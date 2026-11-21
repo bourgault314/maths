@@ -136,6 +136,6 @@ test("ordinateur : « Avec le dessin » prend sa place dans la ligne, après « 
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul\.css\?v=20261121-1/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261120-1/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261121-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261121-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
 });

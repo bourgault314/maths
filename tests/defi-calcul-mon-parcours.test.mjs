@@ -51,7 +51,7 @@ test("le format : version 5 (lot G1 ; 4 au lot F1, 3 au lot « couverture »), r
   // Lot 4 « les ceintures » : version 8, `ceintures` (quatre null).
   // Lot F4 « personne ne reste bloqué » : version 9, `paliers` (quatre null)
   // et `ar` par module.
-  assert.deepEqual(neuf, {version: 10, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [],
+  assert.deepEqual(neuf, {version: 11, epoque: 0, prenom: "", modules: {}, seance: {jour: null, etape: 0, n: 0, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [],
     journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: []}, jours: [], ceintures: [null, null, null, null], paliers: [null, null, null, null]});
   assert.equal(P.estVide(neuf), true);
   const {parcours} = entrainer(neuf, "A5", 1);
@@ -68,15 +68,16 @@ test("le format : version 5 (lot G1 ; 4 au lot F1, 3 au lot « couverture »), r
   assert.equal(P.CLE_SEL, "mathsgo-defi-calcul-sel");
   assert.equal(P.CODES.length, 74);
   // 211 compétences (carte v3, lot « couverture »), chacune a son rang ;
-  // 213 depuis le lot 6 « programmes 2 » (F6 et F9 ont un niveau de plus).
+  // 213 depuis le lot 6 « programmes 2 » (F6 et F9 ont un niveau de plus),
+  // 218 depuis le lot C2 (M1 6 niveaux, D8 5).
   const rangs = P.CODES.flatMap(id => Array.from({length: P.NIVEAUX[id]}, (_, i) => P.rangDe(id, i + 1)));
-  assert.deepEqual(rangs, Array.from({length: 213}, (_, i) => i));
+  assert.deepEqual(rangs, Array.from({length: 218}, (_, i) => i));
   assert.deepEqual(P.competenceDeRang(P.rangDe("A5", 3)), {module: "A5", niveau: 3});
-  assert.equal(P.competenceDeRang(213), null);
+  assert.equal(P.competenceDeRang(218), null);
   // Les 45 modules de la carte v3 font 127 compétences (lot 6 « programmes 2 »), dans l'ordre du parcours.
-  assert.equal(CARTE.modules.reduce((s, f) => s + f.paliers.filter(Boolean).length, 0), 127);
-  assert.equal(CARTE.ordre.length, 127);
-  assert.equal(new Set(CARTE.ordre).size, 127);
+  assert.equal(CARTE.modules.reduce((s, f) => s + f.paliers.filter(Boolean).length, 0), 132);
+  assert.equal(CARTE.ordre.length, 132);
+  assert.equal(new Set(CARTE.ordre).size, 132);
   CARTE.ordre.forEach(cle => { const [id, n] = cle.split("-"); assert.ok(P.NIVEAUX[id] >= Number(n), cle); });
 });
 
@@ -96,7 +97,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   };
   const propre = P.normaliserParcours(forge);
   assert.deepEqual(P.normaliserParcours(propre), propre, "idempotente");
-  assert.equal(propre.version, 10, "lot F4 : version 10 (9 au lot 6 « programmes 2 », 8 au lot 4, 7 au lot 1, 6 au correctif S1, 5 au lot G1)");
+  assert.equal(propre.version, 11, "lot F4 : version 10 (9 au lot 6 « programmes 2 », 8 au lot 4, 7 au lot 1, 6 au correctif S1, 5 au lot G1)");
   assert.equal(propre.epoque, 0);
   assert.equal(propre.prenom.length, 20);
   assert.equal("test" in propre, false, "`test` (version 1) n'est plus gardé : le test d'entrée est toujours proposé");
@@ -144,7 +145,9 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // Lot F4 : `ar` (74 clés : une liste par module, pas deux, sinon 2 094
   // clés) et `paliers` (une clé, quatre dates) : 1 871 clés et 30 375
   // octets avant.
-  assert.deepEqual(pire, {cles: 1946, octets: 31368}, "la mesure du pire cas, à la clé et à l'octet près");
+  // Lot C2 : M1 et D8 ont 5 niveaux de plus (des cases de liste, pas des
+  // clés) : 31 368 octets avant.
+  assert.deepEqual(pire, {cles: 1946, octets: 31648}, "la mesure du pire cas, à la clé et à l'octet près");
   // Une compétence pas entrée n'a pas d'échéance : null, jamais "" (le serveur
   // retire d'une liste toute chaîne qui n'est pas une date, et les échéances
   // suivantes glisseraient d'un rang). La référence en porte.
@@ -423,7 +426,7 @@ test("une progression de version 1 : les boîtes restent, la séance en cours se
     seance: {jour: "2026-10-30", etape: 2, n: 5, p: [1, 0, 4, 1, 1]}, seances: ["2026-10-29", "2026-10-30"], jours: ["2026-10-30"]
   };
   const propre = P.normaliserParcours(v1);
-  assert.equal(propre.version, 10);
+  assert.equal(propre.version, 11);
   assert.deepEqual(propre.modules.A2.b, [4, 3, 0, 0, 0]);
   assert.deepEqual(propre.modules.A2.a, [0, 0, 1, 0, 0]);
   assert.deepEqual(propre.seance, {jour: null, etape: 0, n: 5, p: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, "le plan de version 1 ne vaut plus ; le compte de séances reste");
@@ -459,7 +462,7 @@ test("une progression de version 2 : A8-3 et F5-3 réunis, A2 a un niveau de plu
     seance: {jour: "2026-11-06", etape: 2, n: 5, p: [1, 0, 40, 1, 0]}, seances: ["2026-11-06"], jours: []
   };
   const propre = P.normaliserParcours(v2);
-  assert.equal(propre.version, 10);
+  assert.equal(propre.version, 11);
   assert.deepEqual(propre.modules.A8, {vu: "2026-11-01", ok: "2026-11-01", b: [4, 2], e: ["2026-11-05", "2026-11-02"], a: [1, 1], f: [3, 6], x: [0, 1], t: [0, 1], l: [0, 0],
     d: [null, null], s: [null, null], ar: [0, 0], c: {1: 2}});
   // Seule l'ancienne marche du haut entrée : elle prend la place.
@@ -526,8 +529,8 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
   const r = P.resumeProf(p, CARTE, jour);
   assert.equal(r.lisible, true);
   assert.equal(r.commence, true);
-  assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 127], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 127 compétences");
-  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 127], "sur les modules construits : 127 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8 + F1, F3 + D5, D6, D7 + D8, D9, M13 + F4, F9, F11 + M11, A9, C4, M9)");
+  assert.deepEqual([r.sues, r.entrees, r.total], [2, 6, 132], "sur toute la carte : A2-1 et M2-2 sues, 6 entrées, 132 compétences");
+  assert.deepEqual([r.ouvert.sues, r.ouvert.entrees, r.ouvert.total], [2, 6, 132], "sur les modules construits : 132 compétences (14 + A1, A10, A11, M1 + A3, A4, A6, A7, A8 + M3, M4, M5, M6, M8 + M7, M10, M12, C1, C3 + D1, D3, D4 + F2, F5, F6, F8 + F1, F3 + D5, D6, D7 + D8, D9, M13 + F4, F9, F11 + M11, A9, C4, M9)");
   const a2 = r.modules.find(m => m.id === "A2");
   assert.deepEqual(a2.etats, ["su", "route", "revoir", "gris", "gris"]);
   assert.deepEqual(a2.paliers, [1, 1, 1, 2, 2]);
@@ -563,7 +566,7 @@ test("resumeProf : l'état de chaque compétence, ce qui est à revoir, les caus
 
 test("resumeProf : rien reçu, un parcours abîmé, un parcours d'une autre appli — jamais une erreur", () => {
   const vide = P.resumeProf(null, CARTE, "2026-11-27");
-  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 127, 127, [], []]);
+  assert.deepEqual([vide.lisible, vide.commence, vide.sues, vide.total, vide.ouvert.total, vide.revoir, vide.causes], [false, false, 0, 132, 132, [], []]);
   assert.equal(vide.modules.length, 74);
   assert.deepEqual(vide.seances, {semaine: 0, quatreSemaines: 0, total: 0, jours: []});
   assert.equal(vide.dernier, null);

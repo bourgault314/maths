@@ -34,8 +34,8 @@ test("lot 7b : 8 compétences construites, au palier 3 ; le palier 3 en a 33, la
   });
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 127); // (lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
-  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 40); // (lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
+  assert.equal(construits.length, 132); // (lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
+  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 43); // (lot C2 : D8 en cinq niveaux, F3-3 au CM2 ; lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
   assert.equal(CORE.moduleDe("D8").niveaux[0].type, "F", "la moitié des impairs jusqu'à 15 : un fait à savoir");
 });
 
@@ -44,19 +44,25 @@ test("lot 7b : les bornes du rapport de Codex", () => {
   // D8-1 : la moitié des impairs de 1 à 15.
   tous("D8-1").forEach(c => assert.ok(c.donnees.n % 2 === 1 && c.donnees.n <= 15, c.texte));
   assert.equal(new Set(tous("D8-1").map(c => c.donnees.n)).size, 8);
-  // D8-2 : un chiffre après la virgule ; la moitié reste aux dixièmes (jamais 8,1 ÷ 2).
-  tous("D8-2").forEach(c => {
+  // D8-2, D8-3 (lot C2 : les doubles, puis les moitiés) : un chiffre après
+  // la virgule ; la moitié reste aux dixièmes (jamais 8,1 ÷ 2).
+  const dixiemes = [...tous("D8-2"), ...tous("D8-3")];
+  tous("D8-2").forEach(c => assert.ok(["double", "double-fois"].includes(c.forme), `${c.texte} : un double`));
+  tous("D8-3").forEach(c => assert.ok(["moitie", "division"].includes(c.forme), `${c.texte} : une moitié`));
+  dixiemes.forEach(c => {
     assert.equal(CORE.decimalesDe(c.donnees.n), 1, c.texte);
     if (["moitie", "division"].includes(c.forme)) assert.equal(CORE.decimalesDe(c.reponse), 1, `${c.texte} : la moitié reste aux dixièmes`);
   });
-  assert.ok(!tous("D8-2").some(c => espaces(c.texte) === "8,1 ÷ 2 = □" || espaces(c.texte) === "moitié de 8,1 = □"));
-  // D8-3 : les centièmes ; 8,10 écrit avec son zéro, sa moitié 4,05.
-  tous("D8-3").forEach(c => {
+  assert.ok(!dixiemes.some(c => espaces(c.texte) === "8,1 ÷ 2 = □" || espaces(c.texte) === "moitié de 8,1 = □"));
+  // D8-4, D8-5 : les centièmes ; 8,10 écrit avec son zéro, sa moitié 4,05.
+  tous("D8-4").forEach(c => assert.ok(["double", "double-fois"].includes(c.forme), `${c.texte} : un double`));
+  tous("D8-5").forEach(c => assert.ok(["moitie", "division"].includes(c.forme), `${c.texte} : une moitié`));
+  [...tous("D8-4"), ...tous("D8-5")].forEach(c => {
     const ecrit = espaces(c.texte).match(/\d+,\d+/)[0];
     assert.equal(ecrit.split(",")[1].length, 2, `${c.texte} : deux chiffres après la virgule`);
     assert.ok(CORE.decimalesDe(c.reponse) <= 2, c.texte);
   });
-  const huitDix = tous("D8-3").find(c => espaces(c.texte) === "moitié de 8,10 = □");
+  const huitDix = tous("D8-5").find(c => espaces(c.texte) === "moitié de 8,10 = □");
   assert.ok(huitDix, "moitié de 8,10 (évaluation de 6e, Q13)");
   assert.equal(huitDix.reponse, 4.05);
   // D9-1 : × 5, au plus trois chiffres, jamais un entier. (Lot 6
@@ -125,25 +131,29 @@ test("lot 7b : D8, le double et la moitié suivent le même chemin — deux morc
   // (Lot C1 : la première moitié de la série est la plus facile — « moitié
   // de 0,6 », un seul morceau, sans J'écris ; on prend une moitié à deux
   // morceaux.)
-  const moitie = CORE.genererSerie("D8-2", {graine: 3, total: 40}).find(c => c.forme === "moitie" && CORE.ecrisDuCalcul("D8-2", c));
-  const ecris = CORE.ecrisDuCalcul("D8-2", moitie);
+  // (Lot C2 : la moitié a son niveau, D8-3, et sa leçon.)
+  const moitie = CORE.genererSerie("D8-3", {graine: 3, total: 40}).find(c => c.forme === "moitie" && CORE.ecrisDuCalcul("D8-3", c));
+  const ecris = CORE.ecrisDuCalcul("D8-3", moitie);
   const {e, dec} = moitie.donnees;
   assert.equal(espaces(ecris.consigne), espaces(`moitié de ${CORE.formaterNombre(moitie.donnees.n)} = ${e} ÷ 2 + ${CORE.formaterNombre(dec)} ÷ 2`));
   assert.deepEqual(ecris.etapes.map(x => x.reponse), [e / 2, CORE.exact(dec / 2), moitie.reponse]);
   const double = CORE.niveauDe("D8-2").niveau.apprends.ecris;
   assert.equal(espaces(double.consigne), "double de 7,8 = 2 × 7 + 2 × 0,8");
   // 8,10 : la partie décimale s'écrit aussi avec son zéro, partout.
-  const huit = tous("D8-3").find(c => espaces(c.texte) === "moitié de 8,10 = □");
-  const e810 = CORE.ecrisDuCalcul("D8-3", huit);
+  const huit = tous("D8-5").find(c => espaces(c.texte) === "moitié de 8,10 = □");
+  const e810 = CORE.ecrisDuCalcul("D8-5", huit);
   assert.equal(espaces(e810.consigne), "moitié de 8,10 = 8 ÷ 2 + 0,10 ÷ 2");
   assert.deepEqual(textesSvg(AIDES.dessinerImage(CORE.aideDe(huit))).filter(t => t.includes(",")), ["8,10", "0,10"]);
-  // La moitié est annoncée, avec son dessin : chaque morceau déjà coupé en deux.
-  const annonce = CORE.nouveauteDe(moitie);
-  assert.equal(espaces(annonce.texte), "Nouveau : la moitié, je coupe aussi les deux morceaux.");
-  const dessin = CORE.aideDe(moitie, {nouveau: true});
+  // Lot C2 : la moitié n'est plus annoncée (c'est la leçon de son niveau) ;
+  // « ÷ 2 », l'écriture nouvelle, arrive avec le dessin de l'annonce :
+  // chaque morceau déjà coupé en deux.
+  assert.equal(CORE.nouveauteDe(moitie), null);
+  assert.equal(espaces(CORE.niveauDe("D8-3").niveau.apprends.ecris.consigne), "moitié de 15,8 = 15 ÷ 2 + 0,8 ÷ 2");
+  const division = CORE.genererSerie("D8-3", {graine: 3, total: 40}).find(c => c.forme === "division" && c.donnees.morceaux.length === 2);
+  const dessin = CORE.aideDe(division, {nouveau: true});
   assert.deepEqual([...dessin.trouves], [0, 1]);
   assert.equal(dessin.fini, false);
-  assert.ok(!textesSvg(AIDES.dessinerImage(dessin)).includes(espaces(CORE.formaterNombre(moitie.reponse))), "le dessin d'annonce ne dit pas la réponse");
+  assert.ok(!textesSvg(AIDES.dessinerImage(dessin)).includes(espaces(CORE.formaterNombre(division.reponse))), "le dessin d'annonce ne dit pas la réponse");
   assert.match(espaces(CORE.nouveauteDe(huit).texte), /^Nouveau : 0,10, c’est 10 centièmes : leur moitié, c’est 5 centièmes\.$/);
   // La carte du niveau 1 : sous chaque nombre, sa moitié.
   const carte = CORE.carteParCoeur("D8-1");
@@ -187,14 +197,14 @@ test("lot 7b : M13, chaque moitié sur le résultat d'avant ; la moitié d'un im
 
 test("lot 7b : les erreurs connues, chacune la sienne", () => {
   const cas = [
-    ["D8-2", "moitie", 13.6, 6.3, 2], ["D8-2", "double", 13.6, 26.12, 3], ["D8-2", "moitie", 13.6, 27.2, 1], ["D8-2", "moitie", 13.6, 6.5, 5],
+    ["D8-3", "moitie", 13.6, 6.3, 2], ["D8-2", "double", 13.6, 26.12, 3], ["D8-3", "moitie", 13.6, 27.2, 1], ["D8-3", "moitie", 13.6, 6.5, 5],
     ["D8-1", "moitie", 9, 4, 2]
   ];
   cas.forEach(([cle, forme, n, reponse, cause]) => {
     const c = tous(cle).find(x => x.forme === forme && CORE.memeNombre(x.donnees.n, n));
     assert.equal(CORE.diagnostiquer(c, reponse).c, cause, `${espaces(c.texte)} → ${reponse}`);
   });
-  const huit = tous("D8-3").find(c => espaces(c.texte) === "moitié de 8,10 = □");
+  const huit = tous("D8-5").find(c => espaces(c.texte) === "moitié de 8,10 = □");
   assert.equal(CORE.diagnostiquer(huit, 4.5).c, 4, "4,5 : chaque chiffre coupé en deux (évaluation de 6e)");
   const m13 = [[tous("M13-1").find(c => c.forme === "division" && c.donnees.n === 180), 90, 1], [tous("M13-3").find(c => c.donnees.n === 260 && c.donnees.d === 8), 32, 3],
     [tous("M13-2").find(c => c.forme === "division" && c.donnees.n === 360), 22.5, 2]];

@@ -100,7 +100,7 @@ async function jusquaEcris(page, cle) {
   const base = `http://127.0.0.1:${serveur.address().port}`;
   const navigateur = await chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
   const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => fiche.niveaux.map(niveau => `${fiche.id}-${niveau.n}`));
-  assert.equal(NIVEAUX.length, 127); // lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7d : M11, A9, C4, M9 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11
+  assert.equal(NIVEAUX.length, 132); // lot C2 : M1 et D8, doubles et moitiés en deux niveaux ; lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7d : M11, A9, C4, M9 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11
   let echecs = 0;
   const essai = async (nom, corps) => {
     if (SEULEMENT && !nom.startsWith(SEULEMENT)) return;
@@ -108,7 +108,7 @@ async function jusquaEcris(page, cle) {
   };
 
   for (const taille of [[390, 664], [390, 844], [1366, 768]]) {
-    await essai(`retenir ${taille.join("x")} : les 127 « À retenir » tiennent sans défiler`, async () => {
+    await essai(`retenir ${taille.join("x")} : les 132 « À retenir » tiennent sans défiler`, async () => {
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille);
       const trop = [];
       for (const cle of NIVEAUX) {
@@ -126,7 +126,8 @@ async function jusquaEcris(page, cle) {
         // Lot 3a : M1-2 aussi (sa carte a tous les doubles que l'appli
         // demande) ; les deux sont à reprendre au lot 3b (À retenir des
         // niveaux « par cœur »).
-        const minimum = ["A1-2", "M1-2"].includes(cle) && taille[1] < 700 ? 12 : 15;
+        // (Lot C2 : les doubles des nombres usuels sont devenus M1-5.)
+        const minimum = ["A1-2", "M1-5"].includes(cle) && taille[1] < 700 ? 12 : 15;
         assert.ok(taillePolice >= minimum, `${cle} : la phrase fait ${taillePolice} px`);
       }
       assert.deepEqual(trop, [], `l'écran défile : ${trop.join(", ")}`);

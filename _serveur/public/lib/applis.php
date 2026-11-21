@@ -307,7 +307,11 @@ const CATALOGUE_APPLIS = [
         // 10. Une page de version 9 ne connaît ni `ar` (où reprend un
         // J'apprends arrêté) ni `paliers` (les tests de palier joués) : elle
         // les effacerait.
-        'version_min' => 10,
+        // Lot C2 « doubles et moitiés » (21/11/2026) : 11. M1 a 6 niveaux et
+        // D8 5 (les moitiés à part, chacune à sa place) : une page de version
+        // 10 lirait leurs listes avec les anciens numéros (et couperait les
+        // dernières cases).
+        'version_min' => 11,
         // Correctif F4 (21/11/2026, relecture de Codex, point 7) : la version
         // la plus haute acceptée (le moteur relit la même borne) — au-delà,
         // l'écriture est refusée (400). Avant, 1500 entrait, et le moteur la

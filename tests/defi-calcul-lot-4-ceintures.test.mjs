@@ -61,7 +61,7 @@ test("les quatre paliers ont des compétences construites ; les ceintures et leu
 });
 
 test("format : version 8, `ceintures` à quatre places (une date ou null), et rien d'autre", () => {
-  assert.equal(P.VERSION, 10, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
+  assert.equal(P.VERSION, 11, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11");
   assert.deepEqual(sansTestDePalier(P.creerParcours()).ceintures, [null, null, null, null]);
   const lu = P.normaliserParcours({version: 8, ceintures: ["2026-11-02", "x", 4, "2026-13-40", "2026-11-09"]});
   assert.deepEqual(lu.ceintures, ["2026-11-02", null, null, null], "une date par place, le reste null, quatre places");
@@ -269,7 +269,7 @@ test("Mon parcours compte sur ce qui est construit ; chaque onglet a sa ceinture
 test("le serveur : `ceintures` déclarée, version_min 8 ; la tuile et la page prof dessinent sans HTML", () => {
   const bloc = APPLIS.slice(APPLIS.indexOf("'defi-calcul' => ["), APPLIS.indexOf("'automatismes' => ["));
   assert.match(bloc, /'rouges', 'minutes', 'jours', 'numero', 'ceintures', 'ar', 'paliers'\],/, "lot F4 : ar, paliers");
-  assert.match(bloc, /'version_min' => 10,/, "lot 6 « programmes 2 » : 9 ; lot F4 : 10");
+  assert.match(bloc, /'version_min' => 11,/, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11");
   // Lot B1 (Mon espace redessiné) : la ceinture est l'insigne de la porte Défi calcul.
   assert.match(ESPACE, /insigne\.append\(CORE\.elementCeinture\(document, n, \{barrettes, taille: 22\}\), document\.createTextNode\(ceinture\.court\)\);/);
   assert.match(PROF, /dessin\.replaceChildren\(CALCUL_CORE\.elementCeinture\(document, porte, \{barrettes, taille: 34\}\)\);/);

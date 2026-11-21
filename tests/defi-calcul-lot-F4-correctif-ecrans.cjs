@@ -229,7 +229,8 @@ async function jouer(page, choisir) {
     });
 
     await cas(`${f} : (12) D8-1 (24 calculs) — J'apprends va jusqu'au 25e`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({D8: ligne(3, {ar: [4, 0, 0], f: [1, 0, 0]})})});
+      // (Lot C2 : D8 a cinq niveaux.)
+      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({D8: ligne(5, {ar: [4, 0, 0, 0, 0], f: [1, 0, 0, 0, 0]})})});
       assert.equal(await appel(s.page, "reprendre", "D8", 1, 1), true);
       await pause(s.page, 600);
       // Sans aide : un juste, un faux (le dessin revient pour un calcul, juste) — jamais 5 sur 6.
@@ -243,8 +244,8 @@ async function jouer(page, choisir) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : (5) une copie de l'appareil plus récente (version 11) — « Page ancienne : recharge la page. », rien n'est écrasé`, async () => {
-      const v11 = JSON.stringify({version: 11, epoque: 0, prenom: "", modules: {A1: {vu: "2026-11-22", b: [4, 0, 0], e: ["2026-11-30", null, null], champNeuf: [1, 2, 3]}}, paliers: ["2026-11-01", null, null, null], toutNeuf: {x: 1}});
+    await cas(`${f} : (5) une copie de l'appareil plus récente (version 12 depuis le lot C2) — « Page ancienne : recharge la page. », rien n'est écrasé`, async () => {
+      const v11 = JSON.stringify({version: P.VERSION + 1, epoque: 0, prenom: "", modules: {A1: {vu: "2026-11-22", b: [4, 0, 0], e: ["2026-11-30", null, null], champNeuf: [1, 2, 3]}}, paliers: ["2026-11-01", null, null, null], toutNeuf: {x: 1}});
       const s = await ouvrir(nav, base, {largeur, hauteur, code: "", local: ["mathsgo-defi-calcul-parcours", v11]});
       await photo(s.page, `${f}-page-ancienne`);
       assert.equal(await visible(s.page, "#suivi-repere"), true, "le message est à l'écran");

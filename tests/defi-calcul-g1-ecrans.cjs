@@ -127,7 +127,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     }
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seances.length === 2, null, {timeout: 8000});
     const p = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours());
-    assert.equal(p.version, 10, "version 10 depuis le lot F4 (9 au lot 6 « programmes 2 », 8 au lot 4 « les ceintures », 7 au lot 1 « la séance », 6 au correctif S1 : le numéro des séances)");
+    assert.equal(p.version, 11, "version 11 depuis le lot C2 (10 au lot F4, 9 au lot 6 « programmes 2 », 8 au lot 4 « les ceintures », 7 au lot 1 « la séance », 6 au correctif S1 : le numéro des séances)");
     assert.deepEqual(p.seances, [MERCREDI, MERCREDI]);
     assert.equal(p.journal.numero[0], -1, "la séance d'avant le journal : pas de numéro");
     assert.equal(Math.floor(p.journal.numero[1] / 10000), 2, "la séance jouée : la 2e de la journée");

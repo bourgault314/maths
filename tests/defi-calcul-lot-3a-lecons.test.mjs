@@ -32,7 +32,7 @@ const tirages = (cle, n = 40) => {
 };
 
 test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 127, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.equal(NIVEAUX.length, 132, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;
@@ -78,21 +78,25 @@ test("J'écris est de la même sorte que la leçon (ou l'écart est noté)", () 
 });
 
 test("les leçons du cahier 3a : la sorte du calcul montré et de J'écris", () => {
-  const meme = ["A1-3", "M1-1", "M1-2", "M1-3", "A3-1", "A3-2", "A3-3", "A3-4", "M2-1", "M2-2", "M3-2", "M3-3", "M5-1", "M12-1", "F2-2", "F1-3", "C3-1", "C3-2", "C3-3"];
+  const meme = ["A1-3", "M1-1", "M1-2", "M1-3", "M1-4", "M1-5", "M1-6", "A3-1", "A3-2", "A3-3", "A3-4", "M2-1", "M2-2", "M3-2", "M3-3", "M5-1", "M12-1", "F2-2", "F1-3", "C3-1", "C3-2", "C3-3"];
   meme.forEach(cle => {
     const {montre, ecris} = CORE.niveauDe(cle).niveau.apprends.calculs;
     assert.equal(CORE.sorteDansNiveau(cle, ecris), CORE.sorteDansNiveau(cle, montre), `${cle} : ${espaces(montre.texte)} / ${espaces(ecris.texte)}`);
   });
   // On ajoute avant de retirer (décision 3) : A3-1 montre 46 + 30.
   assert.equal(espaces(CORE.niveauDe("A3-1").niveau.apprends.exemple.texte), "46 + 30");
-  // Le double avant la moitié (décision 5).
-  ["M1-1", "M1-2", "M1-3"].forEach(cle => {
+  // Le double avant la moitié (décision 5) ; lot C2 (choix de Gwenaël) :
+  // chacun son niveau et sa leçon.
+  ["M1-1", "M1-3", "M1-5", "M1-2", "M1-4", "M1-6"].forEach((cle, i) => {
     const {montre, ecris} = CORE.niveauDe(cle).niveau.apprends.calculs;
-    assert.equal(montre.forme, "double", cle);
-    assert.equal(ecris.forme, "double", cle);
-    // (Lot 7e-2 : M1-3, la moitié se découpe aussi — « moitié de 46 = 20 + 3 = 23 ».)
-    assert.match(CORE.niveauDe(cle).niveau.apprends.autre.phrase, cle === "M1-3" ? /Pour la moitié, je coupe aussi en morceaux/ : /La moitié, c’est le nombre qu’on double/, cle);
+    const forme = i < 3 ? "double" : "moitie";
+    assert.equal(montre.forme, forme, cle);
+    assert.equal(ecris.forme, forme, cle);
+    assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : plus de deuxième façon`);
   });
+  // La leçon des moitiés jusqu'à 40 : moitié de 34, on coupe 30 et 4.
+  assert.deepEqual(CORE.niveauDe("M1-2").niveau.apprends.represente.etapes.map(e => [espaces(e.texte), e.reponse]),
+    [["moitié de 30 = □", 15], ["moitié de 4 = □", 2], ["moitié de 34 = □", 17]]);
   // × 10 et ÷ 10 (décision 6).
   assert.equal(espaces(CORE.niveauDe("M2-1").niveau.apprends.exemple.texte), "45 × 10");
   assert.equal(espaces(CORE.niveauDe("M2-2").niveau.apprends.exemple.texte), "480 ÷ 10");
@@ -167,11 +171,14 @@ test("les générateurs du cahier 3a", () => {
   assert.ok(tirages("A3-3").some(c => c.donnees.d <= -100 && CORE.sortesDe("A3-3")[CORE.sorteDe(c)].nom === "− en passant le millier"), "A3-3");
 });
 
+// (Lot C2 : une carte des doubles, une des moitiés, pour chaque niveau « par cœur ».)
 test("les cartes « par cœur » des doubles : tout ce que l'appli demande s'y lit", () => {
-  ["M1-1", "M1-2"].forEach(cle => {
+  ["M1-1", "M1-2", "M1-5", "M1-6"].forEach(cle => {
     const carte = CORE.carteParCoeur(cle);
+    // Le nombre et son double, que la carte les écrive « sous chaque nombre,
+    // son double » ou « sa moitié ».
     const paires = new Map();
-    carte.blocs.forEach(b => b.table[0].forEach((n, j) => paires.set(n, b.table[1][j])));
+    carte.blocs.forEach(b => b.table[0].forEach((n, j) => (b.moitie ? paires.set(b.table[1][j], n) : paires.set(n, b.table[1][j]))));
     tirages(cle).forEach(c => {
       // Le nombre et son double : le plus petit des deux est le nombre.
       const n = Math.min(c.donnees.n, c.reponse);
