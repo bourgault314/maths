@@ -59,7 +59,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -73,6 +73,10 @@
     // (Lot B2-3b-2 : une heure ou une durée ne se coupe pas entre « h » et
     // les minutes : « 10 h 40 », « 1 h 10 min ».)
     t = t.replace(new RegExp(`(\\d${INSECABLE}h) (?=\\d)`, "g"), `$1${INSECABLE}`);
+    // (Lot B6-2 : « 3 × 10⁻⁶ L » ne se coupe pas : ni après l'exposant, ni
+    // autour du « × » devant une puissance de 10.)
+    t = t.replace(new RegExp(`([⁰¹²³⁴⁵⁶⁷⁸⁹]) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g"), `$1${INSECABLE}`);
+    t = t.replace(/(\d) × (?=10[⁰¹²³⁴⁵⁶⁷⁸⁹⁻])/g, `$1${INSECABLE}×${INSECABLE}`);
     t = t.replace(/ ([?!:;»])/g, `${INSECABLE}$1`).replace(/« /g, `«${INSECABLE}`);
     return t;
   }
@@ -1049,6 +1053,68 @@
       titreRelations: "Des exemples à connaître",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["1 m/s = 3,6 km/h", "5 m/s = 18 km/h", "10 m/s = 36 km/h", "20 m/s = 72 km/h", "25 m/s = 90 km/h", "1 h = 3 600 s"],
+      reperes: []
+    },
+    // Lot B6-2 : les préfixes de nano à giga (4e ; S097 p. 9 : « on fait le
+    // lien avec les conversions » ; brevet : 1,5 Go libres, des morceaux de
+    // 4 Mo). Les préfixes comme les nombres (le millier, le million, le
+    // milliard ; le millième, le millionième, le milliardième), puis le
+    // glisse-unité. Choix de Gwenaël du 21/11 : le glisse-unité, juste les
+    // colonnes utiles.
+    P5: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "echelle"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 Go =", reponse: "1 000", apres: "Mo"},
+          consigne: "Touche les lignes : 1 000 fois plus.",
+          aide: {type: "numeration", titre: "Les octets", lignes: [
+            ["kilo", "1 millier", "= 1 000", "1 ko", "= 1 000 o"],
+            ["méga", "1 million", "= 1 000 000", "1 Mo", "= 1 000 000 o"],
+            ["giga", "1 milliard", "= 1 000 000 000", "1 Go", "= 1 000 000 000 o"]]},
+          apres: ["D'une ligne à l'autre : × 1 000.", "1 Go = 1 000 Mo"]},
+        {etiquette: "Je vois", question: {avant: "1 µm =", reponse: "1 000", apres: "nm"},
+          consigne: "Touche les lignes : 1 000 fois moins.",
+          aide: {type: "numeration", titre: "Les longueurs", lignes: [
+            ["milli", "1 millième", "= 0,001", "1 mm", "= 0,001 m"],
+            ["micro", "1 millionième", "= 0,000 001", "1 µm", "= 0,000 001 m"],
+            ["nano", "1 milliardième", "= 0,000 000 001", "1 nm", "= 0,000 000 001 m"]]},
+          apres: ["D'une ligne à l'autre : ÷ 1 000.", "1 µm = 1 000 nm"]},
+        {etiquette: "Je vérifie", question: {enonce: "Il reste 1,5 Go libres sur un téléphone. Une chanson fait 4 Mo.", avant: "1,5 Go =", reponse: "1 500", apres: "Mo"},
+          consigne: "J'écris tout en Mo.",
+          aide: {type: "glisse-unite", grandeur: "octet", nombre: "1,5", de: "Go", vers: "Mo", pale: false, colonnes: ["Go", "", "", "Mo"]},
+          apres: ["1 500 Mo ÷ 4 Mo = 375", "= 375 chansons au plus"]}
+      ],
+      retenir: "giga : un milliard ; méga : un million ; kilo : mille.\nmilli : un millième ; micro : un millionième ; nano : un milliardième.\nD'une unité à la suivante, c'est 1 000 fois : 1 Go = 1 000 Mo ; 1 µm = 1 000 nm.",
+      titreRelations: "Les relations à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 Go = 1 000 Mo", "1 mm = 1 000 µm", "1 Mo = 1 000 ko", "1 µm = 1 000 nm", "1 ko = 1 000 o", "1 MW = 1 000 kW"],
+      reperes: []
+    },
+    // Lot B6-2 : les préfixes en puissances de 10 (3e ; attendus de 4e :
+    // 3 µL = 3 × 10⁻⁶ L ; S097 p. 17 et 20). Choix de Gwenaël du 21/11 : la
+    // bande des 7 préfixes par 1 000 et leur puissance ; l'exposant dans une
+    // case levée au-dessus du 10, le pavé avec « − ».
+    P6: {
+      pret: true,
+      aide: {outil: "bande-p", image: "bande-p"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 km =", exposant: true, reponse: "3", apres: "m"},
+          consigne: "Touche kilo, méga, giga.",
+          aide: {type: "bande-p", base: "m", montre: ["k", "M", "G"]},
+          apres: ["1 000 = 10³ ; 1 000 000 = 10⁶", "1 km = 10³ m"]},
+        {etiquette: "Je vois", question: {avant: "1 nm =", exposant: true, reponse: "−9", apres: "m"},
+          consigne: "Touche milli, micro, nano.",
+          aide: {type: "bande-p", base: "m", montre: ["m", "µ", "n"]},
+          apres: ["0,001 = 10⁻³ ; 0,000 001 = 10⁻⁶", "1 nm = 10⁻⁹ m"]},
+        {etiquette: "Je vérifie", question: {avant: "3 µL = 3 ×", exposant: true, reponse: "−6", apres: "L"},
+          consigne: "Touche micro.",
+          aide: {type: "bande-p", base: "L", montre: ["µ"]},
+          apres: ["1 µL = 10⁻⁶ L", "donc 3 µL = 3 × 10⁻⁶ L"]}
+      ],
+      retenir: "giga : 10⁹ ; méga : 10⁶ ; kilo : 10³.\nmilli : 10⁻³ ; micro : 10⁻⁶ ; nano : 10⁻⁹.\n1 km = 10³ m ; 1 nm = 10⁻⁹ m ; 3 µL = 3 × 10⁻⁶ L.\n1 200 m = 1,2 × 10³ m.",
+      titreRelations: "Les six préfixes",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["giga : 10⁹", "milli : 10⁻³", "méga : 10⁶", "micro : 10⁻⁶", "kilo : 10³", "nano : 10⁻⁹"],
       reperes: []
     }
   };

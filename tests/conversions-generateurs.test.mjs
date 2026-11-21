@@ -54,10 +54,11 @@ const FINE = " ";
 
 // ------------------------------------------------- le recalcul, à part
 // (Lot B1-2 : toutes les unités du CM1, hm, dam, hg, dag, dg, cg, mg, hL, daL, mL.)
-const EXPOSANTS = {km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3,
-  hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "€": 2, c: 0};
-const FAMILLE = {km: "l", hm: "l", dam: "l", m: "l", dm: "l", cm: "l", mm: "l", t: "m", kg: "m", hg: "m", dag: "m", g: "m", dg: "m", cg: "m", mg: "m",
-  hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "€": "a", c: "a"};
+// (Lot B6-2 : de nano à giga, les octets, les watts.)
+const EXPOSANTS = {Mm: 6, km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9, t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3,
+  "µg": -6, ng: -9, hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6, "€": 2, c: 0, o: 0, ko: 3, Mo: 6, Go: 9, W: 0, kW: 3, MW: 6, GW: 9};
+const FAMILLE = {Mm: "l", km: "l", hm: "l", dam: "l", m: "l", dm: "l", cm: "l", mm: "l", "µm": "l", nm: "l", t: "m", kg: "m", hg: "m", dag: "m", g: "m", dg: "m", cg: "m", mg: "m",
+  "µg": "m", ng: "m", hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "µL": "c", "€": "a", c: "a", o: "o", ko: "o", Mo: "o", Go: "o", W: "w", kW: "w", MW: "w", GW: "w"};
 // Lot B1-2 : le sens des préfixes, recopié à part.
 const SENS_PREFIXES = {kilo: ["k", "mille"], hecto: ["h", "cent"], "déca": ["da", "dix"], "déci": ["d", "un dixième"], centi: ["c", "un centième"], milli: ["m", "un millième"]};
 // Un texte « 12,5 » en millièmes, sans l'outil du générateur.
@@ -657,7 +658,8 @@ function controlerQuestion(q, ou) {
   if (q.choix) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
     assert.ok(q.bon >= 0 && q.bon < q.choix.length, `${ou} : bonne réponse absente`);
-    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes" || (q.code === "A5" && q.donnees.sorte === "meme"));
+    if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes"
+      || q.donnees.type === "comparer-p5" || q.donnees.type === "comparer-p6" || (q.code === "A5" && q.donnees.sorte === "meme"));
   }
 }
 
@@ -865,7 +867,8 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
       C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
-      Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"]}[code];
+      Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"],
+      P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1961,4 +1964,112 @@ test("lot B6-1 : G1 — les vitesses recalculées, les choix, les places, les po
   ["sens", "comparer"].forEach(k => assert.deepEqual([...places[k]].sort(), [0, 1, 2], `G1 ${k} : la bonne réponse aux places ${[...places[k]]}`));
   [1, 2, 3].forEach(e => assert.ok(erreurs.has(e), `G1 : l'erreur ${e} jamais déclenchée`));
   ["sens", "kmh", "ms", "par", "etape", "situation", "comparer"].forEach(k => assert.ok(sortes[k] > 300, `G1 : ${k} ${sortes[k]}`));
+});
+
+// Lot B6-2 : P5 (de nano à giga) et P6 (en puissances de 10), recalculés à
+// part ; les places de Je valide ; les pourquoi d'une ligne ; les erreurs ;
+// l'aide qui ne donne pas la réponse ; le glisse-unité à 7 colonnes au plus.
+test("lot B6-2 : P5 et P6 — recalculés à part, les places, les pourquoi, les aides, les erreurs", () => {
+  const SUPS = {"⁻": "-", "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9"};
+  const deSup = t => Number([...t].map(c => SUPS[c] ?? "").join(""));
+  const SENS_GN = {giga: "un milliard", "méga": "un million", kilo: "mille", milli: "un millième", micro: "un millionième", nano: "un milliardième"};
+  const PUISS = {giga: 9, "méga": 6, kilo: 3, milli: -3, micro: -6, nano: -9};
+  const sansEsp = t => String(t).replace(/[   ]/g, " ");
+  const vus = {P5: new Set(), P6: new Set()};
+  const N = Math.min(GRAINES, 600);
+  for (const code of ["P5", "P6"]) for (let g = 1; g <= N; g += 1) for (const usage of ["valide", "entraine", "test", "aide", "retour", "echauffement"]) {
+    const s = G.serie(code, {usage, graine: g});
+    const ou = `${code} ${usage} ${g}`;
+    if (usage === "valide") {
+      if (code === "P5") {
+        const sortes = s.map(q => q.sorteP5);
+        assert.deepEqual([sortes[0], sortes[4], sortes[6], sortes[7]], ["sens", "choix", "situation", "comparer"], `${ou} : places`);
+        assert.ok(s.some(q => q.grandeur === "octet"), `${ou} : les octets`);
+      } else {
+        assert.deepEqual([s[2].sorteP6, s[5].sorteP6, s[6].sorteP6, s[8].sorteP6], ["prefixe", "ecriture", "grand", "comparer"], `${ou} : places`);
+        const ex = s.filter(q => q.forme === "exposant").map(q => q.reponse);
+        assert.ok(ex.some(r => r.startsWith("−")) && ex.some(r => !r.startsWith("−")), `${ou} : exposants des deux signes`);
+      }
+    }
+    s.forEach(q => {
+      vus[code].add(q.sorteP5 || q.sorteP6);
+      const d = q.donnees;
+      Object.values(q.pourquoi || {}).forEach(t => assert.ok(sansEsp(t).length <= 31, `${ou} : pourquoi trop long « ${t} »`));
+      if (q.glisse) {
+        const cols = q.glisse.colonnes;
+        assert.ok(cols.includes(q.glisse.de) && cols.includes(q.glisse.vers) && cols.length <= 7, `${ou} : colonnes ${cols}`);
+        assert.equal(q.glisse.pale, false);
+      }
+      if (code === "P5" && d.type === "conv" && q.forme !== "qcm") {
+        const rep = sansEsp(q.reponseTexte);
+        const aide = [...q.image, q.outilSansRelation ? "" : q.relation].join(" | ");
+        assert.ok(!sansEsp(aide).split(/ = | \| /).includes(rep), `${ou} : l'aide « ${aide} » donne « ${rep} »`);
+        assert.ok(q.reponse !== "0" && !/^0,000/.test(q.reponse), `${ou} : ${q.reponse}`);
+        // Les erreurs : le sens, un zéro, deux pas.
+        const v = lire(d.valeur);
+        const a = lire(q.reponse);
+        const bas = EXPOSANTS[d.de] > EXPOSANTS[d.vers];
+        const fauxDeux = bas ? a * 1000n : (a % 1000n === 0n ? a / 1000n : null);
+        if (fauxDeux) { const r = G.verifier(q, G.ecrire(fauxDeux).replace(/ /g, "")); assert.ok(!r.juste && r.retour, `${ou} : deux pas sans pourquoi`); }
+        if (bas && v % 1000n === 0n && v / 1000n !== a) { const r = G.verifier(q, G.ecrire(v / 1000n).replace(/ /g, "")); assert.ok(!r.juste && r.retour, `${ou} : le sens sans pourquoi`); }
+      }
+      if (d.type === "pb-p5") {
+        const a = lire(d.a); const b = lire(d.b);
+        let rec;
+        if (d.op === "div") rec = (versUnite(a, d.ua, d.ub) / b) * 1000n;
+        else if (d.op === "plus") rec = versUnite(a, d.ua, d.ub) + b;
+        else rec = versUnite((a / 1000n) * b, d.ub, d.uRep);
+        assert.equal(lire(q.reponse), rec, `${ou} : ${q.texte}`);
+        if (d.op === "div") assert.equal(versUnite(a, d.ua, d.ub) % b, 0n, `${ou} : ne tombe pas juste`);
+        assert.ok(G.verifier(q, q.reponse).juste);
+      }
+      if (d.type === "comparer-p5") {
+        const A = versUnite(lire(d.a), d.ua, d.ub); const B = lire(d.b);
+        assert.notEqual(A, B);
+        assert.ok(B > lire(d.a), `${ou} : le piège manque`);
+        assert.ok(Number(A > B ? A - B : B - A) / Number(A > B ? B : A) >= 0.15, `${ou} : trop proches`);
+        const grand = A > B ? `${G.ecrire(lire(d.a))} ${d.ua}` : `${G.ecrire(B)} ${d.ub}`;
+        assert.equal(sansEsp(q.choix[q.bon]), sansEsp(grand));
+      }
+      if (d.type === "sens-p5") {
+        if (d.par === "nom") assert.equal(q.choix[q.bon], SENS_GN[d.prefixe]); else assert.equal(q.choix[q.bon], d.prefixe);
+        assert.equal(new Set(q.choix).size, 3);
+      }
+      if (d.type === "associer-p5") d.prefixes.forEach((p, i) => assert.equal(q.mesures[q.bonnes[i]], SENS_GN[p].replace(/^un /, ""), `${ou} : ${p}`));
+      if (d.type === "exposant") {
+        const e = Number(q.reponse.replace("−", "-"));
+        assert.ok(G.verifier(q, q.reponse).juste && G.verifier(q, String(e)).juste, `${ou} : la bonne réponse refusée`);
+        if (e) { const r = G.verifier(q, String(-e)); assert.ok(!r.juste && r.retour, `${ou} : le signe sans pourquoi`); }
+        if (d.sorte === "puiss" || d.sorte === "mantisse") assert.equal(e, EXPOSANTS[d.de] - EXPOSANTS[d.vers], `${ou} : ${q.texte}`);
+        if (d.sorte === "grand") {
+          const [ent, dec = ""] = d.m.split(",");
+          assert.equal(d.v, (ent + dec).padEnd(ent.length + e, "0"), `${ou} : ${d.v} ≠ ${d.m} × 10^${e}`);
+        }
+        if (d.sorte === "volume") {
+          const dim = /³/.test(d.de) ? 3 : 2;
+          assert.equal(e, dim * (EXPOSANTS[d.de.replace(/[²³]/, "")] - EXPOSANTS[d.vers.replace(/[²³]/, "")]), `${ou} : ${q.texte}`);
+          (q.outilLignes || []).forEach(l => assert.ok(!sansEsp(l).includes(sansEsp(q.reponseTexte)), `${ou} : l'outil donne la réponse`));
+        }
+        assert.ok(sansEsp(q.resume).endsWith(sansEsp(q.reponseTexte)), `${ou} : le résumé`);
+        assert.equal(deSup(q.vertP6.match(/10([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+)/)[1]), e, `${ou} : la correction`);
+      }
+      if (d.type === "ecriture-p6") {
+        assert.equal(d.e, EXPOSANTS[d.de] - EXPOSANTS[d.de.slice(-1) === "o" ? "o" : d.de.slice(-1) === "W" ? "W" : d.de.slice(-1)]);
+        assert.equal(deSup(q.choix[q.bon].match(/10([⁻⁰¹²³⁴⁵⁶⁷⁸⁹]+)/)[1]), d.e, `${ou} : le bon choix`);
+        assert.equal(new Set(q.choix).size, 3);
+      }
+      if (d.type === "prefixe-p6") assert.equal(q.choix[q.bon], d.de);
+      if (d.type === "comparer-p6" && !d.electron) {
+        const va = d.na * 10 ** (EXPOSANTS[d.u] - EXPOSANTS[d.base]);
+        const vb = d.nb * 10 ** d.eb;
+        assert.notEqual(va, vb);
+        assert.equal(q.bon, q.choix.indexOf(va > vb ? q.choix.find(c => /µ|n|m|k|M|G/.test(c[c.length - 2] || "") && !c.includes("×")) : q.choix.find(c => c.includes("×"))), `${ou} : ${q.texte}`);
+        assert.ok((va > vb && d.na < d.nb) || (vb > va && d.nb < d.na), `${ou} : le piège manque`);
+      }
+    });
+  }
+  assert.deepEqual([...vus.P5].sort(), ["associer", "choix", "comparer", "conv", "pb", "rel", "sens", "situation"]);
+  assert.deepEqual([...vus.P6].sort(), ["comparer", "ecriture", "grand", "mantisse", "prefixe", "puiss", "volume"]);
+  // La typographie : « 3 × 10⁻⁶ L » ne se coupe pas.
+  assert.equal(CARTE.typo("3 µL = 3 × 10⁻⁶ L"), "3 µL = 3 × 10⁻⁶ L");
 });

@@ -148,12 +148,15 @@
   // ----------------------------------------------------- la table des unités
 
   const UNITES = {
-    longueur: {km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9},
-    masse: {t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3},
-    contenance: {hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3},
+    // (Lot B6-2 : le mégamètre, le microgramme et le nanogramme, le
+    // microlitre ; la puissance, du watt au gigawatt.)
+    longueur: {Mm: 6, km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9},
+    masse: {t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3, "µg": -6, ng: -9},
+    contenance: {hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6},
     aire: {"km²": 6, "m²": 0, "dm²": -2, "cm²": -4, "mm²": -6},
     volume: {"m³": 0, "dm³": -3, "cm³": -6},
     octet: {o: 0, ko: 3, Mo: 6, Go: 9},
+    puissance: {W: 0, kW: 3, MW: 6, GW: 9},
     // La monnaie (lot A2 bis) : 1 € = 100 c.
     argent: {"€": 2, c: 0}
   };
@@ -186,7 +189,10 @@
     min: "minutes", h: "heures", "€": "euros", c: "centimes",
     // Lot B1-2 : les unités du CM1.
     hm: "hectomètres", dam: "décamètres", hg: "hectogrammes", dag: "décagrammes", dg: "décigrammes", cg: "centigrammes",
-    mg: "milligrammes", hL: "hectolitres", daL: "décalitres"
+    mg: "milligrammes", hL: "hectolitres", daL: "décalitres",
+    // Lot B6-2 : de nano à giga.
+    Go: "gigaoctets", Mo: "mégaoctets", ko: "kilooctets", o: "octets", "µm": "micromètres", nm: "nanomètres", Mm: "mégamètres",
+    "µg": "microgrammes", ng: "nanogrammes", "µL": "microlitres", W: "watts", kW: "kilowatts", MW: "mégawatts", GW: "gigawatts"
   };
 
   function grandeurDe(unite) {
@@ -367,7 +373,9 @@
   const MOT = {km: "kilomètre", m: "mètre", dm: "décimètre", cm: "centimètre", mm: "millimètre", t: "tonne", kg: "kilogramme", g: "gramme",
     L: "litre", dL: "décilitre", cL: "centilitre", mL: "millilitre",
     hm: "hectomètre", dam: "décamètre", hg: "hectogramme", dag: "décagramme", dg: "décigramme", cg: "centigramme", mg: "milligramme",
-    hL: "hectolitre", daL: "décalitre"};
+    hL: "hectolitre", daL: "décalitre",
+    Go: "gigaoctet", Mo: "mégaoctet", ko: "kilooctet", o: "octet", "µm": "micromètre", nm: "nanomètre", Mm: "mégamètre",
+    "µg": "microgramme", ng: "nanogramme", "µL": "microlitre", W: "watt", kW: "kilowatt", MW: "mégawatt", GW: "gigawatt"};
   // `cm1` (lot B1-2) : le glisse-unité du palier 2, toutes ses colonnes
   // (`pale: false`, et les masses jusqu'au milligramme).
   // `decimaux` (lot B2-1) : la phrase des décimaux (C3, C4).
@@ -6936,6 +6944,719 @@
     erreurs(question, lu) { return erreursG1(question, lu); }
   };
 
+  // ======================================================= palier 6 (lot B6-2)
+  //
+  // P5 · Les préfixes de nano à giga (4e). Programme (S097 p. 9) : « on
+  // introduit en fonction des besoins les préfixes des puissances de 10 de
+  // nano à giga », avec l'astronomie, la physique, l'informatique, les
+  // nanotechnologies, « et on fait le lien avec les conversions ». Brevet :
+  // 1,5 Go libres, des morceaux de 4 Mo (Polynésie 2019) ; 1 Go = 1 000 Mo
+  // (on garde 1 ko = 1 000 o). Sans calculatrice (Gwenaël, 21/11).
+  // Choix de Gwenaël du 21/11 (maquette sur la vraie page) : l'outil est le
+  // glisse-unité, juste les colonnes utiles (Go, deux colonnes sans nom,
+  // Mo), et pour µm on part du mm déjà connu.
+  const PREFIXES_GN = [
+    {nom: "giga", sym: "G", e: 9, sens: "un milliard", choix: ["un milliard", "un million", "un milliardième"]},
+    {nom: "méga", sym: "M", e: 6, sens: "un million", choix: ["un million", "un milliard", "un millionième"]},
+    {nom: "kilo", sym: "k", e: 3, sens: "mille", choix: ["mille", "un millième", "un million"]},
+    {nom: "milli", sym: "m", e: -3, sens: "un millième", choix: ["un millième", "mille", "un millionième"]},
+    {nom: "micro", sym: "µ", e: -6, sens: "un millionième", choix: ["un millionième", "un millième", "un million"]},
+    {nom: "nano", sym: "n", e: -9, sens: "un milliardième", choix: ["un milliardième", "un millionième", "un milliard"]}
+  ];
+  const PREFIXE_GN = {};
+  PREFIXES_GN.forEach(p => { PREFIXE_GN[p.nom] = p; PREFIXE_GN[p.sym] = p; });
+  // Les unités de P5, par grandeur, de la plus grande à la plus petite ;
+  // d'une à la suivante : × 1 000.
+  const UNITES_P5 = {octet: ["Go", "Mo", "ko", "o"], longueur: ["m", "mm", "µm", "nm"], masse: ["g", "mg", "µg", "ng"],
+    contenance: ["L", "mL", "µL"], puissance: ["GW", "MW", "kW", "W"]};
+  // Le mot qui porte le préfixe, pour « que veut dire micro ? ».
+  const MOT_P5 = {giga: ["gigaoctet", "gigawatt"], "méga": ["mégaoctet", "mégawatt"], micro: ["micromètre", "microlitre", "microgramme"],
+    nano: ["nanomètre", "nanogramme"]};
+  // Les colonnes du glisse-unité : la ligne entière d'une grandeur, dont on
+  // prend la fenêtre utile.
+  const LIGNES_P5 = {
+    octet: ["Go", "", "", "Mo", "", "", "ko", "", "", "o"],
+    longueur: ["m", "dm", "cm", "mm", "", "", "µm", "", "", "nm"],
+    masse: ["g", "dg", "cg", "mg", "", "", "µg", "", "", "ng"],
+    contenance: ["L", "dL", "cL", "mL", "", "", "µL"],
+    puissance: ["GW", "", "", "MW", "", "", "kW", "", "", "W"]
+  };
+  const CONNUES_P5 = ["m", "mm", "g", "mg", "L", "mL"];
+  function colonnesP5(de, vers) {
+    const l = LIGNES_P5[grandeurDe(de)];
+    let a = Math.min(l.indexOf(de), l.indexOf(vers));
+    const b = Math.max(l.indexOf(de), l.indexOf(vers));
+    if (/^[µn]/.test(l[a])) {
+      const connue = l.slice(0, a).reverse().find(u => CONNUES_P5.includes(u));
+      if (connue) a = l.indexOf(connue);
+    }
+    return l.slice(a, b + 1);
+  }
+  function glisseP5(valeur, de, vers) {
+    return Object.assign(glisse(valeur, de, vers), {pale: false, colonnes: colonnesP5(de, vers)});
+  }
+  const NOTE_P5 = CARTE.typo("D'une unité à la suivante : × 1 000.");
+  // (L'outil : les préfixes et les nombres dans le même ordre, sans les
+  // relier — c'est la question ; l'image : l'ordre des préfixes.)
+  const LIGNES_GRANDS_P5 = ["kilo · méga · giga", "mille · million · milliard"];
+  const LIGNES_PETITS_P5 = ["milli · micro · nano", "millième · millionième · milliardième"];
+  const lignesSensP5 = noms => (noms.some(n => PREFIXE_GN[n].e > 0) ? LIGNES_GRANDS_P5 : []).concat(noms.some(n => PREFIXE_GN[n].e < 0) ? LIGNES_PETITS_P5 : []);
+  const IMAGE_SENS_P5 = ["giga > méga > kilo", "milli > micro > nano"];
+  function echelleP5(grandeur, marque) {
+    return {grandeur, unites: UNITES_P5[grandeur], marque, note: NOTE_P5};
+  }
+  const voyelle = mot => /^[aeiouyéèh]/.test(mot);
+  const deMot = mot => (voyelle(mot) ? `d'${mot}` : `de ${mot}`);
+
+  // Une conversion de P5 (« 1,5 Go = … Mo », « Combien de nanomètres dans
+  // 4 µm ? », ou une situation). La relation au-dessus de l'outil, sauf
+  // quand elle est la réponse.
+  function questionP5(degre, ecrit, valeur, de, vers, extra = {}) {
+    const rep = convertir(valeur, de, vers);
+    if (rep === null || rep <= 0n) return null;
+    const grandeur = grandeurDe(de);
+    const [g, p] = exposant(de) > exposant(vers) ? [de, vers] : [vers, de];
+    const gauche = mes(valeur, de);
+    const reponseTexte = mes(rep, vers);
+    const resume = `${gauche} = ${reponseTexte}`;
+    const relation = relationTexte(g, p);
+    let texte;
+    let morceaux;
+    if (extra.enonce) {
+      texte = `${extra.enonce} ${extra.avant} ${CASE}${NB}${vers}`;
+      morceaux = {enonce: extra.enonce, avant: extra.avant, apres: vers, serre: true};
+    } else if (ecrit === "phrase") {
+      const phrase = `Combien ${deMot(MOTS[vers])} dans ${gauche}${NB}?`;
+      texte = phrase;
+      morceaux = {phrase, apres: vers};
+    } else {
+      texte = `${gauche} = ${CASE}${NB}${vers}`;
+      morceaux = {avant: `${gauche} =`, apres: vers};
+    }
+    const sansRel = relation.split(" = ").includes(reponseTexte) || relation === resume;
+    const x = q({
+      code: "P5", degre, forme: ecrit === "phrase" || extra.enonce ? "phrase" : "nombre", texte, morceaux,
+      reponse: brut(rep), reponseTexte, unite: vers, resume,
+      relation, outil: "glisse-unite", glisse: glisseP5(valeur, de, vers), outilSansRelation: sansRel,
+      echelle: echelleP5(grandeur, [de, vers]), image: [UNITES_P5[grandeur].join(" · "), NOTE_P5],
+      correction: resume === relation ? [relation] : [relation, `donc ${resume}`],
+      grandeur, relationCle: `${g}-${p}`, sorteP5: extra.sorte || "conv", modeleP5: extra.modele || null,
+      donnees: {type: "conv", valeur: brut(valeur), de, vers},
+      cle: `P5:${brut(valeur)}${de}>${vers}`
+    });
+    delete extra.enonce; delete extra.avant;
+    return x;
+  }
+
+  // « Dans gigaoctet, que veut dire giga ? » ; « Quel préfixe veut dire un
+  // millionième ? ». Les fausses : le préfixe voisin et le contraire.
+  function sensP5(degre, p, rng) {
+    const parNom = rng() < 0.5;
+    const autres = melanger(rng, p.choix.slice(1));
+    let choix;
+    let phrase;
+    let bonne;
+    const pourquoi = {};
+    if (parNom) {
+      const mot = choisir(rng, MOT_P5[p.nom]);
+      phrase = `Dans «${NB}${mot}${NB}», que veut dire ${p.nom}${NB}?`;
+      choix = melanger(rng, [p.sens, ...autres]);
+      bonne = p.sens;
+      choix.forEach((c, k) => {
+        if (c === bonne) return;
+        const x = PREFIXES_GN.find(y => y.sens === c);
+        pourquoi[k] = `${c[0].toUpperCase()}${c.slice(1)}, c'est ${x.nom}.`;
+      });
+    } else {
+      phrase = `Quel préfixe veut dire ${p.sens}${NB}?`;
+      const noms = [p, ...autres.map(c => PREFIXES_GN.find(y => y.sens === c))];
+      choix = melanger(rng, noms.map(x => x.nom));
+      bonne = p.nom;
+      choix.forEach((c, k) => { if (c !== bonne) pourquoi[k] = `${c} veut dire ${PREFIXE_GN[c].sens}.`; });
+    }
+    const exemple = CARTE.typo({giga: "1 Go = 1 000 Mo", "méga": "1 Mo = 1 000 ko", micro: "1 mm = 1 000 µm", nano: "1 µm = 1 000 nm"}[p.nom]);
+    return q({
+      code: "P5", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "mots"}, choix, bon: choix.indexOf(bonne), pourquoi,
+      reponse: bonne, reponseTexte: bonne, unite: null, resume: `${p.nom} veut dire ${p.sens}`,
+      outil: "lignes", outilLignes: lignesSensP5([p.nom]), outilPetit: true, image: IMAGE_SENS_P5,
+      correction: [`${p.nom} veut dire ${p.sens}.`, exemple], relationCle: `sens:${p.nom}`, sorteP5: "sens",
+      donnees: {type: "sens-p5", prefixe: p.nom, par: parNom ? "nom" : "sens"}, cle: `P5:sens:${p.nom}:${parNom ? "n" : "s"}`
+    });
+  }
+
+  // Une relation au choix (« 1 Mo = … ko » : 1 000, 100 ou 1 000 000 ;
+  // « 1 nm = … µm » : 0,001, 1 000 ou 0,01).
+  function choixP5(degre, de, vers, rng) {
+    const x = questionP5(degre, "nombre", MILLE, de, vers);
+    if (!x) return null;
+    const rep = milli(x.reponse);
+    const grand = exposant(de) > exposant(vers);
+    const faux = grand ? [100n * MILLE, MILLE * 1000000n] : [MILLE * 1000n, 10n];
+    const choix = melanger(rng, [rep, ...faux]).map(ecrire);
+    const bon = choix.indexOf(ecrire(rep));
+    const pourquoi = {};
+    choix.forEach((c, k) => {
+      if (k === bon) return;
+      const y = milli(c.replace(new RegExp(FINE, "g"), ""));
+      if (grand ? y > rep : y < rep) pourquoi[k] = CARTE.typo(grand ? "Un seul pas : × 1 000." : "Un seul pas : ÷ 1 000.");
+      else if (!grand && y > MILLE) pourquoi[k] = `1${NB}${de} est plus petit que 1${NB}${vers}.`;
+      else pourquoi[k] = CARTE.typo(`De ${de} à ${vers} : 1 000 fois.`);
+    });
+    const phrase = `1${NB}${de} = ${CASE}${NB}${vers}`;
+    // (Sans la phrase sous le glisse-unité : la réponse dit déjà la
+    // relation ; avec elle, la correction tombait à 80 % au petit iPhone
+    // quand un problème était dans la série.)
+    x.glisse = Object.assign({}, x.glisse, {phrase: null, phraseCourte: null});
+    return Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: vers, sorte: "valeur"}, choix, bon, pourquoi,
+      sorteP5: "choix", cle: `${x.cle}:q`});
+  }
+
+  // Relier trois préfixes à leur sens (« giga — milliard »). Degré 3 : deux
+  // qui se confondent (micro et milli, méga et micro).
+  function relierP5(degre, rng) {
+    let trois;
+    if (degre === 3) trois = melanger(rng, [PREFIXE_GN["micro"], PREFIXE_GN["milli"], choisir(rng, [PREFIXE_GN["méga"], PREFIXE_GN["nano"]])]);
+    else trois = melanger(rng, PREFIXES_GN.filter(p => p.nom !== "kilo" && p.nom !== "milli")).slice(0, 3);
+    let ordre = melanger(rng, [0, 1, 2]);
+    while (ordre.every((k, j) => k === j)) ordre = melanger(rng, [0, 1, 2]);
+    const court = x => x.sens.replace(/^un /, "");
+    const mesures = ordre.map(k => court(trois[k]));
+    const bonnes = trois.map((x, k) => ordre.indexOf(k));
+    const consigne = "Relie chaque préfixe à son sens.";
+    const lignes = trois.map(x => `${x.nom} : ${court(x)}`);
+    return q({
+      code: "P5", degre, forme: "associer", texte: `${consigne} ${trois.map(x => x.nom).join(" ; ")} — ${mesures.join(" ; ")}`,
+      morceaux: {phrase: consigne, mots: true, longs: true}, objets: trois.map(x => ({texte: x.nom})), mesures, bonnes,
+      reponse: bonnes.join(","), reponseTexte: lignes.join(" ; "), resume: lignes.join(" ; "),
+      relation: lignes.join(" ; "), outil: "lignes", outilLignes: lignesSensP5(trois.map(x => x.nom)), outilPetit: true, image: IMAGE_SENS_P5,
+      correction: lignes, relationCle: "relier", sorteP5: "associer",
+      donnees: {type: "associer-p5", prefixes: trois.map(x => x.nom), mesures: mesures.slice()},
+      cle: `P5:a:${trois.map(x => x.nom).sort().join("+")}`
+    });
+  }
+
+  // « Quelle mesure est la plus grande ? » (degré 3) : une mesure dans la
+  // grande unité, l'autre dans la petite avec un plus grand nombre (le
+  // piège), 15 % d'écart au moins.
+  const COMPARER_P5 = [["Go", "Mo", ["0,8", "1,2", "1,5", "2", "2,5", "3"]], ["Mo", "ko", ["0,6", "1,5", "2", "3,5", "4"]],
+    ["µm", "nm", ["0,2", "0,5", "0,8", "1,5", "2"]], ["mm", "µm", ["0,3", "0,5", "0,8", "1,2"]], ["MW", "kW", ["0,8", "1,5", "2", "3"]],
+    ["mg", "µg", ["0,5", "0,8", "1,5"]], ["mL", "µL", ["0,2", "0,5", "0,8"]]];
+  function comparerP5(degre, rng) {
+    const [G, p, valeurs] = choisir(rng, COMPARER_P5);
+    const A = milli(choisir(rng, valeurs));
+    const Af = A * 1000n;
+    const k = choisir(rng, [0.6, 0.75, 0.8, 1.25, 1.5, 1.6]);
+    const pas = Number(Af / MILLE) >= 1000 ? 100 : 50;
+    const b = BigInt(Math.round((Number(Af / MILLE) * k) / pas) * pas);
+    const B = b * MILLE;
+    if (B <= A || B === Af) return null;
+    const deux = melanger(rng, [[A, G], [B, p]]);
+    const choix = deux.map(([v, u]) => mes(v, u));
+    const grand = Af > B ? mes(A, G) : mes(B, p);
+    const bon = choix.indexOf(grand);
+    const phrase = `Quelle mesure est la plus grande${NB}?`;
+    const grandeur = grandeurDe(G);
+    const ligne = `${mes(A, G)} = ${mes(Af, p)}`;
+    return q({
+      code: "P5", degre, forme: "qcm", texte: `${phrase} ${choix.join(" ou ")}`, morceaux: {phrase, apres: "", sorte: "comparer-mes"},
+      choix, bon, reponse: grand, reponseTexte: grand, unite: null,
+      resume: `${ligne}${NB}; la plus grande : ${grand}`,
+      // (Sans la phrase sous le glisse-unité : la correction tient au petit
+      // téléphone avec une police large, 85 % avec elle.)
+      relation: relationTexte(G, p), outil: "glisse-unite", glisse: Object.assign(glisseP5(A, G, p), {phrase: null, phraseCourte: null}), outilSansRelation: false,
+      echelle: Object.assign(echelleP5(grandeur, [G, p]), {note: "J'écris les deux mesures dans la même unité."}),
+      image: [UNITES_P5[grandeur].join(" · "), "J'écris les deux mesures dans la même unité."],
+      correction: [ligne, `La plus grande : ${grand}`], pourquoi: {[1 - bon]: `${ligne}.`},
+      // (Sous le glisse-unité, une ligne : « La plus grande : 4 400 ko » ; le
+      // résumé sur deux lignes faisait tomber l'aide à 78 %.)
+      ligneP6: `La plus grande : ${grand}`, vertP6: grand,
+      grandeur, relationCle: `${G}-${p}:cmp`, sorteP5: "comparer",
+      donnees: {type: "comparer-p5", a: brut(A), ua: G, b: brut(B), ub: p},
+      cle: `P5:cmp:${brut(A)}${G}:${brut(B)}${p}`
+    });
+  }
+
+  // Les situations (degré 2 et 3) : une seule conversion, une mesure vraie.
+  // [modèle, énoncé, ce qu'on cherche, de, vers, valeurs]
+  const SITUATIONS_P5 = [
+    ["cle", "Une clé USB peut contenir {v}.", "Capacité :", "Go", "Mo", ["8", "16", "32", "64"]],
+    ["telephone", "Un téléphone a {v} de mémoire.", "Mémoire :", "Go", "Mo", ["64", "128"]],
+    ["photo", "Une photo du Piton de la Fournaise fait {v}.", "Taille :", "Mo", "ko", ["2", "3", "4", "2,5"]],
+    ["chanson", "Une chanson fait {v}.", "Taille :", "Mo", "ko", ["3", "4", "5"]],
+    ["film", "Un film fait {v}.", "Taille :", "Mo", "Go", ["700", "1200", "1500", "2500"]],
+    ["cheveu", "Un cheveu a une épaisseur d'environ {v}.", "Épaisseur :", "µm", "mm", ["60", "70", "80"]],
+    ["sable", "Un grain de sable de l'Hermitage mesure environ {v}.", "Taille :", "µm", "mm", ["200", "300", "500"]],
+    ["bacterie", "Une bactérie mesure environ {v}.", "Longueur :", "µm", "nm", ["1", "2", "3"]],
+    ["globule", "Un globule rouge mesure environ {v}.", "Diamètre :", "µm", "nm", ["7", "8"]],
+    ["dengue", "Le virus de la dengue mesure environ {v}.", "Taille :", "nm", "µm", ["50"]],
+    ["chik", "Le virus du chikungunya mesure environ {v}.", "Taille :", "nm", "µm", ["70"]],
+    ["goutte", "Une goutte d'eau contient environ {v}.", "Contenance :", "µL", "mL", ["50"]],
+    ["eolienne", "Une éolienne a une puissance de {v}.", "Puissance :", "MW", "kW", ["2", "3", "2,5"]],
+    ["bouilloire", "Une bouilloire a une puissance de {v}.", "Puissance :", "W", "kW", ["1800", "2000", "2200"]]
+  ];
+  function situationP5(degre, rng) {
+    const [modele, t, avant, de, vers, vs] = choisir(rng, SITUATIONS_P5);
+    const v = milli(choisir(rng, vs));
+    const enonce = remplirQ2(t, {v: mes(v, de)});
+    return questionP5(degre, "nombre", v, de, vers, {enonce, avant, sorte: "situation", modele});
+  }
+
+  // Les problèmes (degré 3, deux pas, de tête) : la conversion cachée.
+  // [modèle, énoncé, ce qu'on cherche, unité de la réponse, a, ua, b, ub, calcul]
+  const PB_P5 = [
+    ["chansons", "Il reste {a} libres. Une chanson fait {b}. Combien de chansons au plus ?", "Chansons :", "",
+      [["1,5", "4"], ["2", "5"], ["1", "4"], ["1,2", "4"], ["3", "5"]], "Go", "Mo", "div"],
+    ["photos", "Une clé USB de {a}. Une photo fait {b}. Combien de photos au plus ?", "Photos :", "",
+      [["2", "4"], ["4", "5"], ["1", "2"], ["2", "5"]], "Go", "Mo", "div"],
+    ["films", "Deux films : {a} et {b}. Combien de gigaoctets en tout ?", "En tout :", "Go",
+      [["700", "1,3"], ["800", "1,7"], ["500", "1,5"], ["1200", "0,8"]], "Mo", "Go", "plus"],
+    ["virus", "Un cheveu a {a} d'épaisseur, un virus {b}. Combien de virus côte à côte ?", "Virus :", "",
+      [["80", "100"], ["60", "100"], ["80", "50"], ["70", "100"]], "µm", "nm", "div"],
+    ["panneaux", "Un toit de Saint-Pierre a {n} panneaux solaires de {b}. Combien de kW en tout ?", "En tout :", "kW",
+      [["4", "250"], ["8", "250"], ["6", "500"], ["10", "300"]], "", "W", "fois"]
+  ];
+  function problemeP5(degre, rng) {
+    const [modele, t, avant, uRep, valeurs, ua, ub, op] = choisir(rng, PB_P5);
+    const [a, b] = choisir(rng, valeurs).map(milli);
+    let rep;
+    let lignes;
+    if (op === "div") {
+      const af = convertir(a, ua, ub);
+      if (af % b !== 0n) return null;
+      rep = (af / b) * MILLE;
+      lignes = [`${mes(a, ua)} = ${mes(af, ub)}`, `${ecrire(af)} ÷ ${ecrire(b)} = ${ecrire(rep)}`];
+    } else if (op === "plus") {
+      const ag = convertir(a, ua, ub);
+      rep = ag + b;
+      lignes = [`${mes(a, ua)} = ${mes(ag, ub)}`, `${mes(ag, ub)} + ${mes(b, ub)} = ${mes(rep, ub)}`];
+    } else {
+      const total = (a / MILLE) * b;
+      rep = convertir(total, ub, uRep);
+      lignes = [`${ecrire(a)} × ${mes(b, ub)} = ${mes(total, ub)}`, `${mes(total, ub)} = ${mes(rep, uRep)}`];
+    }
+    if (!rep || rep <= 0n) return null;
+    const enonce = remplirQ2(t, {a: mes(a, ua), b: mes(b, ub), n: ecrire(a)}).replace(/ \?$/, `${NB}?`);
+    const reponseTexte = uRep ? mes(rep, uRep) : ecrire(rep);
+    const grandeur = grandeurDe(ub);
+    const conv = op === "fois" ? [ub, uRep] : [ua, ub];
+    return q({
+      code: "P5", degre, forme: "phrase", texte: `${enonce} ${avant} ${CASE}${uRep ? NB + uRep : ""}`,
+      morceaux: {enonce, avant, apres: uRep, serre: true},
+      reponse: brut(rep), reponseTexte, unite: uRep || null, resume: lignes[1], resumeVert: lignes[1],
+      relation: relationTexte(...(exposant(conv[0]) > exposant(conv[1]) ? conv : [conv[1], conv[0]])), outil: "lignes",
+      outilLignes: [relationTexte(...(exposant(conv[0]) > exposant(conv[1]) ? conv : [conv[1], conv[0]]))],
+      noteOutil: "J'écris d'abord tout dans la même unité.",
+      image: ["J'écris d'abord tout dans la même unité."], correction: lignes, grandeur, sorteP5: "pb", modeleP5: modele,
+      // (La correction dans l'ordre : la conversion, puis le calcul, la
+      // réponse en vert — comme P6.)
+      lignesAvantP6: [lignes[0]], ligneP6: lignes[1], vertP6: reponseTexte,
+      donnees: {type: "pb-p5", op, a: brut(a), ua, b: brut(b), ub, uRep},
+      cle: `P5:pb:${modele}:${brut(a)}:${brut(b)}`
+    });
+  }
+
+  // Les relations : un pas (« 1 Go = … Mo », « 1 nm = … µm ») ou deux pas
+  // au degré 3 (« 1 m = … µm », « 1 Go = … ko »).
+  function pairesP5(pas) {
+    const l = [];
+    Object.values(UNITES_P5).forEach(u => u.forEach((g, i) => { if (u[i + pas]) l.push([g, u[i + pas]]); }));
+    return l;
+  }
+  // (Sans m → mm, g → mg, L → mL : déjà appris au CM1.)
+  // (Les octets et les longueurs deux fois plus souvent ; les watts, sans
+  // le gigawatt.)
+  const UN_PAS_P5 = pairesP5(1).filter(([g]) => !["m", "g", "L", "GW"].includes(g))
+    .flatMap(x => (["octet", "longueur"].includes(grandeurDe(x[0])) ? [x, x] : [x]));
+  const DEUX_PAS_P5 = pairesP5(2).filter(([g, p]) => !(g === "Go" && p === "o") && !(g === "m" && p === "nm"));
+  function tirerP5Brut(rng, degre, sorte) {
+    if (sorte === "sens") return sensP5(degre, choisir(rng, PREFIXES_GN.filter(p => MOT_P5[p.nom])), rng);
+    if (sorte === "associer") return relierP5(degre, rng);
+    if (sorte === "comparer") return comparerP5(degre, rng);
+    if (sorte === "situation") return situationP5(degre, rng);
+    if (sorte === "pb") return problemeP5(degre, rng);
+    if (sorte === "choix") { const [g, p] = choisir(rng, UN_PAS_P5); return rng() < 0.5 ? choixP5(degre, g, p, rng) : choixP5(degre, p, g, rng); }
+    const ecrit = degre > 1 && rng() < 0.3 ? "phrase" : "nombre";
+    if (sorte === "rel") {
+      if (degre === 3) { const [g, p] = choisir(rng, DEUX_PAS_P5); return questionP5(degre, ecrit, MILLE, g, p, {sorte: "rel"}); }
+      const [g, p] = choisir(rng, UN_PAS_P5);
+      return degre === 1 ? questionP5(degre, ecrit, MILLE, g, p, {sorte: "rel"}) : questionP5(degre, ecrit, MILLE, p, g, {sorte: "rel"});
+    }
+    // « conv » : d1, un entier vers la petite unité (3 Go = 3 000 Mo) ;
+    // d2, une virgule vers la petite (1,5 Go), ou un nombre rond vers la
+    // grande (2 500 Mo = 2,5 Go) ; d3, vers la grande sans nombre rond
+    // (350 nm = 0,35 µm ; 80 µm = 0,08 mm), ou deux pas (2 Go = 2 000 000 ko).
+    const [g, p] = choisir(rng, UN_PAS_P5);
+    if (degre === 1) return questionP5(degre, ecrit, BigInt(entre(rng, 2, 9)) * MILLE, g, p);
+    if (degre === 2) {
+      if (rng() < 0.5) return questionP5(degre, ecrit, BigInt(entre(rng, 11, 95)) * 100n, g, p);
+      return questionP5(degre, ecrit, BigInt(entre(rng, 2, 9)) * 500n * MILLE + (rng() < 0.4 ? 0n : 0n), p, g);
+    }
+    if (rng() < 0.25) {
+      const [G2, P2] = choisir(rng, DEUX_PAS_P5);
+      return questionP5(degre, ecrit, BigInt(entre(rng, 2, 9)) * MILLE, G2, P2);
+    }
+    const n = BigInt(choisir(rng, [entre(rng, 11, 99) * 10, entre(rng, 2, 9) * 10, entre(rng, 101, 999)]));
+    return questionP5(degre, ecrit, n * MILLE, p, g);
+  }
+  // (« 1 000 ng = … µg » est une relation : pas dans « conv ».)
+  function tirerP5Conv(rng, degre, sorte) {
+    const x = tirerP5Brut(rng, degre, sorte);
+    return x && sorte === "conv" && x.reponse === "1" ? null : x;
+  }
+  const SORTES_P5 = {1: ["sens", "rel", "conv"], 2: ["rel", "conv", "choix", "situation", "associer"], 3: ["rel", "conv", "comparer", "situation", "pb"]};
+  const PLACES_P5 = {
+    valide: ["sens", "rel", "conv", "rel", "choix", "conv", "situation", "comparer", "conv", "pb|associer"],
+    entraine: ["sens", "rel", "conv", "rel", "conv", "sens",
+      "conv", "choix", "situation", "conv", "associer", "rel", "situation", "choix", "conv",
+      "conv", "comparer", "pb", "rel", "situation", "comparer", "conv", "pb", "associer", "conv"],
+    test: ["conv", "comparer|pb", "conv", "situation"],
+    aide: ["rel", "conv", "conv"],
+    retour: ["conv", "situation|choix"],
+    echauffement: ["conv"]
+  };
+  // Les erreurs de P5 au pavé : celles des relations (le sens, le nombre
+  // gardé, un zéro), plus deux pas au lieu d'un, et 1 024.
+  function erreursP5(question, lu) {
+    const d = question.donnees;
+    if (!d) return null;
+    if (d.type === "pb-p5") {
+      const a = milli(d.a);
+      const b = milli(d.b);
+      if (d.op === "div" && b && (a * MILLE) % b === 0n && lu === (a * MILLE) / b) return {erreur: 6, retour: "J'écris d'abord la même unité."};
+      if (d.op === "plus" && lu === a + b) return {erreur: 6, retour: "J'écris d'abord la même unité."};
+      return null;
+    }
+    if (d.type !== "conv") return null;
+    const v = milli(d.valeur);
+    const attendu = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    if (bas && lu === attendu * 1000n) return {erreur: 2, retour: "Un seul pas : × 1 000."};
+    if (!bas && lu * 1000n === attendu) return {erreur: 2, retour: "Un seul pas : ÷ 1 000."};
+    // (Le nombre gardé : une phrase courte, une ligne au petit téléphone.)
+    if (lu === v) return {erreur: 4, retour: CARTE.typo(bas ? "Le nombre change : × 1 000." : "Le nombre change : ÷ 1 000.")};
+    // (Deux pas : « 7 m = … µm », 0,007 tapé.)
+    if (bas && lu < v) return {erreur: 1, retour: "Tu as divisé. Vers une unité plus petite, je multiplie."};
+    if (!bas && lu > v) return {erreur: 3, retour: "Tu as multiplié. Vers une unité plus grande, je divise."};
+    if (bas && ["Go", "Mo", "ko"].includes(d.de) && lu === v * 1024n) return {erreur: 2, retour: `Ici, 1${NB}${d.de} = 1${FINE}000${NB}${d.vers}.`};
+    return erreursRel(question, lu);
+  }
+  ETAPES.P5 = {
+    // On te montre : 1 Go = 1 000 Mo, 1 µm = 1 000 nm, 1,5 Go = 1 500 Mo
+    // (le brevet).
+    clesExemples: ["P5:1000Go>Mo", "P5:1000µm>nm", "P5:1500Go>Mo"],
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, SORTES_P5[degre]);
+      for (let essai = 0; essai < 30; essai += 1) {
+        const x = tirerP5Conv(rng, degre, sorte);
+        if (x) return x;
+      }
+      return null;
+    },
+    formes(usage, rng) {
+      const p = PLACES_P5[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // Dans Je valide : une même relation, une même situation, une fois ;
+    // ailleurs, pas deux fois la même relation à trois questions près.
+    accepte(serie, question, usage) {
+      if (question.modeleP5 && (usage === "valide" || usage === "test") && serie.some(x => x.modeleP5 === question.modeleP5)) return false;
+      return uneRelationUneFois(serie, question, usage);
+    },
+    // Dans Je valide : les octets et une autre grandeur au moins.
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const g = new Set(serie.map(x => x.grandeur).filter(Boolean));
+      return g.has("octet") && g.size >= 3;
+    },
+    erreurs(question, lu) { return erreursP5(question, lu); }
+  };
+
+  // P6 · Les préfixes en puissances de 10 (3e). Attendus de 4e : 3 µL =
+  // 3 × 10⁻⁶ L, 7 Mm = 7 × 10⁶ m ; S097 p. 17 : 1 200 = 1,2 × 10³ ; p. 20 :
+  // l'électron et le proton ; repères de 3e : 1 m³ = (10² cm)³ = 10⁶ cm³.
+  // Choix de Gwenaël du 21/11 : l'outil est la bande des 7 préfixes par
+  // 1 000 avec leur puissance de 10 ; l'exposant s'écrit dans une case
+  // levée au-dessus du 10, et le pavé a « − » à la place de la virgule.
+  const SUP = {"-": "⁻", 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹"};
+  const puiss = e => `10${String(e).split("").map(c => SUP[c]).join("")}`;
+  const moins = e => (e < 0 ? `−${-e}` : String(e));
+  const BASES_P6 = {m: ["Mm", "km", "mm", "µm", "nm"], g: ["kg", "mg", "µg", "ng"], L: ["mL", "µL"], o: ["Go", "Mo", "ko"], W: ["GW", "MW", "kW"]};
+  const BASE_DE = {};
+  Object.entries(BASES_P6).forEach(([b, l]) => l.forEach(u => { BASE_DE[u] = b; }));
+  const prefDe = u => PREFIXE_GN[u.slice(0, u.length - BASE_DE[u].length)];
+  // La bande de l'outil : la base, les préfixes marqués.
+  const bandeP6 = (base, marque, extra = {}) => Object.assign({base, marque}, extra);
+  const IMAGE_P6 = CARTE.typo("D'une case à l'autre : × 10³.");
+
+  // « 1 µm = 10^… m » ; « 3 µL = 3 × 10^… L » ; « 1 km = 10^… mm ».
+  function puissP6(degre, n, u, vers, sorte) {
+    const e = exposant(u) - exposant(vers);
+    const avant = n === 1 ? `1${NB}${u} =` : `${ecrire(milli(n))}${NB}${u} = ${ecrire(milli(n))}${NB}×`;
+    const reponseTexte = `${n === 1 ? "" : `${ecrire(milli(n))}${NB}×${NB}`}${puiss(e)}${NB}${vers}`;
+    const resume = `${n === 1 ? `1${NB}${u}` : `${ecrire(milli(n))}${NB}${u}`} = ${reponseTexte}`;
+    const deuxPref = Boolean(BASE_DE[vers]);
+    const marque = [u, vers].filter(x => BASE_DE[x] && BASE_DE[x] !== x).map(x => prefDe(x).sym);
+    const base = BASE_DE[u];
+    const e1 = deuxPref ? exposant(u) - exposant(base) : e;
+    const l1 = deuxPref ? `1${NB}${u} = ${puiss(e1)}${NB}${base} = ${puiss(e)}${NB}${vers}` : `1${NB}${u} = ${puiss(e)}${NB}${vers}`;
+    const lignes = n === 1 ? [l1] : [l1, `donc ${resume}`];
+    return q({
+      code: "P6", degre, forme: "exposant", texte: `${avant} 10^${CASE} ${vers}`, morceaux: {avant, apres: vers, exposant: true},
+      reponse: moins(e), reponseTexte: n === 1 ? `${puiss(e)}${NB}${vers}` : reponseTexte, unite: vers, resume,
+      outil: "bande-p", bandeP: bandeP6(base, marque), image: [IMAGE_P6],
+      correction: lignes, ligneP6: lignes[lignes.length - 1], vertP6: n === 1 ? `${puiss(e)}${NB}${vers}` : reponseTexte, lignesAvantP6: lignes.slice(0, -1),
+      grandeur: grandeurDe(u), relationCle: `p6:${u}-${vers}`, sorteP6: sorte,
+      donnees: {type: "exposant", n: String(n), de: u, vers, sorte}, cle: `P6:${sorte}:${n}${u}>${vers}`
+    });
+  }
+  // « 5 µm = … m » : 5 × 10⁻⁶ m, 5 × 10⁶ m ou 5 × 10⁻³ m (le sens, le
+  // préfixe voisin).
+  const NOM_E = {9: "giga", 6: "méga", 3: "kilo", "-3": "milli", "-6": "micro", "-9": "nano"};
+  function ecritureP6(degre, n, u, rng) {
+    const base = BASE_DE[u];
+    const e = exposant(u) - exposant(base);
+    const voisin = e > 0 ? (e === 3 ? 6 : e - 3) : (e === -3 ? -6 : e + 3);
+    const es = melanger(rng, [e, -e, voisin]);
+    const t = x => `${ecrire(milli(n))}${NB}×${NB}${puiss(x)}${NB}${base}`;
+    const choix = es.map(t);
+    const bon = es.indexOf(e);
+    const pourquoi = {};
+    es.forEach((x, k) => { if (k !== bon) pourquoi[k] = `${puiss(x)}, c'est ${NOM_E[x]}.`; });
+    const phrase = `${ecrire(milli(n))}${NB}${u} = ${CASE}`;
+    const ligne = `1${NB}${u} = ${puiss(e)}${NB}${base}, donc ${ecrire(milli(n))}${NB}${u} = ${t(e)}`;
+    return q({
+      code: "P6", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "puissances"}, choix, bon, pourquoi,
+      reponse: choix[bon], reponseTexte: choix[bon], unite: null, resume: `${ecrire(milli(n))}${NB}${u} = ${choix[bon]}`,
+      outil: "bande-p", bandeP: bandeP6(base, [prefDe(u).sym]), image: [IMAGE_P6],
+      correction: [ligne], ligneP6: ligne, vertP6: t(e), grandeur: grandeurDe(u), relationCle: `p6:${u}-${base}`, sorteP6: "ecriture",
+      donnees: {type: "ecriture-p6", n: String(n), de: u, e}, cle: `P6:ecr:${n}${u}`
+    });
+  }
+  // « 10⁻⁶ m = 1 … » : µm, mm ou nm.
+  function prefixeP6(degre, u, rng) {
+    const base = BASE_DE[u];
+    const autres = BASES_P6[base].filter(x => x !== u);
+    const voisins = autres.sort((a, b) => Math.abs(exposant(a) - exposant(u)) - Math.abs(exposant(b) - exposant(u))).slice(0, 2);
+    if (voisins.length < 2) return null;
+    const choix = melanger(rng, [u, ...voisins]);
+    const e = exposant(u) - exposant(base);
+    const bon = choix.indexOf(u);
+    const pourquoi = {};
+    choix.forEach((x, k) => { if (k !== bon) pourquoi[k] = `1${NB}${x} = ${puiss(exposant(x) - exposant(base))}${NB}${base}.`; });
+    const phrase = `${puiss(e)}${NB}${base} = 1${NB}${CASE}`;
+    const ligne = `${prefDe(u).nom} : ${puiss(e)}, donc ${puiss(e)}${NB}${base} = 1${NB}${u}`;
+    return q({
+      code: "P6", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "unites"}, choix, bon, pourquoi,
+      reponse: u, reponseTexte: `1${NB}${u}`, unite: null, resume: `${puiss(e)}${NB}${base} = 1${NB}${u}`,
+      outil: "bande-p", bandeP: bandeP6(base, []), image: [IMAGE_P6],
+      correction: [ligne], ligneP6: ligne, vertP6: `1${NB}${u}`, grandeur: grandeurDe(u), relationCle: `p6:${u}-${base}`, sorteP6: "prefixe",
+      donnees: {type: "prefixe-p6", de: u, e}, cle: `P6:pref:${u}`
+    });
+  }
+  // « 1 200 m = 1,2 × 10^… m » (S097 p. 17) ; des grandeurs vraies de La
+  // Réunion et de l'espace. [énoncé ou null, valeur, mantisse, exposant, unité]
+  // (L'énoncé dit ce qu'on mesure ; le nombre est sur la ligne de la case.)
+  const GRANDS_P6 = [
+    ["L'altitude du Piton de la Fournaise :", "2632", "2,632", 3, "m"],
+    ["L'altitude du Piton des Neiges :", "3070", "3,07", 3, "m"],
+    ["L'aire de La Réunion, environ :", "2500", "2,5", 3, "km²"],
+    ["Du Soleil à la Terre, environ :", "150000000", "1,5", 8, "km"],
+    ["De la Terre à la Lune, environ :", "384000", "3,84", 5, "km"],
+    ["Le tour de La Réunion, environ :", "210", "2,1", 2, "km"]
+  ];
+  const MANTISSES_P6 = ["1,2", "2,5", "4,5", "3,6", "7,2", "1,25", "6,4"];
+  function grandP6(degre, rng) {
+    let enonce = null;
+    let v;
+    let m;
+    let e;
+    let u;
+    if (degre === 3 || rng() < 0.35) {
+      const [t, vv, mm, ee, uu] = choisir(rng, GRANDS_P6);
+      [v, m, e, u] = [vv, mm, ee, uu];
+      enonce = t.replace(/ :$/, `${NB}:`);
+    } else {
+      m = choisir(rng, MANTISSES_P6);
+      e = degre === 1 ? 3 : choisir(rng, [3, 4, 5]);
+      u = choisir(rng, ["m", "g", "L"]);
+      const [ent, dec = ""] = m.split(",");
+      v = (ent + dec).padEnd(ent.length + e, "0");
+    }
+    const V = `${ecrire(milli(v))}${NB}${u}`;
+    const avant = `${V} = ${m}${NB}×`;
+    const resume = `${V} = ${m}${NB}×${NB}${puiss(e)}${NB}${u}`;
+    const zeros = (v.match(/0+$/) || [""])[0].length;
+    const lignes = [`${ecrire(milli(v))} = ${m} × ${ecrire(milli(String(10 ** e)))}`, `donc ${resume}`];
+    return q({
+      code: "P6", degre, forme: "exposant", texte: `${enonce ? `${enonce} ` : ""}${avant} 10^${CASE} ${u}`,
+      morceaux: Object.assign({avant, apres: u, exposant: true}, enonce ? {enonce, serre: true} : {}),
+      reponse: moins(e), reponseTexte: `${m}${NB}×${NB}${puiss(e)}${NB}${u}`, unite: u, resume,
+      outil: "lignes", outilLignes: ["10² = 100 ; 10³ = 1 000", "10⁶ = 1 000 000"].map(CARTE.typo), noteOutil: "Je compte les rangs de la virgule.",
+      image: ["Je compte les rangs de la virgule."],
+      correction: lignes, ligneP6: resume, vertP6: `${m}${NB}×${NB}${puiss(e)}${NB}${u}`, lignesAvantP6: [lignes[0]],
+      grandeur: null, sorteP6: "grand", modeleP6: enonce ? `g:${v}` : null, zerosP6: zeros,
+      donnees: {type: "exposant", sorte: "grand", v, m, e}, cle: `P6:g:${v}${u}`
+    });
+  }
+  // Comparer (degré 3) : une mesure avec un préfixe et une en puissance de
+  // 10 (le plus grand nombre n'est pas la plus grande) ; l'électron et le
+  // proton (S097 p. 20).
+  const CMP_P6 = {m: "Quelle longueur est la plus grande ?", g: "Quelle masse est la plus grande ?", o: "Quel fichier est le plus gros ?"};
+  function comparerP6(degre, rng) {
+    if (rng() < 0.25) {
+      const enonce = `Électron : 9,1${NB}×${NB}10⁻³¹${NB}kg. Proton : 1,7${NB}×${NB}10⁻²⁷${NB}kg.`;
+      const consigne = `Le plus lourd${NB}?`;
+      const choix = melanger(rng, ["L'électron", "Le proton"]);
+      const bon = choix.indexOf("Le proton");
+      return q({
+        code: "P6", degre, forme: "qcm", texte: `${enonce} ${consigne}`, morceaux: {enonce, consigne, serre: true, sorte: "comparer"}, choix, bon,
+        pourquoi: {[1 - bon]: "10⁻³¹ est plus petit que 10⁻²⁷."}, reponse: "Le proton", reponseTexte: "Le proton", unite: null,
+        resume: "Le plus lourd : le proton", outil: "lignes", outilLignes: ["Les deux en kg : je compare", "les exposants, −31 et −27."],
+        image: ["Je compare d'abord les exposants."],
+        correction: ["10⁻²⁷ > 10⁻³¹", "Le plus lourd : le proton"], ligneP6: "Le plus lourd : le proton", vertP6: "le proton",
+        lignesAvantP6: ["10⁻²⁷ > 10⁻³¹"], grandeur: "masse", sorteP6: "comparer", modeleP6: "electron",
+        donnees: {type: "comparer-p6", electron: true}, cle: "P6:cmp:electron"
+      });
+    }
+    const base = choisir(rng, ["m", "m", "g", "o"]);
+    const u = choisir(rng, BASES_P6[base].filter(x => x !== "Mm"));
+    const e = exposant(u) - exposant(base);
+    const na = entre(rng, 2, 9);
+    const nb = entre(rng, 2, 9);
+    if (na === nb) return null;
+    // L'autre en puissance de 10 : 3 crans de plus ou de moins ; le plus
+    // grand nombre est du côté de la plus petite mesure.
+    const eb = rng() < 0.5 ? e - 3 : e + 3;
+    if (Math.abs(eb) > 9 || eb === 0) return null;
+    const A = `${na}${NB}${u}`;
+    const B = `${nb}${NB}×${NB}${puiss(eb)}${NB}${base}`;
+    const aGrand = e > eb;
+    if ((aGrand && na > nb) || (!aGrand && nb > na)) return null;
+    const choix = melanger(rng, [A, B]);
+    const grand = aGrand ? A : B;
+    const bon = choix.indexOf(grand);
+    const ligneA = `${A} = ${na}${NB}×${NB}${puiss(e)}${NB}${base}`;
+    const phrase = CMP_P6[base].replace(" ?", `${NB}?`);
+    return q({
+      code: "P6", degre, forme: "qcm", texte: `${phrase} ${choix.join(" ou ")}`, morceaux: {phrase, apres: "", sorte: "comparer-mes"}, choix, bon,
+      pourquoi: {[1 - bon]: `${puiss(Math.max(e, eb))} est plus grand que ${puiss(Math.min(e, eb))}.`},
+      reponse: grand, reponseTexte: grand, unite: null, resume: `${ligneA}${NB}; ${base === "o" ? "le plus gros" : "la plus grande"} : ${grand}`,
+      outil: "bande-p", bandeP: bandeP6(base, [prefDe(u).sym]), image: ["Je compare d'abord les exposants."],
+      correction: [ligneA, `${base === "o" ? "Le plus gros" : "La plus grande"} : ${grand}`], ligneP6: `${base === "o" ? "Le plus gros" : "La plus grande"} : ${grand}`, vertP6: grand, lignesAvantP6: [ligneA],
+      grandeur: grandeurDe(u), relationCle: `p6:${u}-${base}`, sorteP6: "comparer",
+      donnees: {type: "comparer-p6", na, u, nb, eb, base}, cle: `P6:cmp:${na}${u}:${nb}e${eb}`
+    });
+  }
+  // Les aires et les volumes en puissances de 10 (repères de 3e : 1 m =
+  // 10² cm, donc 1 m³ = (10² cm)³ = 10⁶ cm³). [de, vers, la relation des
+  // longueurs, exposant de la longueur, 2 ou 3]
+  const VOLUMES_P6 = [["m³", "cm³", "1 m = 10² cm", 2, 3], ["m³", "dm³", "1 m = 10¹ dm", 1, 3], ["dm³", "m³", "1 dm = 10⁻¹ m", -1, 3],
+    ["cm³", "m³", "1 cm = 10⁻² m", -2, 3], ["m²", "cm²", "1 m = 10² cm", 2, 2], ["km²", "m²", "1 km = 10³ m", 3, 2]];
+  function volumeP6(degre, rng) {
+    const [de, vers, rel, k, d] = choisir(rng, VOLUMES_P6);
+    const e = k * d;
+    const p = puiss(k);
+    const produit = `${Array(d).fill(p).join(" × ")}${NB}${vers}`;
+    const resume = `1${NB}${de} = ${puiss(e)}${NB}${vers}`;
+    const lignes = [`1${NB}${de} = ${produit}`, `= ${puiss(e)}${NB}${vers}`];
+    return q({
+      code: "P6", degre, forme: "exposant", texte: `1${NB}${de} = 10^${CASE} ${vers}`, morceaux: {avant: `1${NB}${de} =`, apres: vers, exposant: true},
+      reponse: moins(e), reponseTexte: `${puiss(e)}${NB}${vers}`, unite: vers, resume,
+      outil: "lignes", outilLignes: [rel.replace(/ /g, NB).replace(`${NB}=${NB}`, " = "), `1${NB}${de} = ${produit}`], noteOutil: "J'ajoute les exposants.",
+      image: [rel.replace(/ /g, NB).replace(`${NB}=${NB}`, " = ")],
+      correction: lignes, ligneP6: resume, vertP6: `${puiss(e)}${NB}${vers}`, lignesAvantP6: [lignes[0]],
+      grandeur: d === 3 ? "volume" : "aire", relationCle: `p6:${de}-${vers}`, sorteP6: "volume", dimP6: d, kP6: k,
+      donnees: {type: "exposant", sorte: "volume", de, vers, e}, cle: `P6:v:${de}>${vers}`
+    });
+  }
+  const UNITES_P6 = {1: ["km", "mm", "kg", "mg", "mL", "ko", "kW", "Mo", "µm"], 2: ["Mm", "km", "mm", "µm", "nm", "kg", "mg", "µg", "ng", "mL", "µL", "Go", "Mo", "ko", "GW", "MW", "kW"]};
+  const DEUX_PREF_P6 = [["km", "mm"], ["mm", "km"], ["µm", "mm"], ["nm", "µm"], ["mm", "µm"], ["Go", "ko"], ["ko", "Mo"], ["mg", "µg"], ["ng", "µg"], ["MW", "kW"], ["km", "µm"]];
+  function tirerP6Brut(rng, degre, sorte) {
+    const u = choisir(rng, UNITES_P6[degre === 1 ? 1 : 2]);
+    if (sorte === "puiss") {
+      if (degre === 3) { const [a, b] = choisir(rng, DEUX_PREF_P6); return puissP6(degre, 1, a, b, "puiss"); }
+      return puissP6(degre, 1, u, BASE_DE[u], "puiss");
+    }
+    if (sorte === "mantisse") {
+      const n = entre(rng, 2, 9);
+      if (degre === 3 && rng() < 0.5) { const [a, b] = choisir(rng, DEUX_PREF_P6.filter(([x]) => x !== "km" || true)); return puissP6(degre, n, a, b, "mantisse"); }
+      return puissP6(degre, n, u, BASE_DE[u], "mantisse");
+    }
+    if (sorte === "ecriture") return ecritureP6(degre, entre(rng, 2, 9), u, rng);
+    if (sorte === "prefixe") return prefixeP6(degre, u, rng);
+    if (sorte === "grand") return grandP6(degre, rng);
+    if (sorte === "comparer") return comparerP6(degre, rng);
+    if (sorte === "volume") return volumeP6(degre, rng);
+    return null;
+  }
+  const SORTES_P6 = {1: ["puiss", "prefixe", "ecriture"], 2: ["puiss", "mantisse", "grand", "prefixe", "ecriture"], 3: ["puiss", "mantisse", "comparer", "volume", "grand"]};
+  const PLACES_P6 = {
+    valide: ["puiss", "puiss", "prefixe", "puiss", "mantisse", "ecriture", "grand", "mantisse", "comparer", "volume|puiss"],
+    entraine: ["puiss", "puiss", "prefixe", "puiss", "ecriture", "puiss",
+      "puiss", "mantisse", "grand", "prefixe", "puiss", "ecriture", "mantisse", "grand", "puiss",
+      "puiss", "comparer", "mantisse", "volume", "grand", "puiss", "comparer", "mantisse", "volume", "puiss"],
+    test: ["mantisse", "comparer|volume", "puiss", "grand"],
+    aide: ["puiss", "mantisse", "puiss"],
+    retour: ["puiss|mantisse", "ecriture|grand"],
+    echauffement: ["puiss"]
+  };
+  // Le pourquoi d'un exposant faux (une ligne au petit téléphone) : le
+  // signe, un cran au lieu de trois, un seul des deux préfixes, les zéros
+  // comptés au lieu des rangs, le carré ou le cube oublié.
+  function erreursP6(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "exposant") return null;
+    const e = Number(question.reponse.replace("−", "-"));
+    if (d.sorte === "grand") {
+      if (lu === -e) return {erreur: 1, retour: "Grand nombre : pas de signe −."};
+      if (lu === question.zerosP6 && lu !== e && lu > 0 && lu < 5) return {erreur: 4, retour: `${d.m} × ${puiss(lu)} = ${ecrire(milli(d.m) * 10n ** BigInt(lu))}.`};
+      return null;
+    }
+    if (d.sorte === "volume") {
+      if (lu === -e) return {erreur: 1, retour: `1${NB}${d.de} est plus ${e > 0 ? "grand" : "petit"} que 1${NB}${d.vers}.`};
+      if (lu === question.kP6) return {erreur: 4, retour: question.dimP6 === 3 ? "Un cube : l'exposant × 3." : "Un carré : l'exposant × 2."};
+      return null;
+    }
+    if (lu === -e && e !== 0) return {erreur: 1, retour: `1${NB}${d.de} est plus ${e > 0 ? "grand" : "petit"} que 1${NB}${d.vers}.`};
+    if (e % 3 === 0 && lu * 3 === e) return {erreur: 2, retour: `Chaque case : × 10³, pas × 10.`};
+    if (BASE_DE[d.vers] !== d.vers && BASE_DE[d.de]) {
+      const b = BASE_DE[d.de];
+      if (lu === exposant(d.de) - exposant(b) || lu === exposant(b) - exposant(d.vers)) return {erreur: 3, retour: `De ${d.de} à ${b}, puis de ${b} à ${d.vers}.`};
+    }
+    return null;
+  }
+  ETAPES.P6 = {
+    // On te montre : 1 km = 10³ m, 1 nm = 10⁻⁹ m, 3 µL = 3 × 10⁻⁶ L.
+    clesExemples: ["P6:puiss:1km>m", "P6:puiss:1nm>m", "P6:mantisse:3µL>L"],
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, SORTES_P6[degre]);
+      for (let essai = 0; essai < 30; essai += 1) {
+        const x = tirerP6Brut(rng, degre, sorte);
+        if (x) return x;
+      }
+      return null;
+    },
+    formes(usage, rng) {
+      const p = PLACES_P6[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    accepte(serie, question, usage) {
+      if (question.modeleP6 && (usage === "valide" || usage === "test") && serie.some(x => x.modeleP6 === question.modeleP6)) return false;
+      return uneRelationUneFois(serie, question, usage);
+    },
+    // Dans Je valide : des exposants positifs et négatifs.
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const ex = serie.filter(x => x.forme === "exposant").map(x => x.reponse);
+      return ex.some(r => r.startsWith("−")) && ex.some(r => !r.startsWith("−"));
+    },
+    erreurs(question, lu) { return erreursP6(question, lu); }
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -7094,6 +7815,15 @@
       return {juste: false, erreur: faux !== undefined ? 9 : 10, retour: retour ? CARTE.typo(retour) : null};
     }
     const etape = ETAPES[question.code];
+    // Lot B6-2 (P6) : un exposant, un entier peut-être négatif (« −6 »).
+    if (question.forme === "exposant") {
+      const t = String(saisie == null ? "" : saisie).replace(/\s/g, "").replace(/^[−-]/, "-");
+      if (!/^-?\d{1,2}$/.test(t)) return {juste: false, erreur: null, retour: null};
+      const lu = Number(t);
+      if (lu === Number(question.reponse.replace("−", "-"))) return {juste: true, erreur: null, retour: null};
+      const e = etape && etape.erreurs ? etape.erreurs(question, lu) : null;
+      return {juste: false, erreur: e ? e.erreur : null, retour: e ? CARTE.typo(e.retour) : null};
+    }
     if (question.forme === "deux-cases") {
       const lus = (Array.isArray(saisie) ? saisie : []).map(lireMilli);
       const attendus = question.reponse.map(milli);
@@ -7119,7 +7849,7 @@
   // (vers la grande aussi, multiplié : 3).
   // Lot B2-1 : C3 et C4, dans les deux sens ; C5 (B2-1b) : les conversions
   // officielles (1 600 m = … km), seulement.
-  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3], C5: [1, 3]};
+  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3], C5: [1, 3], P5: [1, 3]};
   // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
   function erreurDeSens(question, tape) {
     if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") return false;
@@ -7217,6 +7947,9 @@
     COLONNES_CM1,
     HORS_CYCLE_2,
     PREFIXES,
+    // lot B6-2 (P5, P6) : de nano à giga, les puissances de 10
+    PREFIXES_GN,
+    puissanceTexte: puiss,
     PRENOMS,
     OBJETS,
     OBJETS_UNITE,
