@@ -392,11 +392,17 @@ async function controler(page, taille) {
 async function places(page) {
   return page.evaluate(() => {
     const r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(Math.round); };
-    return {question: r(".q"), zone: r(".zone"), "pavé": r(".bas"), bouton: r("#cadre .duo, #cadre .btn"), "je ne sais pas": r("#cadre .jnsp")};
+    // (Lot B3-1c, remarque de Gwenaël : au choix, sans « Valider », « Je ne
+    // sais pas » est au milieu ; avec le pavé, à gauche de « Valider ». Sa
+    // place se compare entre deux questions de la même sorte.)
+    const j = r("#cadre .jnsp");
+    const seul = Boolean(document.querySelector("#cadre .duo-jnsp.jnsp-seul"));
+    return {question: r(".q"), zone: r(".zone"), "pavé": r(".bas"), bouton: r("#cadre .duo, #cadre .btn"), "je ne sais pas": j && [seul ? "milieu" : "gauche"].concat(j)};
   });
 }
 function ecarts(a, b) {
-  return Object.keys(a).filter(k => JSON.stringify(a[k]) !== JSON.stringify(b[k])).map(k => `« ${k} » a bougé${process.env.DEFI_CONVERSIONS_DETAIL ? ` ${JSON.stringify(a[k])}→${JSON.stringify(b[k])}` : ""}`);
+  const memeSorte = k => k !== "je ne sais pas" || !a[k] || !b[k] || a[k][0] === b[k][0];
+  return Object.keys(a).filter(k => memeSorte(k) && JSON.stringify(a[k]) !== JSON.stringify(b[k])).map(k => `« ${k} » a bougé${process.env.DEFI_CONVERSIONS_DETAIL ? ` ${JSON.stringify(a[k])}→${JSON.stringify(b[k])}` : ""}`);
 }
 
 // ------------------------------------------------------------ jouer
@@ -599,7 +605,18 @@ async function faireLeGeste(page, aide) {
       await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v", "bande-p", "tableau-p"].includes(aide.type)) {
+    } else if (aide.type === "arrondis") {
+      // Lot B3-1 (R7) : une ligne des arrondis, touchée par son arrondi (la
+      // ligne elle-même n'a pas de boîte).
+      const a = page.locator(".zone .ar.a-toucher > .r");
+      if (!(await a.count())) return ["rien à toucher dans « arrondis »"];
+      await appuyer(page, a.first());
+    } else if (aide.type === "perim-aire") {
+      // Lot B3-1 (R9) : le bon jardin, comme un élève qui a compris.
+      const a = page.locator(`.zone .pa-fig.a-toucher[data-cle="${aide.bonne}"]`);
+      if (!(await a.count())) return ["pas de jardin à toucher"];
+      await appuyer(page, a.first());
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v", "bande-p", "tableau-p", "reporte"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");

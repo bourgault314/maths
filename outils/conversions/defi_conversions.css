@@ -851,6 +851,12 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .acc-palier .etoiles { color: #8a5a00; white-space: nowrap; }
 /* « Je ne sais pas » : à gauche de Valider, discret, à la même place partout. */
 .duo-jnsp { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+/* (Lot B3-1c, remarque de Gwenaël : une question au choix n'a pas de
+   « Valider » ; « Je ne sais pas » au milieu, sous les réponses. La rangée
+   garde sa place ; « Suivant », dans la même case, n'apparaît qu'une fois
+   « Je ne sais pas » caché.) */
+.duo-jnsp.jnsp-seul > .jnsp { grid-row: 1; grid-column: 1 / -1; justify-self: center; width: calc((100% - .5rem) * .4); }
+.duo-jnsp.jnsp-seul > .action { grid-row: 1; grid-column: 2; }
 .btn.jnsp { color: var(--muted); border-color: #d4e3ed; font-size: .9375rem; font-weight: 800; white-space: nowrap; padding-left: .25rem; padding-right: .25rem; }
 /* Je valide, Je me souviens, Avant de partir : ce qu'il y a à dire, au
    milieu d'une zone qui a déjà la hauteur de la correction. */
@@ -1236,3 +1242,62 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .lettres .titre { flex-basis: 100%; text-align: center; font-size: .75rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: #8a5a00; }
 .lettres .paire { display: inline-flex; align-items: baseline; gap: .25rem; border: .125rem solid #f2c94c; background: #fff; border-radius: .5rem; padding: .125rem .4375rem; font-size: .9375rem; font-weight: 700; white-space: nowrap; }
 .lettres .paire b { font-size: 1.125rem; font-weight: 900; color: var(--blue); }
+
+/* ------------------------------------------- lot B3-1 (R7, R9 : les repères du CM2)
+   Le repère reporté : le dessin (repères, traits, objet) ; le nom de l'objet
+   et la note en HTML dessous (une police large ne les fait pas sortir). */
+.reporte-boite { gap: .125rem; }
+.zone .dessin.reporte { max-height: min(6.75rem, 17vh); }
+.reponse-bonne .dessin.reporte { max-height: min(5.75rem, 14vh); }
+.dessin.reporte.a-toucher { cursor: pointer; }
+.reporte-boite .rep-nom { align-self: flex-start; font-weight: 900; font-size: 1.0625rem; padding-left: 4%; }
+.reporte-boite .rep-nom .rep-q { color: var(--red); }
+.reporte-boite .rep-nom .rep-v { color: var(--green); }
+/* Les arrondis : un nombre, la flèche, son arrondi (jamais le résultat). */
+.arrondis { display: grid; grid-template-columns: max-content max-content max-content; column-gap: .5rem; row-gap: .0625rem; justify-content: center;
+  font-weight: 900; font-size: 1.25rem; line-height: 1.3; }
+.arrondis .ar { display: contents; }
+.arrondis .a { text-align: right; white-space: nowrap; }
+.arrondis .f { color: var(--muted); }
+.arrondis .r { color: var(--blue); white-space: nowrap; }
+.arrondis .r.ar-q { color: var(--red); position: relative; }
+.arrondis .r.ar-q .ar-v { visibility: hidden; }
+.arrondis .r.ar-q .ar-qm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.arrondis .ar.a-toucher > span { cursor: pointer; }
+.arrondis .ar.a-toucher .r { outline: .1875rem dashed #9bc0e6; outline-offset: .0625rem; border-radius: .25rem; padding: 0 .25rem; }
+/* (On te montre : chaque ligne se touche, 40 px de haut au moins. Lot
+   B3-1c, vu en gros plan : les cadres pointillés de deux lignes se
+   touchaient et le « ? » restait en haut à gauche de son cadre.) */
+.arrondis.ar-montre { row-gap: .25rem; }
+.arrondis.ar-montre .ar > span { padding: .25rem 0; display: flex; align-items: center; border: .1875rem solid transparent; }
+.arrondis.ar-montre .ar > .a { justify-content: flex-end; }
+.arrondis.ar-montre .ar > .r { justify-content: center; padding: .25rem .5rem; border-radius: .375rem; }
+.arrondis.ar-montre .ar.a-toucher .r { outline: none; border: .1875rem dashed #9bc0e6; }
+.arrondis.ar-corr { font-size: 1.0625rem; line-height: 1.2; }
+/* Le périmètre et l'aire : deux dessins côte à côte, le mot en gras, son
+   sens en gris dessous. */
+.perim-aire { display: flex; gap: .75rem; justify-content: center; width: 100%; }
+.perim-aire .pa-fig { flex: 1 1 0; max-width: 10rem; display: flex; flex-direction: column; align-items: center; border-radius: .625rem; padding: .125rem .25rem; }
+.zone .perim-aire .dessin.pa { max-height: min(5.5rem, 13vh); }
+/* (Lot B3-1c : interligne 1,25 ; à 1,15, « le périmètre » et « le tour » se
+   chevauchaient en projection, vu par le robot.) */
+.perim-aire .pa-t { display: flex; flex-direction: column; align-items: center; line-height: 1.25; text-align: center; }
+.perim-aire .pa-t b { font-size: 1.0625rem; }
+.perim-aire .pa-t span { color: var(--muted); font-weight: 800; font-size: .9375rem; }
+.perim-aire .pa-fig.a-toucher { cursor: pointer; outline: .1875rem dashed #9bc0e6; outline-offset: -.125rem; }
+.perim-aire .pa-fig.bonne { background: var(--green-soft); outline: .1875rem solid var(--green); outline-offset: -.125rem; }
+.perim-aire .pa-fig.bonne b { color: var(--green); }
+.perim-aire .pa-fig.autre { opacity: .45; }
+.perim-aire.pa-corr .dessin.pa { max-height: min(4.5rem, 11vh); }
+.perim-aire .pa-fig { gap: .1875rem; }
+/* (Lot B3-1c : en projection, les deux jardins plus grands ; ils restaient
+   petits au milieu d'une grande zone.) */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .perim-aire .pa-fig { max-width: 15rem; }
+  .zone .perim-aire .dessin.pa { max-height: min(8rem, 18vh); }
+  .perim-aire.pa-corr .dessin.pa { max-height: min(6rem, 13vh); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .perim-aire .pa-fig.non { animation: pa-non .3s; }
+  @keyframes pa-non { 25% { transform: translateX(-.25rem); } 75% { transform: translateX(.25rem); } }
+}

@@ -132,11 +132,18 @@ async function dessinEntier(page, ou) {
 async function places(page) {
   return page.evaluate(() => {
     const r = s => { const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map(Math.round); };
-    return {q: r(".q"), zone: r(".zone"), bas: r(".bas"), case: r(".case"), bouton: r("#cadre > .btn, #cadre > .duo"), jnsp: r("#cadre .jnsp")};
+    // (Lot B3-1c : « Je ne sais pas » au milieu sans « Valider », à gauche
+    // avec : sa place se compare entre deux questions de la même sorte.)
+    const j = r("#cadre .jnsp");
+    const seul = Boolean(document.querySelector("#cadre .duo-jnsp.jnsp-seul"));
+    return {q: r(".q"), zone: r(".zone"), bas: r(".bas"), case: r(".case"), bouton: r("#cadre > .btn, #cadre > .duo"), jnsp: j && [seul ? "milieu" : "gauche"].concat(j)};
   });
 }
 function memesPlaces(a, b, ou) {
-  for (const k of ["q", "zone", "bas", "bouton", "jnsp"]) assert.deepEqual(b[k], a[k], `${ou} : « ${k} » a bougé`);
+  for (const k of ["q", "zone", "bas", "bouton", "jnsp"]) {
+    if (k === "jnsp" && a[k] && b[k] && a[k][0] !== b[k][0]) continue;
+    assert.deepEqual(b[k], a[k], `${ou} : « ${k} » a bougé`);
+  }
 }
 
 // La question à l'écran (lot 3a) : la page la donne.

@@ -205,6 +205,13 @@
       ["path", trait({d: "M24 15.5v2.5M36.5 28H34M24 40.5V38M11.5 28H14", fill: "none", "stroke-width": "1.8"})],
       ["path", {d: "M24 28V18.5", stroke: OR2, "stroke-width": "3.2", "stroke-linecap": "round"}],
       ["circle", {cx: "24", cy: "28", r: "2.6", fill: N}]],
+    // une aire (lot B3-1, R9) : une surface en carreaux, au modèle des
+    // instruments de R2 (même trait, mêmes couleurs)
+    aire: [["rect", trait({x: "7", y: "9", width: "34", height: "30", rx: "2", fill: BL})],
+      ["rect", {x: "8.2", y: "10.2", width: "9", height: "7.8", fill: TU}], ["rect", {x: "19.5", y: "10.2", width: "9", height: "7.8", fill: TU}],
+      ["rect", {x: "8.2", y: "20.2", width: "9", height: "7.8", fill: TU}],
+      ["path", trait({d: "M18.3 9v30M29.6 9v30M7 19h34M7 29h34", fill: "none", "stroke-width": "1.6"})],
+      ["rect", trait({x: "7", y: "9", width: "34", height: "30", rx: "2", fill: "none"})]],
     // à la prochaine séance
     calendrier: [["rect", trait({x: "6", y: "10", width: "36", height: "33", rx: "3.5", fill: BL})],
       ["path", trait({d: "M6 13.5A3.5 3.5 0 0 1 9.5 10h29a3.5 3.5 0 0 1 3.5 3.5V20H6z", fill: OR2})],
@@ -1410,7 +1417,7 @@
     // (Lot R1-refonte : les repères de « Mes premiers repères » d'abord.)
     dm: [["l15", "1 dm : la largeur de ma main"], ["l1", "1 dm : de 0 à 10 sur la règle"]],
     m: [["l13", "1 m : la hauteur de la poignée de porte"], ["l11", "1 m : un très grand pas"], ["l4", "une voiture : environ 4 m de long"]],
-    km: [["l14", "1 km : 10 terrains de foot bout à bout"], ["l5", "1 km : deux tours et demi de piste"], ["l7", "de Saint-Pierre à Saint-Denis : environ 80 km"]],
+    km: [["l14", "1 km : 10 terrains de foot bout à bout"], ["l5", "1 km : deux tours et demi de piste"], ["l7", "de Saint‑Pierre à Saint‑Denis : environ 80 km"]],
     mg: [["m1", "un grain de riz : environ 25 mg"], ["m7", "mg : pour les masses toutes petites"]],
     g: [["m7", "1 g : un trombone"], ["m3", "une pièce de 1 € : 7,5 g"]],
     kg: [["m8", "1 kg : un litre d'eau"], ["m4", "un paquet de riz : 1 kg"], ["m5", "un pack de 6 bouteilles d'eau : environ 9 kg"]],
@@ -1418,9 +1425,13 @@
     mL: [["c1", "une cuillère à café : 5 mL"], ["c5", "mL : pour les toutes petites quantités"]],
     cL: [["c5", "un verre : environ 20 cL"], ["c2", "une canette : 33 cL"]],
     dL: [["c3", "1 dL : le dixième d'une brique de lait"]],
-    L: [["c3", "une brique de lait : 1 L"], ["c7", "une bouteille d'eau : 1,5 L"], ["c6", "un grand arrosoir : 10 L"], ["c4", "un chauffe-eau solaire : environ 200 L"]]
+    L: [["c3", "une brique de lait : 1 L"], ["c7", "une bouteille d'eau : 1,5 L"], ["c6", "un grand arrosoir : 10 L"], ["c4", "un chauffe-eau solaire : environ 200 L"]],
+    // Lot B3-1 (R8) : les repères d'aire du CM2.
+    "cm²": [["a6", "1 cm² : l'ongle de mon pouce"], ["a1", "1 cm² : un carreau de 1 cm de côté"]],
+    "dm²": [["a7", "1 dm² : la paume de ma main"], ["a2", "une feuille A4 : environ 6 dm²"]],
+    "m²": [["a3", "1 m² : une affiche A0"], ["a4", "un terrain de foot : environ 7 000 m²"]]
   };
-  const ORDRE_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
+  const ORDRE_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"], aire: ["cm²", "dm²", "m²"]};
   // Les lignes de la liste des unités au palier 2 : [{unite, repere, texte}].
   function referencesUnites2(question) {
     const C = carte();
@@ -2336,7 +2347,7 @@
     const corps = el("tbody");
     corps.append(l1, l2);
     t.appendChild(corps);
-    t.setAttribute("aria-label", sup.type === "car" ? "L'horaire du Car Jaune" : "Les marées à Saint-Gilles");
+    t.setAttribute("aria-label", sup.type === "car" ? "L'horaire du Car Jaune" : "Les marées à Saint‑Gilles");
     return t;
   }
 
@@ -2360,14 +2371,19 @@
 
   // ------------------------------------------- ce qu'on mesure (R2)
   const GRANDEURS = [
-    ["longueur", "!regle", "une longueur : la règle, le mètre"],
+    // (Lot B3-1c : avec l'aire, cinq lignes ; chacune sur une ligne au petit
+    // Android avec une police large — le texte court, le dernier.)
+    ["longueur", "!regle", "une longueur : la règle, le mètre", "une longueur : la règle"],
     ["masse", "!balance", "une masse : la balance"],
     ["contenance", "!verreDoseur", "une contenance : le verre doseur"],
-    ["duree", "!chrono", "une durée : l'horloge, le chronomètre"]
+    ["duree", "!chrono", "une durée : l'horloge, le chronomètre", "une durée : le chronomètre"],
+    // (Lot B3-1 : au CM2, R9.)
+    ["aire", "!aire", "une aire : les carreaux"]
   ];
-  function grandeurs(zone, {bonne = null} = {}) {
+  function grandeurs(zone, {bonne = null, aire = false} = {}) {
     const liste = el("div", "refs");
-    GRANDEURS.forEach(([cle, vu, texte]) => {
+    GRANDEURS.filter(([cle]) => aire || cle !== "aire").forEach(([cle, vu, long, court]) => {
+      const texte = aire ? court || long : long;
       const ligne = el("div", `ref${cle === bonne ? " bonne" : ""}`);
       ligne.appendChild(visuel(vu));
       ligne.appendChild(el("span", "", carte().typo(texte)));
@@ -2947,6 +2963,161 @@
     return poser;
   }
 
+  // ======================================================= lot B3-1 (R7, R9)
+  // Le repère reporté (choix de Gwenaël du 21/11, R7) : le repère dessiné
+  // n fois bout à bout, une cote « ≈ 4 m » au-dessus du premier, un trait
+  // entre deux repères qui descend jusqu'à l'objet, l'objet dessous (sa
+  // longueur en quarts de repère). Tout est placé d'après la place des
+  // repères (en unités du dessin), jamais en pourcentages. Le nom de
+  // l'objet et la note sont en HTML sous le dessin (une police large ne
+  // les fait pas sortir). `mode` : "outil" (« Le bassin : ? »),
+  // "correction" (les traits et la mesure en vert), "montre" (un repère
+  // de plus à chaque toucher, puis la mesure en vert).
+  function reporte(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const n = Number(aide.n);
+    const quarts = Number(aide.quarts);
+    const W = 340;
+    const x0 = 16;
+    const pas = Math.min(50, (W - 2 * x0) / Math.max(n, quarts / 4));
+    const yV = 24;
+    const hV = 38;
+    const yB = 78;
+    const hB = 22;
+    const H = yB + hB + 4;
+    const boite = el("div", "dessin-boite reporte-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin reporte${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": `${n} ${aide.plusieurs || "repères"} bout à bout le long de l'objet`});
+    const legende = el("div", "rep-nom");
+    boite.append(dessin, legende);
+    zone.appendChild(boite);
+    let vus = mode === "montre" ? 1 : n;
+    const image = `./conversions-reperes/${(carte().repere(aide.repere) || {}).image || `${aide.repere}.webp`}`;
+    function dessiner() {
+      dessin.textContent = "";
+      const fin = mode === "correction" || (mode === "montre" && vus >= n);
+      const couleur = fin ? VERT : ENCRE;
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      // la cote du repère, au-dessus du premier (lot B3-1c : à 19, 14 px au
+      // moins au petit Android ; à 17, 13,5 px)
+      dessin.appendChild(svg("path", {d: `M${x0} 9v9M${x0 + pas} 9v9M${x0} 13.5H${x0 + pas}`, fill: "none", stroke: ENCRE, "stroke-width": 1.8, "stroke-linecap": "round"}));
+      dessin.appendChild(svg("text", {x: x0 + pas + 5, y: 19, "font-size": 19, "font-weight": 900, fill: ENCRE}, `≈${NB}${aide.mesure}`));
+      for (let k = 0; k < vus; k += 1) {
+        const x = x0 + k * pas;
+        dessin.appendChild(svg("image", {href: image, x: x + 1, y: yV, width: pas - 2, height: hV, preserveAspectRatio: "xMidYMax meet"}));
+      }
+      for (let k = 0; k <= vus; k += 1) {
+        const x = x0 + k * pas;
+        dessin.appendChild(svg("line", {x1: x, y1: yV + hV + 3, x2: x, y2: yB, stroke: couleur, "stroke-width": 1.8, "stroke-linecap": "round"}));
+      }
+      // l'objet
+      const L = (quarts / 4) * pas;
+      dessin.appendChild(svg("rect", {x: x0, y: yB, width: L, height: hB, rx: 3, fill: aide.eau ? "#d8f3f2" : "#f3ede0", stroke: ENCRE, "stroke-width": 2.2}));
+      if (aide.eau) {
+        dessin.appendChild(svg("path", {d: `M${x0 + 10} ${yB + 8}q6 -4 12 0t12 0M${x0 + L / 2 - 12} ${yB + 14}q6 -4 12 0t12 0M${x0 + L - 40} ${yB + 8}q6 -4 12 0t12 0`,
+          fill: "none", stroke: "#00AFAA", "stroke-width": 1.8, "stroke-linecap": "round"}));
+      }
+      legende.textContent = "";
+      legende.append(texteNoeudA(`${aide.nom}${NB}: `), el("span", fin ? "rep-v" : "rep-q", fin ? aide.total : "?"));
+    }
+    dessiner();
+    if (aide.note) boite.appendChild(el("div", "note", carte().typo(aide.note)));
+    if (mode !== "montre") return null;
+    const toucher = () => {
+      if (vus >= n) return;
+      vus += 1;
+      dessiner();
+      if (vus >= n) fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < n, 320);
+  }
+  function texteNoeudA(t) {
+    return root.document.createTextNode(t);
+  }
+
+  // Estimer un calcul (R7, choix de Gwenaël du 21/11) : chaque nombre et
+  // son arrondi, un par ligne (« 212 m → 200 m »), jamais le résultat.
+  // "montre" : l'arrondi s'écrit quand on touche la ligne.
+  function arrondis(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const bloc = el("div", `arrondis${mode === "correction" ? " ar-corr" : ""}${mode === "montre" ? " ar-montre" : ""}`);
+    const lignesA = [];
+    let vus = mode === "montre" ? 0 : aide.paires.length;
+    aide.paires.forEach(([a, r], k) => {
+      const l = el("div", `ar${mode === "montre" ? " a-toucher" : ""}`);
+      const droite = el("span", "r", mode === "montre" ? "" : carte().typo(r));
+      // (Lot B3-1c : le « ? » garde la place de l'arrondi, caché dessous ;
+      // rien ne s'élargit quand l'arrondi s'écrit.)
+      if (mode === "montre") { droite.classList.add("ar-q"); droite.append(el("span", "ar-v", carte().typo(r)), el("span", "ar-qm", "?")); }
+      l.append(el("span", "a", carte().typo(a)), el("span", "f", "→"), droite);
+      bloc.appendChild(l);
+      lignesA.push([l, droite, r]);
+      if (mode === "montre") {
+        l.addEventListener("click", () => {
+          if (!l.classList.contains("a-toucher")) return;
+          l.classList.remove("a-toucher");
+          droite.classList.remove("ar-q");
+          droite.textContent = carte().typo(r);
+          vus += 1;
+          if (vus >= aide.paires.length) fini();
+        });
+      }
+    });
+    zone.appendChild(bloc);
+    if (aide.note) zone.appendChild(el("div", "note", aide.note));
+    if (mode !== "montre") return null;
+    const suivant = () => { const x = lignesA.find(([l]) => l.classList.contains("a-toucher")); if (x) x[0].click(); };
+    return enChaine(suivant, () => vus < aide.paires.length, 420);
+  }
+
+  // Le périmètre et l'aire (R9, choix de Gwenaël du 21/11) : deux jardins
+  // côte à côte, le tour en bleu avec la flèche qui en fait le tour, la
+  // surface en carreaux ; sous chacun, le mot en gras et son sens en gris
+  // (en HTML). `bonne` : "perimetre" ou "aire" (la correction la marque ;
+  // On te montre : on touche le bon dessin).
+  function perimAire(zone, {bonne = null, mode = "outil", fini = () => {}} = {}) {
+    const boite = el("div", `perim-aire${mode === "correction" ? " pa-corr" : ""}`);
+    const figure = (cle, dessin, mot, sens) => {
+      const f = el("div", `pa-fig${mode === "montre" ? " a-toucher" : ""}${mode === "correction" && cle === bonne ? " bonne" : ""}${mode === "correction" && cle !== bonne ? " autre" : ""}`);
+      f.dataset.cle = cle;
+      const t = el("div", "pa-t");
+      t.append(el("b", "", mot), el("span", "", sens));
+      f.append(dessin, t);
+      return f;
+    };
+    const a = svg("svg", {viewBox: "0 0 140 92", class: "dessin pa", role: "img", "aria-label": "Le tour de la figure"});
+    a.appendChild(svg("rect", {x: 10, y: 24, width: 120, height: 60, rx: 1, fill: "#f4f8fb"}));
+    a.appendChild(svg("rect", {x: 10, y: 24, width: 120, height: 60, rx: 1, fill: "none", stroke: BLEU, "stroke-width": 5}));
+    a.appendChild(svg("path", {d: "M44 10H88", stroke: BLEU, "stroke-width": 2.6, fill: "none", "stroke-linecap": "round"}));
+    a.appendChild(svg("path", {d: "M97 10l-10 -5.5v11z", fill: BLEU}));
+    const b = svg("svg", {viewBox: "0 0 140 92", class: "dessin pa", role: "img", "aria-label": "La surface de la figure, en carreaux"});
+    const gx = 8;
+    const gy = 22;
+    const c = 15.5;
+    for (let i = 0; i < 8; i += 1) {
+      for (let j = 0; j < 4; j += 1) {
+        b.appendChild(svg("rect", {x: gx + i * c, y: gy + j * c, width: c, height: c, fill: (i + j) % 2 ? "#b9ebe8" : "#d8f3f2", stroke: ENCRE, "stroke-width": 0.9}));
+      }
+    }
+    b.appendChild(svg("rect", {x: gx, y: gy, width: 8 * c, height: 4 * c, fill: "none", stroke: ENCRE, "stroke-width": 2.2}));
+    const fa = figure("perimetre", a, "le périmètre", "le tour");
+    const fb = figure("aire", b, "l'aire", "la surface");
+    boite.append(fa, fb);
+    zone.appendChild(boite);
+    if (mode !== "montre") return null;
+    let fait = false;
+    const choisirFig = f => {
+      if (fait) return;
+      if (f.dataset.cle !== bonne) { f.classList.remove("non"); void f.offsetWidth; f.classList.add("non"); return; }
+      fait = true;
+      [fa, fb].forEach(x => { x.classList.remove("a-toucher", "non"); x.classList.add(x === f ? "bonne" : "autre"); });
+      fini();
+    };
+    [fa, fb].forEach(f => f.addEventListener("click", () => choisirFig(f)));
+    return () => choisirFig(bonne === "aire" ? fb : fa);
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -3013,7 +3184,11 @@
     if (aide.type === "bande-p") return bandePuissances(zone, aide, {mode: "montre", fini: f});
     // Lot B6-3 (Q9) : le tableau de proportionnalité, l'arc puis la case.
     if (aide.type === "tableau-p") return tableauProp(zone, aide, {mode: "montre", fini: f});
-    if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
+    // Lot B3-1 (R7, R9) : le repère reporté, les arrondis, le périmètre et l'aire.
+    if (aide.type === "reporte") return reporte(zone, Object.assign({eau: aide.nom === "Le bassin"}, aide), {mode: "montre", fini: f});
+    if (aide.type === "arrondis") return arrondis(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "perim-aire") return perimAire(zone, {bonne: aide.bonne, mode: "montre", fini: f});
+    if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
     return null;
   }
   // La correction après une erreur (lot A2 ter, comme le glisse-unité animé
@@ -3186,7 +3361,25 @@
       zone.appendChild(el("div", "note", carte().typo(question.noteOutil || "Je mets tout dans la même unité.")));
       return;
     }
-    if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
+    // Lot B3-1 (R7) : le repère reporté ; le repère compté ; les arrondis.
+    if (question.outil === "reporte" && question.reporte) {
+      reporte(zone, Object.assign({note: question.noteOutil, eau: question.reporte.nom === "Le bassin"}, question.reporte));
+      return;
+    }
+    if (question.outil === "fois-r7") {
+      if (question.repereCarte) zone.appendChild(carteRepere(question.repereCarte));
+      else zone.appendChild(el("div", "rel", carte().typo("Un étage : environ 3 m.")));
+      zone.appendChild(el("div", "note", question.noteOutil));
+      return;
+    }
+    if (question.outil === "arrondis" && question.arrondis) { arrondis(zone, {paires: question.arrondis, note: question.noteOutil}); return; }
+    if (question.outil === "perim-aire") { perimAire(zone); return; }
+    if (question.outil === "reperes-unites") {
+      reperesUnites(zone, question);
+      // (Lot B3-1, R9 : « Plus gros ne veut pas dire plus lourd. »)
+      if (question.noteOutil) zone.appendChild(el("div", "note", question.noteOutil));
+      return;
+    }
     // Lot R1-refonte
     if (question.outil === "carte-repere") { outilCarteRepere(zone, question); return; }
     if (question.outil === "nom-unite") { outilNomUnite(zone, question); return; }
@@ -3229,7 +3422,7 @@
       tableauProp(zone, question.tableauP);
       return;
     }
-    if (question.outil === "grandeurs") { grandeurs(zone); return; }
+    if (question.outil === "grandeurs") { grandeurs(zone, {aire: question.avecAire}); return; }
     if (question.outil === "ranger") {
       // (Lot B2-2b-1, C7 : l'échelle des unités de la question, et l'unité
       // où tout s'écrit.)
@@ -3271,11 +3464,18 @@
       zone.appendChild(el("div", "note", "Je compare avec mon repère."));
       return;
     }
+    // Lot B3-1 (R7) : le repère reporté, sa carte ; (R9) le piège, sa phrase.
+    if (question.outil === "reporte" && question.repereImage) {
+      zone.appendChild(carteRepere(question.repereImage));
+      zone.appendChild(el("div", "note", "Je compte combien de fois mon repère."));
+      return;
+    }
+    if (question.donnees && question.donnees.type === "piege") { zone.appendChild(lignes("rel", question.image.join("\n"))); return; }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot R1-refonte
     if (question.outil === "carte-repere" || question.outil === "nom-unite") { imageDessinRepere(zone, question); return; }
     // Lot A2 bis
-    if (question.outil === "grandeurs" || question.outil === "familles") { grandeurs(zone); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
+    if (question.outil === "grandeurs" || question.outil === "familles") { grandeurs(zone, {aire: question.avecAire}); zone.appendChild(el("div", "note", "Avec quoi je le mesure ?")); return; }
     if (question.tableau) {
       tableauHeures(zone, question.tableau);
       if (question.image && question.image[1]) zone.appendChild(lignes("rel petite", question.image[1]));
@@ -3380,5 +3580,5 @@
   }
 
   return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
-    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
+    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire});
 });
