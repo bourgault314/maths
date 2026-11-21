@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-b62">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-r1n">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261121-b62"></script>
-  <script src="./conversions_generateurs.js?v=20261121-b62"></script>
+  <script src="./conversions_carte.js?v=20261121-r1n"></script>
+  <script src="./conversions_generateurs.js?v=20261121-r1n"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261121-b62"></script>
+  <script src="./defi_conversions_aides.js?v=20261121-r1n"></script>
   <script>
   (function () {
     "use strict";
@@ -1155,7 +1155,7 @@
         // WebKit, lot A2 bis).
         // (Lot 3b-3 : des réponses en mots, « sept heures moins le quart » :
         // « mots », elles passent sur plusieurs lignes dans leur bouton.)
-        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" || m.sorte === "mots" ? " mots" : ""}`);
+        choixEl = el("div", `choix${question.choix.length === 2 ? " deux" : ""}${question.choix.length === 4 ? " quatre" : ""}${m.sorte === "horloge" || m.sorte === "mots" || m.sorte === "nom" ? " mots" : ""}`);
         if (m.sorte === "objets") choixEl.classList.add("objets");
         question.choix.forEach((texte, i) => {
           const b = el("button", "", question.forme === "vrai-faux" ? texte : (m.sorte === "valeur" ? T(`${texte} ${m.apres}`) : texte));

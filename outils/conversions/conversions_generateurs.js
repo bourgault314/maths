@@ -586,6 +586,49 @@
     });
   }
 
+  // Lot R1-noms (21/11, choix de Gwenaël) : le nom de l'unité, lu à partir
+  // de son symbole (« 1 cm, c'est… » : un centimètre, un centilitre, un
+  // kilomètre) ou écrit à partir de son nom (« Un centimètre s'écrit 1… » :
+  // cm, cL, km). Le programme du cycle 2 (S440) : les unités ET leurs
+  // symboles. Les mauvaises réponses sont les vraies confusions : le même
+  // début avec une autre grandeur (cm et cL, km et kg), une autre taille de
+  // la même grandeur (cm et km, cL et L), le m de milli lu comme celui de
+  // mètre (mm et m), le m du mètre et le « min » de la minute. Les dix
+  // unités des dix repères de R1 ; la question garde son repère (son
+  // dessin pour l'image, sa carte pour la correction).
+  const FAUX_NOMS = {mm: ["m", "cm"], cm: ["cL", "km"], dm: ["dL", "cm"], m: ["mm", "min"], km: ["kg", "m"],
+    g: ["kg", "L"], kg: ["km", "g"], t: ["kg", "L"], cL: ["cm", "L"], L: ["cL", "m"]};
+  function questionNom(code, degre, rep, rng, sens = null) {
+    const r = CARTE.repere(rep);
+    const u = r.unite;
+    const lu = x => CARTE.lu("1", x);
+    const Lu = x => `${lu(x)[0].toUpperCase()}${lu(x).slice(1)}`;
+    const ecrit = sens || (degre === 1 ? "nom" : degre === 3 ? "symbole" : choisir(rng, ["nom", "symbole"]));
+    const unites = melanger(rng, [u, ...FAUX_NOMS[u]]);
+    const bon = unites.indexOf(u);
+    const pourquoi = {};
+    let texte;
+    let choix;
+    if (ecrit === "nom") {
+      texte = CARTE.typo(`1 ${u}, c'est ${CASE}`);
+      choix = unites.map(lu);
+      unites.forEach((x, k) => { if (k !== bon) pourquoi[k] = CARTE.typo(`${Lu(x)} s'écrit 1 ${x}.`); });
+    } else {
+      texte = CARTE.typo(`${Lu(u)} s'écrit 1${NB}${CASE}`);
+      choix = unites.slice();
+      unites.forEach((x, k) => { if (k !== bon) pourquoi[k] = CARTE.typo(`1 ${x}, c'est ${lu(x)}.`); });
+    }
+    return q({
+      code, degre, forme: "qcm", texte,
+      morceaux: {phrase: texte, apres: "", sorte: ecrit === "nom" ? "nom" : "symbole"},
+      choix, bon, reponse: choix[bon], reponseTexte: ecrit === "nom" ? lu(u) : `1${NB}${u}`, pourquoi,
+      unite: u, resume: CARTE.typo(`1 ${u}, c'est ${lu(u)}`), repere: rep, outil: "nom-unite", grandeur: r.grandeur,
+      image: [], correction: [CARTE.typo(`1 ${u}, c'est ${lu(u)}.`)],
+      donnees: {type: "nom", repere: rep, unite: u, sens: ecrit},
+      cle: `${code}:${rep}:nom-${ecrit}`
+    });
+  }
+
   // Les repères d'une même grandeur, dans R1 (« Qu'est-ce qui pèse environ
   // 1 kg ? » : les trois masses). La contenance n'en a que deux : pas
   // d'objet à trouver.
@@ -604,10 +647,10 @@
     // valeur, le pavé au degré 3. À toi : un bon élève (9 questions) voit
     // relier, l'unité, l'objet, la règle, la valeur et le pavé.
     formes(usage) {
-      if (usage === "valide") return {0: "associer", 1: "quoi", 2: "unite", 3: "unite", 4: "valeur", 5: "quoi", 6: "regle", 7: "saisie", 8: "valeur", 9: "saisie"};
+      if (usage === "valide") return {0: "associer", 1: "quoi", 2: "unite", 3: "nom", 4: "valeur", 5: "quoi", 6: "regle", 7: "saisie", 8: "valeur", 9: "saisie"};
       if (usage === "entraine") {
-        return {0: "associer", 1: "unite", 2: "quoi", 3: "unite", 4: "quoi", 5: "unite", 6: "regle", 7: "valeur", 8: "saisie", 9: "quoi",
-          10: "associer", 11: "quoi", 12: "valeur", 13: "regle", 14: "unite", 15: "saisie", 16: "valeur", 17: "quoi", 18: "associer",
+        return {0: "associer", 1: "unite", 2: "quoi", 3: "nom", 4: "quoi", 5: "unite", 6: "regle", 7: "valeur", 8: "saisie", 9: "quoi",
+          10: "associer", 11: "quoi", 12: "valeur", 13: "regle", 14: "nom", 15: "saisie", 16: "valeur", 17: "quoi", 18: "associer",
           19: "saisie", 20: "regle", 21: "quoi", 22: "valeur", 23: "saisie", 24: "unite"};
       }
       return {};
@@ -655,6 +698,7 @@
         });
         if (!reps.length) reps = CARTE.etape("R1").reperes.filter(c => !recents.includes(c));
       }
+      if (forme === "nom") return questionNom("R1", degre, choisir(rng, reps), rng);
       if (forme === "quoi") {
         const possibles = reps.filter(c => poolR1(c).length >= 3);
         if (!possibles.length) return null;
@@ -665,7 +709,8 @@
       // façons de demander un même repère — l'unité, la valeur parmi trois,
       // la valeur au pavé. Une même question ne revient pas dans une série.
       const sorte = forme === "saisie" || forme === "unite" || forme === "valeur" ? forme : degre === 1 ? "unite"
-        : degre === 3 ? choisir(rng, ["valeur", "saisie"]) : choisir(rng, ["unite", "valeur", "saisie"]);
+        : degre === 3 ? choisir(rng, ["valeur", "saisie"]) : choisir(rng, ["unite", "valeur", "saisie", "nom"]);
+      if (sorte === "nom") return questionNom("R1", degre, choisir(rng, reps), rng);
       return questionRepereInterne("R1", degre, choisir(rng, reps), sorte, rng);
     }
   };
