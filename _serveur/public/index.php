@@ -322,15 +322,23 @@ try {
   .semaine-jours li { flex-direction: column-reverse; gap: 8px; width: 33px; }
   .semaine-jours .case-jour { position: relative; width: 26px; height: 26px; aspect-ratio: auto; border-radius: 50%;
                               border: 2px solid #cfdae6; background: #fff; }
-  .semaine-jours li:not(:first-child) .case-jour::before { content: ""; position: absolute; right: 100%; top: 50%;
-                              width: 8px; height: 2px; margin-top: -1px; background: #cfdae6; }
+  /* Les liens entre les perles (correctif du 21/11, capture de Gwenaël) : avant,
+     le trait partait du bord INTÉRIEUR du rond (right: 100% compte depuis
+     l'intérieur de la bordure de 2 px) — il mordait sur le rond et passait sur
+     l'anneau orange du jour. Il va maintenant exactement d'un rond au suivant
+     (--ecart = largeur d'un jour - largeur d'un rond), et il n'y en a pas de
+     part et d'autre du jour entouré d'orange : l'anneau reste net. */
+  .semaine-jours { --ecart: 7px; }
+  .semaine-jours li:not(:first-child) .case-jour::before { content: ""; position: absolute; top: 50%;
+                              left: calc(-2px - var(--ecart)); width: var(--ecart); height: 2px; margin-top: -1px; background: #cfdae6; }
+  .semaine-jours .aujourdhui .case-jour::before,
+  .semaine-jours .aujourdhui + li .case-jour::before { display: none; }
   .semaine-jours .fait .case-jour { border-color: #08aaa5; background: #08aaa5; }
   .semaine-jours .avenir .case-jour { border-style: dashed; border-color: #cfdae6; background: transparent; }
   .semaine-jours .aujourdhui .case-jour { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--orange); }
   .semaine-jours .lettre { font-size: 12px; font-weight: 800; }
   .semaine-compte { margin: 0; text-align: right; line-height: 1.15; color: var(--muted); font-size: 13.5px; white-space: nowrap; }
   .semaine-compte strong { display: block; color: var(--blue-dark); font-size: 21px; font-weight: 900; }
-  .semaine-jours li:not(:first-child) .case-jour::before { width: 7px; }
   @media (max-width: 359px) {
     .semaine-ligne { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
     .semaine-compte { width: 100%; text-align: center; }
@@ -405,6 +413,7 @@ try {
     #ecran-espace > .semaine[hidden] { display: none !important; }
     #ecran-espace > .jour-zone:has(+ .semaine[hidden]) { grid-column: 1 / -1; }
     .semaine .semaine-ligne { flex-direction: column; align-items: center; gap: 10px; }
+    .semaine-jours { --ecart: 8px; }
     .semaine-jours li { width: 40px; }
     .semaine-jours .case-jour { width: 32px; height: 32px; }
     .semaine-jours .lettre { font-size: 13px; }

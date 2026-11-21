@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot mon-espace-B1
+lot mon-espace-B1-liens
 genere_le 2026-11-21
 fichiers 71
-manifeste 4c898a060ebe62dae0836b19aa70ae31dbe7caff95314e567a559fe3835d7fd8
+manifeste f408893b04b3152e19dabd3ae8880be7d6e3b4814f7ce65f4d648b82655b7347
 0647544a4a02462d7d3efb522c1c478217d2e15601232ca5e1c974100cfb39b7  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -17,7 +17,7 @@ fef36664abd728712454486174f2c21a88b40e0ccb9974d8ecb91d577fd1c3b3  api/prof.php
 df015c613df736321d80cfd8962fc9457106e6b7ac55eeb9def6ffa24684d6c4  direct.php
 2ebd7777bfa62e332ddaeb0be3a93e6c3a20bde30deccc6d3e86ca4de8345fce  favicon.ico
 b901e292ec96dadfd1a9415bc315027c93b635d0f4254a6da8ff7afd92c6520e  favicon.svg
-94eb3f6ea0e9169b7a5d694d7dc3d9de73a20e66724a8fb2f290fee2cc628114  index.php
+d9b65929659aad08d5fbf1f80f7183f413cd8d3ef8724bc7acd8d81d9d9d3a20  index.php
 8735a6e6f36def32bcf0b114bce2563b7a1bc23059dab95f6a1561f5cda17706  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
 73147a4ffc2c58d1748b93c04ed955e5b1b568ce10d066893d41f8548080fc2d  lib/applis.php

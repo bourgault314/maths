@@ -271,3 +271,22 @@ test("la copie de l'onglet : « faits » ne vaut que le jour de la lecture, et s
   assert.deepEqual(lu("2026-11-19"), [], "une copie de la veille : rien n'est « fait » aujourd'hui");
   assert.match(fonction("lireJauges"), /if \(semaine\.jours\.includes\(aujourdhui\)\) espace\.faits\.push\(cle\);/, "faite = le jour vert de l'appli");
 });
+
+// Correctif « liens » (21/11/2026, capture iPhone de Gwenaël, son choix B) : le
+// trait entre deux perles va d'un rond au suivant, jamais dessus, et il n'y en
+// a pas de part et d'autre du jour entouré d'orange.
+test("Ma semaine : les liens vont d'un rond à l'autre et laissent l'anneau du jour net", () => {
+  const regle = /\.semaine-jours li:not\(:first-child\) \.case-jour::before \{([^}]*)\}/.exec(style);
+  assert.ok(regle, "la règle du lien existe");
+  assert.match(regle[1], /left: calc\(-2px - var\(--ecart\)\); width: var\(--ecart\);/, "départ hors de la bordure de 2 px, longueur = l'écart");
+  assert.doesNotMatch(regle[1], /right: 100%/, "plus de départ depuis l'intérieur du rond");
+  assert.equal((style.match(/\.case-jour::before \{ width:/g) || []).length, 0, "aucune longueur fixe ajoutée plus loin");
+  assert.match(style, /\.semaine-jours \.aujourdhui \.case-jour::before,\n\s*\.semaine-jours \.aujourdhui \+ li \.case-jour::before \{ display: none; \}/);
+  assert.match(lire("_serveur/public/suivi.css"), /\*, \*::before, \*::after \{ box-sizing: border-box; \}/, "la largeur d'un rond compte sa bordure");
+  // L'écart = la largeur d'un jour moins celle d'un rond, au téléphone et en grand.
+  const nombre = re => Number(re.exec(style)[1]);
+  assert.equal(nombre(/\.semaine-jours \{ --ecart: (\d+)px; \}/), nombre(/\.semaine-jours li \{ flex-direction: column-reverse; gap: 8px; width: (\d+)px; \}/)
+    - nombre(/\.semaine-jours \.case-jour \{ position: relative; width: (\d+)px;/), "téléphone");
+  assert.equal(nombre(/ {4}\.semaine-jours \{ --ecart: (\d+)px; \}/), nombre(/ {4}\.semaine-jours li \{ width: (\d+)px; \}/)
+    - nombre(/ {4}\.semaine-jours \.case-jour \{ width: (\d+)px;/), "grand écran");
+});
