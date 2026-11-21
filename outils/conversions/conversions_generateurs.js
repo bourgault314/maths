@@ -6341,6 +6341,601 @@
     erreurs(question, lu, lus) { return erreursQ10(question, lu, lus); }
   };
 
+  // ============================ lot B6-1 : D6 « Toutes les heures décimales » (4e)
+  // Programme de 4e et attendus (« convertir 0,2 h en minutes, 36 min en
+  // heure, 1 h 45 min en heure » ; « 2,1 h = … h … min ») ; c'est la
+  // conversion n° 1 du brevet (35 sujets, 17 où elle se cache dans une
+  // vitesse) ; « 3 h 20 min n'est pas 3,2 h » (Amérique du Sud 2022) ;
+  // « 2,6 h = 2 h 36 min » (la plupart des candidats n'y arrivent pas) ;
+  // S097 p. 20 : la lumière du Soleil (500 s, ou 8,3 min).
+  // Choix de Gwenaël sur la maquette (21/11, 10 h 30) : l'outil est la
+  // double droite des heures (0 à 1 h en dixièmes : 0,1 h = 6 min) ; la
+  // correction, la droite refaite en vert et la ligne de calcul.
+  // Une durée décimale est un entier de centièmes (135 → 1,35 h) ; les
+  // minutes tombent juste (un multiple de 5 centièmes = 3 min).
+  const decH = (x, u = "h") => mes(BigInt(x) * 10n, u);
+  // (Les minutes de x centièmes : x × 60 ÷ 100.)
+  const minDe = x => (x * 3) / 5;
+  // Des minutes aux centièmes d'heure (m multiple de 3).
+  const centDe = m => (m * 5) / 3;
+  // Les deux unités : les heures et les minutes ; les minutes et les secondes.
+  const U_D6 = {h: ["h", "min"], min: ["min", "s"]};
+  // Une valeur tirée : des dixièmes (pas 10), des « quarts » (25, 50, 75) ou
+  // des centièmes multiples de 5 qui ne sont pas des dixièmes (degré 3).
+  function partieD6(rng, sorte) {
+    if (sorte === "dixiemes") { let k; do { k = entre(rng, 1, 9); } while (k === 5 && rng() < 0.5); return k * 10; }
+    if (sorte === "quarts") return choisir(rng, [25, 50, 75]);
+    let k;
+    do { k = entre(rng, 1, 19); } while (k % 2 === 0);
+    return k * 5;
+  }
+  // Situations (une durée en heures décimales, à écrire en heures et
+  // minutes) : [modèle, énoncé ({P}, {d}), centièmes min, max].
+  const SITUATIONS_D6 = [
+    ["vol", "Le vol Réunion – Paris dure {d}.", 1060, 1160],
+    ["piton", "La montée au Piton des Neiges : {d}.", 410, 560],
+    ["car", "Le trajet en Car Jaune dure {d}.", 155, 195],
+    ["trajet", "Le trajet {deP} dure {d}.", 105, 395],
+    ["film", "Le film dure {d}.", 140, 240],
+    ["nuit", "{P} dort {d} cette nuit.", 720, 980],
+    ["raid", "Une étape du Grand Raid : {d}.", 230, 590]
+  ];
+  // Des minutes décimales en secondes (S097 p. 20 : la lumière du Soleil) :
+  // [modèle, énoncé ({P}, {d}), les valeurs en centièmes de minute].
+  // (Des énoncés d'une ligne au petit téléphone : la question la plus
+  // haute fixe la hauteur de toute la série.)
+  const SECONDES_D6 = [
+    ["soleil", "Du Soleil à la Terre, la lumière met {d}.", [830]],
+    ["chanson", "La chanson dure {d}.", [255, 265, 285, 315, 335, 345, 365, 385, 415, 435]],
+    ["course", "{P} court le 400\u00a0m en {d}.", [115, 125, 135, 145, 155]],
+    ["micro", "Le plat chauffe {d} au micro-ondes.", [150, 250, 350, 175, 225, 275]],
+    ["oeuf", "L'œuf à la coque cuit {d}.", [350, 325, 375]]
+  ];
+
+
+  // La double droite des heures (l'outil et la correction) : `c` la
+  // graduation cherchée en centièmes (de 0 à 100, un tiers d'heure
+  // compris), `sens` h>min ou min>h, `u` les deux unités.
+  const droiteD6 = (c, sens, u = "h") => ({c, sens, haut: U_D6[u][0], bas: U_D6[u][1]});
+
+  // La question finie. spec : {sorte, degre, x (centièmes de l'unité
+  // haute, la durée), u, forme…}.
+  function finirD6(spec) {
+    const {sorte, degre, x} = spec;
+    const u = spec.u || "h";
+    const [H, P] = U_D6[u];
+    const h = Math.floor(x / 100);
+    const d = x % 100;
+    const total = minDe(x);
+    const md = minDe(d);
+    const relation = u === "h" ? `0,1${NB}h = 6${NB}min` : `0,1${NB}min = 6${NB}s`;
+    const base = {code: "D6", degre, grandeur: "duree", outil: "droite-h", relation, sorteD6: sorte};
+    // Des heures décimales vers les minutes.
+    if (["dec", "hmin", "total", "situation", "secondes"].includes(sorte)) {
+      const gauche = decH(x, H);
+      const cases = sorte === "hmin" || sorte === "situation";
+      const reponse = cases ? [String(h), String(md)] : String(total);
+      const reponseTexte = cases ? hm(h, md) : `${total}${NB}${P}`;
+      let texte;
+      let morceaux;
+      if (sorte === "situation" || sorte === "secondes") {
+        const enonce = spec.enonce;
+        const avant = "Durée :";
+        morceaux = cases ? {enonce, avant, cases: [H, P], serre: true, long: true} : {enonce, avant, apres: P, serre: true, long: true};
+        texte = `${enonce} ${avant} ${cases ? `${CASE}${NB}${H}${NB}${CASE}${NB}${P}` : `${CASE}${NB}${P}`}`;
+      } else if (cases) {
+        texte = `${gauche} = ${CASE}${NB}${H}${NB}${CASE}${NB}${P}`;
+        morceaux = {avant: `${gauche} =`, cases: [H, P]};
+      } else {
+        texte = `${gauche} = ${CASE}${NB}${P}`;
+        morceaux = {avant: `${gauche} =`, apres: P};
+      }
+      // La correction : la droite en vert, puis une ligne (la réponse en
+      // vert) ; l'image : le calcul posé, sans le résultat.
+      const ligne = h && cases ? `${gauche} = ${h}${NB}${H} + ${decH(d, H)} = ${reponseTexte}`
+        : `${ecrire(BigInt(x) * 10n)} × 60${NB}${P} = ${reponseTexte}`;
+      const image = h && cases ? [`${gauche} = ${h}${NB}${H} + ${decH(d, H)}`, `${decH(d, H)} = ${ecrire(BigInt(d) * 10n)} × 60${NB}${P}`]
+        : [`1${NB}${H} = 60${NB}${P}`, `${gauche} = ${ecrire(BigInt(x) * 10n)} × 60${NB}${P}`];
+      const note = h ? (cases ? "Je lis la partie décimale sur la droite." : `${h}${NB}${H} = ${h * 60}${NB}${P}, puis la droite.`) : `Je cherche ${gauche} sur la droite.`;
+      return q(Object.assign(base, {
+        forme: cases ? "deux-cases" : "nombre", texte, morceaux, reponse, reponseTexte, unite: P,
+        resume: sorte === "situation" || sorte === "secondes" ? `${gauche} = ${reponseTexte}` : `${gauche} = ${reponseTexte}`,
+        droiteH: droiteD6(d, "h>min", u), noteOutil: note, image, correction: [ligne], ligneD6: ligne, vertD6: reponseTexte,
+        modeleD6: spec.modele || sorte,
+        donnees: {type: "d6", sorte, x, u, vers: cases ? "hmin" : P},
+        cle: `D6:${u}:${x}>${cases ? "hmin" : P}`
+      }));
+    }
+    // Des minutes vers les heures décimales.
+    if (["inv", "invhm", "invtot"].includes(sorte)) {
+      // (x : la durée en centièmes d'heure ; sa partie décimale tombe en
+      // minutes entières.)
+      const gauche = sorte === "invtot" ? `${total}${NB}min` : hm(h, md);
+      const reponse = brut(BigInt(x) * 10n);
+      const reponseTexte = decH(x);
+      const texte = `${gauche} = ${CASE}${NB}h`;
+      const ligne = sorte === "invhm" ? `${gauche} = ${h}${NB}h + ${decH(d)} = ${reponseTexte}`
+        : `${gauche} = (${total}${NB}÷${NB}60)${NB}h = ${reponseTexte}`;
+      const image = sorte === "invhm" ? [`${md}${NB}min = (${md}${NB}÷${NB}60)${NB}h`, `${gauche} = ${h}${NB}h + ${md}${NB}min`]
+        : [`1${NB}h = 60${NB}min`, `${gauche} = (${total}${NB}÷${NB}60)${NB}h`];
+      const note = sorte === "inv" ? `Je cherche ${md}${NB}min sur la droite.` : sorte === "invhm" ? `${h}${NB}h, puis ${md}${NB}min sur la droite.`
+        : "Je fais d'abord des paquets de 60 min.";
+      return q(Object.assign(base, {
+        forme: "nombre", texte, morceaux: {avant: `${gauche} =`, apres: "h"}, reponse, reponseTexte, unite: "h",
+        resume: `${gauche} = ${reponseTexte}`, droiteH: droiteD6(d, "min>h"), noteOutil: CARTE.typo(note), image, correction: [ligne],
+        ligneD6: ligne, vertD6: reponseTexte, modeleD6: sorte,
+        donnees: {type: "d6", sorte, x, u: "h", vers: "h"},
+        cle: `D6:h:${x}<${sorte === "invtot" ? "min" : "hmin"}`
+      }));
+    }
+    return null;
+  }
+
+  // Trois réponses au choix, avec les vraies erreurs (« 2,3 h = 2 h 30 min »,
+  // « 2 h 3 min » ; « 1,35 h = 135 min = 2 h 15 min »).
+  function choixD6(degre, rng) {
+    const h = entre(rng, 1, 4);
+    const d = partieD6(rng, degre === 2 ? "dixiemes" : "centiemes");
+    const x = h * 100 + d;
+    const md = minDe(d);
+    const bonne = hm(h, md);
+    const faux = [];
+    if (d < 60) faux.push([hm(h, d), `${decH(d)}, ce n'est pas ${d}${NB}min.`]);
+    if (d % 10 === 0) faux.push([hm(h, d / 10), `${decH(d)}, ce n'est pas ${d / 10}${NB}min.`]);
+    if (Math.floor(x / 60) !== h || x % 60 !== md) faux.push([hm(Math.floor(x / 60), x % 60), `${decH(x)}, ce n'est pas ${mes(x, "min")}.`]);
+    faux.push([hm(h + 1, md), "Compte bien les heures."]);
+    const propres = [];
+    faux.forEach(f => { if (f[0] !== bonne && !propres.some(p => p[0] === f[0])) propres.push(f); });
+    if (propres.length < 2) return null;
+    const deux = [propres[0], propres[1]];
+    const choix = melanger(rng, [bonne, deux[0][0], deux[1][0]]);
+    const pourquoi = {};
+    choix.forEach((c, k) => { const f = deux.find(y => y[0] === c); if (f) pourquoi[k] = f[1]; });
+    const x0 = finirD6({sorte: "hmin", degre, x});
+    const phrase = `${decH(x)} = ${CASE}`;
+    return Object.assign(x0, {
+      forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "duree"}, choix, bon: choix.indexOf(bonne), pourquoi,
+      reponse: bonne, cle: `${x0.cle}:q`, cleBase: x0.cle, sorteD6: "choix", modeleD6: "choix"
+    });
+  }
+  // « 20 min = … h » : un tiers d'heure (attendus de 4e : « 1⁄3 h, pas
+  // 0,2 h ni 0,3 h »).
+  const TIERS_D6 = [[10, "1⁄6", ["0,1", "0,6"]], [20, "1⁄3", ["0,2", "0,3"]], [40, "2⁄3", ["0,4", "0,6"]], [50, "5⁄6", ["0,5", "0,8"]]];
+  function tiersD6(degre, rng) {
+    const [m, f, faux] = choisir(rng, TIERS_D6);
+    const bonne = `${f}${NB}h`;
+    const choix = melanger(rng, [bonne, ...faux.map(y => `${y}${NB}h`)]);
+    const pourquoi = {};
+    faux.forEach(y => { pourquoi[choix.indexOf(`${y}${NB}h`)] = `${y}${NB}h = ${minDe(Number(y.split(",")[1]) * 10)}${NB}min.`; });
+    const phrase = `${m}${NB}min = ${CASE}`;
+    const ligne = `${m}${NB}min = ${m}⁄60${NB}h = ${bonne}`;
+    return q({
+      code: "D6", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "duree"}, choix, bon: choix.indexOf(bonne), pourquoi,
+      reponse: bonne, reponseTexte: bonne, unite: "h", resume: `${m}${NB}min = ${bonne}`, grandeur: "duree", outil: "droite-h",
+      relation: `0,1${NB}h = 6${NB}min`, droiteH: Object.assign(droiteD6(centDe(m), "min>h"), {hautTexte: f}),
+      noteOutil: `${m}${NB}min ne tombe pas sur un dixième.`, image: [`1${NB}min = 1⁄60${NB}h`, `${m}${NB}min = ${m}⁄60${NB}h`],
+      correction: [ligne], ligneD6: ligne, vertD6: bonne, sorteD6: "tiers", modeleD6: "tiers",
+      donnees: {type: "d6", sorte: "tiers", m}, cle: `D6:tiers:${m}`
+    });
+  }
+  // « Le plus long : 1,45 h ou 1 h 30 min ? » — souvent un piège (lire
+  // 0,45 h comme 45 min fait choisir 1,45 h) ; une fois sur cinq, la même
+  // durée.
+  function comparerD6(degre, rng) {
+    const h = entre(rng, 1, 3);
+    const d = partieD6(rng, degre === 2 ? "dixiemes" : "centiemes");
+    const x = h * 100 + d;
+    const md = minDe(d);
+    let m2;
+    const r = rng();
+    if (r < 0.2) m2 = md;
+    else if (r < 0.75 && d < 60 && d - md >= 6) m2 = entre(rng, md + 3, d - 3);
+    else { do { m2 = entre(rng, 5, 55); } while (Math.abs(m2 - md) < 4 || m2 === d); }
+    if (m2 <= 0 || m2 >= 60) return null;
+    const A = decH(x);
+    const B = hm(h, m2);
+    // (L'ordre des deux durées est tiré : la bonne réponse à toutes les places.)
+    const aGauche = rng() < 0.5;
+    const choix = aGauche ? [A, B, "Même durée"] : [B, A, "Même durée"];
+    const gagnant = md === m2 ? "Même durée" : md > m2 ? A : B;
+    const bon = choix.indexOf(gagnant);
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = `${A} = ${hm(h, md)}.`; });
+    const phrase = `Le plus long : ${choix[0]} ou ${choix[1]}${NB}?`;
+    const ligne = `${A} = ${hm(h, md)}`;
+    return q({
+      code: "D6", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "comparer"}, choix, bon, pourquoi,
+      reponse: choix[bon], reponseTexte: choix[bon], unite: null, resume: bon === 2 ? `${A} = ${B}` : `Le plus long : ${choix[bon]}`,
+      grandeur: "duree", outil: "droite-h", relation: `0,1${NB}h = 6${NB}min`, droiteH: droiteD6(d, "h>min"),
+      noteOutil: "Je compare dans la même unité.", image: [`${A} = ${h}${NB}h + ${decH(d)}`, `${decH(d)} = ${ecrire(BigInt(d) * 10n)} × 60${NB}min`],
+      correction: [ligne], ligneD6: ligne, vertD6: hm(h, md), sorteD6: "comparer", modeleD6: "comparer",
+      donnees: {type: "d6", sorte: "comparer", x, m: h * 60 + m2}, cle: `D6:cmp:${x}:${m2}`
+    });
+  }
+
+  function tirerD6Brut(rng, degre, sorte) {
+    // Les heures décimales vers les minutes.
+    // (Pas 0,1 h ni 6 min seuls : c'est la relation écrite sur l'outil.)
+    if (sorte === "dec") {
+      const x = partieD6(rng, degre === 1 ? (rng() < 0.75 ? "dixiemes" : "quarts") : "centiemes");
+      return x === 10 ? null : finirD6({sorte, degre, x});
+    }
+    if (sorte === "hmin") return finirD6({sorte, degre, x: entre(rng, 1, degre === 3 ? 4 : 5) * 100 + partieD6(rng, degre === 3 ? "centiemes" : "dixiemes")});
+    if (sorte === "total") {
+      const x = entre(rng, 1, 4) * 100 + partieD6(rng, degre === 3 ? "centiemes" : rng() < 0.7 ? "dixiemes" : "quarts");
+      return finirD6({sorte, degre, x});
+    }
+    if (sorte === "situation") {
+      const [modele, texte, a, b] = choisir(rng, SITUATIONS_D6);
+      const x = entre(rng, Math.ceil(a / 5), Math.floor(b / 5)) * 5;
+      if (degre === 2 ? x % 10 !== 0 : x % 10 === 0) return null;
+      if (x % 100 === 0 || x % 100 === 50) return null;
+      const P = choisir(rng, PRENOMS);
+      const enonce = remplirQ2(texte, {P, deP: deQ2(P), d: decH(x)});
+      return finirD6({sorte, degre, x, enonce, modele});
+    }
+    if (sorte === "secondes") {
+      const [modele, texte, valeurs] = choisir(rng, SECONDES_D6);
+      const x = choisir(rng, valeurs);
+      const enonce = remplirQ2(texte, {P: choisir(rng, PRENOMS), d: decH(x, "min")});
+      return finirD6({sorte, degre, x, u: "min", enonce, modele});
+    }
+    // Les minutes vers les heures décimales.
+    if (sorte === "inv") {
+      const x = degre === 1 ? (rng() < 0.75 ? partieD6(rng, "dixiemes") : partieD6(rng, "quarts")) : partieD6(rng, "centiemes");
+      return x === 10 ? null : finirD6({sorte, degre, x});
+    }
+    if (sorte === "invhm") return finirD6({sorte, degre, x: entre(rng, 1, 4) * 100 + partieD6(rng, degre === 3 ? (rng() < 0.7 ? "centiemes" : "quarts") : "dixiemes")});
+    if (sorte === "invtot") {
+      const x = entre(rng, 1, 3) * 100 + partieD6(rng, degre === 3 ? "centiemes" : rng() < 0.6 ? "dixiemes" : "quarts");
+      return finirD6({sorte, degre, x});
+    }
+    if (sorte === "choix") return choixD6(Math.max(2, degre), rng);
+    if (sorte === "tiers") return tiersD6(3, rng);
+    if (sorte === "comparer") return comparerD6(Math.max(2, degre), rng);
+    return null;
+  }
+  // Les sortes de chaque degré (l'exerciseur, et une place sans sorte).
+  const SORTES_D6 = {1: ["dec", "inv"], 2: ["hmin", "total", "invhm", "invtot", "choix", "comparer", "situation"],
+    3: ["dec", "hmin", "invhm", "total", "choix", "tiers", "comparer", "situation", "secondes"]};
+  // Les places : les dixièmes au degré 1 ; les heures et les minutes, le
+  // piège et « le plus long » au degré 2 ; les centièmes, le tiers
+  // d'heure, les situations et les secondes au degré 3.
+  const PLACES_D6 = {
+    valide: ["dec", "inv", "dec", "hmin", "invhm", "choix", "comparer", "hmin", "situation|secondes", "tiers|invhm"],
+    entraine: ["dec", "inv", "dec", "inv", "dec", "inv",
+      "hmin", "total", "invhm", "hmin", "choix", "invtot", "comparer", "situation", "hmin",
+      "dec", "hmin", "invhm", "choix", "situation", "total", "tiers", "secondes", "comparer", "invhm"],
+    test: ["hmin", "invhm", "choix|tiers", "invtot|total"],
+    aide: ["dec", "hmin", "invhm"],
+    retour: ["hmin|invhm", "total|invtot|comparer"],
+    echauffement: ["hmin|invhm"]
+  };
+  function tirerD6(rng, degre, forme) {
+    const sorte = forme || choisir(rng, SORTES_D6[degre]);
+    for (let essai = 0; essai < 40; essai += 1) {
+      const x = tirerD6Brut(rng, degre, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+
+  // Les erreurs de D6 au pavé (une ligne au petit téléphone, 31 caractères
+  // au plus) : les chiffres après la virgule lus comme des minutes
+  // (« 0,35 h = 35 min », « 1,35 h = 1 h 35 min », « 0,3 h = 3 min ») ;
+  // diviser par 100 (« 36 min = 0,36 h ») ; 1,35 h lu 135 min.
+  function erreursD6(question, lu, lus) {
+    const d = question.donnees;
+    if (!d || d.type !== "d6") return null;
+    const v = lus ? lus.map(y => Number(y) / 1000) : [Number(lu) / 1000];
+    const x = d.x;
+    const h = Math.floor(x / 100);
+    const dd = x % 100;
+    const [H, P] = U_D6[d.u || "h"];
+    if (d.sorte === "inv" || d.sorte === "invhm" || d.sorte === "invtot") {
+      const m = d.sorte === "invtot" ? minDe(x) : minDe(dd);
+      const lu0 = v[0];
+      if (d.sorte !== "invtot" && Math.abs(lu0 - (h + m / 100)) < 1e-9) return {erreur: 4, retour: `${m}${NB}min, ce n'est pas ${decH(m)}.`};
+      if (d.sorte === "invtot" && Math.abs(lu0 - minDe(x) / 100) < 1e-9) return {erreur: 4, retour: "Je divise par 60, pas par 100."};
+      if (d.sorte === "invtot" && Math.abs(lu0 - (Math.floor(minDe(x) / 60) + (minDe(x) % 60) / 100)) < 1e-9) return {erreur: 4, retour: `${minDe(x) % 60}${NB}min, ce n'est pas ${decH(minDe(x) % 60)}.`};
+      if (Math.abs(lu0 - (d.sorte === "invtot" ? minDe(x) : h * 60 + m)) < 1e-9) return {erreur: 5, retour: "La réponse est en heures."};
+      return null;
+    }
+    if (v.length === 2) {
+      if (v[0] === h && v[1] === dd && dd !== minDe(dd)) return {erreur: 1, retour: `1${NB}${H} = 60${NB}${P}, pas 100${NB}${P}.`};
+      if (v[0] === h && dd % 10 === 0 && v[1] === dd / 10) return {erreur: 3, retour: `${decH(dd, H)}, ce n'est pas ${dd / 10}${NB}${P}.`};
+      // (« 10,75 h, ce n'est pas 1 075 min. » : 32 caractères, trop long
+      // pour une ligne au petit téléphone ; la phrase courte.)
+      if (v[0] === Math.floor(x / 60) && v[1] === x % 60 && x >= 60) return {erreur: 2, retour: x >= 1000 ? `Ce n'est pas ${mes(x, P)}.` : `${decH(x, H)}, ce n'est pas ${mes(x, P)}.`};
+      return null;
+    }
+    const t = v[0];
+    if (t === x && x !== minDe(x)) return {erreur: 1, retour: h ? `1${NB}${H} = 60${NB}${P}, pas 100${NB}${P}.` : `${decH(x, H)}, ce n'est pas ${mes(x, P)}.`};
+    if (!h && dd % 10 === 0 && t === dd / 10) return {erreur: 3, retour: `${decH(dd, H)}, ce n'est pas ${dd / 10}${NB}${P}.`};
+    if (h && t === h * 60 + dd && dd !== minDe(dd)) return {erreur: 2, retour: `${decH(dd, H)}, ce n'est pas ${dd}${NB}${P}.`};
+    if (h && dd % 10 === 0 && t === h * 60 + dd / 10) return {erreur: 3, retour: `${decH(dd, H)}, ce n'est pas ${dd / 10}${NB}${P}.`};
+    return null;
+  }
+
+  ETAPES.D6 = {
+    // On te montre : 0,2 h (attendus de 4e), 2,6 h (l'erreur des candidats),
+    // 36 min (attendus).
+    clesExemples: ["D6:h:20>min", "D6:h:260>hmin", "D6:h:60<hmin"],
+    tirer(rng, degre, i, usage, forme) {
+      return tirerD6(rng, degre, forme);
+    },
+    formes(usage, rng) {
+      const p = PLACES_D6[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans Je valide : une même situation une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      if (question.sorteD6 !== "situation" && question.sorteD6 !== "secondes") return true;
+      return !serie.some(x => x.modeleD6 === question.modeleD6);
+    },
+    erreurs(question, lu, lus) { return erreursD6(question, lu, lus); }
+  };
+
+  // ============================================ lot B6-1 : G1 « km/h et m/s » (4e)
+  // Programme de 4e (« convertir des km/h en m/s et inversement ») ; brevet
+  // (« 90 km/h en m/s : 25 m/s », « montrer que 10 m/s = 36 km/h »,
+  // « un éléphant à 5 m/s est plus rapide qu'un cochon à 17 km/h », « un
+  // avion à 1 200 km/h va moins vite que le son, 340 m/s ») ; Japon : la
+  // même vitesse par heure, par minute, par seconde (72 km/h = 1 200 m/min
+  // = 20 m/s), avant « ÷ 3,6 ».
+  // Choix de Gwenaël sur la maquette (21/11, 10 h 30) : l'outil, ce sont
+  // les trois étapes « En 1 h → En 1 min → En 1 s » reliées par ÷ 60 ;
+  // « ÷ 3,6 » vient dans À retenir (et dans l'image au degré 3) ; la
+  // correction : les trois cases remplies en vert, puis la ligne.
+  // Une vitesse est `s2`, le double de sa valeur en m/s (un entier) : 1 m/s
+  // = 3,6 km/h, donc toutes les vitesses tombent juste (0,5 m/s = 1,8 km/h).
+  const msDe = s2 => BigInt(s2) * 500n;
+  const kmhDe = s2 => BigInt(s2) * 1800n;
+  // Les mètres parcourus en 1 h, en 1 min, en 1 s (en millièmes).
+  const metresG1 = s2 => [BigInt(s2) * 1800000n, BigInt(s2) * 30000n, BigInt(s2) * 500n];
+  const vit = (m, u) => `${ecrire(m)}${NB}${u}`;
+  const COL_G1 = [`En 1${NB}h`, `En 1${NB}min`, `En 1${NB}s`];
+  // Les valeurs de chaque degré (en m/s). Sans calculatrice (Gwenaël,
+  // 21/11) : tout se fait de tête par les étapes ÷ 60 (pas 340 m/s au pavé).
+  const VALEURS_G1 = {
+    kmh: {1: [1, 2, 5, 10, 15, 20, 25, 30], 2: [1, 2, 35, 40, 45, 50, 60, 75, 90, 100, 250], 3: ["0,5", "1,5", "2,5", "7,5", "12,5", "17,5", "22,5", 300]},
+    ms: {1: [1, 2, 5, 10, 15, 20, 25, 30], 2: [2, 3, 4, 8, 15, 25, 30, 40, 50], 3: ["0,5", "1,5", "2,5", "7,5", "12,5", 250]}
+  };
+  const s2De = v => Number(milli(v) / 500n);
+  // Situations : la vitesse dans l'unité où on la dit vraiment. [modèle,
+  // énoncé ({P}, {v}), les vitesses (en m/s)].
+  const SITUATIONS_KMH_G1 = [
+    ["littoral", "Sur la route du Littoral, une voiture roule à {v}.", [25]],
+    ["car", "Le Car Jaune roule à {v}.", [20, 25]],
+    ["velo", "{P} roule à vélo à {v}.", [5, "7,5"]],
+    ["marche", "{P} marche à {v}.", ["1,5"]],
+    ["raid", "Sur le Grand Raid, {P} avance à {v}.", [2]],
+    ["scooter", "Un scooter roule à {v}.", ["12,5"]],
+    ["cyclone", "Pendant le cyclone, le vent souffle à {v}.", [50, 60]],
+    ["tgv", "Un TGV roule à {v}.", [90]],
+    ["avion", "Un avion de ligne vole à {v}.", [250]],
+    ["guepard", "Un guépard court à {v}.", [30]]
+  ];
+  const SITUATIONS_MS_G1 = [
+    ["sprint", "{P} court le 100 m à {v}.", [6, 7]],
+    ["elephant", "Un éléphant court à {v}.", [5]],
+    ["escalator", "Un escalator monte à {v}.", ["0,5"]],
+    ["vent", "Le vent souffle à {v}.", [10, 15, 20]],
+    ["baleine", "Une baleine à bosse nage à {v}.", ["2,5"]],
+    ["nage", "{P} nage à {v}.", [1]]
+  ];
+  // Qui va le plus vite ? (Brevet : l'éléphant et le cochon, le son et
+  // l'avion.) [A, nom de A, A en m/s, B, nom de B, B en km/h].
+  const COMPARER_G1 = [
+    ["Un éléphant court à {a}.", "L'éléphant", 5, "Un cochon court à {b}.", "Le cochon", [17, 20]],
+    ["Dans l'air, le son va à {a}.", "Le son", 340, "Un avion vole à {b}.", "L'avion", [1200, 1250]],
+    ["Un guépard court à {a}.", "Le guépard", 30, "Une voiture roule à {b}.", "La voiture", [100, 108, 110]],
+    ["{P} court le 100 m à {a}.", "{P}", 7, "Un cycliste roule à {b}.", "Le cycliste", [20, 25, 30]],
+    ["Le vent souffle à {a}.", "Le vent", 15, "Un scooter roule à {b}.", "Le scooter", [45, 54, 60]],
+    ["Une baleine à bosse nage à {a}.", "La baleine", "2,5", "{P} marche à {b}.", "{P}", [5, 9, 10]]
+  ];
+  // Le chemin de l'outil : de la colonne connue à la colonne cherchée.
+  const etapesG1 = (s2, depuis, vers, km = false) => ({s2, depuis, vers, km});
+
+  // La question finie. spec : {sorte, degre, s2, depuis, vers (les
+  // colonnes : 0 en 1 h, 1 en 1 min, 2 en 1 s), de, a (les unités : km/h,
+  // m/min, m/s), forme, enonce, modele}.
+  const VALEUR_U = {"km/h": kmhDe, "m/s": msDe, "m/min": s2 => BigInt(s2) * 30000n};
+  const COL_U = {"km/h": 0, "m/min": 1, "m/s": 2};
+  function finirG1(spec) {
+    const {sorte, degre, s2, de, a} = spec;
+    const gauche = vit(VALEUR_U[de](s2), de);
+    const rep = VALEUR_U[a](s2);
+    const reponseTexte = vit(rep, a);
+    const depuis = COL_U[de];
+    const vers = COL_U[a];
+    const m = metresG1(s2);
+    let texte;
+    let morceaux;
+    let resume = `${gauche} = ${reponseTexte}`;
+    if (sorte === "par") {
+      // « À 72 km/h, combien de mètres en 1 s ? »
+      const temps = a === "m/s" ? "1 s" : "1 min";
+      const phrase = `À ${gauche}, combien de mètres en ${temps.replace(" ", NB)}${NB}?`;
+      texte = phrase;
+      morceaux = {phrase, apres: "m"};
+      resume = `À ${gauche} : ${vit(rep, "m")} en ${temps.replace(" ", NB)}`;
+    } else if (sorte === "situation") {
+      const avant = "Vitesse :";
+      texte = `${spec.enonce} ${avant} ${CASE}${NB}${a}`;
+      morceaux = {enonce: spec.enonce, avant, apres: a, serre: true};
+    } else {
+      texte = `${gauche} = ${CASE}${NB}${a}`;
+      morceaux = {avant: `${gauche} =`, apres: a};
+    }
+    const reponseFinale = sorte === "par" ? vit(rep, "m") : reponseTexte;
+    // L'outil : la relation au-dessus (« 72 km = 72 000 m », « 1 km =
+    // 1 000 m »), les trois cases dessous ; l'image : le calcul posé, sans
+    // le résultat (au degré 3, le raccourci « ÷ 3,6 »).
+    const relation = de === "km/h" ? `${ecrire(kmhDe(s2))}${NB}km = ${vit(m[0], "m")}` : `1${NB}km = 1${FINE}000${NB}m`;
+    let image;
+    if (degre === 3 && de === "km/h" && a === "m/s") image = ["De km/h à m/s : ÷ 3,6", `${ecrire(kmhDe(s2))} ÷ 3,6`];
+    else if (degre === 3 && de === "m/s" && a === "km/h") image = ["De m/s à km/h : × 3,6", `${ecrire(msDe(s2))} × 3,6`];
+    else {
+      const sens = vers > depuis ? "÷" : "×";
+      const f = Math.abs(vers - depuis) === 2 ? `3${FINE}600` : "60";
+      image = [`${COL_G1[depuis]} : ${vit(m[depuis], "m")}`, `${COL_G1[vers]} : ${vit(m[depuis], "m")} ${sens} ${f}`];
+    }
+    const ligne = sorte === "par" ? `${COL_G1[vers]} : ${reponseFinale}` : `${gauche} = ${reponseTexte}`;
+    // (Vers les km/h : la ligne d'avant, les mètres en kilomètres.)
+    const avantLigne = a === "km/h" ? `${vit(m[0], "m")} = ${ecrire(kmhDe(s2))}${NB}km` : null;
+    return q({
+      code: "G1", degre, forme: sorte === "par" ? "phrase" : "nombre", texte, morceaux,
+      reponse: brut(rep), reponseTexte: reponseFinale, unite: sorte === "par" ? "m" : a, resume,
+      grandeur: "vitesse", outil: "etapes-v", relation, etapesV: etapesG1(s2, depuis, vers, a === "km/h"),
+      noteOutil: vers > depuis ? "Par heure, par minute, puis par seconde." : "Par seconde, par minute, puis par heure.",
+      image, correction: avantLigne ? [avantLigne, ligne] : [ligne], ligneG1: ligne, vertG1: reponseFinale,
+      sorteG1: sorte, modeleG1: spec.modele || sorte,
+      donnees: {type: "g1", sorte, s2, de, a},
+      cle: `G1:${s2}:${de}>${a}`
+    });
+  }
+  // « 90 km/h, cela veut dire : 90 km en 1 h » (degré 1).
+  function sensG1(rng) {
+    const kmh = rng() < 0.5;
+    const v = kmh ? choisir(rng, [30, 50, 90, 110, 130]) : choisir(rng, [2, 5, 8, 10, 20]);
+    const u = kmh ? "km/h" : "m/s";
+    const bonne = kmh ? `${v}${NB}km en 1${NB}h` : `${v}${NB}m en 1${NB}s`;
+    const faux = kmh ? [`${v}${NB}m en 1${NB}s`, `${v}${NB}km en 1${NB}min`] : [`${v}${NB}km en 1${NB}h`, `${v}${NB}m en 1${NB}min`];
+    const choix = melanger(rng, [bonne, ...faux]);
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (c !== bonne) pourquoi[k] = kmh ? "km/h : des km par heure." : "m/s : des mètres par seconde."; });
+    const phrase = `${v}${NB}${u}, cela veut dire${NB}:`;
+    return q({
+      code: "G1", degre: 1, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "sens"}, choix, bon: choix.indexOf(bonne), pourquoi,
+      reponse: bonne, reponseTexte: bonne, unite: null, resume: `${v}${NB}${u} : ${bonne}`, grandeur: "vitesse", outil: "lignes",
+      outilLignes: ["km/h : kilomètres par heure", "m/s : mètres par seconde"], image: [`Le «${NB}par${NB}» veut dire «${NB}en 1${NB}».`, `${v}${NB}${u} : ${v} … en 1 …`],
+      correction: [kmh ? `km/h : ${v}${NB}km en 1${NB}h` : `m/s : ${v}${NB}m en 1${NB}s`], sorteG1: "sens", modeleG1: "sens",
+      donnees: {type: "g1", sorte: "sens", v, u}, cle: `G1:sens:${v}${u}`
+    });
+  }
+  // Qui va le plus vite ? Les deux vitesses en km/h (× 3,6 tombe toujours
+  // juste) ; souvent le piège du plus grand nombre (17 km/h contre 5 m/s).
+  function comparerG1(degre, rng) {
+    const [ta, na, va, tb, nb, vbs] = choisir(rng, COMPARER_G1);
+    const s2 = s2De(va);
+    const vb = choisir(rng, vbs);
+    const [P, P2] = melanger(rng, PRENOMS);
+    const A = na.replace("{P}", P);
+    const B = nb.replace("{P}", P2);
+    const enonce = `${remplirQ2(ta, {P, a: vit(msDe(s2), "m/s")})} ${remplirQ2(tb, {P: P2, b: vit(milli(vb), "km/h")})}`;
+    const kA = kmhDe(s2);
+    const kB = milli(vb);
+    const aGauche = rng() < 0.5;
+    const choix = aGauche ? [A, B, "Même vitesse"] : [B, A, "Même vitesse"];
+    const gagnant = kA === kB ? "Même vitesse" : kA > kB ? A : B;
+    const bon = choix.indexOf(gagnant);
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = `${vit(msDe(s2), "m/s")} = ${vit(kA, "km/h")}.`; });
+    const consigne = `Le plus rapide${NB}?`;
+    const ligne = `${vit(msDe(s2), "m/s")} = ${vit(kA, "km/h")}`;
+    const m = metresG1(s2);
+    return q({
+      code: "G1", degre, forme: "qcm", texte: `${enonce} ${consigne}`, morceaux: {enonce, consigne, serre: true, sorte: "comparer"}, choix, bon, pourquoi,
+      reponse: gagnant, reponseTexte: gagnant, unite: null, resume: kA === kB ? `${ligne} : même vitesse` : `Le plus rapide : ${gagnant}`,
+      grandeur: "vitesse", outil: "etapes-v", relation: `1${NB}km = 1${FINE}000${NB}m`, etapesV: etapesG1(s2, 2, 0, true),
+      noteOutil: "Je compare en km/h.", image: [`En 1${NB}s : ${vit(m[2], "m")}`, `En 1${NB}h : ${vit(m[2], "m")} × 3${FINE}600`],
+      correction: [`${vit(m[0], "m")} = ${ecrire(kA)}${NB}km`, ligne], ligneG1: ligne,
+      vertG1: vit(kA, "km/h"), sorteG1: "comparer", modeleG1: `cmp:${na}`,
+      donnees: {type: "g1", sorte: "comparer", s2, kmhB: brut(kB)}, cle: `G1:cmp:${s2}:${brut(kB)}`
+    });
+  }
+  function tirerG1Brut(rng, degre, sorte) {
+    if (sorte === "sens") return sensG1(rng);
+    if (sorte === "kmh" || sorte === "ms") {
+      const s2 = s2De(choisir(rng, VALEURS_G1[sorte][degre]));
+      return sorte === "kmh" ? finirG1({sorte, degre, s2, de: "km/h", a: "m/s"}) : finirG1({sorte, degre, s2, de: "m/s", a: "km/h"});
+    }
+    if (sorte === "par") {
+      const s2 = s2De(choisir(rng, degre === 1 ? [5, 10, 20, 15] : [5, 10, 15, 20, 25, 30, 40]));
+      return finirG1({sorte, degre, s2, de: "km/h", a: degre === 1 ? "m/s" : "m/min"});
+    }
+    if (sorte === "etape") {
+      const s2 = s2De(choisir(rng, [5, 10, 15, 20, 25, 30, 40, 50]));
+      const [de, a] = degre === 3 ? choisir(rng, [["m/min", "km/h"], ["km/h", "m/min"]]) : choisir(rng, [["km/h", "m/min"], ["m/min", "m/s"]]);
+      return finirG1({sorte, degre, s2, de, a});
+    }
+    if (sorte === "situation") {
+      const enKmh = rng() < 0.55;
+      const [modele, t, vs] = choisir(rng, enKmh ? SITUATIONS_KMH_G1 : SITUATIONS_MS_G1);
+      const s2 = s2De(choisir(rng, vs));
+      // (Le degré 2 : des vitesses rondes ; le degré 3 : toutes.)
+      if (degre === 2 && s2 % 2) return null;
+      const P = choisir(rng, PRENOMS);
+      const de = enKmh ? "km/h" : "m/s";
+      const enonce = remplirQ2(t, {P, v: vit(VALEUR_U[de](s2), de)});
+      return finirG1({sorte, degre, s2, de, a: enKmh ? "m/s" : "km/h", enonce, modele});
+    }
+    if (sorte === "comparer") return comparerG1(degre, rng);
+    return null;
+  }
+  const SORTES_G1 = {1: ["sens", "kmh", "ms", "par"], 2: ["kmh", "ms", "par", "etape", "situation", "comparer"], 3: ["kmh", "ms", "etape", "situation", "comparer"]};
+  const PLACES_G1 = {
+    valide: ["sens", "kmh", "ms", "kmh", "par", "etape", "comparer", "kmh", "ms", "comparer|situation"],
+    entraine: ["sens", "kmh", "ms", "par", "kmh", "ms",
+      "kmh", "ms", "etape", "situation", "par", "comparer", "kmh", "etape", "ms",
+      "kmh", "ms", "situation", "comparer", "etape", "kmh", "situation", "ms", "comparer", "kmh"],
+    test: ["kmh", "situation", "comparer", "ms"],
+    aide: ["kmh", "kmh", "ms"],
+    retour: ["kmh|ms", "comparer|situation|etape"],
+    echauffement: ["kmh|ms"]
+  };
+  function tirerG1(rng, degre, forme) {
+    const sorte = forme || choisir(rng, SORTES_G1[degre]);
+    for (let essai = 0; essai < 40; essai += 1) {
+      const x = tirerG1Brut(rng, degre, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+  // Les erreurs de G1 au pavé (une ligne au petit téléphone) : s'arrêter en
+  // route (les mètres en 1 h, en 1 min), multiplier au lieu de diviser,
+  // oublier les mètres ou les kilomètres.
+  function erreursG1(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "g1" || d.sorte === "sens" || d.sorte === "comparer") return null;
+    const m = metresG1(d.s2);
+    const rep = milli(question.reponse);
+    const ou = ["en 1 h", "en 1 min", "en 1 s"].map(t => t.replace(" ", NB));
+    const v = COL_U[d.a];
+    for (let k = 0; k < 3; k += 1) if (k !== v && lu === m[k]) return {erreur: 1, retour: `${vit(m[k], "m")}, c'est ${ou[k]}.`};
+    if (d.de === "km/h" && d.a === "m/s" && lu === (rep * 36n * 36n) / 100n) return {erreur: 2, retour: "En 1 s, on va moins loin."};
+    if (d.de === "m/s" && d.a === "km/h" && (lu * 36n * 36n) / 100n === rep && lu !== rep) return {erreur: 2, retour: "En 1 h, on va plus loin."};
+    if (d.a === "km/h" && lu === m[0]) return {erreur: 3, retour: "La réponse est en km."};
+    if (d.a !== "km/h" && lu * 1000n === rep) return {erreur: 3, retour: "La réponse est en mètres."};
+    return null;
+  }
+
+  ETAPES.G1 = {
+    // On te montre : 36 km/h (S097 et l'exemple de la carte), 10 m/s (sujet
+    // zéro 2017), 90 km/h (brevet, 25 m/s, puis ÷ 3,6).
+    clesExemples: ["G1:20:km/h>m/s", "G1:20:m/s>km/h", "G1:50:km/h>m/s"],
+    tirer(rng, degre, i, usage, forme) {
+      return tirerG1(rng, degre, forme);
+    },
+    formes(usage, rng) {
+      const p = PLACES_G1[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans Je valide : une même situation, une même paire, une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      if (question.sorteG1 !== "situation" && question.sorteG1 !== "comparer") return true;
+      return !serie.some(x => x.modeleG1 === question.modeleG1);
+    },
+    erreurs(question, lu) { return erreursG1(question, lu); }
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {

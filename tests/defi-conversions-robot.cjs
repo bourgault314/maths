@@ -595,7 +595,7 @@ async function faireLeGeste(page, aide) {
       await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer"].includes(aide.type)) {
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
