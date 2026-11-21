@@ -396,46 +396,50 @@ try {
      jours centrés ; dessous, les portes sur quatre colonnes (les portes
      longues sur deux). Rien d'autre ne change. ---------------------------- */
   @media (min-width: 900px) {
-    main.etroit:has(#ecran-espace:not([hidden])) { max-width: 1080px; padding-top: 28px; }
+    main.etroit:has(#ecran-espace:not([hidden])) { max-width: 1040px; padding-top: 26px; }
     #ecran-espace { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); column-gap: 18px; align-items: stretch; }
     #ecran-espace > h1 { grid-column: 1 / -1; font-size: 38px; margin-bottom: 16px; }
     #ecran-espace > .jour-zone { grid-column: 1; margin: 0; }
     #ecran-espace > .semaine { grid-column: 2; margin: 0; display: flex; flex-direction: column; justify-content: center;
-                               padding: 18px 16px; border-radius: 22px; }
+                               padding: 14px 16px; border-radius: 22px; }
     #ecran-espace > .semaine[hidden] { display: none !important; }
     #ecran-espace > .jour-zone:has(+ .semaine[hidden]) { grid-column: 1 / -1; }
-    .semaine .semaine-ligne { flex-direction: column; align-items: center; gap: 14px; }
+    .semaine .semaine-ligne { flex-direction: column; align-items: center; gap: 10px; }
     .semaine-jours li { width: 40px; }
     .semaine-jours .case-jour { width: 32px; height: 32px; }
     .semaine-jours .lettre { font-size: 13px; }
     .semaine-compte { text-align: center; font-size: 15px; }
-    .semaine-compte strong { font-size: 30px; }
-    .semaine h2 { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 0 14px;
+    .semaine-compte strong { font-size: 26px; }
+    .semaine h2 { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 0 10px;
                   text-align: center; font: 900 17px/1.2 var(--sans); color: var(--blue-dark); }
     #ecran-espace > .portes-titre, #ecran-espace > #applis { grid-column: 1 / -1; }
-    .portes-titre { margin: 26px 0 12px; font-size: 22px; }
-    #applis { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; }
-    #applis > li.long { grid-column: span 2; }
-    #applis > li.long.pleine { grid-column: 1 / -1; }
-    .porte { min-height: 150px; padding: 16px 16px 14px; border-radius: 20px; }
-    .porte .icone { width: 52px; height: 52px; }
-    .porte-nom { margin-top: 10px; font-size: 19px; }
-    .porte-ligne { font-size: 15px; }
-    li.long .porte { grid-template-columns: 52px minmax(0, 1fr) auto; padding: 16px 18px 14px; min-height: 150px; column-gap: 16px; }
-    li.long .monde-p { width: 26px; height: 26px; }
-    li.long .mondes { gap: 5px; }
+    .portes-titre { margin: 24px 0 12px; font-size: 21px; }
+    /* Les portes : toutes de la même taille, serrées sur leur contenu (pas de
+       grand vide — retour de Gwenaël sur la capture de Code, 21/11). Le nombre
+       de colonnes suit le nombre de portes (--portes, posé par la page) : une
+       seule rangée jusqu'à cinq, trois colonnes pour six, quatre au-delà. */
+    #applis { grid-template-columns: repeat(var(--portes, 4), minmax(0, 1fr)); gap: 14px; }
+    #applis > li.long { grid-column: auto; }
+    .porte, li.long .porte { display: flex; flex-direction: column; align-items: flex-start; min-height: 0;
+                             padding: 14px 15px 12px; border-radius: 18px; }
+    .porte .icone { width: 46px; height: 46px; }
+    .porte-nom, li.long .porte-nom { margin-top: 8px; font-size: 18px; }
+    .porte-ligne { font-size: 14.5px; }
+    li.long .mondes { margin-top: 10px; gap: 4px; }
+    li.long .monde-p { width: 24px; height: 24px; }
+    @media (max-width: 1023px) { #applis[data-portes="5"] { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     .insigne { top: 14px; right: 14px; height: 28px; font-size: 14px; }
-    .jour-carte, .jour-carte.fini { min-height: 210px; padding: 20px 24px 22px; gap: 14px; }
+    .jour-carte, .jour-carte.fini { min-height: 164px; padding: 18px 22px 20px; gap: 12px; }
     .jour-icone { flex-basis: 64px; width: 64px; height: 64px; }
     .jour-icone .icone { width: 50px; height: 50px; }
-    .jour-textes strong { font-size: 27px; }
-    .jour-textes span { font-size: 17px; }
+    .jour-textes strong { font-size: 26px; }
+    .jour-textes span { font-size: 16.5px; }
     .jour-tete, .jour-ensuite { font-size: 16px; }
     /* Le bouton à droite de l'activité : la carte se lit d'un coup d'œil. */
     .jour-carte, .jour-carte.fini { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr;
                                     align-items: center; column-gap: 24px; }
     .jour-haut { grid-column: 1 / -1; align-self: start; }
-    .jour-bouton, .jour-faits { margin: 0; min-width: 260px; min-height: 56px; font-size: 20px; }
+    .jour-bouton, .jour-faits { margin: 0; min-width: 210px; min-height: 54px; font-size: 20px; }
     .jour-faits { justify-content: center; }
   }
 </style>
@@ -2022,10 +2026,11 @@ try {
       if (courtes.length % 2 && appli === courtes[courtes.length - 1]) li.classList.add("long");
       liste.append(li);
     });
-    // Grand écran, quatre colonnes : une porte longue seule sur sa rangée
-    // prend toute la largeur.
-    const cases = [...liste.children].reduce((n, li) => n + (li.classList.contains("long") ? 2 : 1), 0);
-    if (cases % 4 === 2 && liste.lastElementChild) liste.lastElementChild.classList.add("pleine");
+    // Grand écran : les portes toutes égales, une rangée jusqu'à cinq, trois
+    // colonnes pour six (deux rangées pleines), quatre au-delà.
+    const n = liste.children.length;
+    liste.style.setProperty("--portes", String(n <= 5 ? Math.max(n, 1) : n === 6 ? 3 : 4));
+    liste.dataset.portes = String(n);
     appliEvaluation = disponibles.find(appli => appli.cle === "defi-tables") || null;
     const tuileEvaluation = $("evaluation-lien");
     if (!dejaSuivi) tuileEvaluation.hidden = true;

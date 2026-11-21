@@ -253,8 +253,10 @@ test("l'ordre des portes est fixe : Mes cours, la classe, SPLAT! ; une porte cou
   const espace = fonction("afficherEspace");
   assert.match(espace, /const rang = a => \(a\.cle === "cours" \? 0 : a\.cle === "splat" \? 2 : 1\);/);
   assert.match(espace, /if \(courtes\.length % 2 && appli === courtes\[courtes\.length - 1\]\) li\.classList\.add\("long"\);/);
-  assert.match(espace, /if \(cases % 4 === 2 && liste\.lastElementChild\) liste\.lastElementChild\.classList\.add\("pleine"\);/);
-  assert.match(style, /#applis > li\.long\.pleine \{ grid-column: 1 \/ -1; \}/);
+  // Grand écran (retour de Gwenaël, 21/11 : « les gros espaces blancs, non ») : portes toutes égales.
+  assert.match(espace, /liste\.style\.setProperty\("--portes", String\(n <= 5 \? Math\.max\(n, 1\) : n === 6 \? 3 : 4\)\);/);
+  assert.match(style, /#applis \{ grid-template-columns: repeat\(var\(--portes, 4\), minmax\(0, 1fr\)\); gap: 14px; \}/);
+  assert.match(style, /\.porte, li\.long \.porte \{ display: flex; flex-direction: column; align-items: flex-start; min-height: 0;/, "pas de hauteur imposée : pas de grand vide");
   assert.match(style, /@media \(max-width: 359px\) \{\n\s*#applis \{ grid-template-columns: minmax\(0, 1fr\); gap: 10px; \}/, "petit téléphone : une porte par ligne");
 });
 
