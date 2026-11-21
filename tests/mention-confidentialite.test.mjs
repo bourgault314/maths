@@ -358,13 +358,15 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 8 novembre 2026/);
+  assert.match(page, /Dernière mise à jour : 21 novembre 2026/);
   // Lot « compteur de visites » (06/11/2026) : la page dit ce que reçoit le compteur, et ce qu'il ne garde pas.
   assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil, sauf, le temps d’un onglet, une marque sans aucune donnée/);
   assert.match(page, /sans ce qui suit le «&nbsp;\?&nbsp;»/);
   assert.match(page, /Il ne garde ni votre adresse IP ni aucun identifiant/);
   assert.match(page, /Les pages du suivi de classe ne sont pas comptées/);
-  assert.match(page, /<code>mathsgo-compteur-ignorer<\/code>/, "la seule case du compteur est déclarée");
+  assert.match(page, /<code>mathsgo-compteur-ignorer<\/code>/, "la case durable du compteur est déclarée");
+  // Lot « compteur-silence-suivi » (21/11/2026) : la marque d'onglet du compteur est déclarée, et dit ce qu'elle est.
+  assert.match(page, /<li><code>mathsgo-compteur-taire<\/code> — stockage de session \(le temps d’un onglet\), valeur «&nbsp;1&nbsp;», aucune donnée, effacée à la fermeture de l’onglet&nbsp;: ne pas compter les élèves venus de leur espace\.<\/li>/);
   assert.doesNotMatch(page, /Mesure d’audience&nbsp;: aucune|pas de statistiques|aucune page n’appelle de serveur tiers/, "plus de phrase devenue fausse");
   assert.match(page, /mathsgo-suivi-identite/, "la clé d'identité de l'onglet (lot 8) est déclarée");
   assert.doesNotMatch(page, /<code>_ga<\/code>/, "plus de ligne _ga dans le tableau");
