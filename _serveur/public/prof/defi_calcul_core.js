@@ -1510,27 +1510,37 @@
   // palier 1, A2-5 et F9-1 au palier 2, A8-3 et F5-3 réunis à A8-2 et F5-2,
   // A9 et M9 en deux niveaux.
   const ORDRE = Object.freeze([
-    // palier 1 : 41 compétences (lot 6 « programmes 2 » : F9-1, les
+    // palier 1 : 44 compétences (lot 6 « programmes 2 » : F9-1, les
     // dénominateurs multiples dans l'unité, CE2 ; F9-2 et F9-3 sont les
     // anciens F9-1 et F9-2, F6-3 et F6-4 les anciens F6-2 et F6-3)
-    "A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A10-2", "A11-2", "A2-1", "A3-1",
-    "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3", "A3-2",
-    "F8-1", "A7-1", "M1-2", "A10-3", "A11-3", "F8-2", "A5-2", "A6-2", "M3-1", "A7-2",
-    "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3", "F9-1", "M8-1", "M1-3", "M6-2", "M8-2",
-    // palier 2 : 34 compétences (lot 6 « programmes 2 » : F6-2, les
+    // Lot C2 (21/11/2026, choix de Gwenaël après l'audit de cohérence) :
+    // doubles et moitiés en deux niveaux (M1-1 à M1-6) ; les quatre marches
+    // à l'envers remises à l'endroit — « Compléments à la dizaine » avant
+    // « passer la dizaine », « Moitiés jusqu'à 40 » juste après, « un chiffre
+    // en passant la centaine » avant « Dizaines entières en passant la
+    // centaine », « en découpant » avant « nombres usuels » et avant « × 4 ».
+    "A1-1", "A1-2", "A1-3", "A10-1", "A11-1", "M1-1", "A2-1", "A10-2", "A11-2", "M1-2",
+    "A3-1", "M4-1", "A2-2", "M2-1", "A4-1", "A4-2", "A5-1", "A6-1", "M4-2", "A2-3",
+    "A10-3", "A11-3", "A3-2", "F8-1", "A7-1", "M1-3", "M1-4", "M1-5", "M1-6", "F8-2",
+    "A5-2", "A6-2", "M3-1", "A7-2", "M5-1", "A4-3", "M6-1", "A8-1", "F6-1", "A5-3",
+    "F9-1", "M8-1", "M6-2", "M8-2",
+    // palier 2 : 33 compétences (lot 6 « programmes 2 » : F6-2, les
     // fractions égales du CM1) (lot 7e-2 : F8-3 arrive du CM2 ; lot 7d :
-    // « Quotient et reste » arrive du CM2, rapport de Codex du 14/11)
+    // « Quotient et reste » arrive du CM2, rapport de Codex du 14/11 ; lot C2 :
+    // F3-3 passe au CM2, choix de Gwenaël du 21/11)
     "A2-4", "A6-3", "D1-1", "M2-2", "F2-1", "A3-3", "D2-1", "D3-1", "M7-1", "A7-3",
     "F1-1", "A2-5", "M3-2", "D1-2", "F3-1", "A4-4", "M7-2", "D4-1", "F3-2", "C1-1",
-    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "F3-3", "C3-2", "F6-2", "M11-1", "F5-2", "F8-3",
+    "A8-2", "F5-1", "M8-3", "C3-1", "M10-1", "C3-2", "F6-2", "M11-1", "F5-2", "F8-3",
     "M12-1", "M11-2", "F9-2",
-    // palier 3 : 40 compétences
-    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "M13-1", "D1-3", "D2-3",
+    // palier 3 : 43 compétences (lot C2 : D8 en cinq niveaux, doubles puis
+    // moitiés ; F3-3 arrive du CM1, juste après la moitié des impairs — la
+    // moitié d'un impair est un objectif du CM2, choix de Gwenaël du 21/11)
+    "A5-4", "A6-4", "D2-2", "D3-2", "M3-3", "F2-2", "D8-1", "F3-3", "M13-1", "D1-3", "D2-3",
     "D3-3", "F1-2", "D6-1", "M7-3", "D4-2", "D5-1", "F4-1", "D6-2", "M13-2",
-    "D8-2", "F6-3", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2",
-    // (Lot 6 « programmes 2 » : D9-1 après D8-3, la moitié aux centièmes —
-    // 1,47 × 5 = 14,7 ÷ 2.)
-    "F6-4", "D8-3", "D9-1", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
+    "D8-2", "D8-3", "F6-3", "A3-4", "D4-3", "C1-2", "D7-1", "M10-2",
+    // (Lot 6 « programmes 2 » : D9-1 après la moitié aux centièmes, D8-5
+    // depuis le lot C2 — 1,47 × 5 = 14,7 ÷ 2.)
+    "F6-4", "D8-4", "D8-5", "D9-1", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
     "F9-3", "C4-2", "F4-2",
     // palier 4 : 12 compétences (lot 7c : F4-2 passe au CM2)
     "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3",
@@ -3647,23 +3657,40 @@
   // Les viviers des niveaux, par forme (les calculs d'un niveau ne sont
   // jamais ceux d'un autre).
   const entre = (de, a, pas = 1) => Array.from({length: Math.floor((a - de) / pas) + 1}, (_, i) => de + i * pas);
+  // Lot C2 (21/11/2026, choix de Gwenaël après l'audit de cohérence) :
+  // doubles et moitiés en deux niveaux, chacun avec sa leçon — 1 et 2
+  // jusqu'à 40 (et des dizaines), 3 et 4 en découpant, 5 et 6 les nombres
+  // usuels (« en découpant » avant « usuels » : la leçon des usuels découpe
+  // 75 en 70 et 5). Les viviers sont ceux d'avant, partagés ; « 2 × □ »
+  // quitte le niveau 1 (le signe × n'est pas encore vu) pour les moitiés
+  // des nombres usuels (« 1 000 = 2 × … », calcul mental CM1), sur leurs
+  // nombres (la moitié de 70 est au niveau 2).
   const M1_VIVIERS = Object.freeze({
     1: Object.freeze({
       double: [...entre(2, 20), 30, 40, 50],
-      moitie: [2, ...entre(4, 40, 2), 50, 60, 70, 80, 90, 100],
-      "trou-double": [...entre(12, 40, 2), 50, 60, 70, 80, 90, 100],
-      "double-de-trou": [...entre(4, 20, 2), 40, 60, 80, 100],
-      "moitie-de-trou": [...entre(2, 10), 20, 30, 40, 50]
+      "double-de-trou": [...entre(4, 20, 2), 40, 60, 80, 100]
     }),
     2: Object.freeze({
-      double: [25, 35, 45, 75, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900],
-      moitie: [120, 140, 160, 180, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000, 3000, 5000],
-      "double-fois": [25, 75, 150, 250, 350, 450, 500, 600, 750, 1500, 2500]
+      moitie: [2, ...entre(4, 40, 2), 50, 60, 70, 80, 90, 100],
+      "moitie-de-trou": [...entre(2, 10), 20, 30, 40, 50]
     }),
+    // (Lot C2 : seulement des doubles — 14 nombres à 3 chiffres de plus, pour
+    // qu'un calcul « un cran plus facile » reste à 3 chiffres.)
     3: Object.freeze({
-      double: [...entre(21, 49).filter(n => n % 5 !== 0), 124, 132, 136, 143, 214, 225, 236, 318, 342, 417],
+      double: [...entre(21, 49).filter(n => n % 5 !== 0), 124, 132, 136, 143, 214, 225, 236, 318, 342, 417,
+        112, 121, 128, 134, 141, 146, 216, 223, 231, 238, 314, 327, 412, 434]
+    }),
+    4: Object.freeze({
       moitie: [...entre(42, 98, 2).filter(n => n % 10 !== 0), 230, 250, 270, 370, 410, 470, 520, 650, 830, 910],
       division: [...entre(42, 98, 2).filter(n => n % 10 !== 0), 230, 250, 270, 370, 410, 470, 520, 650, 830, 910]
+    }),
+    5: Object.freeze({
+      double: [25, 35, 45, 75, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900],
+      "double-fois": [25, 75, 150, 250, 350, 450, 500, 600, 750, 1500, 2500]
+    }),
+    6: Object.freeze({
+      moitie: [120, 140, 160, 180, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000, 3000, 5000],
+      "trou-double": [120, 150, 200, 300, 400, 500, 600, 800, 1000, 1200]
     })
   });
 
@@ -3674,7 +3701,8 @@
       const nombres = repartir(total, parts);
       const pris = new Set(imposes.map(c => c.cle));
       const tires = formes.flatMap((forme, i) => {
-        const deja = imposes.filter(c => c.forme === forme).length;
+        // (« double de □ = 12 » est rangé avec « 2 × □ » : forme « trou-double ».)
+        const deja = imposes.filter(c => c.forme === (forme === "double-de-trou" ? "trou-double" : forme)).length;
         return melanger(rng, viviers[forme].map(n => m1Calcul(niveau, forme, n)))
           .filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
       });
@@ -3732,10 +3760,13 @@
     // Lot 3a : le boulier pour le double, au niveau 1 seulement.
     manipulation: calcul => (calcul.niveau === 1 ? m1Perles(calcul) : null), difficulte: m1Difficulte,
     niveaux: [
+      // Lot C2 (21/11/2026, choix de Gwenaël) : six niveaux, le double puis
+      // la moitié, chacun sa leçon. Le nom dit ce que le niveau demande
+      // (« et des dizaines » : double de 50, moitié de 90).
       {
-        n: 1, titre: "doubles de 1 à 20, moitiés des pairs jusqu’à 40, dizaines", nom: "Doubles et moitiés jusqu’à 40", palier: 1, type: "F",
-        composer: m1Niveau(1, [4, 4, 2, 1, 1]),
-        imposes: [m1Calcul(1, "moitie", 60), m1Calcul(1, "trou-double", 70)],
+        n: 1, titre: "doubles de 1 à 20, et de 30, 40, 50", nom: "Doubles jusqu’à 40 et des dizaines", palier: 1, type: "F",
+        composer: m1Niveau(1, [4, 1]),
+        imposes: [m1Calcul(1, "double-de-trou", 12)],
         apprends: m1Apprends({
           manipule: true,
           represente: m1Calcul(0, "double", 17),
@@ -3744,31 +3775,30 @@
           etapesRepresente: [["10 + 10 = ?", 20], ["7 + 7 = ?", 14], ["double de 17 = ?", 34]],
           consigneEcris: "double de 14 = 10 + 10 + 4 + 4",
           etapes: [["10 + 10 = ?", 20], ["4 + 4 = ?", 8], ["double de 14 = ?", 28]],
-          bilan: "Le double, c’est le nombre et encore le nombre : double de 17 = 17 + 17 = 34.",
-          // Décision 5 du lot 3 : la leçon sur le double ; la moitié arrive
-          // à l'entraînement (« Nouveau : on cherche la moitié »).
-          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 34 = 17"}
+          bilan: "Le double, c’est le nombre et encore le nombre : double de 17 = 17 + 17 = 34."
         })
       },
       {
-        n: 2, titre: "nombres usuels (25, 75, 150, 600, 1 200…)", nom: "Doubles et moitiés des nombres usuels", palier: 1, type: "F",
-        composer: m1Niveau(2, [5, 5, 2]),
-        imposes: [m1Calcul(2, "moitie", 1200), m1Calcul(2, "double-fois", 250)],
+        // (La leçon : moitié de 34, on coupe 30 et 4 — calcul mental CP,
+        // p. 5 : « la moitié de 40 est 20, la moitié de 6 est 3 ».)
+        n: 2, titre: "moitiés des pairs jusqu’à 40, et de 50 à 100", nom: "Moitiés jusqu’à 40 et des dizaines", palier: 1, type: "F",
+        composer: m1Niveau(2, [4, 1]),
+        imposes: [m1Calcul(2, "moitie", 60)],
         apprends: m1Apprends({
-          represente: m1Calcul(0, "double", 75),
-          ecris: m1Calcul(0, "double", 250),
-          consigne: "double de 75 = 2 × 75",
-          etapesRepresente: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
-          consigneEcris: "double de 250 = 2 × 250",
-          etapes: [["2 × 200 = ?", 400], ["2 × 50 = ?", 100], ["double de 250 = ?", 500]],
-          bilan: "Ces doubles-là, je les sais par cœur : double de 75 = 150.",
-          autre: {phrase: "La moitié, c’est le nombre qu’on double :", calcul: "moitié de 150 = 75"}
+          represente: m1Calcul(0, "moitie", 34),
+          ecris: m1Calcul(0, "moitie", 38),
+          // (Au téléphone, « moitié de 4 » ne se coupe pas en fin de ligne.)
+          consigne: "moitié\u00a0de\u00a034 = moitié\u00a0de\u00a030 + moitié\u00a0de\u00a04",
+          etapesRepresente: [["moitié de 30 = ?", 15], ["moitié de 4 = ?", 2], ["moitié de 34 = ?", 17]],
+          consigneEcris: "moitié\u00a0de\u00a038 = moitié\u00a0de\u00a030 + moitié\u00a0de\u00a08",
+          etapes: [["moitié de 30 = ?", 15], ["moitié de 8 = ?", 4], ["moitié de 38 = ?", 19]],
+          bilan: "Pour la moitié, je coupe chaque morceau en deux : moitié de 34 = 15 + 2 = 17."
         })
       },
       {
-        n: 3, titre: "n’importe quel nombre (46, 136, 470…)", nom: "Doubles et moitiés en découpant", palier: 1, type: "P",
-        composer: m1Niveau(3, [4, 4, 2]),
-        imposes: [m1Calcul(3, "moitie", 470), m1Calcul(3, "double", 136), m1Calcul(3, "division", 92)],
+        n: 3, titre: "n’importe quel nombre (46, 136, 470…)", nom: "Doubles en découpant", palier: 1, type: "P",
+        composer: m1Niveau(3, [1]),
+        imposes: [m1Calcul(3, "double", 136)],
         apprends: m1Apprends({
           represente: m1Calcul(0, "double", 470),
           ecris: m1Calcul(0, "double", 36),
@@ -3776,11 +3806,53 @@
           etapesRepresente: [["2 × 400 = ?", 800], ["2 × 70 = ?", 140], ["double de 470 = ?", 940]],
           consigneEcris: "double de 36 = 2 × 30 + 2 × 6",
           etapes: [["2 × 30 = ?", 60], ["2 × 6 = ?", 12], ["double de 36 = ?", 72]],
-          bilan: "Pour le double, je double chaque morceau : double de 470 = 2 × 400 + 2 × 70 = 940.",
-          // Lot 7e-2 (choix de Gwenaël, calcul mental CP p. 5 et CE1 p. 9) :
-          // la moitié se découpe aussi (46 = 40 + 6) ; annoncée avec son
-          // dessin au premier calcul de moitié (NOUVEAUTES).
-          autre: {phrase: "Pour la moitié, je coupe aussi en morceaux :", calcul: "moitié de 46 = 20 + 3 = 23"}
+          bilan: "Pour le double, je double chaque morceau : double de 470 = 2 × 400 + 2 × 70 = 940."
+        })
+      },
+      {
+        // (Lot 7e-2, choix de Gwenaël, calcul mental CP p. 5 et CE1 p. 9 :
+        // la moitié se découpe aussi. Lot C2 : sa propre leçon, sur un
+        // calcul moyen du niveau ; « ÷ 2 » s'écrit comme dans les doubles et
+        // moitiés de décimaux.)
+        n: 4, titre: "n’importe quel nombre pair (46, 136, 470…)", nom: "Moitiés en découpant", palier: 1, type: "P",
+        composer: m1Niveau(4, [3, 1]),
+        imposes: [m1Calcul(4, "moitie", 470), m1Calcul(4, "division", 92)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "moitie", 76),
+          ecris: m1Calcul(0, "moitie", 58),
+          consigne: "moitié de 76 = 70 ÷ 2 + 6 ÷ 2",
+          etapesRepresente: [["70 ÷ 2 = ?", 35], ["6 ÷ 2 = ?", 3], ["moitié de 76 = ?", 38]],
+          consigneEcris: "moitié de 58 = 50 ÷ 2 + 8 ÷ 2",
+          etapes: [["50 ÷ 2 = ?", 25], ["8 ÷ 2 = ?", 4], ["moitié de 58 = ?", 29]],
+          bilan: "Pour la moitié, je coupe chaque morceau en deux : moitié de 76 = 70 ÷ 2 + 6 ÷ 2 = 35 + 3 = 38."
+        })
+      },
+      {
+        n: 5, titre: "nombres usuels (25, 75, 150, 600…)", nom: "Doubles des nombres usuels", palier: 1, type: "F",
+        composer: m1Niveau(5, [5, 2]),
+        imposes: [m1Calcul(5, "double-fois", 250)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "double", 75),
+          ecris: m1Calcul(0, "double", 250),
+          consigne: "double de 75 = 2 × 75",
+          etapesRepresente: [["2 × 70 = ?", 140], ["2 × 5 = ?", 10], ["double de 75 = ?", 150]],
+          consigneEcris: "double de 250 = 2 × 250",
+          etapes: [["2 × 200 = ?", 400], ["2 × 50 = ?", 100], ["double de 250 = ?", 500]],
+          bilan: "Ces doubles-là, je les sais par cœur : double de 75 = 150."
+        })
+      },
+      {
+        n: 6, titre: "nombres usuels (150, 300, 1 200…)", nom: "Moitiés des nombres usuels", palier: 1, type: "F",
+        composer: m1Niveau(6, [5, 2]),
+        imposes: [m1Calcul(6, "moitie", 1200)],
+        apprends: m1Apprends({
+          represente: m1Calcul(0, "moitie", 150),
+          ecris: m1Calcul(0, "moitie", 1400),
+          consigne: "moitié de 150 = 150 ÷ 2",
+          etapesRepresente: [["100 ÷ 2 = ?", 50], ["50 ÷ 2 = ?", 25], ["moitié de 150 = ?", 75]],
+          consigneEcris: "moitié de 1\u00a0400 = 1\u00a0400 ÷ 2",
+          etapes: [["1\u00a0000 ÷ 2 = ?", 500], ["400 ÷ 2 = ?", 200], ["moitié de 1\u00a0400 = ?", 700]],
+          bilan: "Ces moitiés-là, je les sais par cœur : moitié de 150 = 75."
         })
       }
     ]
@@ -7499,22 +7571,29 @@
     const impairs = entre(1, 15, 2);
     const paquet = (forme, nombres, ecrit = () => null) => Object.freeze(nombres.map(n => d8Calcul(niveau, forme, n, ecrit(n))));
     if (niveau === 1) return Object.freeze([paquet("moitie", impairs), paquet("division", impairs), paquet("trou-double", impairs)]);
-    if (niveau === 2) {
-      // (Lot 6 « programmes 2 », relecture de Codex : quelques petits
-      // décimaux aussi — le double de 0,7, la moitié de 0,8. Un seul
-      // morceau : pas de J'écris tiré.)
+    // (Lot 6 « programmes 2 », relecture de Codex : quelques petits
+    // décimaux aussi — le double de 0,7, la moitié de 0,8. Un seul
+    // morceau : pas de J'écris tiré.)
+    // Lot C2 : les doubles (2, 4) et les moitiés (3, 5), chacun son niveau.
+    if (niveau === 2 || niveau === 3) {
       const doubles = entre(0, 19).flatMap(e => entre(1, 9).map(d => exact(e + d / 10)));
       const moities = [...entre(0, 16), 18].flatMap(e => [2, 4, 6, 8].map(d => exact(e + d / 10)));
-      return Object.freeze([paquet("double", doubles), paquet("double-fois", doubles), paquet("moitie", moities), paquet("division", moities)]);
+      return niveau === 2 ? Object.freeze([paquet("double", doubles), paquet("double-fois", doubles)])
+        : Object.freeze([paquet("moitie", moities), paquet("division", moities)]);
     }
     const centiemes = entre(1, 9).flatMap(e => entre(1, 99).filter(x => x % 10).map(x => exact(e + x / 100)));
+    if (niveau === 4) return Object.freeze([paquet("double-fois", centiemes), paquet("double", centiemes)]);
     const pairs = centiemes.filter(x => Math.round(x * 100) % 2 === 0);
+    // (Lot C2 : le piège de l'évaluation de 6e, Q13 — moitié de 8,10 = 4,05,
+    // et pas 4,5 — dans chaque série, à part : seuls 2,10, 4,10, 6,10 et 8,10
+    // le tendent.)
+    const piege = x => Math.round(x * 100) % 100 === 10 && Math.floor(x) % 2 === 0;
     const zeros = entre(1, 9).flatMap(e => [1, 3, 5, 7, 9].map(y => exact(e + y / 10)));
     const avecZero = n => `${f(n)}0`;
-    return Object.freeze([paquet("double-fois", centiemes), paquet("double", centiemes), paquet("division", pairs), paquet("moitie", pairs),
-      paquet("moitie", zeros, avecZero), paquet("division", zeros, avecZero)]);
+    return Object.freeze([paquet("division", pairs), paquet("moitie", pairs), paquet("moitie", zeros.filter(x => !piege(x)), avecZero),
+      paquet("division", zeros, avecZero), paquet("moitie", zeros.filter(piege), avecZero)]);
   }
-  const D8_VIVIERS = Object.freeze({1: d8Vivier(1), 2: d8Vivier(2), 3: d8Vivier(3)});
+  const D8_VIVIERS = Object.freeze({1: d8Vivier(1), 2: d8Vivier(2), 3: d8Vivier(3), 4: d8Vivier(4), 5: d8Vivier(5)});
   // (Chaque paquet se tire à part, dans ses proportions.)
   function d8Composer(niveau, parts) {
     const paquets = D8_VIVIERS[niveau];
@@ -7593,7 +7672,9 @@
     aide_entraine: "barres",
     erreurs: D8_ERREURS, image: d8Image, aide: d8Aide, phrase: d8Phrase, manipulation: () => null, difficulte: d8Difficulte,
     // Comme M1 (lot 7e-2) : la première moitié arrive annoncée, avec son
-    // dessin — chaque morceau déjà coupé en deux ; l'élève les réunit.
+    // dessin — chaque morceau déjà coupé en deux ; l'élève les réunit
+    // (depuis le lot C2, seulement une écriture nouvelle dans un niveau de
+    // moitiés : « ÷ 2 » après « moitié de »).
     aideNouveau: calcul => (d8Moitie(calcul) && calcul.donnees.morceaux.length > 1
       ? Object.assign(d8Aide(calcul), {trouves: calcul.donnees.morceaux.map((_, i) => i), fini: false}) : null),
     niveaux: [
@@ -7607,26 +7688,48 @@
           bilan: "La moitié de 1, c’est 0,5 : 8 ÷ 2 = 4. 1 ÷ 2 = 0,5. moitié de 9 = 4 + 0,5 = 4,5."
         })
       },
+      // Lot C2 (21/11/2026, choix de Gwenaël) : le double puis la moitié,
+      // chacun son niveau et sa leçon (les leçons des moitiés sont les
+      // calculs que la leçon des doubles montrait en dernier).
       {
-        n: 2, titre: "un chiffre après la virgule", nom: "Doubles et moitiés\u00a0: dixièmes", palier: 3, type: "P",
-        composer: d8Composer(2, [3, 2, 3, 2]),
-        imposes: [d8Calcul(2, "double", 7.3), d8Calcul(2, "moitie", 13.6)],
+        n: 2, titre: "un chiffre après la virgule", nom: "Doubles\u00a0: dixièmes", palier: 3, type: "P",
+        composer: d8Composer(2, [3, 2]),
+        imposes: [d8Calcul(2, "double", 7.3)],
         apprends: d8Apprends({
           represente: d8Calcul(0, "double", 13.6),
           ecris: d8Calcul(0, "double", 7.8),
-          bilan: "Je double chaque morceau : double de 13,6 = 2 × 13 + 2 × 0,6 = 26 + 1,2 = 27,2.",
-          autre: {phrase: "Pour la moitié, je coupe chaque morceau\u00a0:", calcul: "moitié de 13,6 = 6,5 + 0,3 = 6,8"}
+          bilan: "Je double chaque morceau : double de 13,6 = 2 × 13 + 2 × 0,6 = 26 + 1,2 = 27,2."
         })
       },
       {
-        n: 3, titre: "deux chiffres après la virgule", nom: "Doubles et moitiés\u00a0: centièmes", palier: 3, type: "P",
-        composer: d8Composer(3, [2, 2, 2, 2, 1, 1]),
-        imposes: [d8Calcul(3, "division", 1.22), d8Calcul(3, "moitie", 8.1, "8,10")],
+        n: 3, titre: "un chiffre après la virgule", nom: "Moitiés\u00a0: dixièmes", palier: 3, type: "P",
+        composer: d8Composer(3, [3, 2]),
+        imposes: [d8Calcul(3, "division", 7.4)],
+        apprends: d8Apprends({
+          represente: d8Calcul(0, "moitie", 13.6),
+          ecris: d8Calcul(0, "moitie", 15.8),
+          bilan: "Je coupe chaque morceau en deux : moitié de 13,6 = 13 ÷ 2 + 0,6 ÷ 2 = 6,5 + 0,3 = 6,8."
+        })
+      },
+      {
+        n: 4, titre: "deux chiffres après la virgule", nom: "Doubles\u00a0: centièmes", palier: 3, type: "P",
+        composer: d8Composer(4, [1, 1]),
+        imposes: [d8Calcul(4, "double", 7.55)],
         apprends: d8Apprends({
           represente: d8Calcul(0, "double-fois", 4.35),
           ecris: d8Calcul(0, "double-fois", 3.26),
-          bilan: "Je double chaque morceau : 2 × 4,35 = 2 × 4 + 2 × 0,35 = 8 + 0,7 = 8,7.",
-          autre: {phrase: "Pour la moitié, je coupe chaque morceau\u00a0:", calcul: "1,22 ÷ 2 = 0,5 + 0,11 = 0,61"}
+          bilan: "Je double chaque morceau : 2 × 4,35 = 2 × 4 + 2 × 0,35 = 8 + 0,7 = 8,7."
+        })
+      },
+      {
+        // (Calcul mental CM2, p. 18 : 1,22 ÷ 2 = (1 ÷ 2) + (0,22 ÷ 2).)
+        n: 5, titre: "deux chiffres après la virgule", nom: "Moitiés\u00a0: centièmes", palier: 3, type: "P",
+        composer: d8Composer(5, [2, 2, 1, 1, 1]),
+        imposes: [d8Calcul(5, "moitie", 8.1, "8,10")],
+        apprends: d8Apprends({
+          represente: d8Calcul(0, "division", 1.22),
+          ecris: d8Calcul(0, "division", 3.48),
+          bilan: "Je coupe chaque morceau en deux : 1,22 ÷ 2 = 1 ÷ 2 + 0,22 ÷ 2 = 0,5 + 0,11 = 0,61."
         })
       }
     ]
@@ -10379,7 +10482,11 @@
         })
       },
       {
-        n: 3, titre: "résultat non entier", nom: "Part d’une quantité\u00a0: résultat décimal", palier: 2, type: "P", virgule: true,
+        // Lot C2 (choix de Gwenaël du 21/11) : au CM2, juste après « Moitié
+        // des impairs jusqu'à 15 » — la moitié d'un impair (1/2 de 7 L, 1/4
+        // de 10 m) est un objectif du CM2 (programme ; calcul mental CM2,
+        // p. 16) ; au CM1, seulement l'exemple « 1/4 de 10 m » en mots.
+        n: 3, titre: "résultat non entier", nom: "Part d’une quantité\u00a0: résultat décimal", palier: 3, type: "P", virgule: true,
         composer: vivierNiveau(F3_VIVIERS[3], [3, 3, 2, 2]),
         imposes: [f3(3, "1/4 de 6 kg"), f3(3, "1/5 de 8 €")],
         apprends: f3Apprends({
@@ -11438,7 +11545,10 @@
     "A11-2": [["depuis une dizaine", (c, d) => d.n % 10 === 0], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
     "A10-3": [["jusqu’à la centaine", (c, d) => d.m % 100 === 0], ["après la centaine", (c, d) => d.m < 1000], ["après 1 000", toutes]],
     "A11-3": [["depuis une centaine", (c, d) => d.n % 100 === 0], ["à 3 chiffres", (c, d) => d.n < 1000], ["à 4 chiffres", toutes]],
-    "M1-1": parFormes(["double", "double"], ["moitié", "moitie"], ["double de □", "trou-double"], ["moitié de □", "moitie-de-trou"]),
+    // Lot C2 : doubles et moitiés en deux niveaux (« double de □ = 12 » est
+    // rangé avec « 2 × □ » : forme « trou-double »).
+    "M1-1": parFormes(["double", "double"], ["double de □", "trou-double"]),
+    "M1-2": parFormes(["moitié", "moitie"], ["moitié de □", "moitie-de-trou"]),
     "A2-1": [["à 2 chiffres", (c, d) => d.a < 100], ["à 3 chiffres", toutes]],
     "A3-1": [["+ dizaines", (c, d) => c.forme === "somme" && Math.abs(d.d) < 100], ["− dizaines", (c, d) => c.forme === "difference" && Math.abs(d.d) < 100],
       ["+ centaines", (c, d) => c.forme === "somme"], ["− centaines", toutes]],
@@ -11456,7 +11566,6 @@
     "A3-2": parFormes(["+ dizaines", "somme"], ["− dizaines", "difference"]),
     "F8-1": parFormes(["a/b + c/b", "somme"], ["deux fois la même", "fois"], ["parts une à une", "unitaires"], ["a/b − c/b", "difference"]),
     "A7-1": [["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
-    "M1-2": parFormes(["double", "double", "double-fois"], ["moitié", "moitie"]),
     "F8-2": parFormes(["1 − a/b", "un-moins"], ["a/b + □ = 1", "complement"], ["1 − a/b − c/b", "un-moins-plusieurs"]),
     "A5-2": [["+ 19", (c, d) => d.a === 19], ["+ 29", (c, d) => d.a === 29], ["+ 39", toutes]],
     "A6-2": [["− 19", (c, d) => d.a === 19], ["− 29", (c, d) => d.a === 29], ["− 39", toutes]],
@@ -11470,7 +11579,11 @@
     // (Lot 3b, règle du 12/11 : le dessin jusqu'à 12 parts, puis le calcul.)
     "A5-3": [["+ 8", (c, d) => d.a === 8], ["+ 18", (c, d) => d.a === 18], ["+ 28", (c, d) => d.a === 28], ["+ 38", toutes]],
     "M8-1": [["× 11", (c, d) => d.b === 11], ["× 12 à 19", toutes]],
-    "M1-3": parFormes(["double", "double"], ["moitié", "moitie", "division"]),
+    // (Un chiffre de 5 ou plus fait une retenue : double de 36 = 60 + 12.)
+    "M1-3": [["sans retenue", (c, d) => String(d.n).split("").every(x => Number(x) < 5)], ["avec retenue", toutes]],
+    "M1-4": [["moitié à 2 chiffres", (c, d) => c.forme === "moitie" && d.n < 100], ["moitié à 3 chiffres", (c, d) => c.forme === "moitie"], ["÷ 2", toutes]],
+    "M1-5": parFormes(["double", "double"], ["2 × a", "double-fois"]),
+    "M1-6": parFormes(["moitié", "moitie"], ["2 × □ = a", "trou-double"]),
     "M6-2": [["jusqu’à 25", (c, d) => d.n <= 25], ["au-delà de 25", toutes]],
     "M8-2": [["jusqu’à 50", (c, d) => d.b <= 50], ["au-delà de 50", toutes]],
     "A2-4": parFormes(["a + □ = 1 000", "complement", "complement-gauche"], ["1 000 − a", "difference"]),
@@ -11544,8 +11657,11 @@
     "D7-1": D7_SORTES[1], "D7-2": D7_SORTES[2], "D7-3": D7_SORTES[3],
     // Lot 7b : D8, D9, M13 (les familles du rapport de Codex du 14/11).
     "D8-1": parFormes(["moitié de n", "moitie", "division"], ["2 × □ = n", "trou-double"]),
-    "D8-2": parFormes(["double", "double", "double-fois"], ["moitié", "moitie", "division"]),
-    "D8-3": [["double", formeEst("double", "double-fois")], ["moitié aux centièmes", (c, d) => !d.zero], ["moitié qui fait des centièmes", toutes]],
+    // Lot C2 : doubles, puis moitiés, chacun son niveau.
+    "D8-2": parFormes(["double de", "double"], ["2 × a", "double-fois"]),
+    "D8-3": parFormes(["moitié de", "moitie"], ["÷ 2", "division"]),
+    "D8-4": parFormes(["2 × a", "double-fois"], ["double de", "double"]),
+    "D8-5": [["moitié aux centièmes", (c, d) => !d.zero], ["moitié qui fait des centièmes", toutes]],
     "D9-1": [["chiffre de droite pair", (c, d) => dernierChiffre(d.n) % 2 === 0], ["chiffre de droite impair", toutes]],
     "D9-2": [["dixièmes", (c, d) => decimalesDe(d.n) === 1], ["centièmes", toutes]],
     "M13-1": parFormes(["a ÷ 4", "division"], ["4 × □ = b", "trou-facteur"]),
@@ -11597,6 +11713,7 @@
   const coeurDe = blocs => blocs.map(bloc => Object.assign({partie: "coeur"}, bloc));
   const retrouveDe = blocs => blocs.map(bloc => Object.assign({partie: "retrouve"}, bloc));
   const doubles = ligne => ({table: [ligne, ligne.map(n => 2 * n)], ligneTete: true});
+  const moities = ligne => ({table: [ligne, ligne.map(n => n / 2)], ligneTete: true, moitie: true});
   const PAR_COEUR = gele({
     // Lot 3b (écarts relevés par le 3a) : chaque carte montre tous les
     // calculs que le niveau demande — les sommes jusqu'à 10 (4 + 3), « + 10 »,
@@ -11606,19 +11723,33 @@
     "A1-1": {titre: "Les sommes jusqu’à 10", blocs: coeurDe([{liste: ["En orange, les paires qui font 10."], colonnes: 1},
       {table: tablePlus(rangee(0, 10), rangee(0, 10)).map((l, i) => l.map((v, j) => (!i || !j ? v : v > 10 ? "" : v === 10 ? {texte: "10", fort: true} : v)))}])},
     "A1-2": {titre: "La table d’addition", blocs: coeurDe([{table: tablePlus(rangee(1, 10), rangee(1, 10))}])},
+    // (Lot C2 : une carte pour les doubles, une pour les moitiés.)
     "M1-1": {titre: "Sous chaque nombre, son double", blocs: coeurDe([
       {table: [rangee(1, 10), rangee(1, 10).map(n => 2 * n)], ligneTete: true},
       {table: [rangee(11, 20), rangee(11, 20).map(n => 2 * n)], ligneTete: true},
-      // (Lot 3a : 25, 35, 45 aussi — l'appli demande la moitié de 50, 70, 90.)
-      {table: [[25, 30, 35, 40, 45, 50], [50, 60, 70, 80, 90, 100]], ligneTete: true}])},
+      {table: [[30, 40, 50], [60, 80, 100]], ligneTete: true}])},
+    // (Lot 3a : 25, 35, 45 aussi — l'appli demande la moitié de 50, 70, 90.)
+    "M1-2": {titre: "Sous chaque nombre, sa moitié", blocs: coeurDe([
+      {table: [rangee(1, 10).map(n => 2 * n), rangee(1, 10)], ligneTete: true, moitie: true},
+      {table: [rangee(11, 20).map(n => 2 * n), rangee(11, 20)], ligneTete: true, moitie: true},
+      {table: [[50, 60, 70, 80, 90, 100], [25, 30, 35, 40, 45, 50]], ligneTete: true, moitie: true}])},
     // Lot 3a : tous les doubles que l'appli demande (70, les centaines, 750,
     // 1 000…), comme la carte du niveau 1 : sous chaque nombre, son double.
     // Lot 7e-2 : le socle du CE2 (calcul mental, p. 10), puis le reste.
-    "M1-2": {titre: "Sous chaque nombre, son double", blocs: [
+    "M1-5": {titre: "Sous chaque nombre, son double", blocs: [
       ...coeurDe([doubles([25, 35, 45, 60, 75, 100, 150]), doubles([200, 250, 300, 400, 500, 600])]),
       ...retrouveDe([
         {chemin: `double\u00a0de\u00a0${nb(2500)}\u00a0= ${"double de 2000 + double de 500".replace(/ /g, "\u00a0").replace("2000", nb(2000))}`, ...doubles([70, 80, 90, 350, 450, 750])},
         doubles([700, 800, 900, 1000, 1500, 2500])])]},
+    // Lot C2 : les moitiés des nombres usuels — le socle du CM1 (calcul
+    // mental du CM1 : 120 et 150, les centaines jusqu'à 1 200 ; 40 à 100 sont
+    // sur la carte des moitiés jusqu'à 40), puis le reste ;
+    // « 2 × □ = 70 » se lit sur la même carte.
+    "M1-6": {titre: "Sous chaque nombre, sa moitié", blocs: [
+      ...coeurDe([moities([120, 150, 200, 300, 400, 500]), moities([600, 800, 1000, 1200])]),
+      ...retrouveDe([
+        {chemin: `moitié\u00a0de\u00a0${nb(1400)}\u00a0= ${"moitié de 1000 + moitié de 400".replace(/ /g, "\u00a0").replace("1000", nb(1000))}`, ...moities([140, 160, 180, 700, 900])},
+        moities([1400, 1600, 1800, 2000, 3000, 5000])])]},
     "M4-1": {titre: "Les tables de 2, 3, 4 et 5", blocs: coeurDe([{table: tableFois([2, 3, 4, 5], rangee(1, 10))}, {liste: ["Fois 1, le nombre ne change pas : 7 × 1 = 7", "Fois 0, ça fait toujours 0 : 7 × 0 = 0"], colonnes: 1}])},
     "M4-2": {titre: "Les tables de 6, 7, 8 et 9", blocs: coeurDe([{table: tableFois([6, 7, 8, 9, 10], [6, 7, 8, 9, 10])}])},
     "M5-1": {titre: "Les repères 25, 60, 100", blocs: [
@@ -11733,8 +11864,8 @@
     // Lot 7d : × 19 (on va à 20), × 98 (on retire deux fois le nombre).
     "M9-1": [["× 19", "19, c’est 20 − 1 : je fais × 20, puis je retire le nombre"]],
     "M9-2": [["× 98", "98, c’est 100 − 2 : je retire 2 fois le nombre"]],
-    // Lot 7e-2 (choix de Gwenaël) : la moitié en découpant, avec son dessin.
-    "M1-3": [["moitié", "la moitié, je coupe en morceaux"]],
+    // (Lot 7e-2 : « M1-3 » annonçait la moitié en découpant ; depuis le lot
+    // C2, elle a son niveau et sa leçon, M1-4.)
     // Lot 7e-2 : les fractions qui tombent pile sur 1 (les bases), puis
     // celles qui passent 1 (CM1), sur la barre avec l'unité marquée.
     "F8-1": [[c => c.forme === "somme" && c.lu && c.lu.cache && c.lu.cache.part === "n" && c.lu.cotes[1][0].d === 1,
@@ -11772,16 +11903,13 @@
     "D6-2": [["résultat entier", "10 dixièmes font 1 unité : le résultat n’a pas de virgule"]],
     "D7-2": [["unités et dixièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de dixièmes : je casse une unité, elle fait 10 dixièmes"]],
     "D7-3": [["unités et centièmes", "les unités d’abord, puis je casse une unité"], ["d’un entier", "pas de centièmes : je casse une unité, elle fait 100 centièmes"]],
-    // Lot 7b : la moitié, annoncée avec son dessin (comme M1-3) ; 8,10 ÷ 2
-    // (évaluation de 6e, Q13) : les centièmes.
-    // (Lot 6 « programmes 2 » : la moitié de 0,6 n'a qu'un morceau ; l'annonce
-    // attend la première moitié à deux morceaux.)
-    "D8-2": [[c => d8Moitie(c) && c.donnees.morceaux.length >= 2, "la moitié, je coupe aussi les deux morceaux"]],
+    // (Lot 7b : la moitié était annoncée dans les niveaux des doubles ;
+    // depuis le lot C2, elle a ses niveaux, D8-3 et D8-5.)
     // Lot 7c : au-delà de 30 parts, le calcul (comme « Fractions égales »).
     "F9-2": [[c => f9Grand(c), "trop de parts pour les dessiner : je multiplie en haut et en bas"]],
     "F9-3": [[c => f9Grand(c), "trop de parts pour les dessiner : je multiplie en haut et en bas"]],
-    "D8-3": [["moitié aux centièmes", "la moitié, je coupe aussi les deux morceaux"],
-      ["moitié qui fait des centièmes", calcul => `${f(calcul.donnees.dec)}0, c’est ${f(calcul.donnees.dec * 100)} centièmes\u00a0: leur moitié, c’est ${f(calcul.donnees.dec * 50)} centièmes`]]
+    // 8,10 ÷ 2 (évaluation de 6e, Q13) : les centièmes.
+    "D8-5": [["moitié qui fait des centièmes", calcul => `${f(calcul.donnees.dec)}0, c’est ${f(calcul.donnees.dec * 100)} centièmes\u00a0: leur moitié, c’est ${f(calcul.donnees.dec * 50)} centièmes`]]
   });
   const memeNom = (a, b) => String(a).replace(/\s/g, " ") === String(b).replace(/\s/g, " ");
   // La nouveauté d'un calcul dans un niveau (« M2-1 ») : {cle, texte}, ou
@@ -12690,6 +12818,27 @@
     }, barresDessins(m1Image(calcul), etapes.length));
   }
 
+  // Les moitiés (M1, lot C2) : chaque morceau coupé en deux — « moitié de
+  // 34 = moitié de 30 + moitié de 4 » (jusqu'à 40), « moitié de 76 = 70 ÷ 2
+  // + 6 ÷ 2 » (en découpant), « moitié de 1 400 = 1 400 ÷ 2 » (usuels).
+  function recetteMoitie(calcul, ecriture) {
+    const {n, r} = calcul.donnees;
+    const morceaux = morceauxDe(n);
+    if (calcul.forme !== "moitie" || morceaux.length !== 2) return null;
+    const morceau = m => (ecriture === "mots" ? `moitié de ${f(m)}` : `${f(m)} ÷ 2`);
+    // (« moitié de 4 » ne se coupe pas en fin de ligne.)
+    const consigne = {
+      mots: `moitié\u00a0de\u00a0${f(n)} = ${morceaux.map(m => `moitié\u00a0de\u00a0${f(m)}`).join(" + ")}`,
+      fois: `moitié de ${f(n)} = ${f(n)} ÷ 2`,
+      morceaux: `moitié de ${f(n)} = ${morceaux.map(m => `${f(m)} ÷ 2`).join(" + ")}`
+    }[ecriture];
+    const etapes = [...morceaux.map(m => [`${morceau(m)} = ?`, m / 2]), [`moitié de ${f(n)} = ?`, r]];
+    return ecrisAvecDessins({
+      consigne, etapes: etapesEcris(etapes), reponse: r,
+      solution: Object.freeze({image: m1Image(calcul), phrase: m1Phrase(calcul)})
+    }, barresDessins(m1Image(calcul), etapes.length));
+  }
+
   // Écritures d'un décimal (D1) : 4 + 6/10 = □ — la fraction, puis le tout.
   function recetteEntierFraction(calcul) {
     const [entier, fraction] = calcul.termes || [];
@@ -12927,7 +13076,9 @@
     "A4-1": recetteChemin, "A4-2": recetteChemin, "A4-3": recetteChemin, "A4-4": recetteChemin,
     "A7-1": recetteChemin, "A7-2": recetteChemin, "A7-3": recetteChemin,
     "A8-1": recetteEcart, "A8-2": recetteEcart,
-    "M1-1": independantes(c => recetteDouble(c, "plus")), "M1-2": independantes(c => recetteDouble(c, "fois")), "M1-3": independantes(c => recetteDouble(c, "morceaux")),
+    "M1-1": independantes(c => recetteDouble(c, "plus")), "M1-2": independantes(c => recetteMoitie(c, "mots")),
+    "M1-3": independantes(c => recetteDouble(c, "morceaux")), "M1-4": independantes(c => recetteMoitie(c, "morceaux")),
+    "M1-5": independantes(c => recetteDouble(c, "fois")), "M1-6": independantes(c => recetteMoitie(c, "fois")),
     "M4-1": recetteDivisionTable, "M4-2": recetteDivisionTable, "M5-1": recetteVingtCinq,
     "M6-1": recetteDoubleDouble, "M6-2": recetteDoubleDouble,
     "M8-1": independantes(recetteDecomposer), "M8-2": independantes(recetteDecomposer), "M8-3": independantes(recetteDecomposer),
@@ -12952,7 +13103,7 @@
     "D5-1": d5Ecris, "D5-2": d5Ecris,
     "D6-1": independantes(deuxEcris), "D6-2": independantes(deuxEcris), "D6-3": independantes(deuxEcris), "D7-1": independantes(deuxEcris), "D7-2": independantes(deuxEcris), "D7-3": independantes(deuxEcris),
     // Lot 7b.
-    "D8-1": d8Ecris, "D8-2": d8Ecris, "D8-3": d8Ecris,
+    "D8-1": d8Ecris, "D8-2": d8Ecris, "D8-3": d8Ecris, "D8-4": d8Ecris, "D8-5": d8Ecris,
     "D9-1": recetteDixFois, "D9-2": recetteDixFois,
     "M13-1": recetteMoitieMoitie, "M13-2": recetteMoitieMoitie, "M13-3": recetteMoitieMoitie,
     // Lot 7c.

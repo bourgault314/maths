@@ -92,9 +92,10 @@ test("une compétence à revoir ratée deux fois de suite : J'apprends seul (plu
 // (Lot 7e-2 : « Différences et trous jusqu'à 20 » et « Compléments à la
 // dizaine » deviennent des procédures, puis « Compléments à 100 : dizaines » — 12 cartes.)
 // (Lot 7b : « Moitié des impairs jusqu'à 15 » — 13 cartes.)
+// (Lot C2 : 15 — les moitiés jusqu'à 40 et des nombres usuels ont leur carte.)
 test("les cartes « par cœur » : les 13 niveaux « par cœur » construits, et eux seuls", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
-  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M4-1", "M4-2", "M1-2", "M5-1", "F2-1", "F1-1", "F2-2", "D8-1", "F1-2", "F1-3"]);
+  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M1-2", "M4-1", "M4-2", "M1-5", "M1-6", "M5-1", "F2-1", "F1-1", "F2-2", "D8-1", "F1-2", "F1-3"]);
   parCoeur.forEach(cle => assert.ok(CORE.carteParCoeur(cle), cle));
   CORE.ORDRE.filter(cle => !parCoeur.includes(cle)).forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, cle));
   assert.ok(Object.isFrozen(CORE.carteParCoeur("M4-1").blocs[0].table[1]));
@@ -108,7 +109,8 @@ test("les cartes disent vrai : chaque calcul de la carte est juste", () => {
   };
   // « a + b − c = … » : les termes et leurs signes ; « double de n ».
   // (Lot 7e-2 : « double de 2 000 + double de 500 », le × avant le + .)
-  const terme = t => { const d = t.trim().match(/^double de (.+)$/); return d ? 2 * val(d[1]) : val(t); };
+  // (Lot C2 : « moitié de 1 000 + moitié de 400 ».)
+  const terme = t => { const d = t.trim().match(/^(double|moitié) de (.+)$/); return d ? (d[1] === "double" ? 2 : 0.5) * val(d[2]) : val(t); };
   const produit = t => t.split(" × ").map(terme).reduce((a, b) => a * b, 1);
   const calculer = membre => {
     const morceaux = membre.trim().replace(/[\u00a0\u202f]/g, " ").split(/ ([+−]) /);

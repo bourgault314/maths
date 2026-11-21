@@ -7362,7 +7362,7 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(10, $reference->version, 'version 10 (lot F4 « personne ne reste bloqué » : `ar` et `paliers` ; 9 au lot 6 « programmes 2 » : une case de plus pour F6 et F9 ; 8 au lot 4 « les ceintures » : `ceintures` ; 7 au lot 1 « la séance » : `l` et le plan à 11 nombres ; 6 au correctif du lot S1 : le numéro des séances ; 5 au lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
+    egal(11, $reference->version, 'version 11 (lot C2 « doubles et moitiés » : M1 6 niveaux, D8 5 ; 10 au lot F4 « personne ne reste bloqué » : `ar` et `paliers` ; 9 au lot 6 « programmes 2 » : une case de plus pour F6 et F9 ; 8 au lot 4 « les ceintures » : `ceintures` ; 7 au lot 1 « la séance » : `l` et le plan à 11 nombres ; 6 au correctif du lot S1 : le numéro des séances ; 5 au lot G1 « journal + accueil » : le journal, les deux dates ; 4 au lot F1, 3 au lot « couverture »)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(5, count($reference->modules->A2->x), 'x par niveau (les échecs de suite, 0 à 3) — A2 a 5 niveaux depuis le lot « couverture »');
     vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (la mise de côté, lot 3b)');
@@ -8260,9 +8260,11 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
     // Puis le lot 4 « les ceintures » : 8 (`ceintures`).
     // Puis le lot 6 « programmes 2 » : 9 (une case de plus pour F6 et F9).
     // Puis le lot F4 « personne ne reste bloqué » : 10 (`ar` et `paliers`).
-    egal(10, $reference['version'], 'le parcours de référence est en version 10');
-    egal(10, CATALOGUE_APPLIS['defi-calcul']['version_min']);
-    foreach ([[9, 'version 9'], [8, 'version 8'], [7, 'version 7'], [6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['10', '« 10 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
+    // Puis le lot C2 « doubles et moitiés » : 11 (M1 et D8, une case par
+    // niveau neuf, chacune à sa place).
+    egal(11, $reference['version'], 'le parcours de référence est en version 11');
+    egal(11, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[10, 'version 10'], [9, 'version 9'], [8, 'version 8'], [7, 'version 7'], [6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['11', '« 11 » en texte'], [null, 'sans version']] as [$version, $quoi]) {
         $ancien = $reference;
         if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
         $w = ecrire($code, $ancien, 0, 'defi-calcul');
@@ -8271,17 +8273,16 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
         egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
     }
     $w = ecrire($code, $reference, 0, 'defi-calcul');
-    egal(200, $w['code'], 'version 10 : accepté');
+    egal(200, $w['code'], 'version 11 : accepté');
     $ancien = $reference;
-    $ancien['version'] = 9;
-    unset($ancien['paliers']);
+    $ancien['version'] = 10;
     $w = ecrire($code, $ancien, 1, 'defi-calcul');
-    egal(400, $w['code'], 'par-dessus une version 10 : refusé, même avec la bonne révision');
+    egal(400, $w['code'], 'par-dessus une version 11 : refusé, même avec la bonne révision');
     $w = ecrire($code, $ancien, 0, 'defi-calcul');
     egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
     $r = lire($code, 'defi-calcul');
     egal(1, $r['json']['revision'], 'toujours la révision 1');
-    egal(10, $r['json']['parcours']['version'], 'la version 10 est restée');
+    egal(11, $r['json']['parcours']['version'], 'la version 11 est restée');
     // Lot 4 : les ceintures reviennent telles quelles (des dates et des null, à leur place).
     egal($reference['ceintures'], $r['json']['parcours']['ceintures'], 'les ceintures sont gardées telles quelles');
     // Lot F4 : les tests de palier (des dates et des null) et `ar` (des entiers) aussi ; l'échéance

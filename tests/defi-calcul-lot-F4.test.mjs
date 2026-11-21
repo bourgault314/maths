@@ -209,12 +209,12 @@ test("après un test raté aujourd'hui, J'apprends est garanti ; un test pas gar
 // ---------------------------------------------------------- les données (v10)
 
 test("format : version 10, `ar` par module, `paliers` à quatre places ; une version 9 ou 8 se relit sans rien perdre", () => {
-  assert.equal(P.VERSION, 10);
+  assert.equal(P.VERSION, 11);
   assert.deepEqual(P.creerParcours().paliers, [null, null, null, null]);
   const v8 = {version: 8, ceintures: ["2026-11-02", null, null, null],
     modules: {A1: {vu: J, b: [4, 0, 0], e: [plus(3), null, null], a: [1, 0, 0], f: [1, 1, 0], x: [0, 0, 0], t: [0, 0, 0], l: [0, 0, 0], d: [J, null, null], s: [J, null, null], c: {}}}};
   const lu = P.normaliserParcours(v8);
-  assert.equal(lu.version, 10);
+  assert.equal(lu.version, 11);
   assert.deepEqual(lu.paliers, [null, null, null, null]);
   assert.deepEqual(lu.modules.A1.ar, [0, 0, 0]);
   assert.deepEqual(lu.modules.A1.b, [4, 0, 0]);
@@ -226,7 +226,7 @@ test("format : version 10, `ar` par module, `paliers` à quatre places ; une ver
     modules: {F6: {vu: J, ok: J, b: [4, 3, 0, 5], e: [plus(3), plus(2), null, plus(4)], a: [1, 1, 0, 1], f: [1, 1, 0, 2], x: [0, 0, 0, 0], t: [0, 0, 0, 0], l: [0, 0, 0, 0], d: [J, J, null, J], s: [J, J, null, J], c: {}},
       F9: {vu: J, ok: null, b: [2, 0, 0], e: [plus(1), null, null], a: [1, 0, 0], f: [1, 0, 0], x: [0, 0, 0], t: [0, 0, 0], l: [0, 0, 0], d: [J, null, null], s: [null, null, null], c: {}}}};
   const lu9 = P.normaliserParcours(JSON.parse(JSON.stringify(v9)));
-  assert.equal(lu9.version, 10);
+  assert.equal(lu9.version, 11);
   assert.deepEqual(lu9.modules.F6.b, [4, 3, 0, 5], "F6 : pas de case neuve en plus");
   assert.deepEqual(lu9.modules.F6.e, [plus(3), plus(2), null, plus(4)]);
   assert.equal(lu9.modules.F6.ok, J, "le module su le reste");
@@ -298,7 +298,7 @@ test("le serveur : `ar` et `paliers` déclarés, version_min 10 ; la copie du mo
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
   assert.match(bloc, /'ceintures', 'ar', 'paliers'\],/);
-  assert.match(bloc, /'version_min' => 10,/);
+  assert.match(bloc, /'version_min' => 11,/);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
 });
 

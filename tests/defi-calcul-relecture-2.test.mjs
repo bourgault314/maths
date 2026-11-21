@@ -79,12 +79,16 @@ test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virg
   assert.equal([...svg.matchAll(/<line /g)].length, 5);
 });
 
+// (Lot C2 : six niveaux, le double puis la moitié, chacun sa leçon.)
 test("M1 : « Je représente » par étapes dans les trois niveaux (le double comme la moitié)", () => {
   const attendus = {
     "M1-1": ["double de 17 = 17 + 17", ["10 + 10", "7 + 7", "double de 17"], 34],
+    "M1-2": ["moitié de 34 = moitié de 30 + moitié de 4", ["moitié de 30", "moitié de 4", "moitié de 34"], 17],
+    "M1-3": ["double de 470 = 2 × 470", ["2 × 400", "2 × 70", "double de 470"], 940],
+    "M1-4": ["moitié de 76 = 70 ÷ 2 + 6 ÷ 2", ["70 ÷ 2", "6 ÷ 2", "moitié de 76"], 38],
     // (Lot 3a, décision 5 : la leçon sur le double, double de 75.)
-    "M1-2": ["double de 75 = 2 × 75", ["2 × 70", "2 × 5", "double de 75"], 150],
-    "M1-3": ["double de 470 = 2 × 470", ["2 × 400", "2 × 70", "double de 470"], 940]
+    "M1-5": ["double de 75 = 2 × 75", ["2 × 70", "2 × 5", "double de 75"], 150],
+    "M1-6": ["moitié de 150 = 150 ÷ 2", ["100 ÷ 2", "50 ÷ 2", "moitié de 150"], 75]
   };
   Object.entries(attendus).forEach(([cle, [consigne, etapes, reponse]]) => {
     const r = apprends(cle).represente;
@@ -119,7 +123,10 @@ test("lot 7b : D8, « Je représente » par étapes comme M1 — les deux morcea
   const attendus = {
     "D8-1": ["moitié de 9 = 8 ÷ 2 + 1 ÷ 2", ["8 ÷ 2", "1 ÷ 2", "moitié de 9"], 4.5],
     "D8-2": ["double de 13,6 = 2 × 13 + 2 × 0,6", ["2 × 13", "2 × 0,6", "double de 13,6"], 27.2],
-    "D8-3": ["2 × 4,35 = 2 × 4 + 2 × 0,35", ["2 × 4", "2 × 0,35", "2 × 4,35"], 8.7]
+    // (Lot C2 : les moitiés, chacune son niveau.)
+    "D8-3": ["moitié de 13,6 = 13 ÷ 2 + 0,6 ÷ 2", ["13 ÷ 2", "0,6 ÷ 2", "moitié de 13,6"], 6.8],
+    "D8-4": ["2 × 4,35 = 2 × 4 + 2 × 0,35", ["2 × 4", "2 × 0,35", "2 × 4,35"], 8.7],
+    "D8-5": ["1,22 ÷ 2 = 1 ÷ 2 + 0,22 ÷ 2", ["1 ÷ 2", "0,22 ÷ 2", "1,22 ÷ 2"], 0.61]
   };
   Object.entries(attendus).forEach(([cle, [consigne, etapes, reponse]]) => {
     const r = apprends(cle).represente;
@@ -219,7 +226,7 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261121-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-2/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

@@ -84,7 +84,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 127, "127 niveaux construits (lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
+  assert.equal(NIVEAUX.length, 132, "132 niveaux construits (lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
@@ -164,7 +164,8 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // Lot 7b : D8-2 et D8-3 (« Je double chaque morceau : double de 13,6 = … »).
   // Lot 7c : F11-1 et F11-2 (« 3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = … »).
   // Lot 7d : M9-1 et M9-2 (« 9, c’est 10 − 1 : 45 × 9 = … »).
-  assert.equal(coupes, 77, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // Lot C2 : les cinq niveaux de moitiés (M1-2, M1-4, M1-6, D8-3, D8-5).
+  assert.equal(coupes, 82, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   ["M6-1", "M6-2", "M7-1", "M7-2", "M7-3"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.ok(lignes.length >= 2 && lignes.every(Boolean), `${cle} : une ligne par étape`);

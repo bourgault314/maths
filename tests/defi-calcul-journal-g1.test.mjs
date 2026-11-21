@@ -66,7 +66,7 @@ function jouerSeance(p, jour, {secondes = 120, juste = () => true, marche = () =
 }
 
 test("version 5 (7 depuis le lot 1 « la séance ») : le journal est vide au départ, ce que la séance a fait aussi", () => {
-  assert.equal(P.VERSION, 10, "lot 6 « programmes 2 » : 9 ; lot F4 « personne ne reste bloqué » : 10");
+  assert.equal(P.VERSION, 11, "lot 6 « programmes 2 » : 9 ; lot F4 « personne ne reste bloqué » : 10 ; lot C2 : 11");
   const neuf = sansTestDePalier(P.creerParcours());
   assert.deepEqual(neuf.journal, vide());
   assert.deepEqual(neuf.seance.j, [0, 0, 0, 0, 0, 0]);
@@ -197,7 +197,7 @@ test("une progression de version 4 se relit sans rien perdre : journal « pas co
     seances: ["2026-11-03", "2026-11-04", "2026-11-05"], jours: ["2026-11-05"]
   };
   const p = P.normaliserParcours(v4);
-  assert.equal(p.version, 10);
+  assert.equal(p.version, 11);
   assert.deepEqual(p.seances, v4.seances);
   assert.deepEqual(p.journal.calculs, [-1, -1, -1]);
   assert.deepEqual(p.modules.A2.d, [null, null, null, null, null]);
@@ -460,7 +460,7 @@ test("taille : un élève qui a tout rempli tient sous les bornes du serveur", a
 test("serveur : version_min 5 (7 depuis le lot 1 « la séance »), les clés du journal déclarées ; infos.php le dit en une phrase", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 10,/, "lot 6 « programmes 2 » : 9 ; lot F4 « personne ne reste bloqué » : 10");
+  assert.match(bloc, /'version_min' => 11,/, "lot 6 « programmes 2 » : 9 ; lot F4 « personne ne reste bloqué » : 10 ; lot C2 : 11");
   ["d", "s", "j", "journal", ...P.JOURNAL].forEach(cle => assert.match(bloc, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), cle));
   const infos = await lire("../_serveur/public/infos.php");
   // Lot S1 « les journaux » : la phrase vaut désormais pour toutes les applis.
@@ -477,7 +477,7 @@ test("serveur : version_min 5 (7 depuis le lot 1 « la séance »), les clés du
 
 test("la page élève : le temps actif donné au moteur ; l'accueil lit la semaine du moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-1/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-2/);
   assert.match(page, /defi_calcul\.css\?v=20261121-1/, "la feuille a changé au lot 3b « Chaque sorte annoncée »");
   // Lot « accueil » (07/11/2026) : la semaine de l'élève vient de
   // semaineEleve (tests/defi-calcul-accueil.test.mjs) ; plus de ligne

@@ -24,11 +24,11 @@ const tous = (cle, n = 120) => {
 const textes = cle => new Set(tous(cle).map(c => espaces(c.texte)));
 const fractions = texte => [...espaces(texte).matchAll(/(\d+)\/(\d+)/g)].map(m => [Number(m[1]), Number(m[2])]);
 
-test("la carte : 127 compétences (41, 34, 40, 12) ; F9 et F6 ont un niveau de plus, posé à sa place", () => {
+test("la carte : 132 compétences (41, 34, 40, 12) ; F9 et F6 ont un niveau de plus, posé à sa place", () => {
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 127);
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [41, 34, 40, 12]);
+  assert.equal(construits.length, 132);
+  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [44, 33, 43, 12]);
   assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, espaces(n.nom)]), [[1, "Dénominateurs multiples : dans l’unité"], [2, "Dénominateurs multiples : jusqu’à 20"], [3, "Dénominateurs multiples : au-delà de 20"]]);
   assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => [n.palier, espaces(n.nom)]), [[1, "Fractions égales : multiplier"], [2, "Fractions égales : jusqu’à 20"], [3, "Fractions égales : diviser"], [3, "Fractions égales : le dénominateur"]]);
   assert.deepEqual([P.NIVEAUX.F6, P.NIVEAUX.F9], [4, 3]);
@@ -220,23 +220,24 @@ test("les cinq exemples guidés, sous « À retenir » ; le niveau « ajouter 9 
 });
 
 test("la progression : version 9 (10 depuis le lot F4) ; une progression de version 8 se relit (F6 et F9 décalés, plan recalculé) ; le serveur refuse une page de version 8", () => {
-  assert.equal(P.VERSION, 10);
+  assert.equal(P.VERSION, 11);
   const v8 = {version: 8, epoque: 0, prenom: "", modules: {
     F9: {vu: "2026-11-10", ok: "2026-11-12", b: [4, 3], e: ["2026-11-20", "2026-11-21"], a: [1, 1], f: [2, 3], x: [0, 1], t: [0, 0], l: [0, 0], d: ["2026-11-01", "2026-11-02"], s: ["2026-11-05", null], c: {2: 1}},
     F6: {vu: "2026-11-10", ok: null, b: [4, 0, 5], e: ["2026-11-20", null, "2026-11-22"], a: [1, 0, 1], f: [2, 0, 3], x: [0, 0, 0], t: [0, 0, 0], l: [0, 0, 0], d: ["2026-11-01", null, "2026-11-03"], s: [null, null, null], c: {}},
     A2: {vu: "2026-11-10", ok: null, b: [4, 0, 0, 0, 0], e: ["2026-11-20", null, null, null, null], a: [1, 0, 0, 0, 0], f: [1, 0, 0, 0, 0], x: [0, 0, 0, 0, 0], t: [0, 0, 0, 0, 0], l: [0, 0, 0, 0, 0], d: ["2026-11-01", null, null, null, null], s: [null, null, null, null, null], c: {}}
   }, seance: {jour: "2026-11-19", etape: 1, n: 3, p: [1, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [], journal: {}, jours: [], ceintures: [null, null, null, null]};
-  // Les rangs de la version 8 : F6 avait 3 niveaux, F9 2.
+  // Les rangs de la version 8 : F6 avait 3 niveaux, F9 2 (et M1, D8 3 jusqu'au lot C2).
   const ancien = (id, n) => {
     let r = 0;
-    for (const code of P.CODES) { if (code === id) return r + n - 1; r += code === "F6" ? 3 : code === "F9" ? 2 : P.NIVEAUX[code]; }
+    const AVANT = {F6: 3, F9: 2, M1: 3, D8: 3};
+    for (const code of P.CODES) { if (code === id) return r + n - 1; r += AVANT[code] || P.NIVEAUX[code]; }
     return -1;
   };
   v8.seance.p[2] = ancien("F11", 1) + 1;
   v8.seance.p[7] = ancien("F6", 3) + 1;
   v8.seance.p[8] = 4;
   const p = P.normaliserParcours(JSON.parse(JSON.stringify(v8)));
-  assert.equal(p.version, 10);
+  assert.equal(p.version, 11);
   assert.deepEqual(p.modules.F9.b, [0, 4, 3], "F9 : la case neuve devant");
   assert.deepEqual(p.modules.F9.d, [null, "2026-11-01", "2026-11-02"]);
   assert.deepEqual(p.modules.F9.x, [0, 0, 1]);
@@ -252,13 +253,13 @@ test("la progression : version 9 (10 depuis le lot F4) ; une progression de vers
   // Le serveur : version_min 9 (10 depuis le lot F4).
   const applis = lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 10,/);
+  assert.match(bloc, /'version_min' => 11,/);
 });
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261121-1/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261121-2/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
 });
