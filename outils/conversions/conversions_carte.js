@@ -79,6 +79,9 @@
     t = t.replace(new RegExp(`([⁰¹²³⁴⁵⁶⁷⁸⁹]) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g"), `$1${INSECABLE}`);
     t = t.replace(/(\d) × (?=10[⁰¹²³⁴⁵⁶⁷⁸⁹⁻])/g, `$1${INSECABLE}×${INSECABLE}`);
     t = t.replace(/ ([?!:;»])/g, `${INSECABLE}$1`).replace(/« /g, `«${INSECABLE}`);
+    // (Lot B3-1 : un nom de lieu ne se coupe pas à son trait d'union,
+    // « Saint- / Paul » : le trait d'union insécable U+2011.)
+    t = t.replace(/\b(Saint|Sainte|St|Ste)-(?=[A-ZÉÈ])/g, "$1\u2011");
     return t;
   }
 
@@ -221,7 +224,7 @@
     {code: "l4", grandeur: "longueur", etape: "R3", objet: "Une voiture", valeur: "environ 4 m de long", debut: "Une voiture mesure environ", nombre: "4", unite: "m", fin: "de long"},
     {code: "l5", grandeur: "longueur", etape: "R3", objet: "Un tour de piste d'athlétisme", valeur: "400 m", debut: "Un tour de piste d'athlétisme mesure", nombre: "400", unite: "m", fin: ""},
     {code: "l6", grandeur: "longueur", etape: "R3", objet: "Le viaduc de la Nouvelle route du Littoral", valeur: "5,4 km", debut: "Le viaduc de la Nouvelle route du Littoral mesure", nombre: "5,4", unite: "km", fin: "", local: true},
-    {code: "l7", grandeur: "longueur", etape: "R3", objet: "De Saint-Pierre à Saint-Denis", valeur: "environ 80 km en voiture", debut: "De Saint-Pierre à Saint-Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
+    {code: "l7", grandeur: "longueur", etape: "R3", objet: "De Saint‑Pierre à Saint‑Denis", valeur: "environ 80 km en voiture", debut: "De Saint‑Pierre à Saint‑Denis, en voiture, il y a environ", nombre: "80", unite: "km", fin: "", local: true},
     {code: "l8", grandeur: "longueur", etape: "R3", objet: "Le Piton des Neiges", valeur: "environ 3 km d'altitude", debut: "Le Piton des Neiges s'élève à environ", nombre: "3", unite: "km", fin: "d'altitude", local: true},
     {code: "l9", grandeur: "longueur", etape: "R3", objet: "La Diagonale des Fous", valeur: "environ 170 km", debut: "La Diagonale des Fous mesure environ", nombre: "170", unite: "km", fin: "", local: true},
     {code: "m1", grandeur: "masse", etape: "R4", objet: "Un grain de riz", valeur: "environ 25 mg", debut: "Un grain de riz pèse environ", nombre: "25", unite: "mg", fin: ""},
@@ -665,6 +668,79 @@
           apres: ["Oui : autant qu'un grand arrosoir."]}
       ],
       retenir: "Je compare à un repère que je connais : un lit, c'est deux très grands pas, environ 2 m.\nUne mesure pas vraisemblable cache souvent une erreur d'unité.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 3 (lot B3-1)
+    // Les repères du CM2. Choix de Gwenaël du 21/11 (lot B3-1a) : le repère
+    // reporté le long de l'objet (les voitures au-dessus du bassin de la
+    // piscine de Saint‑Paul) ; pour un calcul, « … est proche de… », les
+    // arrondis ; périmètre ou aire, deux dessins. Ontario : « un étage ≈
+    // 3 m » ; S002-S003 p. 10 : « 212 m + 298 m + 496 m est proche de
+    // 1 000 m ».
+    R7: {
+      pret: true,
+      aide: {outil: "reporte", image: "repere"},
+      apprends: [
+        {etiquette: "Je reporte", question: {enonce: "Le bassin de la piscine de Saint‑Paul mesure environ…", avant: "", reponse: "25", apres: "m"},
+          consigne: "Je reporte mon repère.\nTouche les voitures.",
+          aide: {type: "reporte", repere: "l4", n: 6, quarts: 25, nom: "Le bassin", mesure: "4 m", total: "25 m"},
+          apres: ["6 voitures : environ 24 m,", "donc environ 25 m."]},
+        {etiquette: "J'arrondis", question: {enonce: "212 m + 298 m + 496 m est proche de…", avant: "", reponse: "1 000", apres: "m"},
+          consigne: "J'arrondis chaque nombre.\nTouche les nombres.",
+          aide: {type: "arrondis", paires: [["212 m", "200 m"], ["298 m", "300 m"], ["496 m", "500 m"]]},
+          apres: ["200 m + 300 m + 500 m = 1 000 m"]},
+        {etiquette: "Je vérifie", question: {enonce: "Un immeuble a 12 étages. Un étage mesure environ 3 m. L'immeuble mesure environ…", avant: "", reponse: "36", apres: "m"},
+          consigne: "Je compte 12 fois mon repère.",
+          aide: {type: "phrase", lignes: ["Un étage : environ 3 m.", "12 étages : 12 fois plus."]},
+          apres: ["12 × 3 m", "= 36 m"]}
+      ],
+      retenir: "Je compte combien de fois mon repère : 6 voitures de 4 m, environ 24 m.\nPour un calcul, j'arrondis chaque nombre : 212 m + 496 m ≈ 200 m + 500 m = 700 m.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Mes repères d'aire, au modèle des repères du CM1 (carte v4 : le
+    // carreau, l'ongle, la paume, la feuille A4, l'affiche A0, le terrain
+    // de foot).
+    R8: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Un carreau de 1 cm de côté a une aire de", reponse: "1", apres: "cm²"},
+          consigne: "Je trace un carré de 1 cm de côté :\nson aire est 1 centimètre carré.",
+          aide: {type: "repere", repere: "a1"}, legende: "L'ongle de mon pouce : environ 1 cm²."},
+        {etiquette: "Je vois", question: {avant: "La paume de ma main a une aire d'environ", reponse: "1", apres: "dm²"},
+          consigne: "Un carré de 1 dm de côté : 1 décimètre carré.\nMa paume le couvre à peu près.",
+          aide: {type: "repere", repere: "a7"}, legende: "La paume de ma main : environ 1 dm².\nUne feuille A4 : environ 6 dm²."},
+        {etiquette: "Je vois", question: {avant: "Une affiche A0 a une aire de", reponse: "1", apres: "m²"},
+          consigne: "Un carré de 1 m de côté : 1 mètre carré.\nUne affiche A0 a cette aire.",
+          aide: {type: "repere", repere: "a3"}, legende: "16 feuilles A4 couvrent une affiche A0.\nUn terrain de foot : environ 7 000 m²."}
+      ],
+      retenir: "",
+      cahier: "Je les note dans mon cahier et je les apprends par cœur.",
+      reperes: ["a1", "a6", "a7", "a2", "a3", "a4"]
+    },
+    // Qu'est-ce qu'on mesure ? Les cinq grandeurs du CM2, le périmètre ou
+    // l'aire (S038 : repasser le contour, colorier la surface), le gros
+    // qui n'est pas le plus lourd (S023 p. 3).
+    R9: {
+      pret: true,
+      aide: {outil: "grandeurs", image: "grandeurs"},
+      apprends: [
+        {etiquette: "Je vois", question: {vraisemblable: true, enonce: "Je pose une clôture autour du jardin. Qu'est-ce que je mesure ?", reponse: "le périmètre"},
+          consigne: "La clôture fait le tour du jardin.\nTouche le bon dessin.",
+          aide: {type: "perim-aire", bonne: "perimetre"},
+          apres: ["Le tour : le périmètre.", "C'est une longueur, en m."]},
+        {etiquette: "Je vois", question: {vraisemblable: true, enonce: "Je pose du carrelage dans la cuisine. Qu'est-ce que je mesure ?", reponse: "l'aire"},
+          consigne: "Le carrelage couvre tout le sol.\nTouche le bon dessin.",
+          aide: {type: "perim-aire", bonne: "aire"},
+          apres: ["La surface : l'aire.", "Je compte des carreaux, en m²."]},
+        {etiquette: "Je compare", question: {vraisemblable: true, enonce: "Un paquet de céréales est plus gros qu'une bouteille d'eau de 1,5 L. Lequel est le plus lourd ?", reponse: "la bouteille"},
+          consigne: "Gros ne veut pas dire lourd.\nJe pense à mon repère.",
+          aide: {type: "repere", repere: "m8"},
+          apres: ["La bouteille : environ 1,5 kg.", "Les céréales : environ 500 g."]}
+      ],
+      retenir: "Le périmètre, c'est le tour : une longueur. L'aire, c'est la surface, en carreaux.\nPlus gros ne veut pas dire plus lourd ; plus haut ne veut pas dire contenir plus.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },

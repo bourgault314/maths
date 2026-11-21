@@ -744,7 +744,7 @@
     ["Un petit verre de jus :", "2", "dL", 3], ["Une cuillère de sirop :", "1", "cL", 3], ["L'épaisseur d'un carton :", "3", "mm", 3],
     // Un exemple de J'apprends (degré 0) : jamais dans une série. « De
     // Saint-Denis à Saint-Paul » n'en est plus un (lot A2 bis).
-    ["De Saint-Denis à Saint-Paul :", "30", "km", 2], ["Un bébé à la naissance :", "3", "kg", 2],
+    ["De Saint‑Denis à Saint‑Paul :", "30", "km", 2], ["Un bébé à la naissance :", "3", "kg", 2],
     // Les objets de l'exerciseur (lot A2 bis), avec ses mesures.
     ["La longueur d'un lit :", "2", "m", 1], ["Un œuf :", "60", "g", 1], ["Une baguette de pain :", "250", "g", 1],
     ["Un gros dictionnaire :", "1", "kg", 1], ["Un grand arrosoir plein :", "10", "L", 1],
@@ -774,7 +774,7 @@
   const SANS_NOMBRE = [
     ["mesurer la longueur d'un crayon", "cm", "km", 1], ["mesurer la longueur d'une piscine", "m", "mm", 1],
     ["peser un cartable", "kg", "t", 1], ["peser une pomme", "g", "t", 1], ["mesurer la contenance d'une baignoire", "L", null, 1],
-    ["mesurer la distance de Saint-Denis à Saint-Pierre", "km", "mm", 1], ["peser un éléphant", "t", "g", 1],
+    ["mesurer la distance de Saint‑Denis à Saint‑Pierre", "km", "mm", 1], ["peser un éléphant", "t", "g", 1],
     ["mesurer l'épaisseur d'une pièce de 1 €", "mm", "km", 2], ["mesurer la longueur d'un Car Jaune", "m", "mm", 2],
     ["peser un sac de letchis", "kg", "t", 2], ["mesurer la contenance d'un verre", "cL", null, 2],
     ["peser un samoussa", "g", "t", 2], ["mesurer la longueur d'un terrain de football", "m", "mm", 2],
@@ -816,14 +816,14 @@
     ["La récréation :", "15", "min", 0],
     ["Un film au cinéma :", "2", "h", 1], ["Se brosser les dents :", "3", "min", 1], ["Une nuit de sommeil :", "10", "h", 1], ["Un week-end :", "2", "jours", 1],
     ["La journée d'école :", "6", "h", 2], ["Faire cuire des pâtes :", "10", "min", 2], ["Les vacances de Noël : environ", "15", "jours", 2],
-    ["Un match de football :", "90", "min", 2], ["De Saint-Pierre à Saint-Denis en voiture : environ", "1", "h", 2],
+    ["Un match de football :", "90", "min", 2], ["De Saint‑Pierre à Saint‑Denis en voiture : environ", "1", "h", 2],
     ["Monter à pied au sommet du Piton des Neiges : environ", "5", "h", 3], ["Faire bouillir l'eau des pâtes :", "8", "min", 3],
     ["De La Réunion à Paris en avion : environ", "11", "h", 3], ["Un mois : environ", "30", "jours", 3], ["Une chanson :", "3", "min", 3],
     ["Laisser lever la pâte à pain :", "2", "h", 3],
     // Lot A2 ter : La Réunion.
     // (Lot R1-refonte : « Manger un samoussa : 2 min » retiré, Gwenaël, 18/11.)
     ["Prendre une douche : environ", "5", "min", 1], ["Faire cuire un cari : environ", "1", "h", 2],
-    ["Le trajet en Car Jaune de Saint-Pierre à Saint-Denis : environ", "2", "h", 2], ["La marche jusqu'au Trou de Fer : environ", "2", "h", 3],
+    ["Le trajet en Car Jaune de Saint‑Pierre à Saint‑Denis : environ", "2", "h", 2], ["La marche jusqu'au Trou de Fer : environ", "2", "h", 3],
     ["Le Grand Raid, pour les derniers coureurs : environ", "3", "jours", 3]
   ];
   const CHOIX_UNITE = {longueur: ["mm", "cm", "m", "km"], masse: ["g", "kg", "t"], contenance: ["cL", "dL", "L"]};
@@ -2219,7 +2219,7 @@
     [t => `La randonnée commence à ${t}.`, d => `La randonnée dure ${d}.`, "Fin :", 60, 300, 420, 840],
     [t => `L'entraînement de football commence à ${t}.`, d => `L'entraînement dure ${d}.`, "Fin :", 45, 120, 480, 1020],
     // Lot A2 ter : La Réunion.
-    [t => `Le Car Jaune part de Saint-Pierre à ${t}.`, d => `Le trajet dure ${d}.`, "Arrivée :", 30, 150, 420, 1020],
+    [t => `Le Car Jaune part de Saint‑Pierre à ${t}.`, d => `Le trajet dure ${d}.`, "Arrivée :", 30, 150, 420, 1020],
     [t => `Le cari est mis à cuire à ${t}.`, d => `La cuisson dure ${d}.`, "Fin de la cuisson :", 45, 90, 540, 1080],
     [t => `La marche jusqu'au Trou de Fer commence à ${t}.`, d => `La marche dure ${d}.`, "Arrivée :", 60, 180, 420, 780]
   ];
@@ -2230,7 +2230,7 @@
     [t => `La randonnée finit à ${t}.`, d => `La randonnée a duré ${d}.`, "Départ :", 60, 300, 420, 840],
     [t => `L'entraînement de football finit à ${t}.`, d => `L'entraînement a duré ${d}.`, "Début :", 45, 120, 480, 1020],
     // Lot A2 ter : La Réunion.
-    [t => `Le Car Jaune arrive à Saint-Denis à ${t}.`, d => `Le trajet a duré ${d}.`, "Départ :", 30, 150, 420, 1020],
+    [t => `Le Car Jaune arrive à Saint‑Denis à ${t}.`, d => `Le trajet a duré ${d}.`, "Départ :", 30, 150, 420, 1020],
     [t => `Le cari a fini de cuire à ${t}.`, d => `La cuisson a duré ${d}.`, "Début de la cuisson :", 45, 90, 540, 1080],
     [t => `La marche jusqu'au Trou de Fer finit à ${t}.`, d => `La marche a duré ${d}.`, "Départ :", 60, 180, 420, 780]
   ];
@@ -2444,14 +2444,18 @@
   // question cachée de l'exerciseur) ; et relier trois objets à leur mesure.
   // (Lot R1-refonte : le décimètre, la main, est un repère de R1 ; il entre
   // dans les unités de longueur.)
-  const ORDRE_UNITES_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"]};
+  const ORDRE_UNITES_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"],
+    // (Lot B3-1 : « Mes repères d'aire » au même modèle, les unités du CM2.)
+    aire: ["cm²", "dm²", "m²"]};
   // Le nom court d'un repère, sous son dessin, au téléphone (relier, l'objet
   // à trouver) : deux lignes au plus.
   const COURTS_2 = {l1: "La plus petite graduation", l2: "Une pièce de 1 centime", l5: "Un tour de piste", l6: "Le viaduc du Littoral",
-    l7: "St-Pierre à St-Denis", l8: "Le Piton des Neiges", l9: "La Diagonale des Fous", l10: "Mon petit doigt",
+    l7: "St‑Pierre à St‑Denis", l8: "Le Piton des Neiges", l9: "La Diagonale des Fous", l10: "Mon petit doigt",
     l11: "Un très grand pas", m5: "Un pack d'eau", m8: "1 L d'eau", m9: "Une ramette", c1: "Une cuillère à café", c4: "Un chauffe-eau solaire",
     // Lot R1-refonte
-    l13: "La poignée de la porte", l14: "10 terrains de foot", l15: "Ma main", m6: "Une petite voiture"};
+    l13: "La poignée de la porte", l14: "10 terrains de foot", l15: "Ma main", m6: "Une petite voiture",
+    // Lot B3-1
+    a1: "Un carreau de 1 cm", a6: "L'ongle du pouce", a7: "La paume de ma main", a3: "Une affiche A0", a4: "Un terrain de foot"};
   // (Gardés une fois calculés : les séries tirent des centaines de questions.)
   const VIVIERS_2 = {};
   function vivier2(code) {
@@ -2627,7 +2631,9 @@
   // sous 80 % au petit Android.)
   const COMPARER = {longueur: ["Lequel mesure le plus ?", "Lequel mesure le moins ?"],
     masse: ["Lequel pèse le plus ?", "Lequel pèse le moins ?"],
-    contenance: ["Lequel contient le plus ?", "Lequel contient le moins ?"]};
+    contenance: ["Lequel contient le plus ?", "Lequel contient le moins ?"],
+    // (Lot B3-1)
+    aire: ["Lequel a la plus grande aire ?", "Lequel a la plus petite aire ?"]};
   function questionComparer(code, degre, rng, eviter = []) {
     const {tous} = vivier2(code);
     const k = degre === 1 ? 10n : degre === 2 ? 3n : 1n;
@@ -2663,7 +2669,9 @@
   // complètent. Un repère ne revient pas dans Je valide quand il y en a 9
   // ou plus ; sinon deux fois au plus (avec une autre façon de demander),
   // jamais à moins de 3 questions d'écart.
-  function etapeReperes2(code) {
+  // (Lot B3-1, R8 : `ranger`, « Range ces aires » en 7e de Je valide et
+  // trois fois dans À toi.)
+  function etapeReperes2(code, {ranger = false} = {}) {
     // `reperes` : relier et comparer en ont plusieurs ; ils ne comptent pas
     // comme « le repère demandé » (`seul`).
     const reps = x => x.reperes || [x.repere];
@@ -2671,10 +2679,11 @@
     return {
       exclureExemples: false,
       formes(usage) {
-        if (usage === "valide") return {2: "quoi", 4: "comparer", 5: "saisie", 7: "quoi", 9: "associer"};
+        if (usage === "valide") return Object.assign({2: "quoi", 4: "comparer", 5: "saisie", 7: "quoi", 9: "associer"}, ranger ? {6: "ranger"} : {});
         // (Comparer n'est jamais juste avant relier : avec 5 repères de
         // contenance, il ne resterait plus trois repères à relier.)
-        if (usage === "entraine") return {2: "quoi", 4: "comparer", 7: "associer", 11: "comparer", 13: "quoi", 15: "associer", 18: "comparer", 20: "quoi", 22: "associer", 24: "comparer"};
+        if (usage === "entraine") return Object.assign({2: "quoi", 4: "comparer", 7: "associer", 11: "comparer", 13: "quoi", 15: "associer", 18: "comparer", 20: "quoi", 22: "associer", 24: "comparer"},
+          ranger ? {9: "ranger", 16: "ranger", 23: "ranger"} : {});
         return {};
       },
       jamais(serie, question, usage) {
@@ -2701,12 +2710,15 @@
         const {nouveaux, tous} = vivier2(code);
         if (forme === "associer") return questionAssocier2(code, degre, rng, serie.slice(-4).flatMap(reps));
         if (forme === "comparer") return questionComparer(code, degre, rng, serie.slice(-2).flatMap(reps));
+        if (forme === "ranger") return questionRangerR8(degre, rng);
         let choisis = tous;
         if (usage === "valide") {
           const deja = new Set(serie.filter(seul).map(x => x.repere));
           const manquent = nouveaux.filter(c => !deja.has(c));
-          // (Les places libres : 10, moins relier et comparer, moins celles déjà prises.)
-          const restent = 8 - serie.filter(seul).length;
+          // (Les places libres : celles d'un repère seul, de celle-ci à la
+          // dernière — 10, moins relier, comparer et ranger.)
+          const autres = Object.entries(Object.assign({4: "comparer", 9: "associer"}, ranger ? {6: "ranger"} : {})).map(([p]) => Number(p));
+          const restent = Array.from({length: 10}, (_, p) => p).filter(p => p >= i && !autres.includes(p)).length;
           if (manquent.length && (manquent.length >= restent || rng() < 0.7)) choisis = manquent;
         } else if (rng() < 0.6) choisis = nouveaux;
         const rep = choisir(rng, choisis);
@@ -2874,6 +2886,475 @@
       const [, k] = choisir(rng, vivier);
       const sorte = forme || (rng() < 0.2 ? "choix" : rng() < 0.5 ? "oui" : "non");
       return questionVraisemblance(degre, rng, k, sorte);
+    }
+  };
+
+  // ===================================================== palier 3 (lot B3-1)
+  // Les repères du CM2 (carte v4, « Mes repères » du palier 3) :
+  // R7 « J'estime avec un repère », R8 « Mes repères d'aire », R9
+  // « Qu'est-ce qu'on mesure ? ». Choix de Gwenaël du 21/11 (lot B3-1a, les
+  // trois recommandés) : le repère reporté le long de l'objet ; « … est
+  // proche de… » pour un calcul, les arrondis pour outil ; périmètre ou
+  // aire, deux dessins. Le volume n'entre pas au CM2 (le cm³ est en 6e).
+  // Les unités restent écrites dans les calculs (S023 p. 5-6).
+
+  // --------------------------------------------- R7 · J'estime avec un repère
+  // Le repère reporté (S023 p. 3 : « un stylo mesure environ 15 cm, je peux
+  // estimer la longueur de la trousse » ; Ontario : « un étage ≈ 3 m ») :
+  // l'objet, le repère dessiné n fois le long de l'objet, trois mesures au
+  // choix (l'ordre de grandeur : × 10, ÷ 10). [la phrase, le nom sous le
+  // dessin, le repère, sa mesure, n, la longueur de l'objet en quarts de repère,
+  // la réponse, les trois choix, la ligne de la correction, le degré].
+  // (Degré 0 : l'exemple de On te montre, jamais dans une série.)
+  // Les repères dessinés : la voiture (4 m), le très grand pas (1 m),
+  // l'empan (15 cm), la main (10 cm), le terrain de foot (10 terrains bout
+  // à bout : 1 km, donc environ 100 m chacun).
+  const REPORTES = [
+    ["Le bassin de la piscine de Saint‑Paul mesure environ…", "Le bassin", "l4", "4 m", 6, 25, "25 m", ["2,5 m", "25 m", "250 m"], "6 voitures : environ 24 m, donc 25 m", 0],
+    ["Un bus du Car Jaune mesure environ…", "Le bus", "l4", "4 m", 3, 12, "12 m", ["1,2 m", "12 m", "120 m"], "3 voitures : environ 12 m", 1],
+    ["Le tableau de la classe mesure environ…", "Le tableau", "l11", "1 m", 3, 12, "3 m", ["30 cm", "3 m", "30 m"], "3 grands pas : environ 3 m", 1],
+    ["Un grand cahier mesure environ…", "Le cahier", "l15", "10 cm", 3, 12, "30 cm", ["3 cm", "30 cm", "3 m"], "3 mains : environ 30 cm", 1],
+    ["La salle de classe mesure environ…", "La salle", "l11", "1 m", 8, 32, "8 m", ["80 cm", "8 m", "80 m"], "8 grands pas : environ 8 m", 2],
+    ["Une table d'élève mesure environ…", "La table", "l12", "15 cm", 4, 16, "60 cm", ["6 cm", "60 cm", "6 m"], "4 empans : environ 60 cm", 2],
+    ["Le portail de la cour mesure environ…", "Le portail", "l11", "1 m", 4, 16, "4 m", ["40 cm", "4 m", "40 m"], "4 grands pas : environ 4 m", 2],
+    ["Le terrain de basket mesure environ…", "Le terrain", "l4", "4 m", 7, 28, "30 m", ["3 m", "30 m", "300 m"], "7 voitures : environ 28 m, donc 30 m", 3],
+    ["De l'école au stade, il y a environ…", "Le chemin", "l14", "100 m", 5, 20, "500 m", ["50 m", "500 m", "5 km"], "5 terrains de foot : environ 500 m", 3],
+    ["Le banc de la cour mesure environ…", "Le banc", "l12", "15 cm", 7, 27, "1 m", ["10 cm", "1 m", "10 m"], "7 empans : environ 105 cm, donc 1 m", 3],
+    // (Lot B3-1c : six de plus ; au banc des répétitions, après 25 questions
+    // d'À toi, Je valide en reposait 4,7 sur 10.)
+    ["Une trousse mesure environ…", "La trousse", "l15", "10 cm", 2, 8, "20 cm", ["2 cm", "20 cm", "2 m"], "2 mains : environ 20 cm", 1],
+    ["Un camion poubelle mesure environ…", "Le camion", "l4", "4 m", 2, 8, "8 m", ["80 cm", "8 m", "80 m"], "2 voitures : environ 8 m", 1],
+    ["Le préau de l'école mesure environ…", "Le préau", "l11", "1 m", 10, 40, "10 m", ["1 m", "10 m", "100 m"], "10 grands pas : environ 10 m", 2],
+    ["Le pont sur la ravine mesure environ…", "Le pont", "l4", "4 m", 5, 20, "20 m", ["2 m", "20 m", "200 m"], "5 voitures : environ 20 m", 2],
+    ["La fenêtre de la classe mesure environ…", "La fenêtre", "l12", "15 cm", 8, 32, "120 cm", ["12 cm", "120 cm", "12 m"], "8 empans : environ 120 cm", 3],
+    ["Le sentier jusqu'à la cascade mesure environ…", "Le sentier", "l14", "100 m", 8, 32, "800 m", ["80 m", "800 m", "8 km"], "8 terrains de foot : environ 800 m", 3]
+  ];
+  const NOMS_REPORTE = {l4: ["voiture", "voitures", "Une voiture : environ 4 m."], l11: ["grand pas", "grands pas", "Un très grand pas : environ 1 m."],
+    l12: ["empan", "empans", "Mon empan : environ 15 cm."], l15: ["main", "mains", "Ma main : environ 10 cm."],
+    l14: ["terrain de foot", "terrains de foot", "Un terrain de foot : environ 100 m."]};
+  // Le repère compté, sans dessin : [la phrase, le repère (ou null quand
+  // la phrase le donne), n, la réponse, les trois choix, la ligne de la
+  // correction, le degré]. La phrase finit par « environ… ».
+  const FOIS_R7 = [
+    ["Un immeuble a 12 étages. Un étage mesure environ 3 m. L'immeuble mesure environ…", null, 12, "36 m", ["3,6 m", "36 m", "360 m"], "12 × 3 m = 36 m", 0],
+    ["Une carafe se remplit avec 5 verres. La carafe contient environ…", "c5", 5, "1 L", ["10 cL", "1 L", "10 L"], "5 × 20 cL = 100 cL = 1 L", 1],
+    ["Le couloir mesure 15 grands pas. Le couloir mesure environ…", "l11", 15, "15 m", ["1,5 m", "15 m", "150 m"], "15 × 1 m = 15 m", 1],
+    ["Un sac de letchis pèse autant que 3 paquets de riz. Le sac pèse environ…", "m4", 3, "3 kg", ["300 g", "3 kg", "30 kg"], "3 × 1 kg = 3 kg", 1],
+    ["Le cross de l'école fait 3 tours de piste. Le cross mesure environ…", "l5", 3, "1 200 m", ["120 m", "1 200 m", "12 km"], "3 × 400 m = 1 200 m", 2],
+    ["Mon cartable pèse autant que 2 ramettes de papier. Mon cartable pèse environ…", "m9", 2, "5 kg", ["500 g", "5 kg", "50 kg"], "2 × 2,5 kg = 5 kg", 2],
+    ["Une bouteille de jus remplit 4 verres. La bouteille contient environ…", "c5", 4, "80 cL", ["8 cL", "80 cL", "8 L"], "4 × 20 cL = 80 cL", 2],
+    ["Une tour a 20 étages. Un étage mesure environ 3 m. La tour mesure environ…", null, 20, "60 m", ["6 m", "60 m", "600 m"], "20 × 3 m = 60 m", 2],
+    ["La cour de récréation fait 12 voitures de long. La cour mesure environ…", "l4", 12, "50 m", ["5 m", "50 m", "500 m"], "12 × 4 m = 48 m, donc environ 50 m", 3],
+    ["Une marmite de cari se remplit avec 3 bouteilles d'eau. La marmite contient environ…", "c7", 3, "5 L", ["50 cL", "5 L", "50 L"], "3 × 1,5 L = 4,5 L, donc environ 5 L", 3],
+    ["Un camion porte 10 petites voitures. Le camion porte environ…", "m6", 10, "10 t", ["1 t", "10 t", "100 t"], "10 × 1 t = 10 t", 3],
+    ["Un seau se remplit avec 7 bouteilles d'eau. Le seau contient environ…", "c7", 7, "10 L", ["1 L", "10 L", "100 L"], "7 × 1,5 L = 10,5 L, donc environ 10 L", 3],
+    // (Lot B3-1c : six de plus.)
+    ["Un régime de bananes pèse autant que 8 paquets de riz. Le régime pèse environ…", "m4", 8, "8 kg", ["800 g", "8 kg", "80 kg"], "8 × 1 kg = 8 kg", 1],
+    ["Une théière se remplit avec 3 verres. La théière contient environ…", "c5", 3, "60 cL", ["6 cL", "60 cL", "6 L"], "3 × 20 cL = 60 cL", 1],
+    ["Un jerrican se remplit avec 4 bouteilles d'eau. Le jerrican contient environ…", "c7", 4, "6 L", ["60 cL", "6 L", "60 L"], "4 × 1,5 L = 6 L", 2],
+    ["Le terrain de pétanque mesure 12 grands pas. Le terrain mesure environ…", "l11", 12, "12 m", ["1,2 m", "12 m", "120 m"], "12 × 1 m = 12 m", 2],
+    ["Au cross, je fais 6 tours de piste. Je cours environ…", "l5", 6, "2 400 m", ["240 m", "2 400 m", "24 km"], "6 × 400 m = 2 400 m", 3],
+    ["Un jacquier pèse autant que 4 ramettes de papier. Le jacquier pèse environ…", "m9", 4, "10 kg", ["1 kg", "10 kg", "100 kg"], "4 × 2,5 kg = 10 kg", 3]
+  ];
+  // La taille d'une mesure écrite (« 1 200 m », « 80 cL ») dans la plus
+  // petite unité de sa grandeur.
+  function tailleTexte(t) {
+    const [, n, u] = t.replace(/[\u00a0\u202f]/g, " ").match(/^([\d ,]+) (\S+)$/);
+    const g = grandeurDe(u);
+    return {v: convertir(milli(n.replace(/ /g, "")), u, ORDRE_UNITES_2[g][0]), g};
+  }
+  // Le pourquoi d'une mesure trop grande ou trop petite (« 2,5 m, c'est
+  // bien trop court. »). (Lot B3-1c : sur une ligne, 31 signes au plus ;
+  // « beaucoup trop court » passait sur deux lignes au petit Android avec
+  // une police large, la correction de Je valide tombait à 77 %.)
+  const TROP_R7 = {longueur: ["bien trop court", "bien trop long"], masse: ["bien trop léger", "bien trop lourd"], contenance: ["bien trop peu", "beaucoup trop"]};
+  function pourquoiOrdre(choix, bon) {
+    const p = {};
+    const r = tailleTexte(choix[bon]);
+    choix.forEach((c, k) => {
+      if (k === bon) return;
+      const x = tailleTexte(c);
+      p[k] = CARTE.typo(`${c}, c'est ${TROP_R7[r.g][x.v > r.v ? 1 : 0]}.`);
+    });
+    return p;
+  }
+  function questionReporte(degre, rng, i) {
+    const [phrase, nom, rep, mesure, n, quarts, reponse, trois, ligne] = REPORTES[i];
+    const choix = melanger(rng, trois).map(c => CARTE.typo(c));
+    const bon = choix.indexOf(CARTE.typo(reponse));
+    const [un, plusieurs, note] = NOMS_REPORTE[rep];
+    const texte = CARTE.typo(phrase);
+    return q({
+      code: "R7", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: "", sorte: "mesure"},
+      choix, bon, reponse: choix[bon], reponseTexte: choix[bon], unite: reponse.split(" ").pop(),
+      grandeur: "longueur", resume: CARTE.typo(`${phrase.replace(/…$/, "")} ${reponse}.`),
+      outil: "reporte", reporte: {repere: rep, n, quarts, nom, mesure: CARTE.typo(mesure), total: CARTE.typo(reponse), un, plusieurs},
+      noteOutil: CARTE.typo(note), image: [CARTE.typo(note)], repereImage: rep,
+      correction: [CARTE.typo(ligne)], ligneR7: CARTE.typo(ligne), vertR7: CARTE.typo(reponse),
+      pourquoi: pourquoiOrdre(choix, bon),
+      donnees: {type: "estimer", sorte: "reporte", situation: i},
+      cle: `R7:r:${i}`
+    });
+  }
+  function questionFoisR7(degre, rng, i) {
+    const [phrase, rep, n, reponse, trois, ligne] = FOIS_R7[i];
+    const choix = melanger(rng, trois).map(c => CARTE.typo(c));
+    const bon = choix.indexOf(CARTE.typo(reponse));
+    const r = rep ? CARTE.repere(rep) : null;
+    const g = tailleTexte(reponse).g;
+    const k = phrase.lastIndexOf(". ");
+    const enonce = CARTE.typo(phrase.slice(0, k + 1));
+    const fin = CARTE.typo(phrase.slice(k + 2));
+    const noteOutil = CARTE.typo(rep ? `Je compte ${n} fois mon repère.` : `Je compte ${n} fois un étage.`);
+    const monRepere = r ? CARTE.typo(`Mon repère : ${r.objet[0].toLowerCase()}${r.objet.slice(1)}, ${r.valeur}.`) : null;
+    return q({
+      code: "R7", degre, forme: "qcm", texte: CARTE.typo(phrase), morceaux: {enonce, phrase: fin, apres: "", sorte: "mesure"},
+      choix, bon, reponse: choix[bon], reponseTexte: choix[bon], unite: null, grandeur: g,
+      // (Lot B3-1c : la dernière phrase seulement, le résumé tient sur deux lignes.)
+      resume: CARTE.typo(`${phrase.slice(k + 2).replace(/…$/, "")} ${reponse}.`),
+      outil: "fois-r7", repereCarte: rep, noteOutil, image: monRepere ? [monRepere] : [noteOutil],
+      correction: [CARTE.typo(ligne)], ligneR7: CARTE.typo(ligne), vertR7: CARTE.typo(reponse),
+      pourquoi: pourquoiOrdre(choix, bon),
+      donnees: {type: "estimer", sorte: "fois", situation: i},
+      cle: `R7:f:${i}`
+    });
+  }
+
+  // L'estimation d'un calcul (S002 p. 10, S003 p. 10 : « 212 m + 298 m +
+  // 496 m est proche de 1 000 m » ; « 1 212 L − 496 L est proche de 700 L,
+  // car 1 200 L − 500 L = 700 L » ; « 52 × 37 L ≈ 2 000 L » ; « 59 437 kg ÷ 6
+  // est proche de 10 000 kg, car 6 × 10 000 kg = 60 000 kg » ; « 597 kg ÷ 2
+  // est proche de 300 kg »). Les trois choix : le calcul arrondi, 10 fois
+  // plus, 10 fois moins. L'outil : chaque nombre et son arrondi, jamais le
+  // résultat. Degré 1 : des sommes de centaines ; degré 2 : des
+  // différences et des sommes de milliers ; degré 3 : des produits et des
+  // partages. (Un nombre n'est jamais à mi-chemin : 250 ne s'arrondit pas.)
+  const UNITES_CALCUL = ["m", "L", "kg"];
+  // (Un produit : « 52 × 37 L », jamais « 52 × 37 m », qu'on lirait comme une aire.)
+  const UNITES_PRODUIT = ["L", "kg"];
+  // Un nombre près d'un nombre rond : r ± un écart (jamais plus du quart du pas).
+  function presDe(rng, r, pas) {
+    for (let essai = 0; essai < 20; essai += 1) {
+      const e = entre(rng, 1, pas === 10 ? 3 : Math.floor(pas / 5));
+      const x = rng() < 0.5 ? r - e : r + e;
+      if (x > 0 && x % 10 !== 0) return x;
+    }
+    return r + 3;
+  }
+  const NB_TXT = x => ecrire(milli(x));
+  function tirerCalcul(rng, degre) {
+    const produit = degre === 3 && rng() < 0.5;
+    const u = choisir(rng, produit ? UNITES_PRODUIT : UNITES_CALCUL);
+    const M = x => `${NB_TXT(x)}${NB}${u}`;
+    if (degre === 1) {
+      const n = rng() < 0.6 ? 3 : 2;
+      const ronds = Array.from({length: n}, () => 100 * entre(rng, 1, 5));
+      const nombres = ronds.map(r => presDe(rng, r, 100));
+      const total = ronds.reduce((a, b) => a + b, 0);
+      return {op: "+", u, nombres, ronds, total, texte: nombres.map(M).join(" + "), arrondi: `${ronds.map(M).join(" + ")} = ${M(total)}`};
+    }
+    if (degre === 2) {
+      if (rng() < 0.5) {
+        const a = 100 * entre(rng, 11, 49);
+        const b = 100 * entre(rng, 2, Math.min(9, a / 100 - 2));
+        const A = presDe(rng, a, 100);
+        const B = presDe(rng, b, 100);
+        return {op: "−", u, nombres: [A, B], ronds: [a, b], total: a - b, texte: `${M(A)} − ${M(B)}`, arrondi: `${M(a)} − ${M(b)} = ${M(a - b)}`};
+      }
+      const ronds = [1000 * entre(rng, 1, 4), 1000 * entre(rng, 1, 4)];
+      const nombres = ronds.map(r => presDe(rng, r, 1000));
+      return {op: "+", u, nombres, ronds, total: ronds[0] + ronds[1], texte: nombres.map(M).join(" + "), arrondi: `${ronds.map(M).join(" + ")} = ${M(ronds[0] + ronds[1])}`};
+    }
+    if (produit) {
+      // 52 × 37 L : deux nombres de deux chiffres, arrondis à la dizaine.
+      const a = 10 * entre(rng, 2, 9);
+      const b = 10 * entre(rng, 2, 9);
+      const A = presDe(rng, a, 10);
+      const B = presDe(rng, b, 10);
+      return {op: "×", u, nombres: [A, B], ronds: [a, b], total: a * b, texte: `${NB_TXT(A)} × ${M(B)}`, arrondi: `${NB_TXT(a)} × ${M(b)} = ${M(a * b)}`, sansUnite: 0};
+    }
+    // 59 437 kg ÷ 6 : le partage d'un nombre près d'un multiple facile.
+    const d = entre(rng, 2, 9);
+    const p = choisir(rng, [100, 1000, 10000]);
+    const r = d * p * entre(rng, 1, Math.max(1, Math.floor(9 / d)));
+    const N = presDe(rng, r, Math.max(100, p / 2));
+    return {op: "÷", u, nombres: [N, d], ronds: [r, d], total: r / d, texte: `${M(N)} ÷ ${d}`, arrondi: `${M(r)} ÷ ${d} = ${M(r / d)}`, sansUnite: 1};
+  }
+  function questionCalculR7(degre, rng, impose = null) {
+    for (let essai = 0; essai < 30; essai += 1) {
+      const c = impose || tirerCalcul(rng, degre);
+      if (!c) continue;
+      const {u, total} = c;
+      const M = x => `${NB_TXT(x)}${NB}${u}`;
+      // Les trois choix : 10 fois moins, le bon, 10 fois plus (des nombres
+      // entiers).
+      if (total % 10 !== 0 || total < 100) continue;
+      // (Lot B3-1c : mélangés ; la bonne réponse était toujours au milieu.)
+      const trois = melanger(rng, [total / 10, total, total * 10]);
+      const choix = trois.map(M).map(t => CARTE.typo(t));
+      const bon = trois.indexOf(total);
+      // (Une réponse n'est jamais un nombre de l'énoncé, ni un arrondi de
+      // l'outil : « 1 209 m − 584 m », « 584 m → 600 m », la réponse 600 m.)
+      if (c.nombres.includes(total) || c.ronds.includes(total)) continue;
+      const texte = CARTE.typo(`${c.texte} est proche de…`);
+      const lignes = c.nombres.map((x, k) => (c.sansUnite === k && c.op !== "÷" ? [NB_TXT(x), NB_TXT(c.ronds[k])] : c.op === "÷" && k === 1 ? null : [M(x), M(c.ronds[k])])).filter(Boolean);
+      const pourquoi = {};
+      trois.forEach((v, k) => { if (v !== total) pourquoi[k] = v < total ? "Un zéro de moins." : "Un zéro de trop."; });
+      // (« 100 000 kg » sortait de son bouton à 360 px avec une police
+      // large : les réponses longues en plus petit, comme des mots.)
+      const longues = choix.some(c => c.length > 8);
+      return q({
+        code: "R7", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: "", sorte: longues ? "mots" : "mesure"},
+        choix, bon, reponse: choix[bon], reponseTexte: choix[bon], unite: u, grandeur: grandeurDe(u),
+        resume: CARTE.typo(`${c.texte} ≈ ${M(total)}`),
+        outil: "arrondis", arrondis: lignes.map(([a, b]) => [CARTE.typo(a), CARTE.typo(b)]),
+        // (Lot B3-1c : la note sur une ligne avec une police large.)
+        noteOutil: c.op === "÷" ? "Un nombre facile à partager." : "J'arrondis chaque nombre.",
+        image: [CARTE.typo(`${lignes[0][0]} → ${lignes[0][1]}`)],
+        correction: [CARTE.typo(c.arrondi), CARTE.typo(`${c.texte} ≈ ${M(total)}`)], ligneR7: CARTE.typo(c.arrondi), vertR7: CARTE.typo(M(total)),
+        pourquoi,
+        donnees: {type: "estimer-calcul", op: c.op, nombres: c.nombres, ronds: c.ronds, unite: u},
+        cle: `R7:c:${c.nombres.join(c.op)}${u}`.replace(/\s/g, "")
+      });
+    }
+    return null;
+  }
+  // L'exemple de On te montre (jamais dans une série).
+  const EXEMPLE_CALCUL_R7 = "R7:c:212+298+496m";
+  ETAPES.R7 = {
+    clesExemples: ["R7:r:0", "R7:f:0", EXEMPLE_CALCUL_R7],
+    // Je valide : trois repères reportés, trois comptés, quatre calculs ;
+    // À toi : les trois en alternance.
+    formes(usage) {
+      if (usage === "valide") return {0: "reporte", 1: "calcul", 2: "fois", 3: "reporte", 4: "calcul", 5: "fois", 6: "calcul", 7: "reporte", 8: "fois", 9: "calcul"};
+      if (usage === "entraine") {
+        const f = {};
+        const cycle = ["reporte", "calcul", "fois", "reporte", "fois", "calcul"];
+        for (let i = 0; i < 25; i += 1) f[i] = cycle[i % cycle.length];
+        return f;
+      }
+      return {};
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const f = forme || choisir(rng, ["reporte", "fois", "calcul"]);
+      if (f === "calcul") return questionCalculR7(degre, rng);
+      const liste = f === "reporte" ? REPORTES : FOIS_R7;
+      // (Au degré 3, aussi celles du degré 2 : il n'y en a que deux ou trois.)
+      const vivier = liste.map((s, k) => [s, k]).filter(([s]) => s[s.length - 1] === degre || (degre === 3 && s[s.length - 1] === 2));
+      const [, k] = choisir(rng, vivier);
+      return f === "reporte" ? questionReporte(degre, rng, k) : questionFoisR7(degre, rng, k);
+    }
+  };
+
+  // ----------------------------------------------- R8 · Mes repères d'aire
+  // Au modèle des repères du CM1 (etapeReperes2, la grandeur aire), et
+  // « Range ces aires » (carte v4 : 40 cm², 12 dm², 4 m², 50 m²) : on
+  // range d'abord par unité (cm² < dm² < m²), puis par nombre ; le piège,
+  // le plus grand nombre n'est pas la plus grande aire. (Les conversions
+  // d'aires viennent après, lots B3-2.) Des nombres qu'on écrit vraiment :
+  // en cm², de 20 à 90 ; en dm², de 2 à 40 ; en m², de 2 à 90 (moins de
+  // 1 dm², moins de 1 m² : jamais d'ambiguïté).
+  const BORNES_R8 = {"cm²": [20, 90], "dm²": [2, 40], "m²": [2, 90]};
+  function questionRangerR8(degre, rng) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      const us = melanger(rng, ["cm²", "dm²", "m²", choisir(rng, ["cm²", "dm²", "m²"])]);
+      const liste = us.map(u => {
+        const [a, b] = BORNES_R8[u];
+        const n = u === "cm²" ? 5 * entre(rng, a / 5, b / 5) : entre(rng, a, b);
+        return [n, u];
+      });
+      const val = ([n, u]) => n * {"cm²": 1, "dm²": 100, "m²": 10000}[u];
+      const vals = liste.map(val);
+      if (new Set(vals).size !== 4) continue;
+      // Le piège : un plus grand nombre devant une plus petite aire.
+      const piege = liste.some((a, i) => liste.some((b, j) => a[1] !== b[1] && a[0] > b[0] && vals[i] < vals[j]));
+      if (!piege) continue;
+      const ordre = [0, 1, 2, 3].sort((x, y) => vals[x] - vals[y]);
+      if (ordre.every((x, k) => x === k)) continue;
+      const mesures = liste.map(([n, u]) => CARTE.typo(`${n} ${u}`));
+      const rangees = ordre.map(k => mesures[k]);
+      const consigne = "Range ces aires de la plus petite à la plus grande.";
+      return q({
+        code: "R8", degre, forme: "ranger", texte: `${consigne} ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne, consigne: "Touche-les dans l'ordre : 1, 2, 3, 4."},
+        mesures, ordre, reponse: ordre.join(","), reponseTexte: rangees.join(" < "), unite: null,
+        resume: rangees.join(" < "), outil: "reperes-unites", grandeur: "aire", unites: ["cm²", "dm²", "m²"], reperes: [],
+        image: ["cm² < dm² < m²"],
+        correction: [rangees.join(" < "), CARTE.typo("D'abord l'unité : cm² < dm² < m² ; puis le nombre.")], uniteCommune: null,
+        donnees: {type: "ranger-aires", mesures: liste.map(([n, u]) => [String(n), u])},
+        cle: `R8:ranger:${rangees.join("<").replace(/[\s\u00a0\u202f]/g, "")}`
+      });
+    }
+    return null;
+  }
+  ETAPES.R8 = etapeReperes2("R8", {ranger: true});
+
+  // -------------------------------------------- R9 · Qu'est-ce qu'on mesure ?
+  // Les cinq grandeurs du CM2 (R2 + « une aire : les carreaux ») ; le
+  // périmètre ou l'aire (S003 p. 15 : « l'élève sait différencier le
+  // périmètre et l'aire » ; S038 : repasser le contour, colorier la
+  // surface ; 36 % comptent le contour pour une aire, A5) ; le gros qui
+  // n'est pas le plus lourd (S023 p. 3 : le paquet de céréales et la
+  // bouteille), le haut qui ne contient pas le plus (Japon). Pas de
+  // volume : il vient en 6e.
+  const GRANDEURS_5 = ["une longueur", "une masse", "une contenance", "une durée", "une aire"];
+  const CLES_5 = ["longueur", "masse", "contenance", "duree", "aire"];
+  // (Lot B3-1c : un pourquoi tient sur une ligne, 31 signes au plus.)
+  const RAISON_5 = {longueur: "Une distance : une longueur.", masse: "Je pèse : une masse.", contenance: "Je mesure ce que ça contient.",
+    duree: "Je mesure un temps : une durée.", aire: "Une surface : une aire."};
+  // [la situation, la grandeur, le degré]
+  const SITUATIONS_R9 = [
+    ["Je compte les carreaux qui couvrent la figure.", "aire", 1], ["Je recouvre la table avec des feuilles A4.", "aire", 1],
+    ["Je pose la règle le long du cahier.", "longueur", 1], ["Je pèse les ananas sur la balance.", "masse", 1],
+    ["Je verse le jus de goyavier dans le verre doseur.", "contenance", 1], ["Je déclenche le chronomètre au départ de la course.", "duree", 1],
+    ["Je veux savoir combien de carreaux il faut pour le sol de la cuisine.", "aire", 2], ["Je veux savoir quelle surface de mur je vais peindre.", "aire", 2],
+    ["Je veux savoir quelle longueur de grillage il faut autour du jardin.", "longueur", 2], ["Je veux savoir si le colis pèse plus de 2 kg.", "masse", 2],
+    ["Je veux savoir combien d'eau il faut pour remplir le bassin.", "contenance", 2], ["Je veux savoir combien de temps sèche la peinture.", "duree", 2],
+    ["Je veux savoir quelle surface de tôle il faut pour le toit de la case.", "aire", 3], ["Je veux savoir quelle place prend le tapis sur le sol.", "aire", 3],
+    ["Je veux savoir quelle surface occupe le champ de cannes.", "aire", 3], ["Je veux savoir quelle longueur de ruban il faut autour du cadeau.", "longueur", 3],
+    ["Je veux savoir combien de temps dure la descente du Piton.", "duree", 3], ["Je veux savoir combien de sirop tient dans la bouteille.", "contenance", 3],
+    // (Lot B3-1c : neuf de plus ; au banc des répétitions, après 25 questions
+    // d'À toi, Je valide en reposait 5 sur 10.)
+    ["Je mesure ma taille sous la toise.", "longueur", 1], ["Je regarde combien de temps dure la récréation.", "duree", 1],
+    ["Je veux savoir combien pèse mon cartable.", "masse", 2], ["Je veux savoir combien de jus contient la carafe.", "contenance", 2],
+    ["Je veux savoir quelle distance je parcours jusqu'à l'école.", "longueur", 2], ["Je veux savoir combien de nappes il faut pour couvrir la table.", "aire", 3],
+    ["Je veux savoir combien d'eau tient l'aquarium.", "contenance", 3], ["Je veux savoir combien de temps met le Car Jaune jusqu'à Saint‑Denis.", "duree", 3],
+    ["Je veux savoir combien pèse le sac de letchis.", "masse", 3]
+  ];
+  // (Lot B3-1c : le résumé court d'une situation, pour la fin de Je valide
+  // et le bilan ; la phrase entière passait sur cinq lignes au petit iPhone
+  // avec une police large, « Accueil » sortait du cadre — vu par le robot.)
+  const COURTS_R9 = ["Les carreaux de la figure", "La table en feuilles A4", "La règle le long du cahier", "Les ananas sur la balance", "Le jus dans le verre doseur", "Le chronomètre de la course", "Les carreaux du sol", "Le mur à peindre", "Le grillage du jardin", "Le colis", "L'eau du bassin", "La peinture qui sèche", "La tôle du toit", "Le tapis sur le sol", "Le champ de cannes", "Le ruban du cadeau", "La descente du Piton", "Le sirop de la bouteille", "Ma taille", "La récréation", "Mon cartable", "Le jus de la carafe", "Le trajet jusqu'à l'école", "Les nappes sur la table", "L'eau de l'aquarium", "Le Car Jaune jusqu'à Saint‑Denis", "Le sac de letchis"];
+  const COURTS_PA = ["La clôture du jardin", "Le carrelage de la cuisine", "Le ruban autour de la carte", "La peinture du mur", "Le tour du terrain", "La nappe sur la table", "Le gazon du jardin", "La bordure de la nappe", "Le grillage du champ", "Les tôles du toit", "Le papier cadeau", "La guirlande de la fenêtre", "La frise de la classe", "Les dalles de la cour", "Les plinthes de la chambre", "La moquette de la chambre", "Le bord du terrain", "La pelouse du terrain", "Les galets du bassin", "Le fond de la piscine", "Le cadre du tableau", "Le vernis de la table", "La haie du jardin", "Les panneaux du toit"];
+  function questionGrandeur5(degre, rng) {
+    const vivier = SITUATIONS_R9.map((o, i) => [o, i]).filter(([o]) => o[2] === degre);
+    const [[phrase, grandeur], i] = choisir(rng, vivier);
+    // Quatre réponses : la bonne, et trois autres ; l'aire ou la longueur
+    // toujours là (la confusion du périmètre).
+    const autres = melanger(rng, CLES_5.filter(c => c !== grandeur));
+    const voisine = grandeur === "aire" ? "longueur" : "aire";
+    const trois = [voisine, ...autres.filter(c => c !== voisine).slice(0, 2)];
+    const cles = CLES_5.filter(c => c === grandeur || trois.includes(c));
+    const choix = cles.map(c => GRANDEURS_5[CLES_5.indexOf(c)]);
+    const bon = cles.indexOf(grandeur);
+    const texte = CARTE.typo(phrase);
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = CARTE.typo(RAISON_5[grandeur]); });
+    return q({
+      code: "R9", degre, forme: "qcm", texte: CARTE.typo(`${phrase} Qu'est-ce que je mesure ?`),
+      morceaux: {phrase: texte, sorte: "grandeur", consigne: CARTE.typo("Qu'est-ce que je mesure ?")},
+      choix, bon, reponse: choix[bon], reponseTexte: choix[bon], pourquoi,
+      unite: null, resume: CARTE.typo(`${COURTS_R9[i]} : ${choix[bon]}.`), outil: "grandeurs", avecAire: true, grandeur,
+      correction: [CARTE.typo(`Je mesure ${choix[bon]}.`)],
+      donnees: {type: "grandeur5", situation: i, grandeur},
+      cle: `R9:g:${i}`
+    });
+  }
+  // Le périmètre ou l'aire : [la situation, "perimetre" ou "aire", le degré].
+  const PERIM_AIRE = [
+    ["Je pose une clôture autour du jardin.", "perimetre", 0], ["Je pose du carrelage dans la cuisine.", "aire", 0],
+    ["Je colle un ruban tout autour de la carte.", "perimetre", 1], ["Je peins tout le mur.", "aire", 1],
+    ["Je fais le tour du terrain en courant.", "perimetre", 1], ["Je recouvre la table d'une nappe.", "aire", 1],
+    ["Je sème du gazon dans tout le jardin.", "aire", 2], ["Je couds une bordure autour de la nappe.", "perimetre", 2],
+    ["J'entoure le champ de cannes d'un grillage.", "perimetre", 2], ["Je pose des tôles sur le toit de la case.", "aire", 2],
+    ["J'emballe la boîte dans du papier cadeau.", "aire", 2], ["Je mets une guirlande autour de la fenêtre.", "perimetre", 2],
+    ["Je colle une frise tout autour de la classe.", "perimetre", 3], ["Je compte les dalles qui couvrent la cour.", "aire", 3],
+    ["Je pose des plinthes au bas des murs de la chambre.", "perimetre", 3], ["J'achète de la moquette pour la chambre.", "aire", 3],
+    // (Lot B3-1c : huit de plus.)
+    ["Je trace à la craie le bord du terrain.", "perimetre", 1], ["Je pose de la pelouse sur tout le terrain.", "aire", 1],
+    ["Je mets des galets tout autour du bassin.", "perimetre", 2], ["Je carrelle le fond de la piscine.", "aire", 2],
+    ["Je pose un cadre autour du tableau.", "perimetre", 2], ["Je vernis tout le dessus de la table.", "aire", 3],
+    ["Je plante une haie le long des quatre côtés du jardin.", "perimetre", 3], ["Je couvre le toit de panneaux solaires.", "aire", 3]
+  ];
+  const MOTS_PA = {perimetre: "le périmètre", aire: "l'aire"};
+  function questionPerimAire(degre, rng, i) {
+    const [phrase, bonne] = PERIM_AIRE[i];
+    const choix = ["le périmètre", "l'aire"];
+    const bon = choix.indexOf(MOTS_PA[bonne]);
+    const texte = CARTE.typo(phrase);
+    const raison = bonne === "perimetre" ? "Je fais le tour : le périmètre." : "Je couvre la surface : l'aire.";
+    // (Lot B3-1c : le pourquoi dit ce qu'est le mauvais choix ; il répétait
+    // la correction mot pour mot.)
+    const pourquoiPA = bonne === "perimetre" ? "L'aire, c'est ce qu'on couvre." : "Le périmètre, c'est le tour.";
+    return q({
+      code: "R9", degre, forme: "qcm", texte: CARTE.typo(`${phrase} Qu'est-ce que je mesure ?`),
+      morceaux: {phrase: texte, sorte: "mots", consigne: CARTE.typo("Qu'est-ce que je mesure ?")},
+      choix, bon, reponse: choix[bon], reponseTexte: choix[bon], pourquoi: {[1 - bon]: pourquoiPA},
+      unite: null, resume: CARTE.typo(`${COURTS_PA[i]} : ${choix[bon]}.`), outil: "perim-aire", perimAire: bonne,
+      image: ["le périmètre : le tour", "l'aire : la surface"],
+      correction: [CARTE.typo(raison)],
+      donnees: {type: "perim-aire", situation: i, bonne},
+      cle: `R9:pa:${i}`
+    });
+  }
+  // Le gros qui n'est pas le plus lourd, le haut qui ne contient pas le
+  // plus : [la phrase, la question, les deux objets, le bon, les deux
+  // lignes de la correction, la grandeur, le degré]. (Des repères connus :
+  // 1 L d'eau, 1 kg ; la pièce de 1 €, 7,5 g ; le pack d'eau, 9 kg ; le
+  // verre, 20 cL ; la canette, 33 cL.)
+  const PIEGES_R9 = [
+    ["Un paquet de céréales est plus gros qu'une bouteille d'eau de 1,5 L.", "Lequel est le plus lourd ?", ["le paquet de céréales", "la bouteille d'eau"], 1,
+      ["La bouteille d'eau : environ 1,5 kg.", "Le paquet de céréales : environ 500 g."], "masse", 0],
+    ["Un sac de chips est plus gros qu'une brique de lait.", "Lequel est le plus lourd ?", ["le sac de chips", "la brique de lait"], 1,
+      ["La brique de lait : environ 1 kg.", "Le sac de chips : environ 150 g."], "masse", 2],
+    ["Un ballon de baudruche est plus gros qu'une pièce de 1 €.", "Lequel est le plus lourd ?", ["le ballon", "la pièce de 1 €"], 1,
+      ["La pièce de 1 € : 7,5 g.", "Le ballon : environ 3 g."], "masse", 2],
+    ["Un carton vide est plus gros qu'un pack de 6 bouteilles d'eau.", "Lequel est le plus lourd ?", ["le carton vide", "le pack d'eau"], 1,
+      ["Le pack d'eau : environ 9 kg.", "Le carton vide : environ 500 g."], "masse", 3],
+    ["Un verre est plus haut qu'une casserole.", "Lequel contient le plus ?", ["le verre", "la casserole"], 1,
+      ["La casserole : environ 2 L.", "Le verre : environ 20 cL."], "contenance", 2],
+    ["Une canette est plus haute qu'un grand bol.", "Lequel contient le plus ?", ["la canette", "le grand bol"], 1,
+      ["Le grand bol : environ 50 cL.", "La canette : 33 cL."], "contenance", 3],
+    ["Une bouteille de sirop est plus haute qu'une bassine.", "Laquelle contient le plus ?", ["la bouteille de sirop", "la bassine"], 1,
+      ["La bassine : environ 10 L.", "La bouteille de sirop : environ 70 cL."], "contenance", 3],
+    // (Lot B3-1c : deux de plus.)
+    ["Un sac de pop-corn est plus gros qu'un paquet de sucre.", "Lequel est le plus lourd ?", ["le sac de pop-corn", "le paquet de sucre"], 1,
+      ["Le paquet de sucre : 1 kg.", "Le sac de pop-corn : environ 100 g."], "masse", 2],
+    ["Un vase est plus haut qu'un saladier.", "Lequel contient le plus ?", ["le vase", "le saladier"], 1,
+      ["Le saladier : environ 3 L.", "Le vase : environ 1 L."], "contenance", 2]
+  ];
+  const PIEGE_RAISON = {masse: "Plus gros ne veut pas dire plus lourd.", contenance: "Plus haut ne veut pas dire contenir plus."};
+  // (Lot B3-1c : le pourquoi sur une ligne ; la règle reste dans l'outil.)
+  const PIEGE_POURQUOI = {masse: "Plus gros, mais plus léger.", contenance: "Plus haut, mais plus étroit."};
+  function questionPiegeR9(degre, rng, i) {
+    const [phrase, question, objets, b, lignesC, g] = PIEGES_R9[i];
+    const ordre = melanger(rng, [0, 1]);
+    const choix = ordre.map(k => CARTE.typo(objets[k]));
+    const bon = ordre.indexOf(b);
+    const enonce = CARTE.typo(phrase);
+    return q({
+      code: "R9", degre, forme: "qcm", texte: CARTE.typo(`${phrase} ${question}`),
+      morceaux: {enonce, phrase: CARTE.typo(question), sorte: "mots"},
+      choix, bon, reponse: choix[bon], reponseTexte: choix[bon], pourquoi: {[1 - bon]: PIEGE_POURQUOI[g]},
+      unite: null, resume: CARTE.typo(`${question.replace(/ \?$/, "")} : ${choix[bon]}.`), outil: "reperes-unites", grandeur: g,
+      unites: g === "masse" ? ["g", "kg"] : ["cL", "L"], noteOutil: PIEGE_RAISON[g],
+      image: [PIEGE_RAISON[g]],
+      correction: lignesC.map(t => CARTE.typo(t)),
+      donnees: {type: "piege", situation: i, grandeur: g},
+      cle: `R9:p:${i}`
+    });
+  }
+  ETAPES.R9 = {
+    clesExemples: ["R9:pa:0", "R9:pa:1", "R9:p:0"],
+    // Je valide : quatre fois la grandeur, quatre fois périmètre ou aire,
+    // deux pièges ; À toi : le même mélange.
+    formes(usage) {
+      if (usage === "valide") return {0: "grandeur", 1: "pa", 2: "piege", 3: "grandeur", 4: "pa", 5: "grandeur", 6: "pa", 7: "piege", 8: "grandeur", 9: "pa"};
+      if (usage === "entraine") {
+        const f = {};
+        const cycle = ["pa", "grandeur", "pa", "grandeur", "piege"];
+        for (let i = 0; i < 25; i += 1) f[i] = cycle[i % cycle.length];
+        return f;
+      }
+      return {};
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const f = forme || (degre === 1 ? choisir(rng, ["grandeur", "pa"]) : choisir(rng, ["grandeur", "pa", "piege"]));
+      if (f === "grandeur") return questionGrandeur5(degre, rng);
+      const liste = f === "pa" ? PERIM_AIRE : PIEGES_R9;
+      const vivier = liste.map((s, k) => [s, k]).filter(([s]) => s[s.length - 1] === degre || (f === "piege" && degre === 1 && s[s.length - 1] === 2));
+      const [, k] = choisir(rng, vivier);
+      return f === "pa" ? questionPerimAire(degre, rng, k) : questionPiegeR9(degre, rng, k);
     }
   };
 
@@ -5053,7 +5534,7 @@
   // pas, la petite et ses bornes et son pas, les unités du résultat].
   // Des mesures vraisemblables ; La Réunion à côté de tous les jours.
   const SITUATIONS_C8 = [
-    ["Marché de Saint-Pierre : {A} de letchis, {B} de mangues.", "En tout,", "+", ["kg", 1, 3, 0.5], ["g", 250, 900, 50], ["kg", "g"]],
+    ["Marché de Saint‑Pierre : {A} de letchis, {B} de mangues.", "En tout,", "+", ["kg", 1, 3, 0.5], ["g", 250, 900, 50], ["kg", "g"]],
     ["Pour un cari : {A} de poulet et {B} d'oignons.", "En tout,", "+", ["kg", 1, 2.5, 0.5], ["g", 200, 600, 50], ["kg", "g"]],
     ["{P} a {A} de saucisses. Le rougail en prend {B}.", "Il reste", "-", ["kg", 1, 3, 0.5], ["g", 300, 900, 50], ["kg", "g"]],
     ["Jus de goyavier : une bouteille de {A}. On en verse {B}.", "Il reste", "-", ["L", 1, 2, 0.5], ["cL", 15, 50, 5], ["L", "cL"]],
@@ -6060,7 +6541,7 @@
     ["piscine", "La séance de piscine commence à {D} et dure {d}. À quelle heure finit la séance ?", "Fin :", 40, 75, 480, 960],
     ["film", "Le film commence à {D} et dure {d}. À quelle heure finit le film ?", "Fin :", 85, 150, 810, 1250],
     ["match", "Le match commence à {D} et dure {d}. À quelle heure finit le match ?", "Fin :", 70, 110, 840, 1140],
-    ["route", "{P} part de Saint-Denis en voiture à {D}. Le trajet jusqu'à Saint-Pierre dure {d}.", "Arrivée :", 65, 100, 360, 1080],
+    ["route", "{P} part de Saint‑Denis en voiture à {D}. Le trajet jusqu'à Saint‑Pierre dure {d}.", "Arrivée :", 65, 100, 360, 1080],
     ["piton", "{P} part du gîte à {D} et monte {d} jusqu'au sommet du Piton des Neiges.", "Arrivée :", 85, 130, 180, 270],
     ["cari", "Le cari commence à cuire à {D}. La cuisson dure {d}. À quelle heure finit la cuisson ?", "Fin :", 45, 90, 600, 1110],
     ["velo", "{P} part à {D} pour une étape de course à vélo, qui dure {d}.", "Arrivée :", 65, 110, 540, 840]
@@ -6075,7 +6556,7 @@
     ["piscine", "La séance de piscine finit à {A} et dure {d}. À quelle heure commence la séance ?", "Début :", 40, 75, 540, 1020],
     ["cari", "Le cari est cuit à {A}, après {d} de cuisson. À quelle heure commence la cuisson ?", "Début :", 45, 90, 660, 1170],
     ["velo", "{P} met {d} pour une étape de course à vélo et passe la ligne d'arrivée à {A}.", "Départ :", 65, 110, 600, 900],
-    ["car", "Le Car Jaune arrive à Saint-Denis à {A}. Le trajet depuis Saint-Pierre dure {d}.", "Départ :", 75, 125, 420, 1140]
+    ["car", "Le Car Jaune arrive à Saint‑Denis à {A}. Le trajet depuis Saint‑Pierre dure {d}.", "Départ :", 75, 125, 420, 1140]
   ];
   // Deux étapes : [modèle, énoncé ({P}, {D}, {d1}, {d2}), la case, d1 min,
   // max, d2 min, max, départ au plus tôt, au plus tard, les deux instants
@@ -7257,7 +7738,7 @@
       [["700", "1,3"], ["800", "1,7"], ["500", "1,5"], ["1200", "0,8"]], "Mo", "Go", "plus"],
     ["virus", "Un cheveu a {a} d'épaisseur, un virus {b}. Combien de virus côte à côte ?", "Virus :", "",
       [["80", "100"], ["60", "100"], ["80", "50"], ["70", "100"]], "µm", "nm", "div"],
-    ["panneaux", "Un toit de Saint-Pierre a {n} panneaux solaires de {b}. Combien de kW en tout ?", "En tout :", "kW",
+    ["panneaux", "Un toit de Saint‑Pierre a {n} panneaux solaires de {b}. Combien de kW en tout ?", "En tout :", "kW",
       [["4", "250"], ["8", "250"], ["6", "500"], ["10", "300"]], "", "W", "fois"]
   ];
   function problemeP5(degre, rng) {

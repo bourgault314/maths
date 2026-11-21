@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-b63">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-b31">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261121-b63"></script>
-  <script src="./conversions_generateurs.js?v=20261121-b63"></script>
+  <script src="./conversions_carte.js?v=20261121-b31"></script>
+  <script src="./conversions_generateurs.js?v=20261121-b31"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261121-b63"></script>
+  <script src="./defi_conversions_aides.js?v=20261121-b31"></script>
   <script>
   (function () {
     "use strict";
@@ -611,7 +611,7 @@
       // (Lot 3b : aussi le repère demandé au pavé.)
       if (qn.repere && (qn.forme === "qcm" || qn.forme === "phrase")) reponse.appendChild(AIDES.carteRepere(qn.repere, {grande: true}));
       // « Qu'est-ce que je mesure ? » : les quatre grandeurs, la bonne en vert.
-      else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur});
+      else if (qn.outil === "grandeurs") AIDES.montrer(reponse, {type: "grandeurs", bonne: qn.grandeur, aire: qn.avecAire});
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
@@ -1157,6 +1157,7 @@
           gesteEl.appendChild(b);
         });
       }
+      if (ui.jnsp) ui.jnsp.parentElement.classList.remove("jnsp-seul");
       if (gesteEl) {
         ui.bas.appendChild(gesteEl);
         // (Lot B2-1b : une carte longue, « 2 kg 650 g », sur un grand écran
@@ -1190,6 +1191,10 @@
         });
         ui.bas.appendChild(choixEl);
         ui.action.style.visibility = "hidden";
+        // (Lot B3-1c, remarque de Gwenaël du 21/11 : sans « Valider », « Je
+        // ne sais pas » se met au milieu, sous les réponses, au lieu de
+        // rester seul à gauche.)
+        if (ui.jnsp) ui.jnsp.parentElement.classList.add("jnsp-seul");
       } else {
         const pave = el("div", "pave4");
         // (Lot B6-2, choix de Gwenaël du 21/11 : pour un exposant, « − » à la
@@ -1391,7 +1396,24 @@
       if (question.tableauP.rep) AIDES.tableauProp(zone, question.tableauP, {mode: "correction"});
       ligneVerte(zone, question.ligneQ9, question.vertQ9);
     }
+    // Lot B3-1 (R7, décidé le 21/11, montré sur la maquette) : le repère
+    // reporté refait en vert, puis « 6 voitures : environ 24 m, donc
+    // 25 m », la réponse en vert ; le calcul : les arrondis, le calcul
+    // arrondi avec ses unités, la réponse en vert, puis « ≈ ». (R9) : les
+    // deux dessins, le bon marqué, la phrase.
+    function r7Corrige(zone, question) {
+      if (question.reporte) AIDES.reporte(zone, Object.assign({eau: question.reporte.nom === "Le bassin"}, question.reporte), {mode: "correction"});
+      if (question.arrondis) AIDES.arrondis(zone, {paires: question.arrondis}, {mode: "correction"});
+      ligneVerte(zone, question.ligneR7, question.vertR7);
+      if (question.arrondis && question.correction[1]) zone.appendChild(el("div", "rel petite libre", question.correction[1]));
+    }
     function bonneReponse(zone, question) {
+      if (question.ligneR7) { r7Corrige(zone, question); return; }
+      if (question.perimAire) {
+        AIDES.perimAire(zone, {bonne: question.perimAire, mode: "correction"});
+        zone.appendChild(texteLignes("grosse petite-grosse", question.correction.join("\n")));
+        return;
+      }
       if (question.tableauP) { tableauCorrige(zone, question); return; }
       if (question.ligneP6) { p6Corrige(zone, question); return; }
       if (question.droiteH) { droiteHCorrige(zone, question); return; }

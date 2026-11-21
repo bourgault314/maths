@@ -77,9 +77,11 @@ function versUnite(m, de, vers) {
 }
 // Lot B1-1 : les unités du CM1 (mg, mL) et la taille d'un repère dans la
 // plus petite unité de sa grandeur, pour comparer deux repères.
-const EXP2 = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, mg: -3, L: 0, dL: -1, cL: -2, mL: -3};
+// (Lot B3-1 : les aires du CM2, comptées en cm² : 1 dm² = 100 cm², 1 m² =
+// 10 000 cm².)
+const EXP2 = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, mg: -3, L: 0, dL: -1, cL: -2, mL: -3, "cm²": 0, "dm²": 2, "m²": 4};
 const FAMILLE_G = {km: "longueur", m: "longueur", dm: "longueur", cm: "longueur", mm: "longueur", t: "masse", kg: "masse", g: "masse", mg: "masse",
-  L: "contenance", dL: "contenance", cL: "contenance", mL: "contenance"};
+  L: "contenance", dL: "contenance", cL: "contenance", mL: "contenance", "cm²": "aire", "dm²": "aire", "m²": "aire"};
 function taille(r) {
   return lire(r.nombre.replace(".", ",")) * 10n ** BigInt(EXP2[r.unite] + 3);
 }
@@ -552,7 +554,8 @@ function controlerQuestion(q, ou) {
     assert.deepEqual([...q.bonnes].sort(), [0, 1, 2]);
     q.donnees.reperes.forEach((code, i) => {
       const r = CARTE.repere(code);
-      assert.equal(q.mesures[q.bonnes[i]].replace(/\u00a0/g, " "), `${r.nombre.replace(".", ",")} ${r.unite}`, `${ou} : ${code} mal relié`);
+      // (Lot B3-1 : « 7 000 m² », les milliers.)
+      assert.equal(q.mesures[q.bonnes[i]].replace(/\u00a0/g, " ").replace(/\u202f/g, ""), `${r.nombre.replace(".", ",")} ${r.unite}`, `${ou} : ${code} mal relié`);
       // (Lot B1-1 : au palier 2, le nom court du repère.)
       if (CARTE.etape(q.code).palier >= 2) assert.ok(q.objets[i].texte.length <= 27 && q.correction[i].startsWith(r.objet), `${ou} : ${q.objets[i].texte}`);
       // (Lot R1-refonte : « La plus petite graduation », « 10 terrains de foot ».)
@@ -659,7 +662,9 @@ function controlerQuestion(q, ou) {
     assert.equal(new Set(q.choix).size, q.choix.length, `${ou} : deux choix identiques ${JSON.stringify(q.choix)}`);
     assert.ok(q.bon >= 0 && q.bon < q.choix.length, `${ou} : bonne réponse absente`);
     if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes"
-      || q.donnees.type === "comparer-p5" || q.donnees.type === "comparer-p6" || (q.code === "A5" && q.donnees.sorte === "meme"));
+      || q.donnees.type === "comparer-p5" || q.donnees.type === "comparer-p6" || (q.code === "A5" && q.donnees.sorte === "meme")
+      // (Lot B3-1, R9 : le périmètre ou l'aire ; le gros qui n'est pas le plus lourd.)
+      || q.donnees.type === "perim-aire" || q.donnees.type === "piege");
   }
 }
 
@@ -869,7 +874,8 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
       C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
       Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"],
-      P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"]}[code];
+      P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"],
+      R7: ["qcm"], R8: ["qcm", "associer", "phrase", "ranger"], R9: ["qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1440,7 +1446,7 @@ test("lot B2-2b-2 : C8 — les sortes, les deux sens, S002, le marathon, les err
   const sortes = new Set(toutes.map(q => q.sorteC8.replace(/-\d+$/, "")));
   ["plus-petite", "plus-grande", "moins-petite", "moins-grande", "complement", "situation", "marathon", "officielle"].forEach(k => assert.ok(sortes.has(k), `${k} ne tombe pas`));
   ["longueur", "masse", "contenance"].forEach(gr => ["+", "-"].forEach(op => assert.ok(toutes.some(q => q.grandeur === gr && q.donnees.op === op), `${gr} ${op}`)));
-  assert.ok(toutes.some(q => /Saint-Pierre|cari|rougail|Grand Raid|Diagonale des Fous|goyavier/.test(q.texte)), "La Réunion");
+  assert.ok(toutes.some(q => /Saint[-‑]Pierre|cari|rougail|Grand Raid|Diagonale des Fous|goyavier/.test(q.texte)), "La Réunion");
   assert.ok(toutes.some(q => /Grand Raid/.test(q.texte)) && toutes.some(q => /Diagonale des Fous/.test(q.texte)), "le Grand Raid et la Diagonale");
   const ex = new Set(G.clesExemples("C8"));
   assert.equal(ex.size, 3);
@@ -2215,4 +2221,152 @@ test("lot B6-3 : Q9 — recalculé à part, les fautes, les aides, les places, l
     .forEach(k => assert.ok(sortes[k] > 100, `Q9 : ${k} ${sortes[k] || 0}`));
   // La typographie : les unités composées ne se coupent pas.
   assert.equal(CARTE.typo("8 L par minute, 50 pouces, 2 milles"), "8\u00a0L par minute, 50\u00a0pouces, 2\u00a0milles");
+});
+
+// Lot B3-1 : R7, R8, R9, les repères du CM2. Recalculé à part : la mesure
+// reportée (n repères, arrondie), le calcul arrondi, l'ordre des aires en
+// cm², la bonne grandeur, le périmètre ou l'aire, le plus petit objet des
+// pièges ; les choix × 10 et ÷ 10 ; aucune réponse dans l'énoncé ni dans
+// l'outil ; un pourquoi par mauvais choix ; les exemples de On te montre
+// jamais tirés ; le résumé contient la réponse telle qu'elle est écrite.
+test("lot B3-1 : R7, R8, R9 — recalculés à part, les choix, l'outil sans la réponse, les places", () => {
+  const sp = t => String(t).replace(/[   ‑]/g, x => (x === "‑" ? "-" : " "));
+  // Une mesure écrite (« 1 200 m », « 2,5 kg ») dans la plus petite unité de sa grandeur.
+  const mes = t => {
+    const m = sp(t).trim().match(/^(\d[\d ]*(?:,\d+)?) (\S+)$/);
+    assert.ok(m && m[2] in EXP2, `mesure illisible : ${t}`);
+    return {v: Number(m[1].replace(/ /g, "").replace(",", ".")) * 10 ** (EXP2[m[2]] + 3), g: FAMILLE_G[m[2]]};
+  };
+  const proche = (a, b) => Math.abs(a / b - 1) < 1e-9;
+  // « 5 L » est dans « 1,5 L » sans y être écrit : la mesure entière, pas un bout.
+  const contient = (t, m) => new RegExp(`(^|[^\\d, ])${sp(m).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(sp(t)) || sp(t).startsWith(sp(m))
+    || new RegExp(`(^|[^\\d,]) ${sp(m).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(sp(t));
+  const N = Math.min(GRAINES, 400);
+  const vus = {R7: {}, R8: {}, R9: {}};
+  // (La bonne réponse d'un calcul à toutes les places : elle était toujours au milieu.)
+  const placesCalcul = new Set();
+  const exemples = {R7: ["R7:r:0", "R7:f:0", "R7:c:212+298+496m"], R9: ["R9:pa:0", "R9:pa:1", "R9:p:0"]};
+  // R9 : la grandeur et le périmètre ou l'aire, d'après les mots de la phrase.
+  const grandeurDe = t => (/carreaux|surface|recouvre|place prend|couvrent|couvrir/.test(t) ? "aire" : /règle|longueur|grillage|ruban|toise|distance/.test(t) ? "longueur"
+    : /pèse|balance/.test(t) ? "masse" : /verse|remplir|sirop|tient|contient/.test(t) ? "contenance" : /chronomètre|temps|dure/.test(t) ? "duree" : null);
+  const NOMS_G = {longueur: "une longueur", masse: "une masse", contenance: "une contenance", duree: "une durée", aire: "une aire"};
+  const perimDe = t => (/autour|le tour|entoure|bord|frise|plinthes|côtés/.test(t) ? "le périmètre" : "l'aire");
+  for (let g = 1; g <= N; g += 1) for (const usage of ["valide", "entraine", "test", "aide", "retour", "echauffement"]) {
+    for (const code of ["R7", "R8", "R9"]) {
+      const s = G.serie(code, {usage, graine: g});
+      const ou0 = `${code} ${usage} ${g}`;
+      assert.ok(s.length > 0, `${ou0} : série vide`);
+      (exemples[code] || []).forEach(k => assert.ok(!s.some(q => q.cle === k), `${ou0} : l'exemple ${k} tiré`));
+      if (code === "R8" && usage === "valide") {
+        assert.equal(s[6].forme, "ranger", `${ou0} : « Range ces aires » 7e`);
+        const demandes = new Set(s.filter(q => q.repere).map(q => q.repere));
+        CARTE.etape("R8").reperes.forEach(r => assert.ok(demandes.has(r), `${ou0} : le repère ${r} pas demandé`));
+      }
+      if (code === "R8" && usage === "entraine") assert.ok(s.filter(q => q.forme === "ranger").length >= 3, `${ou0} : ranger trois fois`);
+      s.forEach(q => {
+        const ou = `${ou0} « ${sp(q.texte)} »`;
+        const d = q.donnees;
+        vus[code][d.type + (d.sorte ? `:${d.sorte}` : "")] = (vus[code][d.type + (d.sorte ? `:${d.sorte}` : "")] || 0) + 1;
+        [q.texte, q.resume, ...(q.choix || []), ...(q.correction || []), ...Object.values(q.pourquoi || {}), q.noteOutil || "", ...(q.image || [])]
+          .forEach(t => { ecriture(t, ou); milliers(t, ou); });
+        assert.doesNotMatch(sp(q.texte).replace(IMPERSONNEL, ""), /\b(il|elle|Il|Elle)\b/, `${ou} : « il » ou « elle »`);
+        // (R8 suit le modèle des repères du CM1, R3 à R5 : sans pourquoi.)
+        if (q.forme === "qcm" && code !== "R8") {
+          assert.ok(sp(q.resume).includes(sp(q.reponseTexte)), `${ou} : le résumé « ${q.resume} » sans « ${q.reponseTexte} »`);
+          // (Un pourquoi sur une ligne : 31 signes au plus, comme Q9.)
+          q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi[k] && sp(q.pourquoi[k]).length <= 31, `${ou} : le choix « ${c} », pourquoi « ${q.pourquoi[k]} »`); });
+        }
+        if (code === "R7") {
+          assert.equal(q.forme, "qcm", ou);
+          assert.equal(q.choix.length, 3, ou);
+          // Les trois choix : ÷ 10, le bon, × 10.
+          const t = q.choix.map(mes);
+          const r = t[q.bon].v;
+          assert.deepEqual(t.map(x => x.v).sort((a, b) => a - b).map(v => v / r).map(x => Math.round(x * 100) / 100), [0.1, 1, 10], `${ou} : ${q.choix}`);
+          // La réponse n'est pas dans l'énoncé (ni « 25 m » ni « 25 »).
+          assert.ok(!contient(q.texte, q.reponseTexte), `${ou} : la réponse dans l'énoncé`);
+          // Ni dans l'outil.
+          [q.noteOutil, ...(q.image || [])].forEach(x => assert.ok(!contient(x, q.reponseTexte), `${ou} : l'outil « ${x} » donne la réponse`));
+          if (d.sorte === "reporte") {
+            const R = q.reporte;
+            const un = mes(R.mesure);
+            const cr = CARTE.repere(R.repere);
+            assert.ok(proche(un.v, mes(`${cr.nombre.replace(".", ",")} ${cr.unite}`).v / (R.repere === "l14" ? 10 : 1)), `${ou} : le repère ${R.mesure}`);
+            const longueur = R.quarts / 4 * un.v;
+            assert.ok(Math.abs(R.quarts / 4 - R.n) < 1, `${ou} : ${R.n} repères pour ${R.quarts} quarts`);
+            assert.ok(r / (R.n * un.v) >= 0.8 && r / (R.n * un.v) <= 1.25 && r / longueur >= 0.8 && r / longueur <= 1.25, `${ou} : ${q.reponseTexte} pour ${R.n} × ${R.mesure}`);
+            assert.notEqual(sp(R.mesure), sp(q.reponseTexte), `${ou} : le repère est la réponse`);
+            assert.ok(sp(q.ligneR7).includes(`${R.n} `), `${ou} : la correction « ${q.ligneR7} »`);
+          } else if (d.sorte === "fois") {
+            const n = Number(sp(q.noteOutil).match(/Je compte (\d+) fois/)[1]);
+            let un;
+            if (q.repereCarte) { const cr = CARTE.repere(q.repereCarte); un = mes(`${cr.nombre.replace(".", ",")} ${cr.unite}`); } else un = mes("3 m");
+            assert.ok(sp(q.texte).includes(`${n} `), `${ou} : ${n} fois`);
+            assert.ok(r / (n * un.v) >= 0.8 && r / (n * un.v) <= 1.25, `${ou} : ${q.reponseTexte} pour ${n} fois`);
+            assert.ok(sp(q.ligneR7).startsWith(`${n} × `), `${ou} : la correction « ${q.ligneR7} »`);
+          } else {
+            assert.equal(d.type, "estimer-calcul", ou);
+            placesCalcul.add(q.bon);
+            const {op, nombres, ronds, unite} = d;
+            // Chaque nombre près de son arrondi (le quart du pas au plus), l'arrondi rond.
+            nombres.forEach((x, k) => {
+              if (op === "÷" && k === 1) return assert.equal(x, ronds[k], ou);
+              const pas = op === "×" ? 10 : op === "+" && q.degre === 2 ? 1000 : 100;
+              assert.equal(ronds[k] % pas, 0, `${ou} : ${ronds[k]} n'est pas rond`);
+              assert.ok(Math.abs(x - ronds[k]) <= (op === "÷" ? ronds[k] / 10 : pas * 0.3), `${ou} : ${x} loin de ${ronds[k]}`);
+              assert.notEqual(x % 10, 0, `${ou} : ${x} est déjà rond`);
+            });
+            const total = op === "+" ? ronds.reduce((a, b) => a + b, 0) : op === "−" ? ronds[0] - ronds[1] : op === "×" ? ronds[0] * ronds[1] : ronds[0] / ronds[1];
+            assert.ok(Number.isInteger(total), ou);
+            assert.ok(proche(r, mes(`${total} ${unite}`).v), `${ou} : ${q.reponseTexte} au lieu de ${total} ${unite}`);
+            // L'arrondi ne tombe pas loin du vrai calcul (moins de la moitié).
+            const vrai = op === "+" ? nombres.reduce((a, b) => a + b, 0) : op === "−" ? nombres[0] - nombres[1] : op === "×" ? nombres[0] * nombres[1] : nombres[0] / nombres[1];
+            assert.ok(Math.abs(vrai / total - 1) < 0.35, `${ou} : ${vrai} et ${total}`);
+            // Les arrondis ne donnent jamais le résultat.
+            q.arrondis.flat().forEach(x => assert.notEqual(sp(x), sp(q.reponseTexte), `${ou} : l'arrondi « ${x} » est la réponse`));
+            if (op === "÷") assert.ok(nombres[0] < 100000, `${ou} : partage à plus de 5 chiffres`);
+            if (op === "×") assert.notEqual(unite, "m", `${ou} : un produit en m`);
+            assert.ok(sp(q.correction.at(-1)).endsWith(sp(q.reponseTexte)), `${ou} : la correction « ${q.correction.at(-1)} »`);
+          }
+        }
+        if (code === "R8" && q.forme === "ranger") {
+          const vals = d.mesures.map(([n, u]) => mes(`${n} ${u}`).v);
+          assert.equal(new Set(vals).size, 4, `${ou} : deux aires égales`);
+          const ordre = [0, 1, 2, 3].sort((a, b) => vals[a] - vals[b]);
+          assert.deepEqual(q.ordre, ordre, `${ou} : l'ordre`);
+          assert.ok(d.mesures.some(([na, ua], i) => d.mesures.some(([nb, ub], j) => ua !== ub && Number(na) > Number(nb) && vals[i] < vals[j])), `${ou} : sans piège`);
+          assert.equal(sp(q.reponseTexte), ordre.map(k => sp(q.mesures[k])).join(" < "), ou);
+          assert.ok(sp(q.resume).includes(sp(q.reponseTexte)), ou);
+        }
+        if (code === "R9") {
+          assert.equal(q.forme, "qcm", ou);
+          if (d.type === "grandeur5") {
+            assert.equal(q.choix.length, 4, `${ou} : 4 choix`);
+            const bonne = grandeurDe(sp(q.texte));
+            assert.ok(bonne, `${ou} : grandeur inconnue du test`);
+            assert.equal(q.choix[q.bon], NOMS_G[bonne], ou);
+            assert.ok(q.choix.includes(bonne === "aire" ? "une longueur" : "une aire"), `${ou} : sans l'aire ou la longueur`);
+          } else if (d.type === "perim-aire") {
+            assert.deepEqual(q.choix, ["le périmètre", "l'aire"], ou);
+            assert.equal(q.choix[q.bon], perimDe(sp(q.texte)), ou);
+          } else {
+            assert.equal(d.type, "piege", ou);
+            const m = sp(q.texte).match(/est plus (?:gros|grosse|haut|haute) qu'(?:un|une) ([^ .]+)/);
+            assert.ok(m, ou);
+            assert.equal(sp(q.choix[q.bon]).split(" ")[1], m[1], `${ou} : la bonne réponse n'est pas le plus petit objet`);
+          }
+        }
+      });
+    }
+  }
+  ["estimer:reporte", "estimer:fois", "estimer-calcul"].forEach(k => assert.ok(vus.R7[k] > 100, `R7 : ${k} ${vus.R7[k] || 0}`));
+  ["ranger-aires"].forEach(k => assert.ok(vus.R8[k] > 100, `R8 : ${k} ${vus.R8[k] || 0}`));
+  ["grandeur5", "perim-aire", "piege"].forEach(k => assert.ok(vus.R9[k] > 100, `R9 : ${k} ${vus.R9[k] || 0}`));
+  assert.deepEqual([...placesCalcul].sort(), [0, 1, 2], "R7 : la bonne réponse d'un calcul pas à toutes les places");
+  // Les cinq opérations de R7 : sommes, différences, produits, partages.
+  const ops = new Set();
+  for (let g = 1; g <= 300; g += 1) G.serie("R7", {usage: "valide", graine: g}).forEach(q => q.donnees.op && ops.add(q.donnees.op));
+  assert.deepEqual([...ops].sort(), ["+", "×", "÷", "−"].sort());
+  // Le nom de lieu ne se coupe pas : « Saint‑Paul » avec le trait d'union insécable.
+  assert.ok(CARTE.etape("R7").apprends[0].question.enonce.includes("Saint‑Paul"));
 });
