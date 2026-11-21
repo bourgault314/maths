@@ -78,7 +78,9 @@ function navigateur({
   stockageRefuse = false,
   codeOnglet = null,
   billet = null,
+  vue = "",
   ongletRefuse = false,
+  onglet: ongletPartage = null,
 } = {}) {
   const url = new URL(adresse);
   const envoyes = [];
@@ -95,10 +97,13 @@ function navigateur({
   // La mémoire de l'onglet : là, et seulement là, les applis suivies rangent
   // le code de l'élève connecté (« mathsgo-suivi-code »).
   const accesOnglet = [];
-  const onglet = new Map(codeOnglet === null ? [] : [["mathsgo-suivi-code", codeOnglet]]);
+  // « onglet » : la même mémoire d'une page à l'autre du MÊME onglet
+  // (rechargement, page suivante, retour arrière).
+  const onglet = ongletPartage ?? new Map();
+  if (codeOnglet !== null) onglet.set("mathsgo-suivi-code", codeOnglet);
   const sessionStorage = {
     getItem(cle) { accesOnglet.push(["lire", cle]); if (ongletRefuse) throw new Error("refusé"); return onglet.has(cle) ? onglet.get(cle) : null; },
-    setItem(cle) { accesOnglet.push(["écrire", cle]); },
+    setItem(cle, valeur) { accesOnglet.push(["écrire", cle]); if (ongletRefuse) throw new Error("refusé"); onglet.set(cle, String(valeur)); },
     removeItem(cle) { accesOnglet.push(["effacer", cle]); },
     clear() { accesOnglet.push(["vider", ""]); },
   };
@@ -111,7 +116,7 @@ function navigateur({
     alert(message) { alertes.push(message); },
   };
   // Ce que le script du <head> d'une appli suivie pose avant ce fichier (defer).
-  if (billet !== null) fenetre.MATHSGO_ENTREE = { billet, vue: "", ouvrir: "" };
+  if (billet !== null) fenetre.MATHSGO_ENTREE = { billet, vue, ouvrir: "" };
   fenetre.top = cadre ? {} : fenetre;
   fenetre.self = fenetre;
   const document = {
@@ -126,7 +131,7 @@ function navigateur({
     const lien = { getAttribute: () => href };
     for (const f of ecouteurs[type] ?? []) f({ type, button, target: { closest: () => lien } });
   };
-  return { envoyes, alertes, accesStockage, accesOnglet, stock, cliquer };
+  return { envoyes, alertes, accesStockage, accesOnglet, stock, onglet, cliquer };
 }
 
 const parametres = (u) => Object.fromEntries(new URL(u).searchParams);
@@ -214,8 +219,10 @@ test("un outil SPLAT! ouvert avec le billet dans l'adresse, sans MATHSGO_ENTREE,
     n.cliquer("https://mathsgo.re/outils/fiche.pdf");
     assert.deepEqual(n.envoyes, [], "ni une fiche PDF pendant l'échange");
   }
-  // Une ancre ordinaire, un « b= » vide ou un autre nom finissant par b : on compte.
-  for (const ancre of ["#monde-3", "#b=", "#ab=12", "#enq-bonus"]) {
+  // Une ancre ordinaire ou un autre nom finissant par b : on compte. (Un
+  // « #b= » vide est un billet depuis le lot « compteur-silence-suivi » :
+  // voir la partie 4.)
+  for (const ancre of ["#monde-3", "#ab=12", "#enq-bonus"]) {
     assert.equal(navigateur({ adresse: `https://mathsgo.re/outils/splat.html${ancre}` }).envoyes.length, 1, ancre);
   }
 });
@@ -237,8 +244,8 @@ test("cas témoins : un visiteur, un code mal formé, un billet vide ou un ongle
 
 test("le code lu dans l'onglet ne sort jamais, et l'onglet n'est jamais modifié", () => {
   const eleve = navigateur({ codeOnglet: "AB2CD3" });
-  assert.ok(eleve.accesOnglet.every(([action, cle]) => action === "lire" && cle === "mathsgo-suivi-code"),
-    `seule la case du code est LUE : ${JSON.stringify(eleve.accesOnglet)}`);
+  assert.ok(eleve.accesOnglet.every(([action, cle]) => action === "lire" && ["mathsgo-suivi-code", "mathsgo-compteur-taire"].includes(cle)),
+    `seules la case du code et la marque du compteur sont LUES : ${JSON.stringify(eleve.accesOnglet)}`);
   // Un code invalide laisse compter : la visite part, sans le code.
   const visiteur = navigateur({ codeOnglet: "AB2CD1" });
   assert.equal(visiteur.envoyes.length, 1);
@@ -265,6 +272,119 @@ test("les cinq applis suivies posent MATHSGO_ENTREE dans le <head>, avant le com
   }
 });
 
+// ---------------------------------------------------------------------------
+// 4. Le compteur se tait après un passage par le suivi de classe (lot
+//    « compteur-silence-suivi », 21/11/2026, diagnostic GoatCounter du même
+//    jour : quatre chemins par lesquels une visite venue du suivi partait
+//    encore). Trois signes : la provenance suivi.mathsgo.re, un billet (même
+//    vide), la marque d'onglet « mathsgo-compteur-taire ».
+// ---------------------------------------------------------------------------
+const SUIVI_MA_CLASSE = "https://suivi.mathsgo.re/prof/classe.php?id=3";
+const SUIVI_ESPACE = "https://suivi.mathsgo.re/eleve/";
+const DEFI_TABLES = "https://mathsgo.re/outils/calcul_mental/defi_tables.html";
+const UN_BILLET = "0123456789abcdef0123456789abcdef";
+
+function rienNePart(n, message) {
+  assert.deepEqual(n.envoyes, [], message);
+  n.cliquer("https://mathsgo.re/outils/fiche.pdf");
+  assert.deepEqual(n.envoyes, [], `${message} — ni une fiche PDF`);
+}
+
+test("provenance suivi : une page ouverte depuis suivi.mathsgo.re ne compte pas, et pose la marque d'onglet", () => {
+  for (const provenance of [SUIVI_MA_CLASSE, SUIVI_ESPACE, "https://suivi.mathsgo.re", "https://suivi.mathsgo.re/"]) {
+    const n = navigateur({ adresse: DEFI_TABLES, provenance });
+    rienNePart(n, `venu de ${provenance}`);
+    assert.equal(n.onglet.get("mathsgo-compteur-taire"), "1", `marque posée (venu de ${provenance})`);
+  }
+  // Ni r=https://suivi.mathsgo.re, ni rien d'autre : l'envoi n'a pas lieu du tout.
+  // Un AUTRE sous-domaine, ou http://, n'est pas le suivi : on compte.
+  for (const provenance of ["https://www.mathsgo.re/outils/", "http://suivi.mathsgo.re/eleve/", "https://exemple.fr/?suivi.mathsgo.re"]) {
+    assert.equal(navigateur({ adresse: DEFI_TABLES, provenance }).envoyes.length, 1, provenance);
+  }
+});
+
+test("chemin 1 — Ma classe ouvre une fiche dans un onglet, puis le professeur recharge : rien ne part", () => {
+  const onglet = new Map();
+  // Arrivée : billet de fiche rangé par le <head>, adresse déjà nettoyée.
+  rienNePart(navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_MA_CLASSE, billet: UN_BILLET, vue: "fiche", onglet }), "arrivée depuis Ma classe");
+  assert.equal(onglet.get("mathsgo-compteur-taire"), "1");
+  // Rechargement : plus de billet (il a été effacé de l'adresse), la vue
+  // professeur ne range aucun code ; la provenance reste celle du suivi.
+  rienNePart(navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_MA_CLASSE, billet: "", onglet }), "rechargement");
+  // Et même si le navigateur ne redonnait pas la provenance : la marque suffit.
+  rienNePart(navigateur({ adresse: DEFI_TABLES, billet: "", onglet }), "rechargement sans provenance");
+});
+
+test("chemin 2 — nouvel onglet depuis le suivi avec un billet vide, usé ou périmé : rien ne part", () => {
+  // Billet vide : le <head> ne l'efface pas de l'adresse, MATHSGO_ENTREE.billet vaut "".
+  for (const provenance of [SUIVI_ESPACE, ""]) {
+    const onglet = new Map();
+    rienNePart(navigateur({ adresse: `${DEFI_TABLES}#b=`, provenance, billet: "", onglet }), `#b= vide (provenance « ${provenance} »)`);
+    assert.equal(onglet.get("mathsgo-compteur-taire"), "1");
+    rienNePart(navigateur({ adresse: "https://mathsgo.re/outils/splat.html?eleve=1&parcours=m1e1#b=", provenance, onglet: new Map() }), "#b= vide sans MATHSGO_ENTREE");
+    rienNePart(navigateur({ adresse: "https://mathsgo.re/outils/splat.html#vue=x&b=", provenance, onglet: new Map() }), "&b= vide");
+  }
+  // Billet usé ou périmé : il est rangé, l'échange échouera, aucun code n'arrivera.
+  for (const usé of ["ffffffffffffffffffffffffffffffff", "a"]) {
+    const onglet = new Map();
+    rienNePart(navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_ESPACE, billet: usé, onglet }), `billet « ${usé} »`);
+    // Page suivante du même onglet, sans code : la marque tient.
+    rienNePart(navigateur({ adresse: "https://mathsgo.re/outils/index.html", provenance: DEFI_TABLES, onglet }), "page suivante après l'échec");
+  }
+});
+
+test("chemin 3 — billet refusé par le serveur, puis rechargement : rien ne part", () => {
+  const onglet = new Map();
+  // Provenance retirée exprès (lien en rel=noreferrer) : seul le billet parle.
+  rienNePart(navigateur({ adresse: DEFI_TABLES, billet: UN_BILLET, onglet }), "arrivée avec le billet");
+  assert.equal(onglet.get("mathsgo-compteur-taire"), "1");
+  assert.ok(!onglet.has("mathsgo-suivi-code"), "refusé : aucun code dans l'onglet");
+  // Rechargement : adresse nettoyée, billet vide, aucune provenance, aucun code.
+  rienNePart(navigateur({ adresse: DEFI_TABLES, billet: "", onglet }), "rechargement après le refus");
+});
+
+test("chemin 4 — déconnexion puis retour arrière : rien ne part", () => {
+  const onglet = new Map();
+  rienNePart(navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_ESPACE, billet: UN_BILLET, onglet }), "arrivée de l'élève");
+  onglet.set("mathsgo-suivi-code", "AB2CD3"); // l'échange a réussi
+  rienNePart(navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_ESPACE, billet: "", onglet }), "élève connecté");
+  // « Sortir » (eleve-retour-espace.js, ?sortie=1) vide TOUT l'onglet,
+  // marque comprise, puis ouvre l'écran du code sur le suivi.
+  onglet.clear();
+  // Retour arrière : la page de l'appli ressort avec sa provenance d'origine.
+  const retour = navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_ESPACE, billet: "", onglet });
+  rienNePart(retour, "retour arrière après la déconnexion");
+  assert.equal(onglet.get("mathsgo-compteur-taire"), "1", "la provenance repose la marque");
+});
+
+test("marque d'onglet : elle tait le compteur sur les pages suivantes du même onglet, ne contient que « 1 », et ne passe pas à un autre onglet", () => {
+  const onglet = new Map();
+  navigateur({ adresse: DEFI_TABLES, provenance: SUIVI_ESPACE, onglet });
+  assert.deepEqual([...onglet], [["mathsgo-compteur-taire", "1"]], "la seule case écrite, et sa seule valeur");
+  for (const adresse of ["https://mathsgo.re/", "https://mathsgo.re/outils/index.html", "https://mathsgo.re/outils/splat_univers.html#monde-3"]) {
+    rienNePart(navigateur({ adresse, provenance: "https://mathsgo.re/outils/", onglet }), `page suivante ${adresse}`);
+  }
+  // Une marque posée à la main (n'importe quelle autre valeur) ne compte pas.
+  assert.equal(navigateur({ onglet: new Map([["mathsgo-compteur-taire", "oui"]]) }).envoyes.length, 1);
+  // Un autre onglet (une autre mémoire) compte.
+  assert.equal(navigateur({ onglet: new Map() }).envoyes.length, 1);
+  // Mémoire de l'onglet refusée : le signe de la page suffit, sans erreur.
+  assert.deepEqual(navigateur({ provenance: SUIVI_ESPACE, ongletRefuse: true }).envoyes, []);
+  // Un visiteur ordinaire n'écrit rien dans l'onglet.
+  const visiteur = navigateur({ provenance: "https://www.google.com/" });
+  assert.ok(visiteur.accesOnglet.every(([action]) => action === "lire"), JSON.stringify(visiteur.accesOnglet));
+  assert.equal(visiteur.onglet.size, 0);
+});
+
+test("témoin : un visiteur venu de Google, sans billet, EST compté (une fois, avec r=https://www.google.com)", () => {
+  for (const adresse of [DEFI_TABLES, "https://mathsgo.re/", "https://mathsgo.re/outils/splat_univers.html"]) {
+    const n = navigateur({ adresse, provenance: "https://www.google.com/", billet: adresse === DEFI_TABLES ? "" : null });
+    assert.equal(n.envoyes.length, 1, adresse);
+    const p = parametres(n.envoyes[0]);
+    assert.equal(p.r, "https://www.google.com", adresse);
+  }
+});
+
 test("un clic sur une fiche PDF du site est compté comme événement, avec le nom du fichier", () => {
   const n = navigateur({ adresse: "https://mathsgo.re/outils/index.html?q=pythagore" });
   n.cliquer("../outils/pythabarre_recto_verso.pdf?v=3#page=2");
@@ -283,7 +403,11 @@ test("un clic sur une fiche PDF du site est compté comme événement, avec le n
 test("compteur.js ne contacte qu'une adresse : celle de GoatCounter", () => {
   const adresses = [...new Set(codeCompteur.match(/https?:\/\/[^\s"'`)]+/g) ?? [])]
     .filter((a) => !/^https?:\/\/exemple\.fr/.test(a));
-  assert.deepEqual(adresses, ["https://mathsgo.goatcounter.com/count"]);
+  // https://suivi.mathsgo.re (lot « compteur-silence-suivi ») n'est jamais
+  // contacté : il n'est que comparé à document.referrer, pour se taire.
+  assert.deepEqual(adresses.sort(), ["https://mathsgo.goatcounter.com/count", "https://suivi.mathsgo.re"]);
+  assert.equal(codeCompteur.match(/PROVENANCE_SUIVI/g).length, 2, "déclarée, puis lue une seule fois");
+  assert.match(codeCompteur, /String\(document\.referrer \|\| ""\)\.indexOf\(PROVENANCE_SUIVI\) === 0/);
   assert.doesNotMatch(codeCompteur, /document\.title/, "le titre de la page ne part jamais (Défi tables y met le prénom)");
   assert.doesNotMatch(codeCompteur, /location\.search|\.search\b/, "ce qui suit « ? » ne part jamais");
   assert.doesNotMatch(codeCompteur, /document\.cookie/);

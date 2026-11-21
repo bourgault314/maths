@@ -360,7 +360,7 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /rien n’est transmis/);
   assert.match(page, /Dernière mise à jour : 8 novembre 2026/);
   // Lot « compteur de visites » (06/11/2026) : la page dit ce que reçoit le compteur, et ce qu'il ne garde pas.
-  assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil/);
+  assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil, sauf, le temps d’un onglet, une marque sans aucune donnée/);
   assert.match(page, /sans ce qui suit le «&nbsp;\?&nbsp;»/);
   assert.match(page, /Il ne garde ni votre adresse IP ni aucun identifiant/);
   assert.match(page, /Les pages du suivi de classe ne sont pas comptées/);

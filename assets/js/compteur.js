@@ -19,35 +19,51 @@
 //   e  et t pour une fiche PDF : « true » et le nom du fichier.
 // Jamais : le titre de la page (Défi tables y met le prénom), ce qui suit « ? »,
 // l'adresse précédente sur le site, ni aucune donnée du stockage du navigateur
-// (il en LIT une, le code de l'onglet, pour savoir s'il doit se taire — voir
-// plus bas ; elle ne part jamais).
+// (il en LIT deux dans l'onglet, le code de l'élève et sa propre marque, pour
+// savoir s'il doit se taire — voir plus bas ; rien n'en part jamais). Et rien
+// du tout quand on arrive du serveur de suivi : le compteur se tait.
 //
-// Rien n'est écrit sur l'appareil du visiteur. Une seule exception, pour
-// l'auteur du site : ouvrir une page avec #ne-pas-me-compter range une case
-// (mathsgo-compteur-ignorer) qui fait ignorer ses visites sur CET appareil ;
-// #me-compter la retire.
+// Ce que le compteur écrit sur l'appareil, et rien d'autre :
+//   - mathsgo-compteur-ignorer (stockage durable), pour l'auteur du site :
+//     ouvrir une page avec #ne-pas-me-compter range cette case, qui fait
+//     ignorer ses visites sur CET appareil ; #me-compter la retire ;
+//   - mathsgo-compteur-taire (mémoire de l'onglet, sessionStorage, valeur
+//     « 1 », aucune donnée), la marque d'onglet décrite plus bas. Elle
+//     disparaît avec l'onglet.
 //
 // Le compteur ne compte que sur mathsgo.re : ni en local, ni dans un cadre
 // (iframe), ni pour un navigateur piloté par un robot, ni sur suivi.mathsgo.re
 // (aucune page du serveur de suivi ne charge ce fichier).
 //
-// Ni pour un ÉLÈVE CONNECTÉ (lot « petits correctifs de sécurité », 11/11/2026,
-// constat F07 de l'audit GPT du 09/11). La règle tient depuis le 30/08 :
-// aucune mesure d'audience dès qu'un élève est identifié par un code. Le
-// compteur de novembre ne la regardait pas — une appli ouverte par un élève
-// connecté envoyait sa visite. Deux signes, lus dans l'onglet et nulle part
-// ailleurs, et jamais envoyés :
+// Ni pour un ÉLÈVE CONNECTÉ, ni pour qui VIENT DU SUIVI DE CLASSE (lot
+// « petits correctifs de sécurité », 11/11/2026, constat F07 de l'audit GPT du
+// 09/11 ; lot « compteur-silence-suivi », 21/11/2026, diagnostic GoatCounter
+// du même jour). La règle tient depuis le 30/08 : aucune mesure d'audience dès
+// qu'un élève est identifié par un code. Le compteur se tait sur l'un de ces
+// signes, lus dans la page et l'onglet et nulle part ailleurs, jamais envoyés :
+//   - la provenance : document.referrer commence par https://suivi.mathsgo.re
+//     (l'espace élève, Ma classe). Le navigateur la garde au rechargement, au
+//     retour arrière et dans un nouvel onglet ouvert depuis le suivi, et
+//     Safari la donne aussi : c'est le signe qui tient quand le billet est
+//     vide, usé, périmé ou refusé et qu'aucun code n'arrive dans l'onglet ;
+//   - l'arrivée par un billet (#b=…), MÊME VIDE, avant que l'appli l'ait
+//     échangé contre le code : le script du <head> de chaque appli suivie le
+//     range dans window.MATHSGO_ENTREE.billet et efface l'adresse avant que ce
+//     fichier, chargé en « defer », ne tourne ; un « #b= » vide, lui, n'est
+//     pas effacé et reste lisible dans l'adresse. Les pages sans ce script
+//     (les outils SPLAT! ouverts par « ?eleve=1&parcours=…#b=… ») gardent le
+//     billet dans l'adresse le temps de l'échange : il est lu là aussi
+//     (relecture Codex du 11/11/2026, D4) ;
 //   - le code rangé par les applis suivies dans la mémoire de l'onglet
 //     (sessionStorage, « mathsgo-suivi-code », lu comme eleve-retour-espace.js) ;
-//   - l'arrivée par un billet (#b=…), AVANT que l'appli l'ait échangé contre
-//     le code : le script du <head> de chaque appli suivie le range dans
-//     window.MATHSGO_ENTREE.billet et efface l'adresse avant que ce fichier,
-//     chargé en « defer », ne tourne ; les pages sans ce script (les outils
-//     SPLAT! ouverts par « ?eleve=1&parcours=…#b=… ») gardent le billet dans
-//     l'adresse le temps de l'échange : il est lu là aussi (relecture Codex
-//     du 11/11/2026, D4).
+//   - la marque d'onglet « mathsgo-compteur-taire » : posée par ce fichier dès
+//     qu'il voit l'un des deux premiers signes (provenance suivi ; billet dans
+//     MATHSGO_ENTREE ou « b= » dans l'adresse), elle tait le compteur sur
+//     toutes les pages suivantes du MÊME onglet — après un billet refusé et un
+//     rechargement, après une déconnexion. Valeur « 1 », aucune donnée ; un
+//     autre onglet ne la voit pas.
 // Le professeur qui ouvre une fiche depuis Ma classe (#b=…&vue=fiche) n'est
-// pas compté non plus : c'est aussi un billet.
+// pas compté non plus : c'est aussi un billet, et il vient du suivi.
 (function () {
   "use strict";
 
@@ -55,6 +71,8 @@
   var HOTES_COMPTES = ["mathsgo.re", "www.mathsgo.re"];
   var CASE_IGNORER = "mathsgo-compteur-ignorer";
   var CASE_CODE_ELEVE = "mathsgo-suivi-code";
+  var MARQUE_TAIRE = "mathsgo-compteur-taire";
+  var PROVENANCE_SUIVI = "https://suivi.mathsgo.re";
   var ALPHABET_CODES = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 
   function lireCaseIgnorer() {
@@ -108,23 +126,55 @@
     }
   }
 
-  // Un élève connecté dans cet onglet ? (Voir l'en-tête.) Le code est lu
-  // comme le lisent les moteurs des applis : majuscules, signes retirés, six
-  // caractères de l'alphabet des codes. Il ne sort pas de cette fonction.
-  function eleveConnecte() {
+  // Les signes qui posent la marque d'onglet (voir l'en-tête). Rien de ce
+  // qu'ils lisent ne sort de ces fonctions.
+  function vientDuSuivi() {
+    try {
+      return String(document.referrer || "").indexOf(PROVENANCE_SUIVI) === 0;
+    } catch (_erreur) {
+      return false;
+    }
+  }
+
+  function arriveParUnBillet() {
     try {
       var entree = window.MATHSGO_ENTREE;
       if (entree && typeof entree.billet === "string" && entree.billet !== "") return true;
     } catch (_erreur) {
-      // Rien à lire : on regarde la mémoire de l'onglet.
+      // Rien à lire : on regarde l'adresse.
     }
     try {
-      // Le billet encore dans l'adresse : « b=… » non vide, en tête du
+      // Le billet encore dans l'adresse : « b= », même vide, en tête du
       // fragment ou après un « & » (la même lecture que splat-parcours.js).
-      if (/(?:^#|&)b=[^&]/.test(String(window.location.hash || ""))) return true;
+      // Un « #b= » vide n'est pas effacé par le script du <head> : c'est ici
+      // qu'on le voit.
+      if (/(?:^#|&)b=/.test(String(window.location.hash || ""))) return true;
     } catch (_erreur) {
-      // Adresse illisible : on regarde la mémoire de l'onglet.
+      // Adresse illisible.
     }
+    return false;
+  }
+
+  function lireMarqueTaire() {
+    try {
+      return window.sessionStorage.getItem(MARQUE_TAIRE) === "1";
+    } catch (_erreur) {
+      return false;
+    }
+  }
+
+  function poserMarqueTaire() {
+    try {
+      window.sessionStorage.setItem(MARQUE_TAIRE, "1");
+    } catch (_erreur) {
+      // Mémoire de l'onglet refusée : le signe de CETTE page suffit à se taire.
+    }
+  }
+
+  // Un élève connecté dans cet onglet ? (Voir l'en-tête.) Le code est lu
+  // comme le lisent les moteurs des applis : majuscules, signes retirés, six
+  // caractères de l'alphabet des codes. Il ne sort pas de cette fonction.
+  function eleveConnecte() {
     var brut = "";
     try {
       brut = window.sessionStorage.getItem(CASE_CODE_ELEVE) || "";
@@ -144,6 +194,8 @@
     if (dansUnCadre()) return true;
     if (document.visibilityState === "prerender") return true;
     if (estUnRobot()) return true;
+    if (aTaire) return true;
+    if (lireMarqueTaire()) return true;
     if (eleveConnecte()) return true;
     if (lireCaseIgnorer()) return true;
     return false;
@@ -196,6 +248,11 @@
     }
     envoyer({ p: cheminPropre(url.pathname), t: nom, e: "true" });
   }
+
+  // Les signes du suivi, lus une fois, à l'arrivée sur la page : ils posent
+  // la marque d'onglet, même en local ou dans un cadre (elle ne contient rien).
+  var aTaire = vientDuSuivi() || arriveParUnBillet();
+  if (aTaire) poserMarqueTaire();
 
   if (window.location.hash === "#ne-pas-me-compter") {
     reglerCaseIgnorer(true);

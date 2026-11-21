@@ -711,7 +711,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       *, *::before, *::after { scroll-behavior:auto !important; animation:none !important; transition:none !important; }
     }
   </style>
-<script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>
+<script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
 </head>
 <body>
   <div class="app">

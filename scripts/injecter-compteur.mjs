@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-export const LIGNE_COMPTEUR = '<script src="/assets/js/compteur.js?v=compteur-20261106-1" defer></script>';
+export const LIGNE_COMPTEUR = '<script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>';
 
 // Les pages HTML du plan du site, en chemins du dépôt (« outils/index.html »).
 export function pagesDuPlanDuSite(racine = root) {
