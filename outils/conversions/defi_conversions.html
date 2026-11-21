@@ -606,7 +606,7 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && !qn.arcsCorr && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && !qn.arcsCorr && !qn.droiteH && !qn.etapesV && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -1289,7 +1289,28 @@
       else c.append(texteNoeud(ligne.slice(0, k)), el("span", "v", v), texteNoeud(ligne.slice(k + v.length)));
       zone.appendChild(c);
     }
+    // Lot B6-1 (choix de Gwenaël du 21/11) : l'outil refait en vert (la
+    // double droite des heures, les trois étapes de km/h à m/s), puis la
+    // ligne de calcul, la réponse en vert (vers les km/h, la case de l'heure
+    // dit aussi les kilomètres).
+    function ligneVerte(zone, ligne, v) {
+      const c = el("div", "calcul-pb");
+      const k = v ? ligne.lastIndexOf(v) : -1;
+      if (k < 0) c.textContent = ligne;
+      else c.append(texteNoeud(ligne.slice(0, k)), el("span", "v", v), texteNoeud(ligne.slice(k + v.length)));
+      zone.appendChild(c);
+    }
+    function droiteHCorrige(zone, question) {
+      AIDES.droiteHeures(zone, question.droiteH, {mode: "correction"});
+      ligneVerte(zone, question.ligneD6, question.vertD6);
+    }
+    function etapesCorrige(zone, question) {
+      AIDES.etapesVitesse(zone, question.etapesV, {mode: "correction"});
+      ligneVerte(zone, question.ligneG1, question.vertG1);
+    }
     function bonneReponse(zone, question) {
+      if (question.droiteH) { droiteHCorrige(zone, question); return; }
+      if (question.etapesV) { etapesCorrige(zone, question); return; }
       if (question.schemaCorr) { schemaCorrige(zone, question); return; }
       if (question.arcsCorr) { arcsCorrige(zone, question); return; }
       // Lot B2-3a (A5) : la figure complétée (numérotée, les demis

@@ -1947,6 +1947,165 @@
     dessiner();
     return enChaine(toucher, () => !fait, 750);
   }
+  // ======================================================= lot B6-1 (palier 6)
+  // D6 « Toutes les heures décimales » (choix de Gwenaël du 21/11) : la
+  // double droite des heures, en haut les heures (0 à 1 h en dixièmes), en
+  // bas les minutes (0,1 h = 6 min). aide : {c (la graduation cherchée en
+  // centièmes, un tiers d'heure compris), sens (h>min, min>h), haut, bas}.
+  // mode : "outil" (0, 0,1 ↔ 6, 0,5 ↔ 30, 1 ↔ 60, et le « ? » à sa place),
+  // "correction" (les dixièmes jusqu'à la graduation, elle en vert),
+  // "montre" (chaque toucher écrit un dixième de plus, jusqu'à elle).
+  function droiteHeures(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const c = Number(aide.c);
+    const haut = aide.haut || "h";
+    const bas = aide.bas || "min";
+    const x0 = 24;
+    const x1 = 280;
+    const yH = 46;
+    const yB = 84;
+    const X = k => x0 + ((x1 - x0) * k) / 10;
+    const xc = x0 + ((x1 - x0) * c) / 100;
+    const dec = k => (k === 10 ? "1" : k === 0 ? "0" : `0,${k}`);
+    const boite = el("div", "dessin-boite droite2-boite");
+    const dessin = svg("svg", {viewBox: "0 0 340 118", class: `dessin droite2 droite-h${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": "La double droite des heures"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    const fin = Math.floor(c / 10);
+    let vus = mode === "montre" ? 0 : fin;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: 340, height: 118, fill: "transparent"}));
+      [yH, yB].forEach(y => {
+        dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x1 + 14, y2: y, stroke: ENCRE, "stroke-width": 2.4}));
+        dessin.appendChild(svg("path", {d: `M${x1 + 16} ${y} l-8 -5 v10 Z`, fill: ENCRE}));
+      });
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yH + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, haut));
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yB + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, bas));
+      const trouve = mode === "correction" || (mode === "montre" && vus >= fin);
+      const ici = trouve ? VERT : BLEU;
+      for (let k = 0; k <= 10; k += 1) {
+        const x = X(k);
+        const gros = k % 5 === 0;
+        [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: x, y1: y - (gros ? 8 : 6), x2: x, y2: y + (gros ? 8 : 6), stroke: ENCRE, "stroke-width": gros ? 2.4 : 1.6})));
+        // Les nombres écrits : 0, 0,1 (6), 0,5 (30), 1 (60) ; en correction
+        // et dans On te montre, les dixièmes jusqu'à la graduation.
+        const ecrit = mode === "outil" ? [0, 1, 5, 10].includes(k) : (k <= vus || k === 10 || (mode === "correction" && k === 5));
+        if (!ecrit || k * 10 === c || Math.abs(x - xc) < 19) continue;
+        const pale = mode !== "outil" && ![0, 1, 10].includes(k);
+        const couleur = mode === "montre" && k && k <= vus && k !== 10 ? BLEU : pale ? "#6c8494" : ENCRE;
+        // (Les dixièmes du milieu un peu plus petits : « 0,1 » et « 0,2 » ne
+        // se touchent pas à côté de la graduation cherchée.)
+        const taille = [0, 10].includes(k) ? 13 : 11.5;
+        dessin.appendChild(svg("text", {x, y: yH - 16, "text-anchor": "middle", "font-size": taille, "font-weight": 900, fill: couleur}, dec(k)));
+        dessin.appendChild(svg("text", {x, y: yB + 24, "text-anchor": "middle", "font-size": taille, "font-weight": 900, fill: couleur}, String(k * 6)));
+      }
+      // La graduation cherchée (un demi-dixième, un tiers : un trait de plus).
+      if (mode === "montre" && !trouve) return;
+      [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: xc, y1: y - 9, x2: xc, y2: y + 9, stroke: ici, "stroke-width": 2.6})));
+      const minutes = Math.round((c * 60) / 100);
+      const hautT = aide.hautTexte || (Number.isInteger(c) ? gen().ecrire(BigInt(c) * 10n) : "?");
+      const cache = (sens, cote) => !trouve && aide.sens === sens && cote;
+      const tHaut = cache("min>h", true) || !Number.isInteger(c) ? ["?", trouve && !Number.isInteger(c) ? ici : ROUGE] : [hautT, ici];
+      const tBas = cache("h>min", true) ? ["?", ROUGE] : [String(minutes), ici];
+      if (!Number.isInteger(c) && trouve) tHaut[0] = aide.hautTexte || "";
+      dessin.appendChild(svg("text", {x: xc, y: yH - 16, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: tHaut[1]}, tHaut[0]));
+      dessin.appendChild(svg("text", {x: xc, y: yB + 25, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: tBas[1]}, tBas[0]));
+      dessin.appendChild(svg("line", {x1: xc, y1: yH + 9, x2: xc, y2: yB - 9, stroke: ici, "stroke-width": 2, "stroke-dasharray": "4 3"}));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche la droite");
+    boite.appendChild(note);
+    const toucher = () => {
+      if (vus >= fin) return;
+      vus += 1;
+      dessiner();
+      if (vus >= fin) { note.remove(); dessin.classList.remove("a-toucher"); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < fin, 300);
+  }
+
+  // G1 « km/h et m/s » (choix de Gwenaël du 21/11) : les trois étapes, « En
+  // 1 h », « En 1 min », « En 1 s », les mètres parcourus dans chaque case,
+  // reliées par ÷ 60 (vers la seconde) ou × 60 (vers l'heure). aide : {s2
+  // (le double de la vitesse en m/s), depuis, vers (les cases : 0, 1, 2)}.
+  // mode : "outil" (la case connue, les « ? » du chemin), "correction" (le
+  // chemin en vert), "montre" (chaque toucher remplit la case suivante).
+  function etapesVitesse(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const s2 = BigInt(aide.s2);
+    const metres = [s2 * 1800000n, s2 * 30000n, s2 * 500n];
+    const depuis = Number(aide.depuis);
+    const vers = Number(aide.vers);
+    const pas = vers > depuis ? 1 : -1;
+    const chemin = [];
+    for (let k = depuis; k !== vers + pas; k += pas) chemin.push(k);
+    const titres = ["En 1 h", "En 1 min", "En 1 s"].map(t => t.replace(" ", NB).replace(/1 (?=h|min|s)/, `1${NB}`));
+    const W = 340;
+    const l = 98;
+    const ecart = (W - 8 - 3 * l) / 2;
+    const xCase = k => 4 + k * (l + ecart);
+    const boite = el("div", "dessin-boite etapes-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} 120`, class: `dessin etapes-v${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": "La même vitesse en 1 h, en 1 min, en 1 s"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let vus = mode === "montre" ? 0 : chemin.length - 1;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: 120, fill: "transparent"}));
+      const fin = mode === "correction" || (mode === "montre" && vus >= chemin.length - 1);
+      [0, 1, 2].forEach(k => {
+        const x = xCase(k);
+        const n = chemin.indexOf(k);
+        const horsChemin = n < 0;
+        const connue = k === depuis;
+        const montree = n > 0 && (mode === "correction" || (mode === "montre" && n <= vus));
+        dessin.appendChild(svg("text", {x: x + l / 2, y: 18, "text-anchor": "middle", "font-size": 13.5, "font-weight": 900, fill: horsChemin ? "#b3c2cd" : "#6c8494"}, titres[k]));
+        dessin.appendChild(svg("rect", {x, y: 26, width: l, height: 42, rx: 9, fill: connue ? "#eef3f7" : montree && fin ? "#e7f6ee" : "#fff",
+          stroke: horsChemin ? "#c9d6df" : connue ? ENCRE : montree && fin ? VERT : BLEU, "stroke-width": 2, "stroke-dasharray": horsChemin ? "5 4" : "none"}));
+        if (horsChemin) return;
+        const t = connue || montree ? `${gen().ecrire(metres[k])}${NB}m` : "?";
+        const taille = Math.min(17, (l - 10) / (t.length * 0.56));
+        const couleur = t === "?" ? ROUGE : connue ? ENCRE : fin ? VERT : BLEU;
+        // (Vers les km/h, la case de l'heure trouvée dit aussi les
+        // kilomètres : « 45 000 m », « = 45 km ».)
+        if (aide.km && k === 0 && !connue && montree && fin) {
+          dessin.appendChild(svg("text", {x: x + l / 2, y: 44, "text-anchor": "middle", "font-size": Math.min(taille, 14).toFixed(1), "font-weight": 900, fill: couleur}, t));
+          dessin.appendChild(svg("text", {x: x + l / 2, y: 61, "text-anchor": "middle", "font-size": 13, "font-weight": 900, fill: couleur},
+            `=${NB}${gen().ecrire(metres[0] / 1000n)}${NB}km`));
+          return;
+        }
+        dessin.appendChild(svg("text", {x: x + l / 2, y: 47 + taille * 0.36, "text-anchor": "middle", "font-size": taille.toFixed(1), "font-weight": 900, fill: couleur}, t));
+      });
+      chemin.slice(1).forEach((k, n) => {
+        const a = chemin[n];
+        const xa = xCase(a) + l / 2 + 12 * pas;
+        const xb = xCase(k) + l / 2 - 12 * pas;
+        const couleur = BLEU;
+        dessin.appendChild(svg("path", {d: `M${xa} 74 Q${(xa + xb) / 2} 102 ${xb} 74`, fill: "none", stroke: couleur, "stroke-width": 2.4}));
+        dessin.appendChild(svg("path", {d: `M${xb} 74 l${-9 * pas} 3 l${5 * pas} 6 Z`, fill: couleur}));
+        dessin.appendChild(svg("text", {x: (xa + xb) / 2, y: 115, "text-anchor": "middle", "font-size": 15, "font-weight": 900, fill: couleur}, `${pas > 0 ? "÷" : "×"}${NB}60`));
+      });
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche les cases");
+    boite.appendChild(note);
+    const toucher = () => {
+      if (vus >= chemin.length - 1) return;
+      vus += 1;
+      dessiner();
+      if (vus >= chemin.length - 1) { note.remove(); dessin.classList.remove("a-toucher"); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < chemin.length - 1, 600);
+  }
   // L'horaire du Car Jaune, les marées de Saint-Gilles (choix de Gwenaël du
   // 21/11) : un tableau de deux lignes, comme une vraie fiche à lire.
   function supportQ10(sup) {
@@ -2550,6 +2709,9 @@
     if (aide.type === "axe") return axe(zone, aide, f);
     // Lot B2-3b-2 (Q10) : l'axe à arcs, puis les bonds par l'heure pile.
     if (aide.type === "arcs") return arcsMontre(zone, aide, f);
+    // Lot B6-1 : la double droite des heures (D6), les trois étapes (G1).
+    if (aide.type === "droite-h") return droiteHeures(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "etapes-v") return etapesVitesse(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
     return null;
   }
@@ -2713,6 +2875,21 @@
       zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
       return;
     }
+    // Lot B6-1 (choix de Gwenaël du 21/11) : la double droite des heures
+    // (D6) et les trois étapes de km/h à m/s (G1), la relation au-dessus,
+    // la phrase dessous.
+    if (question.outil === "droite-h" && question.droiteH) {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      droiteHeures(zone, question.droiteH);
+      zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+      return;
+    }
+    if (question.outil === "etapes-v" && question.etapesV) {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      etapesVitesse(zone, question.etapesV);
+      zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+      return;
+    }
     if (question.outil === "grandeurs") { grandeurs(zone); return; }
     if (question.outil === "ranger") {
       // (Lot B2-2b-1, C7 : l'échelle des unités de la question, et l'unité
@@ -2850,6 +3027,6 @@
     return s;
   }
 
-  return Object.freeze({axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

@@ -158,6 +158,25 @@ function attendue(q) {
       if (Array.isArray(q.reponse)) return [BigInt(Math.floor(t / 60)) * 1000n, BigInt(t % 60) * 1000n];
       return [BigInt(t) * 1000n];
     }
+    // Lot B6-1 : D6, les heures décimales (x en centièmes de l'unité haute :
+    // 135 → 1,35 h), recalculées à part : x × 60 ÷ 100 tombe juste.
+    case "d6": {
+      if (q.forme === "qcm") return null;
+      const x = BigInt(d.x);
+      assert.equal((x * 60n) % 100n, 0n, "les minutes ne tombent pas juste");
+      if (d.vers === "hmin") return [(x / 100n) * 1000n, ((x % 100n) * 60n / 100n) * 1000n];
+      if (d.vers === "h") return [x * 10n];
+      return [(x * 60n / 100n) * 1000n];
+    }
+    // Lot B6-1 : G1, km/h et m/s (s2 : le double de la vitesse en m/s),
+    // recalculés à part : 1 h = 3 600 s, 1 km = 1 000 m.
+    case "g1": {
+      if (q.forme === "qcm") return null;
+      const metresParHeure = BigInt(d.s2) * 1800n * 1000n;
+      const en = {"km/h": metresParHeure / 1000n, "m/min": metresParHeure * 1000n / 60n / 1000n, "m/s": metresParHeure * 1000n / 3600n / 1000n};
+      assert.equal((metresParHeure * 1000n) % 3600n, 0n);
+      return [en[d.a]];
+    }
     // Lot B2-2b-2 : C8, « 8,2 kg + 840 g = … kg » (comme les problèmes).
     case "pb": case "vrai": case "calc": {
       const a = versUnite(lire(d.a), d.ua, d.vers);
@@ -830,7 +849,7 @@ for (const code of PRETES) {
       P2: ["qcm", "associer", "nombre", "phrase"], P3: ["qcm", "nombre", "phrase"], P4: ["qcm", "associer", "nombre", "phrase"],
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
       C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
-      Q10: ["nombre", "deux-cases", "qcm"]}[code];
+      Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -1795,4 +1814,135 @@ test("lot B2-3b-2 : Q10 — les sortes, les places, l'axe, la correction, le Car
   // Les exemples de On te montre ne reviennent jamais.
   const exemples = ["Q10:ecole:duree:467--496", "Q10:velo:depart:653--730", "Q10:train:arrivee:463-557-609"];
   for (let g = 1; g <= 400; g += 1) G.serie("Q10", {usage: "entraine", graine: g}).forEach(q => assert.ok(!exemples.includes(q.cle), q.cle));
+});
+
+// ------------------------------------------------- lot B6-1 : le palier 6
+test("lot B6-1 : D6 — les choix recalculés, les places, les pourquoi, les aides, les erreurs", () => {
+  const sp = t => t.replace(/[  ]/g, " ");
+  const places = {};
+  const noter = (k, b) => { (places[k] = places[k] || new Set()).add(b); };
+  const erreurs = new Set();
+  const sortes = {};
+  for (let g = 1; g <= 600; g += 1) {
+    for (const usage of ["valide", "entraine", "test", "retour", "aide"]) {
+      const s = G.serie("D6", {usage, graine: g});
+      if (usage === "valide") {
+        assert.deepEqual(s.slice(0, 7).map(q => q.sorteD6), ["dec", "inv", "dec", "hmin", "invhm", "choix", "comparer"], `D6 valide ${g} : places`);
+        const sit = s.filter(q => q.sorteD6 === "situation" || q.sorteD6 === "secondes").map(q => q.modeleD6);
+        assert.equal(new Set(sit).size, sit.length, `D6 valide ${g} : une situation deux fois`);
+      }
+      s.forEach(q => {
+        const ou = `D6 ${usage} ${g} « ${sp(q.texte)} »`;
+        const d = q.donnees;
+        sortes[q.sorteD6] = (sortes[q.sorteD6] || 0) + 1;
+        // L'aide (l'outil, l'image) n'écrit jamais la réponse.
+        if (q.sorteD6 !== "comparer") {
+          const aide = sp([...(q.image || []), q.noteOutil || "", q.relation || ""].join(" | "));
+          assert.ok(!aide.includes(sp(q.reponseTexte)), `${ou} : l'aide « ${aide} » donne la réponse`);
+        }
+        assert.ok(q.droiteH && q.droiteH.c > 0 && q.droiteH.c < 100, `${ou} : la droite`);
+        assert.ok(sp(q.ligneD6).includes(sp(q.vertD6)), `${ou} : la ligne de correction sans la réponse`);
+        assert.doesNotMatch(q.texte, /\bde [AEIOUÉÈ]/, `${ou} : « de » devant une voyelle`);
+        if (q.forme === "qcm") {
+          assert.equal(q.choix.length, 3);
+          q.choix.forEach((c, k) => { if (k !== q.bon) { assert.ok(q.pourquoi[k] && q.pourquoi[k].length <= 31, `${ou} : pourquoi « ${q.pourquoi[k]} »`); ecriture(q.pourquoi[k], ou); } });
+          let bonne;
+          if (q.sorteD6 === "choix") {
+            const x = d.x; const md = (x % 100) * 0.6;
+            bonne = `${Math.floor(x / 100)} h ${md} min`;
+          } else if (q.sorteD6 === "tiers") {
+            const p = (a, b) => (b ? p(b, a % b) : a); const k = p(d.m, 60);
+            bonne = `${d.m / k}⁄${60 / k} h`;
+          } else if (q.sorteD6 === "comparer") {
+            const md = (d.x % 100) * 0.6 + Math.floor(d.x / 100) * 60;
+            const [A] = [sp(G.ecrire(BigInt(d.x) * 10n)) + " h"];
+            const m2 = d.m % 60; const h = Math.floor(d.m / 60);
+            bonne = md === d.m ? "Même durée" : md > d.m ? A : `${h} h ${m2} min`;
+          }
+          assert.equal(sp(q.choix[q.bon]), bonne, `${ou} : la bonne réponse`);
+          noter(q.sorteD6, q.bon);
+        } else {
+          // Les erreurs connues, une ligne au petit téléphone.
+          const x = d.x; const h = Math.floor(x / 100); const dd = x % 100;
+          const essais = [];
+          if (q.forme === "deux-cases") essais.push([String(h), String(dd)], [String(h), String(dd / 10)], [String(Math.floor(x / 60)), String(x % 60)]);
+          else if (d.vers === "h") essais.push(String(h + ((dd * 0.6) / 100)).replace(".", ","), String(Math.round(x * 0.6)), String(Math.round(x * 0.6) / 100).replace(".", ","));
+          else essais.push(String(x), String(h * 60 + dd), String(dd / 10).replace(".", ","));
+          // (Les retours de toutes les erreurs connues, milliers compris : « 10,75 h, ce n'est pas 1 075 min. »)
+          essais.forEach(e => {
+            const v = G.verifier(q, e);
+            if (v.juste || !v.retour) return;
+            assert.ok(v.retour.length <= 31, `${ou} : « ${v.retour} » trop long`);
+            ecriture(v.retour, ou); milliers(v.retour, ou);
+            erreurs.add(v.erreur);
+          });
+        }
+        if (q.pourquoi) Object.values(q.pourquoi).forEach(t => milliers(t, ou));
+      });
+    }
+  }
+  ["choix", "tiers", "comparer"].forEach(k => assert.deepEqual([...places[k]].sort(), [0, 1, 2], `D6 ${k} : la bonne réponse aux places ${[...places[k]]}`));
+  [1, 2, 3, 4, 5].forEach(e => assert.ok(erreurs.has(e), `D6 : l'erreur ${e} jamais déclenchée`));
+  ["dec", "inv", "hmin", "total", "invhm", "invtot", "choix", "tiers", "comparer", "situation", "secondes"].forEach(k => assert.ok(sortes[k] > 300, `D6 : ${k} ${sortes[k]}`));
+});
+
+test("lot B6-1 : G1 — les vitesses recalculées, les choix, les places, les pourquoi, les aides, les erreurs", () => {
+  const sp = t => t.replace(/[  ]/g, " ");
+  const places = {};
+  const erreurs = new Set();
+  const sortes = {};
+  for (let g = 1; g <= 600; g += 1) {
+    for (const usage of ["valide", "entraine", "test", "retour", "aide"]) {
+      const s = G.serie("G1", {usage, graine: g});
+      if (usage === "valide") {
+        assert.deepEqual(s.slice(0, 9).map(q => q.sorteG1), ["sens", "kmh", "ms", "kmh", "par", "etape", "comparer", "kmh", "ms"], `G1 valide ${g} : places`);
+        const m = s.filter(q => q.sorteG1 === "comparer" || q.sorteG1 === "situation").map(q => q.modeleG1);
+        assert.equal(new Set(m).size, m.length, `G1 valide ${g} : une situation deux fois`);
+      }
+      s.forEach(q => {
+        const ou = `G1 ${usage} ${g} « ${sp(q.texte)} »`;
+        const d = q.donnees;
+        sortes[q.sorteG1] = (sortes[q.sorteG1] || 0) + 1;
+        if (q.forme !== "qcm") {
+          assert.doesNotMatch(q.texte, /340/, `${ou} : sans calculatrice, pas 340 m/s au pavé`);
+          const aide = sp([...(q.image || []), q.noteOutil || "", q.relation || ""].join(" | "));
+          assert.ok(!aide.includes(sp(q.reponseTexte)), `${ou} : l'aide « ${aide} » donne la réponse`);
+          assert.ok(sp(q.ligneG1).includes(sp(q.vertG1)), `${ou} : la ligne de correction sans la réponse`);
+          // Les erreurs : s'arrêter en route, multiplier au lieu de diviser.
+          const s2 = BigInt(d.s2);
+          [s2 * 1800000n, s2 * 30000n, s2 * 500n, s2 * 1800n, s2 * 1800n * 1000n].forEach(m => {
+            const v = G.verifier(q, G.brut(m));
+            if (v.juste || !v.retour) return;
+            assert.ok(v.retour.length <= 31, `${ou} : « ${v.retour} » trop long`);
+            ecriture(v.retour, ou);
+            erreurs.add(v.erreur);
+          });
+          const r = G.milli(q.reponse);
+          [r * 36n * 36n / 100n, r * 100n / 1296n].forEach(m => { const v = G.verifier(q, G.brut(m)); if (!v.juste && v.retour) erreurs.add(v.erreur); });
+        } else {
+          assert.equal(q.choix.length, 3);
+          q.choix.forEach((c, k) => { if (k !== q.bon) { assert.ok(q.pourquoi[k] && q.pourquoi[k].length <= 31, `${ou} : pourquoi « ${q.pourquoi[k]} »`); ecriture(q.pourquoi[k], ou); } });
+          if (q.sorteG1 === "sens") assert.equal(sp(q.choix[q.bon]), d.u === "km/h" ? `${d.v} km en 1 h` : `${d.v} m en 1 s`, ou);
+          if (q.sorteG1 === "comparer") {
+            const kA = BigInt(d.s2) * 1800n; const kB = G.milli(d.kmhB);
+            const idx = kA === kB ? q.choix.indexOf("Même vitesse") : q.texte.indexOf(q.choix[q.bon]) >= 0 || /^(L'|Le |La )/.test(q.choix[q.bon]) ? q.bon : -1;
+            assert.equal(idx, q.bon, ou);
+            // Le nom du gagnant est dans l'énoncé, avec la bonne vitesse.
+            if (kA !== kB) {
+              const phrases = q.morceaux.enonce.split(/(?<=\.) /);
+              const gagnant = q.choix[q.bon].replace(/^L'/, "").replace(/^(Le|La) /, "").toLowerCase();
+              const p = phrases.find(t => t.toLowerCase().includes(gagnant));
+              assert.ok(p, `${ou} : ${gagnant} absent`);
+              assert.equal(/m\/s\.$/.test(sp(p)), kA > kB, `${ou} : le mauvais gagnant`);
+            }
+            (places.comparer = places.comparer || new Set()).add(q.bon);
+          }
+          if (q.sorteG1 === "sens") (places.sens = places.sens || new Set()).add(q.bon);
+        }
+      });
+    }
+  }
+  ["sens", "comparer"].forEach(k => assert.deepEqual([...places[k]].sort(), [0, 1, 2], `G1 ${k} : la bonne réponse aux places ${[...places[k]]}`));
+  [1, 2, 3].forEach(e => assert.ok(erreurs.has(e), `G1 : l'erreur ${e} jamais déclenchée`));
+  ["sens", "kmh", "ms", "par", "etape", "situation", "comparer"].forEach(k => assert.ok(sortes[k] > 300, `G1 : ${k} ${sortes[k]}`));
 });
