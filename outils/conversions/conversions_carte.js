@@ -59,7 +59,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|km/h|m/s|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -70,6 +70,9 @@
     let t = texte;
     for (let i = 0; i < 3; i += 1) t = t.replace(RE_MILLIERS, `$1${FINE}`);
     t = t.replace(RE_UNITE, `$1${INSECABLE}`);
+    // (Lot B2-3b-2 : une heure ou une durée ne se coupe pas entre « h » et
+    // les minutes : « 10 h 40 », « 1 h 10 min ».)
+    t = t.replace(new RegExp(`(\\d${INSECABLE}h) (?=\\d)`, "g"), `$1${INSECABLE}`);
     t = t.replace(/ ([?!:;»])/g, `${INSECABLE}$1`).replace(/« /g, `«${INSECABLE}`);
     return t;
   }
@@ -957,6 +960,40 @@
           apres: ["630 g + 3,2 kg = 0,63 kg + 3,2 kg", "= 3,83 kg"]}
       ],
       retenir: "Je fais un schéma en barres, puis j'écris toutes les mesures dans la même unité.\nPour trouver le tout, j'ajoute. Pour trouver une partie ou un écart, j'enlève.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Lot B2-3b-2 : les problèmes de durées (S002 p. 17-18 : « aucun
+    // algorithme posé en base soixante », l'axe orienté, des instants
+    // intermédiaires). On te montre les trois exemples officiels : Ismaël
+    // (de 7 h 47 à 8 h 16), Lucie (1 h 17 min, arrivée à 12 h 10), le train
+    // (7 h 43, 1 h 34 min, puis 52 min). Choix de Gwenaël du 21/11 : l'axe à
+    // arcs, puis les bonds par l'heure pile en vert. (Des énoncés courts : avec
+    // une police large, ceux de Lucie et du train étaient coupés à 360 × 640.)
+    Q10: {
+      pret: true,
+      aide: {outil: "axe-arcs", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Ismaël part de chez lui à 7 h 47 et arrive au travail à 8 h 16. Combien de temps dure le trajet ?", avant: "Durée :", reponse: "29", apres: "min"},
+          consigne: "Touche l'axe du temps : je passe par l'heure pile.",
+          aide: {type: "arcs",
+            avant: {instants: [{t: 467}, {t: 496}], arcs: [{de: 0, a: 1, texte: "?"}], piles: true},
+            apres: {instants: [{t: 467}, {t: 480}, {t: 496}], arcs: [{de: 0, a: 1, texte: "13 min", vert: true}, {de: 1, a: 2, texte: "16 min", vert: true}]}},
+          apres: ["13 min + 16 min", "= 29 min"]},
+        {etiquette: "Je représente", question: {enonce: "Lucie roule 1 h 17 min et passe la ligne d'arrivée à 12 h 10. À quelle heure part Lucie ?", avant: "Départ :", reponse: "10 h 53", apres: ""},
+          consigne: "Je recule jusqu'à l'heure pile, puis le reste.",
+          aide: {type: "arcs",
+            avant: {instants: [{t: 653, cache: true}, {t: 730}], arcs: [{de: 0, a: 1, texte: "1 h 17 min"}], piles: true},
+            apres: {instants: [{t: 653, vert: true}, {t: 660}, {t: 720}, {t: 730}], arcs: [{de: 0, a: 1, texte: "7 min", vert: true}, {de: 1, a: 2, texte: "1 h", vert: true}, {de: 2, a: 3, texte: "10 min", vert: true}]}},
+          apres: ["12 h 10 − 10 min − 1 h − 7 min", "= 10 h 53"]},
+        {etiquette: "Je représente", question: {enonce: "Le train part à 7 h 43 : 1 h 34 min jusqu'à la 1re gare, puis 52 min jusqu'à la 2e gare.", avant: "Arrivée :", reponse: "10 h 09", apres: ""},
+          consigne: "Deux étapes : je trouve d'abord l'heure du milieu.",
+          aide: {type: "arcs",
+            avant: {instants: [{t: 463}, {t: 557, vide: true, sous: "1re gare"}, {t: 609, cache: true, sous: "2e gare"}], arcs: [{de: 0, a: 1, texte: "1 h 34 min"}, {de: 1, a: 2, texte: "52 min"}]},
+            apres: {instants: [{t: 463}, {t: 557, vert: true, sous: "1re gare"}, {t: 609, vert: true, sous: "2e gare"}], arcs: [{de: 0, a: 1, texte: "1 h 34 min"}, {de: 1, a: 2, texte: "52 min"}]}},
+          apres: ["7 h 43 + 1 h 34 min = 9 h 17", "9 h 17 + 52 min = 10 h 09"]}
+      ],
+      retenir: "Je dessine l'axe du temps et je passe par l'heure pile : de 7 h 47 à 8 h 16, c'est 13 min + 16 min = 29 min.\nAvec deux étapes, je trouve d'abord l'heure du milieu.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     }

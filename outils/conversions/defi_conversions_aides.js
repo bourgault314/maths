@@ -1849,13 +1849,127 @@
     const debut = Math.floor(depart / 60) * 60 - (depart % 60 ? 0 : 15);
     const fin = Math.ceil(arrivee / 60) * 60 + (arrivee % 60 ? 0 : 15);
     const duree = arrivee - depart;
-    const texte = `${cherche === "depart" ? "−" : "+"}${NB}${duree % 60 && duree > 60 ? `${Math.floor(duree / 60)}${NB}h ${duree % 60}${NB}min` : duree % 60 ? `${duree}${NB}min` : `${duree / 60}${NB}h`}`;
+    const texte = `${cherche === "depart" ? "−" : "+"}${NB}${duree % 60 && duree > 60 ? `${Math.floor(duree / 60)}${NB}h${NB}${duree % 60}${NB}min` : duree % 60 ? `${duree}${NB}min` : `${duree / 60}${NB}h`}`;
     axeDessin(dessin, {debut, fin, marques: [
       {t: depart, titre: "DÉPART", inconnue: cherche === "depart"},
       {t: arrivee, titre: "ARRIVÉE", inconnue: cherche === "arrivee"}],
     fleche: cherche === "duree" ? null : (cherche === "arrivee" ? {de: depart, a: arrivee, texte} : {de: arrivee, a: depart, texte})});
     zone.appendChild(dessin);
     zone.appendChild(el("div", "note", cherche === "duree" ? "Je fais des bonds : jusqu'à l'heure pile, puis les heures, puis les minutes." : "Je fais un bond jusqu'à l'heure pile, puis le reste."));
+  }
+
+  // ------------------------------------- l'axe du temps à arcs (lot B2-3b-2)
+  // Q10 « Durées et horaires » (S002 p. 18, choix de Gwenaël du 21/11) :
+  // l'axe orienté, les instants marqués, les durées en arcs au-dessus
+  // (« ? » en rouge pour ce qu'on cherche) ; l'heure pile en gris quand
+  // elle a la place (`piles`). La correction : les bonds par l'heure pile
+  // en vert, la réponse en vert sur l'axe.
+  //   instants : [{t, cache, vide, vert, sous}] ; arcs : [{de, a, texte, vert}]
+  function axeArcs(zone, {instants, arcs, piles = false}) {
+    const W = 330;
+    const x0 = 32;
+    const x1 = W - 32;
+    const yA = 50;
+    const avecSous = instants.some(i => i.sous);
+    const H = avecSous ? 96 : 80;
+    const ts = instants.map(i => i.t);
+    const pts = [...new Set(ts)].sort((a, b) => a - b);
+    const debut = pts[0];
+    const total = Math.max(1, pts[pts.length - 1] - debut);
+    // (Chaque intervalle a une place assez grande : un bond de 7 min se
+    // voit à côté d'un bond de 6 h, et « 16 h 26 » ne touche pas « 16 h 36 ».)
+    const poids = pts.slice(1).map((p, k) => Math.max(p - pts[k], total * 0.36));
+    const somme = poids.reduce((a, b) => a + b, 0) || 1;
+    const xs = [x0];
+    poids.forEach(w => xs.push(xs[xs.length - 1] + (w / somme) * (x1 - x0)));
+    const X = t => {
+      for (let k = 1; k < pts.length; k += 1) if (t <= pts[k]) return xs[k - 1] + ((t - pts[k - 1]) / Math.max(1, pts[k] - pts[k - 1])) * (xs[k] - xs[k - 1]);
+      return x1;
+    };
+    const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: "dessin axe-arcs", role: "img", "aria-label": "L'axe du temps"});
+    s.appendChild(svg("line", {x1: x0 - 20, y1: yA, x2: x1 + 20, y2: yA, stroke: N, "stroke-width": 2.5}));
+    s.appendChild(svg("path", {d: `M${x1 + 20} ${yA} l-8 -5 v10 Z`, fill: N}));
+    const VERT = "#147447";
+    if (piles) {
+      // (La première et la dernière heure pile, si elles ont la place.)
+      const hs = [];
+      for (let h = Math.ceil(debut / 60) * 60; h < pts[pts.length - 1]; h += 60) hs.push(h);
+      [...new Set([hs[0], hs[hs.length - 1]])].filter(h => h !== undefined && instants.every(i => Math.abs(X(i.t) - X(h)) > 40)).forEach(h => {
+        s.appendChild(svg("line", {x1: X(h), y1: yA - 6, x2: X(h), y2: yA + 6, stroke: "#8ea1af", "stroke-width": 2.2}));
+        s.appendChild(svg("text", {x: X(h), y: yA + 24, "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: "#6c8494"}, heureT(h)));
+      });
+    }
+    arcs.forEach(({de, a, texte, vert}) => {
+      const xa = X(instants[de].t);
+      const xb = X(instants[a].t);
+      const haut = Math.min(22, 10 + Math.abs(xb - xa) * 0.14);
+      const c = vert ? VERT : "#0755b8";
+      s.appendChild(svg("path", {d: `M${xa.toFixed(1)} ${yA - 4} Q${((xa + xb) / 2).toFixed(1)} ${(yA - 4 - haut * 2).toFixed(1)} ${xb.toFixed(1)} ${yA - 4}`,
+        fill: "none", stroke: c, "stroke-width": 2.6}));
+      s.appendChild(svg("path", {d: `M${xb.toFixed(1)} ${yA - 4} l-3 -10 l-6 5 Z`, fill: c}));
+      s.appendChild(svg("text", {x: ((xa + xb) / 2).toFixed(1), y: (yA - 10 - haut).toFixed(1), "text-anchor": "middle", "font-size": 16, "font-weight": 900,
+        fill: texte === "?" ? "#a93030" : c}, texte));
+    });
+    instants.forEach(({t, cache, vide, vert, sous}) => {
+      const x = X(t);
+      s.appendChild(svg("line", {x1: x, y1: yA - 8, x2: x, y2: yA + 8, stroke: N, "stroke-width": 2.5}));
+      if (!vide) s.appendChild(svg("text", {x, y: yA + 25, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: cache ? "#a93030" : vert ? VERT : N}, cache ? "?" : heureT(t)));
+      if (sous) s.appendChild(svg("text", {x, y: yA + 42, "text-anchor": "middle", "font-size": 14.5, "font-weight": 800, fill: "#506b7d"}, carte().typo(sous)));
+    });
+    zone.appendChild(s);
+    return s;
+  }
+  // On te montre : l'axe de la question ; on le touche, les bonds par
+  // l'heure pile (ou les instants trouvés) apparaissent en vert.
+  function arcsMontre(zone, aide, fini) {
+    const boite = el("div", "dessin-boite");
+    zone.appendChild(boite);
+    let fait = false;
+    function dessiner() {
+      boite.textContent = "";
+      const s = axeArcs(boite, fait ? aide.apres : aide.avant);
+      s.setAttribute("tabindex", "0");
+      const somme = el("div", "somme");
+      if (!fait) {
+        s.classList.add("a-toucher");
+        somme.appendChild(el("span", "touche", "touche l'axe du temps"));
+      }
+      boite.appendChild(somme);
+      s.addEventListener("click", toucher);
+      s.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    }
+    function toucher() {
+      if (fait) return;
+      fait = true;
+      dessiner();
+      fini();
+    }
+    dessiner();
+    return enChaine(toucher, () => !fait, 750);
+  }
+  // L'horaire du Car Jaune, les marées de Saint-Gilles (choix de Gwenaël du
+  // 21/11) : un tableau de deux lignes, comme une vraie fiche à lire.
+  function supportQ10(sup) {
+    const t = el("table", `horaire${sup.type === "maree" ? " maree" : ""}`);
+    const l1 = el("tr");
+    const l2 = el("tr");
+    // (Les marées : le titre dans une case haute de deux lignes, à gauche ;
+    // l'énoncé tient sur une ligne. Le Car Jaune : quatre arrêts prennent
+    // toute la largeur, l'énoncé dit « En Car Jaune ».)
+    if (sup.type === "maree") {
+      const titre = el("th", "tete", carte().typo("Marées à St‑Gilles"));
+      titre.setAttribute("rowspan", "2");
+      l1.appendChild(titre);
+    }
+    (sup.type === "car" ? sup.arrets : sup.liste).forEach(([nom, h]) => {
+      l1.appendChild(el("th", "", carte().typo(nom)));
+      l2.appendChild(el("td", "", heureT(h)));
+    });
+    const corps = el("tbody");
+    corps.append(l1, l2);
+    t.appendChild(corps);
+    t.setAttribute("aria-label", sup.type === "car" ? "L'horaire du Car Jaune" : "Les marées à Saint-Gilles");
+    return t;
   }
 
   // --------------------------------------------- le tableau heures / minutes
@@ -2434,6 +2548,8 @@
     if (aide.type === "etiquette") return etiquette(zone, aide, f);
     if (aide.type === "horloges") return horloges(zone, aide, f);
     if (aide.type === "axe") return axe(zone, aide, f);
+    // Lot B2-3b-2 (Q10) : l'axe à arcs, puis les bonds par l'heure pile.
+    if (aide.type === "arcs") return arcsMontre(zone, aide, f);
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
     return null;
   }
@@ -2591,6 +2707,12 @@
       return;
     }
     if (question.outil === "axe-temps" && question.axe) { axeTemps(zone, question.axe); return; }
+    // Lot B2-3b-2 (Q10) : l'axe à arcs du document officiel.
+    if (question.outil === "axe-arcs" && question.arcs) {
+      axeArcs(zone, question.arcs);
+      zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+      return;
+    }
     if (question.outil === "grandeurs") { grandeurs(zone); return; }
     if (question.outil === "ranger") {
       // (Lot B2-2b-1, C7 : l'échelle des unités de la question, et l'unité
@@ -2728,6 +2850,6 @@
     return s;
   }
 
-  return Object.freeze({deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });
