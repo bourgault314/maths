@@ -28,7 +28,7 @@
 //      les places (choix, objets reliés, mesures rangées) ; des durées et
 //      des prix vraisemblables.
 // BANC_GRAINES=200 node --test tests/conversions-generateurs.test.mjs : plus court.
-import test from "node:test";
+import testDeNode from "node:test";
 import assert from "node:assert/strict";
 import {createRequire} from "node:module";
 
@@ -38,6 +38,15 @@ const G = require("../outils/conversions/conversions_generateurs.js");
 
 const GRAINES = Number(process.env.BANC_GRAINES || 2000);
 const PRETES = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+// Lot « vérifications plus rapides » (21/11/2026) : le banc d'essai par étape (2 000
+// graines × 7 usages, les trois quarts de la durée du fichier) est joué par trois voisins,
+// conversions-generateurs-banc-1.test.mjs, -banc-2 et -banc-3, chacun pour le tiers des
+// étapes, dans trois processus qui tournent en même temps : mêmes graines, mêmes
+// contrôles, le tiers de l'attente. Ce fichier-ci garde tous les autres tests.
+// BANC_PART=1 node --test tests/conversions-generateurs.test.mjs : la part 1 seule.
+const PARTS = 3;
+const PART = Number(process.env.BANC_PART || 0);
+const test = PART ? () => {} : testDeNode;
 // Lot 3a : « retour » (Je me souviens, Avant de partir : 2 questions de degré 2).
 const USAGES = [["valide", null], ["entraine", null], ["test", null], ["echauffement", null], ["aide", null], ["retour", null], ["exerciseur", 30]];
 const NB = " ";
@@ -193,15 +202,22 @@ const PERSONNE = /\b(il|elle|ils|elles)\b/gi;
 // (Lot 3b-3 : « Quelle heure est-il ? », « Il est huit heures » : l'heure,
 // pas une personne.)
 const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il y a|y a-t-il|faut-il|heure est-il|il est (?:midi|[a-zé]+ heures?))/gi;
+// La même chose qu'assert.doesNotMatch, mais le message n'est écrit que si la règle
+// casse (lot « vérifications plus rapides », 21/11/2026 : l'écrire d'avance, pour
+// chaque texte de chaque graine, prenait le septième du banc d'essai). Les motifs
+// passés ici n'ont pas le drapeau g : test() ne garde rien d'un appel à l'autre.
+function pasDe(texte, re, message) {
+  if (re.test(texte)) assert.doesNotMatch(texte, re, message());
+}
 function ecriture(texte, ou) {
-  INTERDITS.forEach(re => assert.doesNotMatch(texte, re, `${ou} : ${re} dans « ${texte} »`));
-  assert.doesNotMatch(texte, /\d (?:km|hm|dam|m|dm|cm|mm|t|kg|hg|dag|g|dg|cg|mg|hL|daL|L|dL|cL|mL|min|h)(?![\wÀ-ÿ])/, `${ou} : espace normale avant l'unité dans « ${texte} »`);
+  INTERDITS.forEach(re => pasDe(texte, re, () => `${ou} : ${re} dans « ${texte} »`));
+  pasDe(texte, /\d (?:km|hm|dam|m|dm|cm|mm|t|kg|hg|dag|g|dg|cg|mg|hL|daL|L|dL|cL|mL|min|h)(?![\wÀ-ÿ])/, () => `${ou} : espace normale avant l'unité dans « ${texte} »`);
   // (Lot B1-2 : un nombre et l'unité écrite en mots, « 1 hectomètre ».)
-  assert.doesNotMatch(texte, /\d (?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)\b/, `${ou} : espace normale avant l'unité en mots dans « ${texte} »`);
-  assert.doesNotMatch(texte, /\d[  ]\d{3}(?!\d)/, `${ou} : milliers sans espace fine dans « ${texte} »`);
+  pasDe(texte, /\d (?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)\b/, () => `${ou} : espace normale avant l'unité en mots dans « ${texte} »`);
+  pasDe(texte, /\d[  ]\d{3}(?!\d)/, () => `${ou} : milliers sans espace fine dans « ${texte} »`);
   // (Lot B2-3b-2, Gwenaël : « 52 / min à la ligne, c'est pas joli » : une
   // heure ou une durée ne se coupe pas non plus entre « h » et les minutes.)
-  assert.doesNotMatch(texte, /\d\u00a0h (?=\d)/, `${ou} : « h » et les minutes séparables dans « ${texte} »`);
+  pasDe(texte, /\d\u00a0h (?=\d)/, () => `${ou} : « h » et les minutes séparables dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
   // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une ;
@@ -831,8 +847,8 @@ function controlerSerie(code, usage, nombre, s, ou) {
   }
 }
 
-for (const code of PRETES) {
-  test(`banc d'essai : ${code} · ${CARTE.etape(code).nom} (${GRAINES} graines × ${USAGES.length} usages)`, () => {
+for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
+  testDeNode(`banc d'essai : ${code} · ${CARTE.etape(code).nom} (${GRAINES} graines × ${USAGES.length} usages)`, () => {
     const formes = new Set();
     for (let g = 1; g <= GRAINES; g += 1) {
       for (const [usage, nombre] of USAGES) {

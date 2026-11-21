@@ -32,20 +32,30 @@ Automatismes V2, lire dans cet ordre :
   côté du dépôt (ou, pour un worktree rangé ailleurs, de `~/Developer/MathsGo-Code/outils-tests`) ;
   s'ils manquent, la suite échoue au lieu de passer en silence. Pas en CI : les
   machines de GitHub n'ont ni navigateur ni les polices de Windows.
-- Qui vérifie quoi (depuis le 15/11/2026). Un lot préparé par Cowork arrive vérifié :
-  `npm run verifier` complet (tests + recettes des applis touchées), sur le main dont le
-  numéro est écrit dans le prompt. La CI de GitHub rejoue ensuite, sur la pull request,
-  `node --test`, les validations et les tests du serveur — mais PAS les recettes au
-  navigateur. Claude Code ne refait donc que ce que personne d'autre ne fait :
-  - les tests propres au lot (`node --test --test-reporter=tap <fichiers du lot>`) ;
+- Qui vérifie quoi (depuis le 15/11/2026 ; revu le 21/11/2026, lot « vérifications plus
+  rapides »). Un lot préparé par Cowork arrive vérifié : `npm run verifier` complet (tests +
+  recettes des applis touchées), sur le main dont le numéro est écrit dans le prompt. La CI
+  de GitHub joue ensuite, sur la pull request, les validations rapides, les tests du serveur
+  s'il est touché, et les fichiers de `node --test` qui concernent les fichiers changés
+  (`scripts/tests-cibles.mjs` : un test tourne s'il nomme un fichier changé ou un fichier qui
+  le charge ; tout tourne si la pull request touche l'outillage des tests) — mais PAS les
+  recettes au navigateur. La batterie complète tourne UNE fois, sur main, après la fusion
+  (quatre machines en parallèle) ; la publication attend qu'elle soit verte et ne rejoue
+  rien. Si elle rougit, rien n'est publié : c'est un test que le ciblage n'avait pas choisi,
+  à corriger comme un rouge de pull request. Claude Code ne refait donc que ce que personne
+  d'autre ne fait :
+  - les tests propres au lot : `node scripts/tests-cibles.mjs --lancer` (la copie de
+    travail contre origin/main, la même règle que la CI), ou
+    `node --test --test-reporter=tap <fichiers du lot>` quand le prompt les nomme ;
   - les recettes des applis touchées : `node scripts/verifier-navigateur.mjs` lancé seul
     (le même choix que `npm run verifier`, sans les ≈ 12 min de `node --test`) ;
   - les écrans demandés par le prompt, sur l'ordinateur de Gwenaël (polices Windows).
   `npm run verifier` complet chez Claude Code seulement si : le diff ne s'applique pas
   tel quel (`--3way` qui fusionne, `--exclude`, conflit), un fichier est retouché à la
   main, le lot touche `package.json` ou `scripts/verifier-navigateur.mjs`, ou la CI ne
-  tourne pas (budget GitHub Actions épuisé). Dans sa réponse, Claude Code rappelle à
-  Gwenaël d'attendre la coche verte de la pull request avant de fusionner.
+  tourne pas. Dans sa réponse, Claude Code rappelle à Gwenaël d'attendre la coche verte de
+  la pull request avant de fusionner ; le site est en ligne quand « Publication » est verte
+  dans l'onglet Actions (≈ 8 min après la fusion).
   Plusieurs fenêtres de Claude Code tournent en parallèle sur le même ordinateur : une
   batterie complète prend tous les cœurs et ralentit toutes les autres, d'où cette règle.
 - Les tests du serveur de suivi (« serveur (SQLite) » et « serveur (MySQL) ») ne

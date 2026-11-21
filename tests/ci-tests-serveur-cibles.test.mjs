@@ -28,10 +28,11 @@ const lire = (chemin) => readFileSync(join(racine, chemin), "utf8");
 // tourne dans « node --test », donc sur chaque pull request (job
 // « verifications », jamais sauté sur une pull request) et dans la publication.
 //
-// Depuis le 06/10/2026, le même tri s'applique à l'arrivée sur main, et le job
-// « verifications » n'y tourne plus (la publication rejoue les mêmes contrôles) :
-// ce fichier garde aussi ces deux règles — et rejoue le tri pour de vrai, sur un
-// petit dépôt jetable, au lieu de se contenter d'en lire le texte.
+// Depuis le 06/10/2026, le même tri s'applique à l'arrivée sur main : ce fichier
+// le rejoue pour de vrai, sur un petit dépôt jetable, au lieu de se contenter
+// d'en lire le texte. Depuis le lot « vérifications plus rapides » (21/11/2026),
+// il garde aussi la nouvelle répartition : tests ciblés sur la pull request,
+// batterie complète une fois sur main, publication qui attend son verdict.
 //
 // Sabotage attendu (rend ce test rouge) :
 //  - ajouter dans lancer.php une lecture de dirname($racine) . '/outils/exemple.js'
@@ -174,65 +175,69 @@ test("les deux jobs serveur sont conditionnés, et leurs noms de coche ne bougen
     assert.match(entete, /if: needs\.changements\.outputs\.serveur == 'true'/,
       `${job} ne doit tourner que si le tri le demande`);
   }
-  // « verifications », lui, ne dépend pas du tri : les tests Node tournent sur
-  // toutes les pull requests, y compris celles où le serveur est sauté. Sa
-  // seule condition : ne pas tourner à l'arrivée sur main, où la publication
-  // rejoue les mêmes contrôles (test suivant).
+  // « verifications » (la coche exigée) n'est jamais sautée : un job sauté compte
+  // comme réussi. Elle tourne même si le tri échoue, et rougit alors.
   const verifications = workflow.slice(workflow.indexOf("\n  verifications:"),
     workflow.indexOf("\n  serveur-sqlite:"));
   const conditions = [...verifications.matchAll(/^\s+if:\s*(.+)$/gm)].map(([, c]) => c.trim());
-  assert.deepEqual(conditions, ["github.event_name != 'push'"],
-    "le job « verifications » n'est sauté QU'à l'arrivée sur main — jamais sur une pull request, "
-      + "ni le dimanche, ni sur « Run workflow »");
-  assert.doesNotMatch(verifications, /^\s+needs:/m,
-    "ni dépendre du tri : il doit tourner même si le job « changements » échoue");
+  assert.deepEqual(conditions, ["${{ !cancelled() }}"],
+    "le job « verifications » tourne à chaque passage (sauf annulé) : sauté, il compterait comme réussi");
+  assert.match(verifications, /needs: \[changements, controles, batterie\]/,
+    "il fait le bilan du tri, des contrôles rapides et de la batterie");
+  for (const garde of ['[ "$CHANGEMENTS" = "success" ]', '[ "$CONTROLES" = "success" ]', '[ "$BATTERIE" = "success" ]']) {
+    const ligne = verifications.split("\n").find((l) => l.includes(garde));
+    assert.ok(ligne && /exit 1/.test(ligne), `le bilan doit rougir si ${garde} est faux`);
+  }
+  // Les contrôles rapides ne sont jamais sautés non plus.
+  const controles = workflow.slice(workflow.indexOf("\n  controles:"), workflow.indexOf("\n  batterie:"));
+  assert.ok(controles.length > 100, "le job « controles » doit exister");
+  assert.doesNotMatch(controles.split("\n    steps:")[0], /^\s+if:/m, "le job « controles » tourne à chaque passage");
 });
 
-// Le job « verifications » ne tourne plus à l'arrivée sur main : c'est sans
-// perte seulement si la publication, qui tourne, elle, à chaque arrivée sur
-// main et refuse de publier quand un contrôle échoue, joue CHACUN de ses
-// contrôles bloquants. Sabotage attendu : ajouter une étape
-// « run: node scripts/nouveau-controle.mjs » au job « verifications » sans
-// l'ajouter à l'étape « Vérifications bloquantes » de publier.yml.
-test("à l'arrivée sur main, la publication rejoue chaque contrôle bloquant du job « verifications »", () => {
+// Une seule batterie complète par fusion (lot « vérifications plus rapides »,
+// 21/11/2026) : elle tourne sur main, et la publication attend son verdict au
+// lieu de la rejouer. Sabotages attendus (rendent ce test rouge) : remettre
+// « node --test » dans publier.yml ; publier sans attendre « Vérifications » ;
+// publier un passage rouge ; ne plus jouer la batterie complète hors pull request.
+test("une batterie complète par fusion : sur main, et la publication attend son verdict sans la rejouer", () => {
   const workflow = lire(WORKFLOW);
-  const job = workflow.slice(workflow.indexOf("\n  verifications:"), workflow.indexOf("\n  serveur-sqlite:"));
-  const bloquants = job.split(/\n {6}- name: /).slice(1)
-    .filter((etape) => /\n {8}run: /.test(etape) && !/\n {8}continue-on-error: true/.test(etape))
-    .map((etape) => /\n {8}run: (.+)/.exec(etape)[1].trim());
-  assert.ok(bloquants.length >= 9,
-    `le relevé doit trouver les contrôles bloquants du job (trouvé : ${bloquants.length} — ${bloquants.join(" ; ")})`);
-  assert.ok(bloquants.some((c) => c.startsWith("node --test")), "les tests Node en font partie");
+  // Hors pull request, le choix des tests répond « tout ».
+  const choix = workflow.slice(workflow.indexOf("- name: Choisir les tests de la pull request"), workflow.indexOf("\n  controles:"));
+  assert.match(choix, /if \[ "\$EVENEMENT" != "pull_request" \]; then\s*\n\s*echo "tout=true" >> "\$GITHUB_OUTPUT"/,
+    "hors pull request (arrivée sur main, dimanche, Run workflow), la batterie complète doit tourner");
+  assert.match(choix, /node scripts\/tests-cibles\.mjs "\$BASE" "\$TETE" --github/,
+    "sur une pull request, les tests sont choisis par scripts/tests-cibles.mjs");
+  const batterie = workflow.slice(workflow.indexOf("\n  batterie:"), workflow.indexOf("\n  verifications:"));
+  assert.match(batterie, /if: needs\.changements\.outputs\.tests_tout == 'true'/, "la batterie tourne quand le tri dit « tout »");
 
   const publier = lire(".github/workflows/publier.yml");
-  const debut = publier.indexOf("- name: Vérifications bloquantes");
-  assert.ok(debut > 0, "publier.yml doit avoir son étape « Vérifications bloquantes »");
-  const etape = publier.slice(debut, publier.indexOf("\n      - name:", debut + 1));
-  assert.doesNotMatch(etape, /continue-on-error/, "et elle doit rester bloquante");
-  const commandes = etape.split("\n").map((ligne) => ligne.trim());
-  const absents = bloquants.filter((commande) => !commandes.includes(commande));
-  assert.deepEqual(absents, [],
-    `${absents.join(", ")} : contrôle du job « verifications » absent de la publication. Comme ce `
-      + "job ne tourne plus à l'arrivée sur main, ce contrôle ne serait plus joué avant de publier. "
-      + "Ajoute la même commande à l'étape « Vérifications bloquantes » de publier.yml.");
-
+  assert.doesNotMatch(publier, /node --test/, "la publication ne rejoue plus les tests : la batterie vient de passer sur main");
   const declencheurs = publier.slice(publier.indexOf("\non:"), publier.indexOf("\npermissions:"));
-  assert.match(declencheurs, /push:\s*\n\s*branches: \[main\]/,
-    "la publication doit tourner à chaque arrivée sur main : c'est elle qui rejoue les contrôles");
+  assert.match(declencheurs, /workflow_run:\s*\n\s*workflows: \["Vérifications"\]\s*\n\s*types: \[completed\]\s*\n\s*branches: \[main\]/,
+    "la publication se lance quand « Vérifications » a fini sur main");
+  assert.doesNotMatch(declencheurs, /\bpush:/, "et jamais directement à l'arrivée sur main, sans attendre le verdict");
+  const construire = publier.slice(publier.indexOf("\n  construire:"), publier.indexOf("\n    steps:", publier.indexOf("\n  construire:")));
+  assert.match(construire, /github\.event\.workflow_run\.conclusion == 'success'/, "elle ne publie qu'un passage VERT");
+  assert.match(construire, /github\.event\.workflow_run\.event == 'push'/, "pour une arrivée sur main");
+  assert.match(publier, /ref: \$\{\{ github\.event\.workflow_run\.head_sha \}\}/, "et elle publie le commit vérifié, pas un autre");
+  assert.match(publier, /git ls-remote origin refs\/heads\/main/, "un état dépassé ne doit pas écraser le plus récent");
+  assert.match(publier, /cancel-in-progress: false/, "une publication en cours n'est pas coupée par la suivante");
 });
 
-// La machine que GitHub prête à un dépôt privé a deux processeurs ; sans
-// option, « node --test » y passe les fichiers un par un (processeurs − 1).
-test("sur la machine de GitHub, les tests du site passent deux fichiers à la fois", () => {
-  for (const fichier of [WORKFLOW, ".github/workflows/publier.yml"]) {
-    const lancements = [...lire(fichier).matchAll(/^\s*(?:run: )?node --test\b.*$/gm)].map(([l]) => l.trim());
-    assert.ok(lancements.length >= 1, `${fichier} doit lancer « node --test »`);
-    for (const lancement of lancements) {
-      assert.match(lancement, /^(?:run: )?node --test --test-concurrency=2$/,
-        `${fichier} : « ${lancement} » — sur deux processeurs, node passerait les fichiers un par un `
-          + "(255 s au lieu de 167 s, mesuré le 06/10/2026)");
-    }
+// Le dépôt est public depuis le 21/11/2026 : la machine prêtée a quatre
+// processeurs, et la batterie complète se partage entre quatre machines.
+test("sur la machine de GitHub, quatre fichiers à la fois, et la batterie complète en quatre parts", () => {
+  const workflow = lire(WORKFLOW);
+  const lancements = [...workflow.matchAll(/^\s*(?:run: )?node --test\b.*$/gm)].map(([l]) => l.trim().replace(/^run: /, ""));
+  assert.equal(lancements.length, 2, `deux lancements attendus (tests ciblés, batterie) : ${lancements.join(" | ")}`);
+  for (const lancement of lancements) {
+    assert.match(lancement, /^(?:run: )?node --test --test-concurrency=4\b/, `« ${lancement} » : quatre processeurs, quatre fichiers à la fois`);
   }
+  assert.ok(lancements.includes("node --test --test-concurrency=4 --test-shard=${{ matrix.part }}/4"), "la batterie, une part sur quatre");
+  assert.match(workflow, /part: \[1, 2, 3, 4\]/, "les quatre parts tournent toutes");
+  assert.ok(lancements.includes("node --test --test-concurrency=4 $CIBLES"), "les tests choisis, sur une pull request");
+  assert.match(workflow, /if \[ -z "\$CIBLES" \]; then echo "aucun fichier de test concerné"; exit 0; fi/,
+    "une liste vide ne doit pas lancer « node --test » sans fichier, qui jouerait tout");
 });
 
 // ---------------------------------------------------------------------------
