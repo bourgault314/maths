@@ -1,0 +1,15 @@
+{
+  "name": "maths&go · Mon espace",
+  "short_name": "maths&go",
+  "description": "Entre ton code pour retrouver tes activités.",
+  "lang": "fr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "icons": [
+    {"src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icone-masquable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -57,7 +57,7 @@
 # dossier s'AJOUTE aux en-tetes envoyes par PHP au lieu de les remplacer, et
 # chaque page en portait deux (« DENY, DENY »). D'ou le FilesMatch.
 <IfModule mod_headers.c>
-  <FilesMatch "\.(js|css)$">
+  <FilesMatch "\.(js|css|webmanifest)$">
     Header set X-Content-Type-Options "nosniff"
     Header set Referrer-Policy "strict-origin-when-cross-origin"
     Header set X-Frame-Options "DENY"
@@ -110,6 +110,12 @@
   <FilesMatch "\.(js|css|png|svg|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable" env=MG_EMPREINTE
   </FilesMatch>
+</IfModule>
+
+# Lot E « Arriver » (21/11/2026) : le manifeste de l'icône (app.webmanifest)
+# doit partir avec son vrai type, sinon nosniff (ci-dessus) le ferait refuser.
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
 </IfModule>
 
 Options -Indexes

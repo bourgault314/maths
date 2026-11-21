@@ -126,7 +126,8 @@ test("la charte : le <style> de la page ne recopie plus ce que la charte fait", 
 
 test("la charte : nosniff s'étend aux feuilles de style (.htaccess)", () => {
   const htaccess = lire("_serveur/public/.htaccess");
-  assert.match(htaccess, /<FilesMatch "\\\.\(js\|css\)\$">\s*\n\s*Header set X-Content-Type-Options "nosniff"/);
+  // Lot E « Arriver » : le manifeste de l'icône (.webmanifest) s'y ajoute.
+  assert.match(htaccess, /<FilesMatch "\\\.\(js\|css\|webmanifest\)\$">\s*\n\s*Header set X-Content-Type-Options "nosniff"/);
   assert.doesNotMatch(htaccess, /<FilesMatch "\\\.js\$">/);
 });
 

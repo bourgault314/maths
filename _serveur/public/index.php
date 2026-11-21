@@ -66,6 +66,14 @@ try {
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<!-- Lot E « Arriver » (21/11/2026) : l'icône sur l'écran d'accueil du téléphone.
+     Le nom sous l'icône (choix de Gwenaël : « maths&go »), et pour Android le
+     manifeste (app.webmanifest) avec les images du M. Il dit « display:
+     browser » : l'icône ouvre Mon espace dans Chrome, comme un onglet, et les
+     applis de mathsgo.re gardent le même onglet. Pas de theme-color : la barre
+     du navigateur ne change pas de couleur. -->
+<meta name="apple-mobile-web-app-title" content="maths&amp;go">
+<link rel="manifest" href="app.webmanifest">
 <title>Mon espace | maths&amp;go</title>
 <link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
 <link rel="preload" href="polices/nunito-latin-wght-normal.woff2?v=<?= htmlspecialchars($versionNunito, ENT_QUOTES) ?>" as="font" type="font/woff2" crossorigin>
@@ -124,6 +132,24 @@ try {
   #cases { --cec-max: 372px; --cec-ecart: 8px; --cec-hauteur: 62px; --cec-police: 1.75rem;
            --cec-ecart-etroit: 5px; --cec-hauteur-etroite: 56px; --cec-police-etroite: 1.45rem;
            --cec-ligne: var(--line); --cec-bleu: var(--blue); --cec-encre: var(--blue-dark); }
+  /* Lot E « Arriver » (21/11/2026, planches E-1 à E-3) : sur ordinateur, l'écran
+     du code était petit et perdu au milieu d'un grand vide. À partir de 900 px :
+     logo, titre, carte, cases et bouton plus grands ; le bloc descend d'une
+     hauteur FIXE (pas centré : un message d'erreur ferait remonter la page).
+     Le message s'ajoute sous le bouton : rien au-dessus ne bouge. La carte tient
+     entière à 1366 × 657 (écran 1366 × 768 moins les barres du navigateur).
+     En dessous de 900 px, rien ne change. */
+  @media (min-width: 900px) {
+    #ecran-code { padding-top: clamp(4px, 4vh, 48px); }
+    #ecran-code .logo-accueil { width: 240px; height: auto; margin: 0 auto 22px; }
+    #ecran-code h1 { font-size: 3rem; }
+    #ecran-code .sous-titre { font-size: 1.2rem; margin-bottom: 30px; }
+    #ecran-code .carte { max-width: 600px; padding: 34px 40px 36px; border-radius: 22px; }
+    #cases { --cec-max: 516px; --cec-ecart: 12px; --cec-hauteur: 84px; --cec-police: 2.5rem; }
+    #form-code .actions { margin-top: 24px; }
+    #form-code .actions button { min-width: 320px; min-height: 56px; font-size: 1.15rem; border-radius: 14px; }
+    #ecran-code .message { font-size: 1.05rem; }
+  }
   /* Une seule mise en page pour toutes les tailles de liste : une colonne tant
      qu'il n'y a qu'une ou deux activités (la tuile reste large et la page ne
      paraît pas vide), deux ou trois dès qu'il y en a plus — sans rien réécrire
@@ -269,6 +295,12 @@ try {
   body:not(.sur-code) .entete, #ecran-espace, #ecran-cours { --sans: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --serif: var(--sans); font-family: var(--sans); }
   body:not(.sur-code) .entete button { font-family: var(--sans); }
+  /* Lot E « Arriver » (21/11/2026, choix de Gwenaël, planche E-4) : l'écran
+     du code passe en Nunito, comme Mon espace juste derrière — au téléphone
+     aussi. Seule la police change au téléphone, pas les tailles. */
+  #ecran-code { --sans: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-family: var(--sans); }
+  #ecran-code h1 { font-family: var(--sans); font-weight: 900; letter-spacing: -.01em; }
+  #ecran-code .sous-titre { font-weight: 600; text-wrap: balance; }  /* 320 px : pas de « donné. » seul sur sa ligne */
   #ecran-espace h1, #ecran-cours h1 { font-family: var(--sans); font-weight: 900; letter-spacing: -.01em; }
   #ecran-espace > h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
   main.etroit:has(#ecran-espace:not([hidden])) { max-width: 720px; padding-top: 16px; }
