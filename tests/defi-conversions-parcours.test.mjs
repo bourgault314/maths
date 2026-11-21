@@ -598,34 +598,45 @@ test("fusion : 400 paires de parcours joués au hasard — symétrique, sans per
   }
 });
 
-test("lot B2-3b-2 : le palier 2 s'ouvre à l'élève (16 étapes prêtes) ; un palier en construction reste caché", () => {
+test("lots B2-3b-2 et B6-3 : les paliers 2 et 6 s'ouvrent à l'élève ; un palier en construction reste caché", () => {
   // Lot B1-1 : une étape prête d'un palier en construction n'entre pas dans
   // le parcours (palierPret). Lot B2-3b-2 : Q10 construite, le palier 2 a
-  // ses 16 étapes, Mon parcours le montre ; les paliers 3 à 6 restent cachés.
+  // ses 16 étapes, Mon parcours le montre. Lot B6-3 : Q9 construite, le
+  // palier 6 (4e, 3e) a ses 5 étapes et s'ouvre ; les paliers 3 à 5
+  // restent cachés (on les construit après, lots B3 à B5).
   assert.equal(CARTE.palierPret(2), true, "le palier 2 est prêt");
+  assert.equal(CARTE.palierPret(6), true, "le palier 6 est prêt");
+  assert.deepEqual(CARTE.etapesDuPalier(6).map(e => e.code), ["D6", "G1", "P5", "P6", "Q9"]);
   assert.equal(CARTE.etapesDuPalier(2).length, 16);
   assert.deepEqual([...CARTE.PRETES], CARTE.ORDRE.filter(c => CARTE.etape(c).pret));
   assert.deepEqual([...CARTE.PARCOURS], CARTE.PRETES.filter(c => CARTE.palierPret(CARTE.etape(c).palier)));
-  assert.deepEqual([...CARTE.PARCOURS], [...CARTE.etapesDuPalier(1), ...CARTE.etapesDuPalier(2)].map(e => e.code), "les paliers 1 et 2, dans l'ordre");
+  assert.deepEqual([...CARTE.PARCOURS], [...CARTE.etapesDuPalier(1), ...CARTE.etapesDuPalier(2), ...CARTE.etapesDuPalier(6)].map(e => e.code), "les paliers 1, 2 et 6, dans l'ordre");
   CARTE.PARCOURS.forEach(c => assert.ok(CARTE.palierPret(CARTE.etape(c).palier), `${c} : palier pas prêt`));
-  [3, 4, 5, 6].forEach(n => assert.equal(CARTE.palierPret(n), false, `palier ${n}`));
+  [3, 4, 5].forEach(n => assert.equal(CARTE.palierPret(n), false, `palier ${n}`));
   // Un élève qui a fini le palier 1 continue au palier 2, par ses repères.
   let p = P.creer();
   CARTE.etapesDuPalier(1).forEach((e, i) => { p = P.noterTest(p, e.code, P.ajouterJours(J, -(20 - i))); });
   assert.equal(P.monEtape(p, CARTE.PARCOURS), "R3");
-  // Les deux paliers finis : plus d'étape à faire (« Le palier 3 arrive
-  // bientôt »).
+  // Le palier 2 fini : l'élève continue au palier 6, par les heures
+  // décimales (lot B6-3).
   CARTE.etapesDuPalier(2).forEach((e, i) => { p = P.noterTest(p, e.code, P.ajouterJours(J, -(5 - (i % 5)))); });
+  assert.equal(P.monEtape(p, CARTE.PARCOURS), "D6");
+  // Les trois paliers finis : plus d'étape à faire (« Les paliers 3 à 5
+  // arrivent bientôt »).
+  CARTE.etapesDuPalier(6).forEach((e, i) => { p = P.noterTest(p, e.code, P.ajouterJours(J, -(3 - (i % 3)))); });
   assert.equal(P.monEtape(p, CARTE.PARCOURS), null);
   // La deuxième ceinture : les 16 étapes du palier 2.
   const paliers = {};
   CARTE.PALIERS.forEach(pal => { paliers[pal.n] = CARTE.etapesDuPalier(pal.n).map(e => e.code); });
   assert.deepEqual(P.ceintures(p, paliers)[1], {n: 2, total: 16, validees: 16, solides: 0, gagnee: true, doree: false});
-  // Les textes du palier 2 sont complets, comme au palier 1.
-  CARTE.etapesDuPalier(2).forEach(e => {
+  assert.deepEqual(P.ceintures(p, paliers).find(c => c.n === 6), {n: 6, total: 5, validees: 5, solides: 0, gagnee: true, doree: false});
+  // Les textes des paliers 2 et 6 sont complets, comme au palier 1.
+  // (Au palier 6, 250 signes au plus : les règles de la 4e sont plus
+  // longues ; « À retenir » mesuré à l'écran aux lots B6-1 et B6-2.)
+  [...CARTE.etapesDuPalier(2), ...CARTE.etapesDuPalier(6)].forEach(e => {
     assert.equal(e.apprends.length, 3, e.code);
     if (e.reperes.length) assert.equal(e.retenir, "", e.code);
-    else assert.ok(e.retenir.length > 20 && e.retenir.length < 200, `${e.code} : ${e.retenir.length} signes`);
+    else assert.ok(e.retenir.length > 20 && e.retenir.length < (e.palier === 6 ? 250 : 200), `${e.code} : ${e.retenir.length} signes`);
     assert.ok(e.cahier, e.code);
   });
   // Leurs textes sont complets, comme au palier 1.

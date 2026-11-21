@@ -7702,6 +7702,546 @@
     erreurs(question, lu) { return erreursP6(question, lu); }
   };
 
+  // ============================================ lot B6-3 : Q9 (4e, 3e)
+  // « Problèmes : vitesses, débits et masses volumiques ». Programme de 4e
+  // (débits m³/s ↔ L/min) et de 3e (m³/s ↔ L/h) ; S097 p. 40-43 : le
+  // changement d'unité est une situation de proportionnalité (le tableau à
+  // deux lignes, l'unité écrite) ; €/kg, €/L, €/m, la consommation ; le bus
+  // de Clotilde lu sur un graphique en km et min. Brevet : la bougie (cire à
+  // 0,7 g/cm³), le béton, la médaille, les granulés (750 kg/m³), le bassin
+  // (112 m³ à 4 m³/h), le colis le plus dense, l'écran de 50 pouces ;
+  // 3 h 20 min n'est pas 3,2 h. Évaluations nationales de 4e : la douche,
+  // « trois fois plus rapide ».
+  // Choix de Gwenaël du 21/11 (maquette sur la vraie page) : l'outil est le
+  // tableau de proportionnalité (deux lignes, une par grandeur, « × k » sur
+  // un arc au-dessus et au-dessous ; trois colonnes, le retour à l'unité,
+  // quand le rapport n'est pas entier) ; l'image, le tableau sans « × k » ;
+  // le graphique du bus aux degrés 2 et 3 ; sans calculatrice (des nombres
+  // de tête), et de temps en temps un vrai nombre de brevet : « Quel
+  // calcul ? ».
+  //
+  // Une unité : [facteur (p / q) vers l'unité de base de sa grandeur,
+  // grandeur]. La base : la seconde, le millilitre, le gramme, le
+  // millimètre, l'euro.
+  const U9 = {
+    s: [1n, 1n, "duree"], min: [60n, 1n, "duree"], h: [3600n, 1n, "duree"], j: [86400n, 1n, "duree"],
+    mL: [1n, 1n, "volume"], cL: [10n, 1n, "volume"], L: [1000n, 1n, "volume"], "cm³": [1n, 1n, "volume"], "dm³": [1000n, 1n, "volume"],
+    "m³": [1000000n, 1n, "volume"],
+    g: [1n, 1n, "masse"], kg: [1000n, 1n, "masse"], t: [1000000n, 1n, "masse"],
+    mm: [1n, 1n, "longueur"], cm: [10n, 1n, "longueur"], m: [1000n, 1n, "longueur"], km: [1000000n, 1n, "longueur"],
+    pouce: [254n, 10n, "longueur"], mille: [1852000n, 1n, "longueur"],
+    "€": [1n, 1n, "prix"]
+  };
+  const NOMS_U9 = {s: "secondes", min: "minutes", h: "heures", L: "litres", mL: "millilitres", cL: "centilitres", "m³": "m³", g: "grammes",
+    kg: "kilogrammes", t: "tonnes", cm: "centimètres", km: "kilomètres", m: "mètres", "€": "euros"};
+  const NOMS_LIGNE_Q9 = {duree: "Durée", volume: "Volume", masse: "Masse", longueur: "Distance", prix: "Prix"};
+  // L'unité écrite (« 1 pouce », « 50 pouces »).
+  const symQ9 = (u, m) => (u === "pouce" ? (m > MILLE ? "pouces" : "pouce") : u === "mille" ? (m > MILLE ? "milles" : "mille") : u);
+  const mesQ9 = (m, u) => `${ecrire(m)}${NB}${symQ9(u, m)}`;
+  // m (en u) vers v : exact, ou null.
+  function convQ9(m, u, v) {
+    const [p1, q1] = U9[u];
+    const [p2, q2] = U9[v];
+    const n = m * p1 * q2;
+    const d = q1 * p2;
+    return n % d === 0n ? n / d : null;
+  }
+  const pgcdQ9 = (a, b) => (b === 0n ? a : pgcdQ9(b, a % b));
+  // « 1 h = 60 min », « 1 m³ = 1 000 L » : de la grande unité à la petite.
+  function relQ9(u, v) {
+    const [g, p] = U9[u][0] * U9[v][1] > U9[v][0] * U9[u][1] ? [u, v] : [v, u];
+    const f = convQ9(MILLE, g, p);
+    return f === null ? null : `1${NB}${symQ9(g, MILLE)} = ${mesQ9(f, p)}`;
+  }
+  function relVirgule(u, v) {
+    const [g, p] = U9[u][0] * U9[v][1] > U9[v][0] * U9[u][1] ? [u, v] : [v, u];
+    const f = convQ9(MILLE, g, p);
+    return `1${NB}${symQ9(g, MILLE)}, c'est ${mesQ9(f, p)}.`;
+  }
+
+  // La question finie. spec : {sorte, degre, modele, enonce, avant, apres
+  // (l'unité de la case), taux: [[n, un], [d, ud]] (n un pour d ud), x: [v,
+  // u] (ce qu'on donne), cherche (l'unité de la réponse), noms (les deux
+  // lignes du tableau, si ce ne sont pas les grandeurs), nus (des nombres
+  // sans unité dans le tableau : le pouce), relation, suffixe (« en 1 h »),
+  // figure, fautes}.
+  function finirQ9(spec) {
+    const {sorte, degre, taux, x, cherche} = spec;
+    const [n, un] = [milli(taux[0][0]), taux[0][1]];
+    const [d, ud] = [milli(taux[1][0]), taux[1][1]];
+    const [xv, xu] = [milli(x[0]), x[1]];
+    const g = U9[xu][2];
+    // La ligne 1 : la grandeur donnée ; la ligne 2 : celle qu'on cherche.
+    const [r1, u1, r2b, u2b] = U9[ud][2] === g ? [d, ud, n, un] : [n, un, d, ud];
+    // (La ligne 2 dans l'unité de la réponse quand elle est plus petite :
+    // « 60 min ÷ 5 », « 2 000 L × 60 », pas « 1 h ÷ 5 = 0,2 h ».)
+    const plusPetite = U9[cherche][0] * U9[u2b][1] < U9[u2b][0] * U9[cherche][1];
+    // L'unité commune de la ligne 1 : la plus petite des deux.
+    const c = U9[u1][0] * U9[xu][1] <= U9[xu][0] * U9[u1][1] ? u1 : xu;
+    const a1 = convQ9(r1, u1, c);
+    const a2 = convQ9(xv, xu, c);
+    if (a1 === null || a2 === null || a1 === a2) return null;
+    // (Lot B6-3c : deux conversions, « 1 min = 60 s » et « 1 m³ = 1 000 L ».
+    // La ligne 2 reste dans l'unité donnée quand le calcul tombe juste ; la
+    // ligne de calcul finit par la seconde, « 5 m³ × 60 = 300 m³ =
+    // 300 000 L », comme « 100 m × 60 = 6 000 m = 6 km ». Avec les deux dans
+    // l'étiquette, la correction passait à 79 % au petit iPhone.)
+    const deux = u1 !== xu && u2b !== cherche;
+    const justeEn = u => {
+      const rr = convQ9(r2b, u2b, u);
+      if (rr === null || (rr * a2) % a1 !== 0n) return false;
+      if (a2 % a1 !== 0n && a1 % a2 !== 0n && rr % (a1 / pgcdQ9(a1, a2)) !== 0n) return false;
+      return convQ9((rr * a2) / a1, u, cherche) !== null;
+    };
+    const u2 = plusPetite && convQ9(r2b, u2b, cherche) !== null && !(deux && justeEn(u2b)) ? cherche : u2b;
+    const r2 = convQ9(r2b, u2b, u2);
+    // La case cherchée, dans l'unité de la ligne 2, puis dans celle de la réponse.
+    if ((r2 * a2) % a1 !== 0n) return null;
+    const rep2 = (r2 * a2) / a1;
+    const rep = convQ9(rep2, u2, cherche);
+    if (rep === null || rep <= 0n || rep % 1n !== 0n) return null;
+    // Le passage d'une colonne à l'autre : × k, ÷ k, ou (degré 3) le retour
+    // à l'unité, « ÷ 4 » puis « × 7 ».
+    let colonnes;
+    let fleches;
+    let calcul;
+    const nb = v => ecrire(v);
+    if (a2 % a1 === 0n) {
+      const k = a2 / a1;
+      colonnes = [[a1, a2], [r2, null]];
+      fleches = [`×${NB}${nb(k * MILLE)}`];
+      calcul = `${mesQ9(r2, u2)} × ${nb(k * MILLE)}`;
+    } else if (a1 % a2 === 0n) {
+      const k = a1 / a2;
+      colonnes = [[a1, a2], [r2, null]];
+      fleches = [`÷${NB}${nb(k * MILLE)}`];
+      calcul = `${mesQ9(r2, u2)} ÷ ${nb(k * MILLE)}`;
+    } else {
+      const p = pgcdQ9(a1, a2);
+      const m1 = a1 / p;
+      const m2 = a2 / p;
+      if (m1 > 12n || m2 > 20n || r2 % m1 !== 0n) return null;
+      colonnes = [[a1, p, a2], [r2, r2 / m1, null]];
+      fleches = [`÷${NB}${nb(m1 * MILLE)}`, `×${NB}${nb(m2 * MILLE)}`];
+      calcul = `${mesQ9(r2, u2)} ÷ ${nb(m1 * MILLE)} × ${nb(m2 * MILLE)}`;
+    }
+    const cel = (v, u) => (spec.nus ? nb(v) : mesQ9(v, u));
+    const noms = spec.noms || [NOMS_LIGNE_Q9[g], NOMS_LIGNE_Q9[U9[u2][2]]];
+    const tableauQ = {
+      noms,
+      lignes: [colonnes[0].map(v => cel(v, c)), colonnes[1].map(v => (v === null ? null : cel(v, u2)))],
+      fleches,
+      rep: cel(rep2, u2)
+    };
+    // La conversion, dans l'étiquette jaune (« 1 h = 60 min »).
+    const rels = [];
+    if (u1 !== xu) rels.push(relQ9(u1, xu));
+    if (u2b !== cherche) rels.push(relQ9(u2b, cherche));
+    const relation = spec.relation !== undefined ? spec.relation : rels.filter(Boolean).join(" · ") || null;
+    // (Dans la correction, la seconde conversion est déjà au bout de la
+    // ligne de calcul : l'étiquette ne garde que la première.)
+    const relationCorr = spec.relation !== undefined || u2 === cherche || rels.filter(Boolean).length < 2 ? relation : rels.filter(Boolean)[0];
+    // (Dans l'outil, la première est dans le tableau, « 1 s | 60 s » : il
+    // garde la seconde, celle de la réponse, « 1 m³ = 1 000 L ». Avec les
+    // deux, l'étiquette passait sous « L'outil » et l'outil tombait à 59 %
+    // au petit iPhone avec une police large.)
+    const relationOutil = spec.relation !== undefined || u2 === cherche || rels.filter(Boolean).length < 2 ? relation : rels.filter(Boolean)[1];
+    const vert = spec.nus ? mesQ9(rep, cherche) : mesQ9(rep, cherche);
+    const ligne = `${calcul} = ${mesQ9(rep2, u2)}${u2 !== cherche ? ` = ${vert}` : ""}${spec.suffixe ? ` ${spec.suffixe}` : ""}`;
+    const enonce = spec.enonce;
+    const avant = spec.avant || "";
+    const texte = `${enonce} ${avant ? `${avant} ` : ""}${CASE}${NB}${spec.apres}`;
+    // Les erreurs prévues (une ligne au petit téléphone) : la conversion
+    // oubliée ; 1 h = 100 min ; le calcul à l'envers ; la réponse restée
+    // dans l'unité du tableau.
+    const fautes = [];
+    const ajouterFaute = (v, retour) => { if (v !== null && v > 0n && v !== rep && !fautes.some(f => f[0] === v)) fautes.push([v, retour]); };
+    if (u1 !== xu && r1 !== 0n) {
+      const brutX = (r2 * xv) % r1 === 0n ? (r2 * xv) / r1 : null;
+      ajouterFaute(brutX === null ? null : convQ9(brutX, u2, cherche), relVirgule(u1, xu));
+      // (1 h = 100 min : le piège des heures décimales.)
+      if (c === "min" && [u1, xu].includes("h")) {
+        const a1c = u1 === "h" ? r1 * 100n : a1;
+        const a2c = xu === "h" ? xv * 100n : a2;
+        if ((r2 * a2c) % a1c === 0n) ajouterFaute(convQ9((r2 * a2c) / a1c, u2, cherche), `1${NB}h, c'est 60${NB}min, pas 100.`);
+      }
+    }
+    if ((r2 * a1) % a2 === 0n) ajouterFaute(convQ9((r2 * a1) / a2, u2, cherche), (r2 * a1) / a2 > rep2 ? "Le nombre doit rapetisser." : "Le nombre doit grandir.");
+    if (u2 !== cherche) ajouterFaute(rep2, `La réponse est en ${NOMS_U9[cherche] || cherche}.`);
+    (spec.fautes || []).forEach(([v, t]) => ajouterFaute(typeof v === "bigint" ? v : milli(v), t));
+    return q({
+      code: "Q9", degre, forme: "nombre", texte,
+      morceaux: Object.assign({enonce, avant, apres: spec.apres, serre: true}, spec.figure ? {figure: spec.figure} : {}),
+      // (Lot B6-3c : une vitesse, « 12 km en 1 h » : le bilan dit aussi
+      // « donc 12 km/h », pour mettre la réponse en vert là où elle est.)
+      reponse: brut(rep), reponseTexte: `${ecrire(rep)}${NB}${spec.apres}`, unite: spec.apres,
+      resume: spec.suffixe ? `${ligne}, donc ${ecrire(rep)}${NB}${spec.apres}` : ligne, resumeVert: spec.suffixe ? `${ligne}, donc ${ecrire(rep)}${NB}${spec.apres}` : ligne,
+      grandeur: U9[u2][2], outil: "tableau-p", tableauP: tableauQ, relation, relationCorr, relationOutil,
+      noteOutil: null, image: [], correction: [ligne], ligneQ9: ligne, vertQ9: vert,
+      sorteQ9: sorte, modeleQ9: spec.modele, fautesQ9: fautes.map(([v, t]) => [brut(v), t]),
+      donnees: {type: "q9", taux: [[brut(n), un], [brut(d), ud]], x: [brut(xv), xu], cherche},
+      cle: `Q9:${spec.modele}:${brut(xv)}${xu}:${brut(n)}${un}/${brut(d)}${ud}>${cherche}`
+    });
+  }
+
+  // Les situations : [modèle, degrés, énoncé ({P}, {a}, {b}), avant, unité
+  // de la case, valeurs [[a, b], …], (a, b) → {taux, x, cherche}].
+  // Des nombres de tête (Gwenaël, 21/11) ; La Réunion à côté de tous les
+  // jours ; aucun chiffre inventé pour un lieu nommé (« une cascade de
+  // l'île »).
+  const ParMin = (a, b) => ({taux: [[a, "L"], [1, "min"]], x: [b, "h"], cherche: "L"});
+  const SITUATIONS_Q9 = {
+    debit: [
+      ["tuyau", [1, 2], "Un tuyau d'arrosage donne {a} L par minute. Combien de litres en {b} h ?", "", "L", [[15, 1], [12, 1], [20, 1], [15, 2], [10, 2]], ParMin],
+      ["douche", [1, 2, 3], "Une douche coule à {a} L par minute. Combien de litres en {b} s ?", "", "L", [[12, 30], [10, 30], [12, 15], [8, 45]],
+        (a, b) => ({taux: [[a, "L"], [1, "min"]], x: [b, "s"], cherche: "L"})],
+      ["fuite", [2, 3], "Un robinet qui fuit perd 1 L toutes les {a} min. Combien de litres en {b} h ?", "", "L", [[5, 1], [5, 12], [10, 24], [6, 3], [4, 2]],
+        (a, b) => ({taux: [[1, "L"], [a, "min"]], x: [b, "h"], cherche: "L"})],
+      ["goutte", [3], "Un robinet perd 1 mL toutes les {a} s. Combien de millilitres en {b} h ?", "", "mL", [[10, 1], [5, 1], [20, 2], [12, 1]],
+        (a, b) => ({taux: [[1, "mL"], [a, "s"]], x: [b, "h"], cherche: "mL"})],
+      ["arrosage", [2, 3], "Un arroseur donne {a} L en {b} min. Combien de litres en 1 h ?", "", "L", [[30, 4], [45, 9], [15, 4], [21, 4]],
+        (a, b) => ({taux: [[a, "L"], [b, "min"]], x: [1, "h"], cherche: "L"})]
+    ],
+    duree: [
+      ["bassin", [1, 2], "Il manque {a} m³ d'eau au bassin. Le tuyau donne {b} L par minute.", "Durée :", "min",
+        [[3, 50], [2, 40], [6, 100], [1, 50], [4, 50]], (a, b) => ({taux: [[b, "L"], [1, "min"]], x: [a, "m³"], cherche: "min"})],
+      ["citerne", [2, 3], "Une citerne de {a} L se vide à {b} L par minute. En combien d'heures ?", "", "h",
+        [[1200, 10], [1800, 15], [2400, 20], [900, 5]], (a, b) => ({taux: [[b, "L"], [1, "min"]], x: [a, "L"], cherche: "h"})]
+    ],
+    cascade: [
+      ["cascade", [2, 3], "Une cascade de l'île débite {a} m³ par seconde. Combien de litres en 1 min ?", "", "L", [[2, 1], [3, 1], [5, 1]],
+        a => ({taux: [[a, "m³"], [1, "s"]], x: [1, "min"], cherche: "L"})],
+      ["source", [2, 3], "Une source donne {a} L par seconde. Combien de m³ en 1 h ?", "", "m³", [[5, 1], [10, 1], [2, 1]],
+        a => ({taux: [[a, "L"], [1, "s"]], x: [1, "h"], cherche: "m³"})]
+    ],
+    riviere: [
+      ["riviere", [3], "Une rivière de l'île débite {a} m³/s. Combien de litres en 1 h ?", "", "L", [[2, 1], [3, 1], [5, 1]],
+        a => ({taux: [[a, "m³"], [1, "s"]], x: [1, "h"], cherche: "L"})],
+      ["pompe", [3], "Une pompe débite {a} L/h. Combien de litres par minute ?", "", "L", [[600, 1], [1200, 1], [1800, 1], [900, 1]],
+        a => ({taux: [[a, "L"], [1, "h"]], x: [1, "min"], cherche: "L"})]
+    ],
+    vitesse: [
+      ["bus", [1, 2], "Le bus de {P} roule à {a} km/h. Combien de kilomètres en {b} min ?", "", "km", [[9, 20], [30, 20], [60, 15], [45, 20], [60, 45]],
+        (a, b) => ({taux: [[a, "km"], [1, "h"]], x: [b, "min"], cherche: "km"})],
+      ["marche", [1, 2, 3], "{P} marche à {a} km/h. Combien de kilomètres en {b} min ?", "", "km", [["4,5", 20], [6, 30], [5, 30], [6, 20], ["4,5", 40]],
+        (a, b) => ({taux: [[a, "km"], [1, "h"]], x: [b, "min"], cherche: "km"})],
+      ["velo", [2, 3], "{P} roule à vélo à {a} km/h. Combien de mètres en 1 min ?", "", "m", [[12, 1], [18, 1], [15, 1], [24, 1]],
+        a => ({taux: [[a, "km"], [1, "h"]], x: [1, "min"], cherche: "m"})]
+    ],
+    vmoy: [
+      // (Lot B6-3c : sans « Vitesse : » devant la case, la question le demande
+      // déjà ; « Vitesse : … km/h » sortait de la ligne au petit iPhone.)
+      ["cycliste", [1, 2], "Un cycliste parcourt {a} km en {b} min. Quelle est sa vitesse ?", "", "km/h", [[15, 30], [10, 20], [8, 30], [12, 20], [25, 30]],
+        (a, b) => ({taux: [[a, "km"], [b, "min"]], x: [1, "h"], cherche: "km", suffixe: `en 1${NB}h`})],
+      ["littoral", [2, 3], "Route du Littoral : une voiture fait {a} km en {b} min. Sa vitesse ?", "", "km/h",
+        [[12, 9], [12, 8], [10, 8], [9, 6]], (a, b) => ({taux: [[a, "km"], [b, "min"]], x: [1, "h"], cherche: "km", suffixe: `en 1${NB}h`})],
+      ["kayak", [2, 3], "{P} pagaie {a} m en {b} s. Quelle est sa vitesse en km/h ?", "", "km/h", [[50, 30], [100, 60], [25, 30], [20, 12]],
+        (a, b) => ({taux: [[a, "m"], [b, "s"]], x: [1, "h"], cherche: "km", suffixe: `en 1${NB}h`})]
+    ],
+    temps: [
+      ["car", [2, 3], "Le Car Jaune roule à {a} km/h. Combien de minutes pour faire {b} km ?", "", "min", [[60, 12], [60, 18], [90, 30], [80, 20], [72, 18]],
+        (a, b) => ({taux: [[a, "km"], [1, "h"]], x: [b, "km"], cherche: "min"})],
+      ["sentier", [2, 3], "{P} marche à {a} km/h. Combien de minutes pour faire {b} km ?", "", "min", [[4, 2], [5, 3], [6, 4], [3, 2]],
+        (a, b) => ({taux: [[a, "km"], [1, "h"]], x: [b, "km"], cherche: "min"})]
+    ],
+    mv: [
+      ["bougie1", [1, 2], "Une bougie : {a} cm³ de cire. 1 cm³ de cire pèse 0,7 g.", "Masse :", "g", [[300, 1], [200, 1], [500, 1], [400, 1]],
+        a => ({taux: [["0,7", "g"], [1, "cm³"]], x: [a, "cm³"], cherche: "g"})],
+      ["bougie3", [3], "Un bloc de cire : {a} cm³ à 0,7 g/cm³. Sa masse en kg ?", "", "kg", [[2000, 1], [3000, 1], [1500, 1]],
+        a => ({taux: [["0,7", "g"], [1, "cm³"]], x: [a, "cm³"], cherche: "kg"})],
+      ["beton", [1, 2], "1 m³ de béton pèse 2,4 t. Combien de kilogrammes pour {a} m³ ?", "", "kg", [["0,5", 1], [2, 1], ["1,5", 1], [3, 1]],
+        a => ({taux: [["2,4", "t"], [1, "m³"]], x: [a, "m³"], cherche: "kg"})],
+      ["ble", [2, 3], "1 m³ de blé pèse 800 kg. Une benne : {a} m³ de blé. Combien de tonnes ?", "", "t", [[15, 1], [10, 1], [5, 1], [20, 1]],
+        a => ({taux: [[800, "kg"], [1, "m³"]], x: [a, "m³"], cherche: "t"})],
+      ["medaille", [3], "Une médaille d'argent : {a} cm³. L'argent : 10,5 g/cm³.", "Masse :", "g", [[2, 1], [4, 1], [6, 1]],
+        a => ({taux: [["10,5", "g"], [1, "cm³"]], x: [a, "cm³"], cherche: "g"})],
+      ["granules", [3], "Des granulés de bois : 750 kg/m³. Combien de tonnes pour {a} m³ ?", "", "t", [[4, 1], [8, 1], [2, 1]],
+        a => ({taux: [[750, "kg"], [1, "m³"]], x: [a, "m³"], cherche: "t"})]
+    ],
+    prix: [
+      ["letchis", [1, 2], "Les letchis coûtent {a} € le kilo. Combien pour {b} g ?", "", "€", [[6, 500], [8, 500], [4, 250], [10, 500]],
+        (a, b) => ({taux: [[a, "€"], [1, "kg"]], x: [b, "g"], cherche: "€"})],
+      ["tissu", [1, 2], "Le tissu coûte {a} € le mètre. Combien pour {b} cm ?", "", "€", [[8, 50], [12, 50], [6, 25], [10, 20]],
+        (a, b) => ({taux: [[a, "€"], [1, "m"]], x: [b, "cm"], cherche: "€"})],
+      ["jus", [1, 2], "Le jus de goyave coûte {a} € le litre. Combien pour {b} cL ?", "", "€", [[2, 50], [4, 25], [3, 50], [2, 25]],
+        (a, b) => ({taux: [[a, "€"], [1, "L"]], x: [b, "cL"], cherche: "€"})],
+      ["mangues", [3], "Les mangues coûtent {a} € le kilo. Combien pour {b} g ?", "", "€", [[6, 750], [4, 750], [8, 750], [10, 600]],
+        (a, b) => ({taux: [[a, "€"], [1, "kg"]], x: [b, "g"], cherche: "€"})]
+    ],
+    conso: [
+      ["conso", [1, 2], "Une voiture consomme {a} L aux 100 km. Combien de litres pour {b} km ?", "", "L", [[5, 300], [6, 200], [5, 50], [7, 200], [4, 50]],
+        (a, b) => ({taux: [[a, "L"], [100, "km"]], x: [b, "km"], cherche: "L"})],
+      ["conso1", [3], "Une voiture consomme {a} L aux 100 km. Combien de centilitres pour 1 km ?", "", "cL", [[5, 1], [6, 1], [8, 1], [4, 1]],
+        a => ({taux: [[a, "L"], [100, "km"]], x: [1, "km"], cherche: "cL"})]
+    ],
+    pouce: [
+      ["ecran", [1, 2], "Un écran de {a} pouces. 1 pouce = 2,54 cm. Sa diagonale en cm ?", "", "cm", [[50, 1], [10, 1], [20, 1], [100, 1]],
+        a => ({taux: [["2,54", "cm"], [1, "pouce"]], x: [a, "pouce"], cherche: "cm", nus: true, noms: ["Pouces", "cm"], relation: null})],
+      ["ecran-m", [3], "Un écran de {a} pouces. 1 pouce = 2,54 cm. Sa diagonale en mètres ?", "", "m", [[50, 1], [40, 1], [60, 1]],
+        a => ({taux: [["2,54", "cm"], [1, "pouce"]], x: [a, "pouce"], cherche: "m", nus: true, noms: ["Pouces", "cm"]})],
+      ["mille", [3], "Un bateau parcourt {a} milles marins. 1 mille = 1,852 km. Combien de km ?", "", "km", [[10, 1], [5, 1], [20, 1]],
+        a => ({taux: [["1,852", "km"], [1, "mille"]], x: [a, "mille"], cherche: "km", nus: true, noms: ["Milles", "km"], relation: null})]
+    ]
+  };
+  // (« 1 pouce = 2,54 cm » ne se coupe pas ; un nombre et son unité non
+  // plus.)
+  // « de » devant un prénom tiré : « le bus d'Inès ».
+  const deQ9 = P => (/^[AEIOUYÉÈÊÂÎÔ]/.test(P) ? `d'${P}` : `de ${P}`);
+  function remplirQ9(t, v) {
+    return t.replace("de {P}", deQ9(v.P || "")).replace("{P}", v.P || "").replace("{a}", v.a).replace("{b}", v.b)
+      .replace(/1 pouce = 2,54 cm/, `1${NB}pouce${NB}=${NB}2,54${NB}cm`).replace(/1 mille = 1,852 km/, `1${NB}mille${NB}=${NB}1,852${NB}km`)
+      .replace(/(\d) (?=(?:L|mL|cL|km|m|cm|kg|g|t|h|min|s|€|m³|cm³|pouces|milles)(?![\wÀ-ÿ²³]))/g, `$1${NB}`)
+      .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${FINE}`).replace(/ \?$/, `${NB}?`).replace(/ :$/, `${NB}:`);
+  }
+  function situationQ9(degre, rng, sorte) {
+    const liste = SITUATIONS_Q9[sorte].filter(s => s[1].includes(degre));
+    if (!liste.length) return null;
+    const [modele, , t, avant, apres, valeurs, faire] = choisir(rng, liste);
+    const [a, b] = choisir(rng, valeurs);
+    const f = faire(a, b);
+    const ecrireV = v => ecrire(milli(v));
+    const enonce = remplirQ9(t, {P: choisir(rng, PRENOMS), a: ecrireV(a), b: ecrireV(b)});
+    const x = finirQ9(Object.assign({sorte, degre, modele, enonce, avant: avant ? avant.replace(/ :$/, `${NB}:`) : "", apres}, f));
+    // (Le retour à l'unité, trois colonnes : au degré 3 seulement.)
+    if (!x || (x.tableauP.lignes[0].length === 3 && degre < 3)) return null;
+    return x;
+  }
+
+  // Le graphique du bus (S097 p. 41) : la distance (km) selon la durée
+  // (min), une droite depuis 0, des croix, la lecture en pointillés. Des
+  // points sur le quadrillage : [minutes, km, minutes max, km max].
+  const GRAPHES_Q9 = [[20, 3, 30, 4], [15, 2, 30, 4], [30, 4, 30, 5], [10, 2, 30, 6], [20, 5, 30, 8], [15, 3, 30, 6], [30, 6, 40, 8], [20, 4, 30, 6]];
+  function grapheQ9(degre, rng) {
+    const [m, k, xMax, yMax] = choisir(rng, GRAPHES_Q9);
+    // (Des vitesses de 8 à 15 km/h : un vélo, une trottinette, le bus de
+    // S097, à 9 km/h et plus. Lot B6-3c : sans prénom, « Ce bus » montre le
+    // graphique ; l'énoncé tient sur deux lignes avec une police large : la
+    // question du graphique fixe la hauteur de toute la série, et à trois
+    // lignes l'outil tombait à 79 % au petit iPhone.)
+    const vehicule = choisir(rng, ["Ce bus", "Ce vélo", "Cette trottinette"]);
+    if (vehicule === "Ce bus" && (60 * k) / m < 9) return null;
+    const enonce = `${vehicule} roule toujours à la même vitesse. Sa vitesse${NB}?`;
+    const x = finirQ9({sorte: "graphe", degre, modele: `graphe:${m}:${k}`, enonce, avant: "", apres: "km/h",
+      taux: [[k, "km"], [m, "min"]], x: [1, "h"], cherche: "km", suffixe: `en 1${NB}h`,
+      // (Les croix sur le quadrillage : le point lu, et son double s'il
+      // tient dans le graphique.)
+      figure: {type: "graphe", xMax, yMax, point: [m, k], croix: [[m, k], [2 * m, 2 * k]].filter(([a, b]) => a <= xMax && b <= yMax)}});
+    return x;
+  }
+
+  // Au choix. Le piège « 3 h 20 min n'est pas 3,2 h » (brevet 2022) :
+  // [km, h, min] — la vitesse juste, celle de « 3,2 h », celle des heures
+  // seules.
+  const PIEGES_Q9 = [[36, 3, 20], [24, 1, 20], [48, 3, 20], [12, 1, 20]];
+  function piegeQ9(degre, rng) {
+    const [km, h, mn] = choisir(rng, PIEGES_Q9);
+    const t = h * 60 + mn;
+    const vraie = (milli(km) * 60n) / BigInt(t);
+    if ((milli(km) * 60n) % BigInt(t) !== 0n) return null;
+    const dec = milli(`${h},${mn}`);
+    const fausse = (milli(km) * MILLE) / dec;
+    if ((milli(km) * MILLE) % dec !== 0n || fausse === vraie) return null;
+    const seule = milli(km) / BigInt(h);
+    const vit = v => `${ecrire(v)}${NB}km/h`;
+    const bonne = vit(vraie);
+    const choix = melanger(rng, [bonne, vit(fausse), vit(seule)].filter((c, i, l) => l.indexOf(c) === i));
+    if (choix.length < 3) return null;
+    const P = choisir(rng, PRENOMS);
+    const enonce = `${P} parcourt ${km}${NB}km en ${h}${NB}h${NB}${mn}${NB}min à vélo. Quelle est sa vitesse${NB}?`;
+    const pourquoi = {};
+    choix.forEach((c, k) => {
+      if (c === vit(fausse)) pourquoi[k] = `${h}${NB}h${NB}${mn}${NB}min, ce n'est pas ${ecrire(dec)}${NB}h.`;
+      else if (c !== bonne) pourquoi[k] = `Il y a aussi les ${mn}${NB}min.`;
+    });
+    const p = pgcdQ9(BigInt(t), 60n);
+    const m1 = BigInt(t) / p;
+    const m2 = 60n / p;
+    const tabl = m1 <= 20n ? {noms: ["Durée", "Distance"], lignes: [[`${t}${NB}min`, `${ecrire(p * MILLE)}${NB}min`, `60${NB}min`], [`${km}${NB}km`, mesQ9(milli(km) / m1, "km"), null]],
+      fleches: [`÷${NB}${m1}`, `×${NB}${m2}`], rep: mesQ9(vraie, "km")} : null;
+    if (!tabl || (milli(km) % m1) !== 0n) return null;
+    const ligne = `${km}${NB}km ÷ ${m1} × ${m2} = ${mesQ9(vraie, "km")} en 1${NB}h`;
+    return q({
+      code: "Q9", degre, forme: "qcm", texte: enonce, morceaux: {enonce, serre: true, sorte: "piege"}, choix, bon: choix.indexOf(bonne), pourquoi,
+      reponse: bonne, reponseTexte: bonne, unite: null, resume: ligne, resumeVert: ligne, grandeur: "longueur",
+      // (Dans la correction, « 3 h = 180 min » : « 3 h 20 min = 200 min »
+      // ne tient pas à côté de l'étiquette au petit iPhone ; le tableau
+      // montre les 200 min.)
+      outil: "tableau-p", tableauP: tabl, relation: `${h}${NB}h${NB}${mn}${NB}min = ${t}${NB}min`, relationCorr: `${h}${NB}h = ${h * 60}${NB}min`, image: [], correction: [ligne], ligneQ9: ligne, vertQ9: mesQ9(vraie, "km"),
+      sorteQ9: "piege", modeleQ9: `piege:${km}`, donnees: {type: "q9-piege", km, h, mn}, cle: `Q9:piege:${km}:${h}:${mn}`
+    });
+  }
+
+  // « Quel calcul ? » : un vrai nombre de brevet, l'élève choisit le
+  // calcul (le bon, l'inverse, la mauvaise opération ou la conversion
+  // oubliée). [modèle, énoncé, consigne, bon, faux 1, pourquoi 1, faux 2,
+  // pourquoi 2, le tableau (noms, ligne 1, ligne 2, flèche)].
+  const CALCULS_Q9 = [
+    ["bassin", "Il manque 112 m³ d'eau au bassin. Le tuyau donne 4 m³ par heure.", "Quel calcul donne la durée ?",
+      "112 ÷ 4", "112 × 4", "Le nombre doit rapetisser.", "4 ÷ 112", "Combien de fois 4 m³ ?",
+      [["Volume", "Durée"], ["4 m³", "112 m³"], ["1 h", null]]],
+    ["granules", "Un silo : 16 m³ de granulés de bois. 1 m³ de granulés pèse 750 kg.", "Quel calcul donne la masse ?",
+      "16 × 750", "750 ÷ 16", "16 m³, c'est 16 fois 1 m³.", "16 ÷ 750", "Le nombre doit grandir.",
+      [["Volume", "Masse"], ["1 m³", "16 m³"], ["750 kg", null]]],
+    ["seine", "La Seine débite 328 m³ par seconde.", "Quel calcul pour 3 min, en m³ ?",
+      "328 × 180", "328 × 3", "3 min, c'est 180 s.", "328 ÷ 180", "Le nombre doit grandir.",
+      [["Durée", "Volume"], ["1 s", "180 s"], ["328 m³", null]]],
+    ["voiture", "Une voiture parcourt 150 km en 1 h 30 min.", "Quel calcul donne les km/h ?",
+      "150 ÷ 1,5", "150 ÷ 1,3", "30 min, c'est 0,5 h.", "150 × 1,5", "Le nombre doit rapetisser.",
+      [["Durée", "Distance"], ["90 min", "60 min"], ["150 km", null]]],
+    ["essence", "Une voiture consomme 6,5 L aux 100 km.", "Quel calcul pour 340 km ?",
+      "6,5 × 3,4", "6,5 × 340", "340 km, c'est 3,4 fois 100 km.", "340 ÷ 6,5", "On cherche des litres.",
+      [["Distance", "Essence"], ["100 km", "340 km"], ["6,5 L", null]]]
+  ];
+  // (Une ligne de calcul ne se coupe pas : « 112 ÷ 4 ».)
+  const tyQ9 = s => remplirQ9(s, {a: "", b: ""}).replace(/ ([×÷]) /g, `${NB}$1${NB}`).replace(/(\d) h (?=\d)/, `$1${NB}h${NB}`);
+  function calculQ9(degre, rng) {
+    const [modele, t, consigne, bon, f1, p1, f2, p2, [noms, l1, l2]] = choisir(rng, CALCULS_Q9);
+    const enonce = tyQ9(t);
+    const choix = melanger(rng, [bon, f1, f2].map(tyQ9));
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (c === tyQ9(f1)) pourquoi[k] = tyQ9(p1); else if (c === tyQ9(f2)) pourquoi[k] = tyQ9(p2); });
+    const consigneT = tyQ9(consigne);
+    const juste = tyQ9(bon);
+    return q({
+      code: "Q9", degre, forme: "qcm", texte: `${enonce} ${consigneT}`, morceaux: {enonce, consigne: consigneT, serre: true, sorte: "calcul"},
+      choix, bon: choix.indexOf(juste), pourquoi, reponse: juste, reponseTexte: juste, unite: null, resume: juste, grandeur: null,
+      outil: "tableau-p", tableauP: {noms, lignes: [l1.map(tyQ9), l2.map(v => (v ? tyQ9(v) : null))], fleches: [], rep: null},
+      relation: null, image: [], correction: [juste], ligneQ9: juste, vertQ9: juste,
+      sorteQ9: "calcul", modeleQ9: `calcul:${modele}`, donnees: {type: "q9-calcul", modele}, cle: `Q9:calcul:${modele}`
+    });
+  }
+
+  // « Le plus dense ? » (brevet 2025), « Le moins cher au kilo ? » : deux
+  // produits, deux unités ; souvent le piège du plus grand nombre.
+  // [modèle, A, [masse ou prix], [volume ou masse], B, …].
+  const COMPARER_Q9 = {
+    dense: [
+      ["colis", "Le colis A", ["6", "kg"], ["10", "dm³"], "Le colis B", ["40", "kg"], ["0,1", "m³"]],
+      ["colis2", "Le colis A", ["3", "kg"], ["5", "dm³"], "Le colis B", ["500", "kg"], ["1", "m³"]],
+      ["sacs", "Le sac A", ["12", "kg"], ["20", "dm³"], "Le sac B", ["0,8", "t"], ["1", "m³"]]
+    ],
+    cher: [
+      ["fruits", "Les letchis", ["3", "€"], ["500", "g"], "Les mangues", ["5", "€"], ["1", "kg"]],
+      ["riz", "Le riz blanc", ["2", "€"], ["1", "kg"], "Le riz rouge", ["1,5", "€"], ["500", "g"]],
+      ["epices", "Le curcuma", ["4", "€"], ["250", "g"], "Le massalé", ["15", "€"], ["1", "kg"]]
+    ]
+  };
+  // Une mesure dans l'unité de base de sa grandeur (en millièmes).
+  const baseQ9 = (m, u) => (milli(m) * U9[u][0]) / U9[u][1];
+  function comparerQ9(degre, rng, sorte) {
+    const [modele, A, [ma, uma], [va, uva], B, [mb, umb], [vb, uvb]] = choisir(rng, COMPARER_Q9[sorte]);
+    const dense = sorte === "dense";
+    // Pour 1 dm³ (en grammes) ou pour 1 kg (en euros).
+    const ref = dense ? baseQ9(1, "dm³") : baseQ9(1, "kg");
+    const par = (m, um, v, uv) => (baseQ9(m, um) * ref) / baseQ9(v, uv);
+    const pa = par(ma, uma, va, uva);
+    const pb = par(mb, umb, vb, uvb);
+    const egal = dense ? "Aussi dense" : "Même prix";
+    const gagnant = pa === pb ? egal : dense ? (pa > pb ? A : B) : (pa < pb ? A : B);
+    const choix = rng() < 0.5 ? [A, B, egal] : [B, A, egal];
+    const bon = choix.indexOf(gagnant);
+    const m = (v, u) => `${ecrire(milli(v))}${NB}${u}`;
+    const pour = (v, u) => (dense ? `pour ${m(v, u)}` : milli(v) === MILLE && u === "kg" ? "le kilo" : `les ${m(v, u)}`);
+    const enonce = `${A}${NB}: ${m(ma, uma)} ${pour(va, uva)}. ${B}${NB}: ${m(mb, umb)} ${pour(vb, uvb)}.`;
+    const consigne = dense ? `Le plus dense${NB}?` : `Le moins cher au kilo${NB}?`;
+    const val = p => (dense ? mesQ9(p, "g") : mesQ9(p, "€"));
+    const court = t => t.replace(/^(Le|Les) /, "");
+    const ligne = dense ? `Pour 1${NB}dm³${NB}: A ${val(pa)}, B ${val(pb)}` : `Le kilo${NB}: ${court(A)} ${val(pa)}, ${court(B)} ${val(pb)}`;
+    const pourquoi = {};
+    choix.forEach((c, k) => { if (k !== bon) pourquoi[k] = dense ? `Compare pour 1${NB}dm³.` : `Compare le prix de 1${NB}kg.`; });
+    // L'outil : le premier produit qui n'est pas déjà pour 1 dm³ ou 1 kg,
+    // ramené à 1 dm³ ou 1 kg.
+    const [m0, um0, v0, uv0] = baseQ9(va, uva) === ref ? [mb, umb, vb, uvb] : [ma, uma, va, uva];
+    const unC = dense ? "dm³" : "g";
+    const vc = convQ9(milli(v0), uv0, unC);
+    const refC = convQ9(MILLE, dense ? "dm³" : "kg", unC);
+    if (vc === null || (vc > refC ? vc % refC : refC % vc) !== 0n) return null;
+    const fl = vc > refC ? `÷${NB}${ecrire((vc / refC) * MILLE)}` : `×${NB}${ecrire((refC / vc) * MILLE)}`;
+    const tabl = {noms: [dense ? "Volume" : "Masse", dense ? "Masse" : "Prix"], lignes: [[mesQ9(vc, unC), mesQ9(refC, unC)], [m(m0, um0), null]], fleches: [fl], rep: null};
+    return q({
+      code: "Q9", degre, forme: "qcm", texte: `${enonce} ${consigne}`, morceaux: {enonce, consigne, serre: true, sorte},
+      choix, bon, pourquoi, reponse: gagnant, reponseTexte: gagnant, unite: null, resume: ligne, resumeVert: ligne, grandeur: null,
+      outil: "tableau-p", tableauP: tabl, relation: dense ? `1${NB}m³ = 1${FINE}000${NB}dm³` : `1${NB}kg = 1${FINE}000${NB}g`,
+      image: [], correction: [ligne], ligneQ9: ligne, vertQ9: null,
+      sorteQ9: sorte, modeleQ9: `${sorte}:${modele}`, donnees: {type: `q9-${sorte}`, a: [ma, uma, va, uva], b: [mb, umb, vb, uvb]}, cle: `Q9:${sorte}:${modele}`
+    });
+  }
+  // « Trois fois plus rapide » (évaluations nationales de 4e).
+  // (Lot B6-3c : jamais « 3 fois plus vite pendant 20 min » : la réponse
+  // était toujours la vitesse de l'énoncé, il suffisait de la recopier.)
+  const FOIS_Q9 = [[4, 3, 15], [4, 3, 30], [6, 3, 30], [6, 2, 15], [6, 2, 20], [4, 2, 15]];
+  function foisQ9(degre, rng) {
+    const [v, k, mn] = choisir(rng, FOIS_Q9);
+    const [P, P2] = melanger(rng, PRENOMS);
+    const mot = k === 3 ? "trois fois" : "deux fois";
+    const vk = milli(v * k);
+    const enonce = `${P} marche à ${v}${NB}km/h. ${P2} roule ${mot} plus vite. Distance en ${mn}${NB}min${NB}?`;
+    const oubli = (milli(v) * BigInt(mn)) % 60n === 0n ? (milli(v) * BigInt(mn)) / 60n : null;
+    const x = finirQ9({sorte: "fois", degre, modele: `fois:${v}:${k}`, enonce, avant: `${P2}${NB}:`, apres: "km",
+      taux: [[vk, "km"], [1, "h"]], x: [mn, "min"], cherche: "km", relation: `1${NB}h = 60${NB}min`,
+      fautes: oubli ? [[oubli, `${P2} va ${mot} plus vite.`]] : []});
+    return x;
+  }
+
+  function tirerQ9Brut(rng, degre, sorte) {
+    if (sorte === "graphe") return grapheQ9(degre, rng);
+    if (sorte === "piege") return piegeQ9(degre, rng);
+    if (sorte === "calcul") return calculQ9(degre, rng);
+    if (sorte === "dense" || sorte === "cher") return comparerQ9(degre, rng, sorte);
+    if (sorte === "fois") return foisQ9(degre, rng);
+    if (SITUATIONS_Q9[sorte]) return situationQ9(degre, rng, sorte);
+    return null;
+  }
+  const SORTES_Q9 = {
+    1: ["debit", "duree", "vitesse", "vmoy", "mv", "prix", "conso", "pouce"],
+    2: ["debit", "duree", "cascade", "vitesse", "vmoy", "temps", "mv", "prix", "conso", "pouce", "graphe", "piege", "fois", "dense", "cher", "calcul"],
+    3: ["debit", "duree", "cascade", "riviere", "vitesse", "vmoy", "temps", "mv", "prix", "conso", "pouce", "graphe", "piege", "dense", "calcul"]
+  };
+  const PLACES_Q9 = {
+    valide: ["debit", "vitesse", "mv", "duree", "prix|conso", "graphe|cascade", "vmoy|temps", "pouce|mv", "piege|dense|cher|calcul", "riviere|cascade|temps"],
+    entraine: ["debit", "vitesse", "mv", "prix", "vmoy", "duree",
+      "cascade", "graphe", "temps", "conso", "dense", "pouce", "calcul", "fois", "cher",
+      "riviere", "vmoy", "mv", "piege", "debit", "graphe", "temps", "calcul", "pouce", "duree"],
+    test: ["debit|vitesse", "mv|prix", "riviere|cascade|temps", "vmoy|duree"],
+    aide: ["debit", "vitesse", "mv"],
+    retour: ["debit|vitesse|mv|prix", "cascade|temps|vmoy|duree"],
+    echauffement: ["debit|vitesse|mv"]
+  };
+  function tirerQ9(rng, degre, forme) {
+    const sorte = forme || choisir(rng, SORTES_Q9[degre]);
+    for (let essai = 0; essai < 40; essai += 1) {
+      const x = tirerQ9Brut(rng, degre, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+  // Les erreurs de Q9 au pavé : celles que la question a prévues.
+  function erreursQ9(question, lu) {
+    const f = (question.fautesQ9 || []).find(([v]) => milli(v) === lu);
+    return f ? {erreur: 1, retour: f[1]} : null;
+  }
+
+  ETAPES.Q9 = {
+    // On te montre : le tuyau d'arrosage (15 L par minute, en 1 h), le bus
+    // de Clotilde (S097 : 9 km/h, en 20 min), le bassin (3 m³ à 50 L par
+    // minute).
+    clesExemples: ["Q9:tuyau:1h:15L/1min>L", "Q9:bus:20min:9km/1h>km", "Q9:bassin:3m³:50L/1min>min"],
+    tirer(rng, degre, i, usage, forme) {
+      return tirerQ9(rng, degre, forme);
+    },
+    formes(usage, rng) {
+      const p = PLACES_Q9[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans une série : un même modèle une fois.)
+    accepte(serie, question) {
+      return !serie.some(x => x.modeleQ9 === question.modeleQ9);
+    },
+    erreurs(question, lu) { return erreursQ9(question, lu); }
+  };
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {

@@ -426,6 +426,7 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
   .cadre.serre { gap: .375rem; }
   /* La relation de l'outil monte à côté de l'étiquette. */
   .zone > .rel.petite:not(.libre):first-of-type { position: absolute; top: .25rem; right: .5rem; padding: .125rem .5rem; font-size: .875rem; }
+  .zone > .rel.petite.serree:not(.libre):first-of-type { font-size: .8125rem; padding: .125rem .375rem; }
   .gu2 { --pp: 1.25rem; --pointe: .3125rem; }
   .gu2-tete button { min-height: 1.5rem; font-size: .8125rem; }
   .gu2-chiffres span { height: 2.25rem; font-size: 1.5rem; }
@@ -567,6 +568,42 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
 .q .horaire td { font-weight: 900; padding: .125rem .25rem; border: .0625rem solid #b9cbd8; background: #fff; white-space: nowrap; }
 .dessin-boite .somme .touche { color: #8ea1af; font-size: .8125rem; font-weight: 700; }
 .note.reste { font-size: 1rem; color: var(--ink); font-weight: 900; }
+/* Lot B6-3 (Q9, choix de Gwenaël du 21/11) : le tableau de
+   proportionnalité (S097 p. 40), en grille : une colonne de noms, deux ou
+   trois colonnes de cases ; les arcs « × 60 » au-dessus et au-dessous, de
+   case à case. (Pas de classe « bas » ni « haut » : la page les a déjà.) */
+.tab-prop { display: grid; grid-template-columns: auto repeat(2, max-content); align-items: center; justify-content: center; font-weight: 900; font-size: 1.0625rem; margin: 0 auto; --tp-min: 4.25em; }
+.tab-prop.trois { grid-template-columns: auto repeat(3, max-content); font-size: 1rem; --tp-min: 3.875em; }
+.tab-prop.trois .tp-c { padding-left: .3125rem; padding-right: .3125rem; }
+.tab-prop.trois .tp-nom { padding-left: .25rem; padding-right: .375rem; }
+/* (Lot B6-3c : une colonne n'est jamais plus étroite que son texte ;
+   « 200 min » se coupait avec une police large. Trop large pour sa zone,
+   le tableau rapetisse ses textes, jusqu'à 80 %.) */
+.tab-prop .tp-c { min-width: var(--tp-min); }
+/* (Les noms suivent la taille du tableau, 14 px au moins : WebKit
+   rapetisse l'outil de 3 points de plus que Chromium.) */
+.tab-prop .tp-nom { font-size: max(14px, .94em); color: var(--muted); padding: .25rem .5rem; text-align: right; white-space: nowrap; }
+.tab-prop .tp-c { border: .125rem solid #9fb6c7; background: #fff; text-align: center; padding: .125rem .5rem; white-space: nowrap; margin: -.0625rem 0 0 -.0625rem; min-height: 1.75rem; line-height: 1.375rem; }
+.tab-prop .tp-c.trou { color: #a93030; background: #fffafa; }
+.tab-prop .tp-c.bleu { color: var(--blue); }
+.tab-prop .tp-c.vert { color: var(--green); background: var(--green-soft); border-color: var(--green); position: relative; z-index: 1; }
+.tab-prop .tp-c.a-toucher { outline: .1875rem dashed var(--blue); outline-offset: -.3125rem; cursor: pointer; }
+/* (Lot B6-3c : les arcs dessinés d'après la place des cases — le
+   « × 60 » au-dessus du trait, la pointe au bout de la courbe.) */
+.tab-prop { position: relative; }
+.tab-prop .tp-arc { position: relative; height: max(1.5em, 1.5625rem); color: var(--blue); }
+.tab-prop .tp-trace { position: absolute; left: 0; top: 0; overflow: visible; }
+.tab-prop .tp-trace .tp-courbe { stroke: currentColor; }
+.tab-prop .tp-trace .tp-pointe { fill: currentColor; }
+.tab-prop .tp-trace .tp-fois { fill: currentColor; font-weight: 900; }
+/* (On te montre : l'arc pas encore touché, en pointillés pâles.) */
+.tab-prop .tp-arc.cache { opacity: .3; cursor: pointer; }
+.tab-prop .tp-arc.cache .tp-courbe { stroke-dasharray: 4 3; }
+.tab-prop .tp-arc.cache .tp-fois { visibility: hidden; }
+/* Le graphique du bus (S097 p. 41) : le dessin à gauche, la case à
+   droite ; ses textes à 13 px au moins au téléphone. */
+.q .pb-fig .dessin.graphe-q { height: 5.875rem; max-width: 63%; }
+.q .pb-fig .graphe-q + .l1 .case { width: 3.5rem; }
 table.tab-hm { border-collapse: collapse; font-weight: 900; font-size: 1.25rem; }
 table.tab-hm th { font-size: .9375rem; color: var(--muted); padding: .25rem .625rem; text-align: right; border: 0; }
 table.tab-hm td { border: .125rem solid #9fb6c7; background: #fff; text-align: center; min-width: 3.75rem; padding: .25rem .5rem; }

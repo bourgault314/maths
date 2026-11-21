@@ -202,7 +202,7 @@ const INTERDITS = [/\d\.\d/, /e[+-]\d/, /000000/, /NaN|undefined|null|\[object/,
 const PERSONNE = /\b(il|elle|ils|elles)\b/gi;
 // (Lot 3b-3 : « Quelle heure est-il ? », « Il est huit heures » : l'heure,
 // pas une personne.)
-const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il y a|y a-t-il|faut-il|heure est-il|il est (?:midi|[a-zé]+ heures?))/gi;
+const IMPERSONNEL = /(il en faut|il reste|reste-t-il|il faut|il manque|il y a|y a-t-il|faut-il|heure est-il|il est (?:midi|[a-zé]+ heures?))/gi;
 // La même chose qu'assert.doesNotMatch, mais le message n'est écrit que si la règle
 // casse (lot « vérifications plus rapides », 21/11/2026 : l'écrire d'avance, pour
 // chaque texte de chaque graine, prenait le septième du banc d'essai). Les motifs
@@ -869,7 +869,7 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       C3: ["nombre", "phrase", "qcm"], C4: ["nombre", "phrase", "qcm"], C5: ["nombre", "phrase", "deux-cases", "qcm", "plusieurs"],
       C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
       Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"],
-      P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"]}[code];
+      P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -2131,4 +2131,88 @@ test("lot B6-2 : P5 et P6 — recalculés à part, les places, les pourquoi, les
   assert.deepEqual([...vus.P6].sort(), ["comparer", "ecriture", "grand", "mantisse", "prefixe", "puiss", "volume"]);
   // La typographie : « 3 × 10⁻⁶ L » ne se coupe pas.
   assert.equal(CARTE.typo("3 µL = 3 × 10⁻⁶ L"), "3 µL = 3 × 10⁻⁶ L");
+});
+
+// Lot B6-3 : Q9, les problèmes de vitesses, débits et masses volumiques.
+// La réponse recalculée à part depuis les données (taux, quantité, unité
+// cherchée) ; les fautes prévues refusées avec un pourquoi d'une ligne ; la
+// ligne de correction contient la réponse ; l'aide (l'étiquette de l'outil,
+// de l'image et de la correction) ne la donne pas ; toutes les sortes ; « de »
+// devant une voyelle ; aucun « il » ni « elle » ; les places de Je valide.
+test("lot B6-3 : Q9 — recalculé à part, les fautes, les aides, les places, l'écriture", () => {
+  const sp = t => String(t).replace(/[\u00a0\u202f\u2009]/g, " ");
+  const num = t => parseFloat(sp(t).replace(/ /g, "").replace(",", "."));
+  const F = {s: 1, min: 60, h: 3600, mL: 1, cL: 10, L: 1000, "cm³": 1, "dm³": 1000, "m³": 1e6, g: 1, kg: 1000, t: 1e6, mm: 1, cm: 10, m: 1000, km: 1e6, pouce: 25.4, mille: 1852000, "€": 1};
+  const GR = {s: "d", min: "d", h: "d", mL: "v", cL: "v", L: "v", "cm³": "v", "dm³": "v", "m³": "v", g: "m", kg: "m", t: "m", mm: "l", cm: "l", m: "l", km: "l", pouce: "l", mille: "l", "€": "p"};
+  const sortes = {};
+  const N = Math.min(GRAINES, 600);
+  for (let g = 1; g <= N; g += 1) for (const usage of ["valide", "entraine", "test", "aide", "retour", "echauffement"]) {
+    const s = G.serie("Q9", {usage, graine: g});
+    const ou0 = `Q9 ${usage} ${g}`;
+    assert.ok(s.length > 0, `${ou0} : série vide`);
+    const modeles = s.map(q => q.modeleQ9);
+    assert.equal(new Set(modeles).size, modeles.length, `${ou0} : un même modèle deux fois`);
+    if (usage === "valide") assert.deepEqual(s.slice(0, 4).map(q => q.sorteQ9), ["debit", "vitesse", "mv", "duree"], `${ou0} : places`);
+    s.forEach(q => {
+      const ou = `${ou0} « ${sp(q.texte)} »`;
+      sortes[q.sorteQ9] = (sortes[q.sorteQ9] || 0) + 1;
+      const d = q.donnees;
+      [q.texte, q.ligneQ9, q.relation || "", q.relationCorr || "", q.relationOutil || "", ...(q.choix || []), ...Object.values(q.pourquoi || {})].forEach(t => { ecriture(t, ou); milliers(t, ou); });
+      // « Le bus d'Inès », pas « de Inès » (des prénoms tirés au hasard).
+      assert.doesNotMatch(q.texte, /\b(de|que) [AEIOUYÉÈÊÂÎÔ]/, `${ou} : « de » ou « que » devant une voyelle`);
+      assert.ok(q.tableauP && q.outil === "tableau-p", `${ou} : sans tableau`);
+      if (d.type === "q9") {
+        const [[nv, nu], [dv, du]] = d.taux;
+        const [xv, xu] = d.x;
+        const taux = num(nv) * F[nu] / (num(dv) * F[du]);
+        const rep = GR[xu] === GR[du] ? num(xv) * F[xu] * taux / F[d.cherche] : num(xv) * F[xu] / taux / F[d.cherche];
+        assert.ok(Math.abs(rep - num(q.reponse)) < 1e-9, `${ou} : ${q.reponse} au lieu de ${rep}`);
+        assert.ok(G.verifier(q, q.reponse).juste, `${ou} : la bonne réponse refusée`);
+        assert.ok(sp(q.ligneQ9).includes(sp(q.vertQ9)), `${ou} : la ligne sans la réponse`);
+        assert.ok(sp(q.ligneQ9).endsWith(sp(q.reponseTexte)) || sp(q.ligneQ9).includes(`${sp(q.reponseTexte).replace(/ km\/h$/, " km")} en 1 h`), `${ou} : la ligne finit par « ${q.ligneQ9} »`);
+        // L'aide ne donne pas la réponse.
+        [q.relation, q.relationCorr, q.relationOutil].filter(Boolean).forEach(r => assert.ok(!sp(r).split(/ = | · /).includes(sp(q.reponseTexte)), `${ou} : « ${r} » donne la réponse`));
+        assert.ok(!q.tableauP.lignes.flat().filter(Boolean).map(sp).includes(sp(q.reponseTexte)), `${ou} : le tableau donne la réponse`);
+        // Les fautes prévues : refusées, un pourquoi d'une ligne.
+        (q.fautesQ9 || []).forEach(([v, t]) => {
+          const r = G.verifier(q, v);
+          assert.ok(!r.juste && r.retour, `${ou} : la faute ${v} sans pourquoi`);
+          assert.ok(sp(r.retour).length <= 31, `${ou} : pourquoi trop long « ${r.retour} »`);
+          ecriture(r.retour, ou);
+        });
+        // L'étiquette de la correction et de l'outil : une seule conversion.
+        [q.relationCorr, q.relationOutil].filter(Boolean).forEach(r => assert.ok(!r.includes("·") || q.relationCorr === q.relation, `${ou} : deux conversions dans « ${r} »`));
+        if (q.sorteQ9 === "fois") assert.notEqual(num(q.reponse), num(sp(q.texte).match(/à (\d+) km\/h/)[1]), `${ou} : la réponse est la vitesse de l'énoncé`);
+        if (q.morceaux.figure) {
+          const f = q.morceaux.figure;
+          assert.deepEqual(f.point, [num(dv), num(nv)], `${ou} : le point du graphique`);
+          f.croix.forEach(([a, b]) => assert.ok(a <= f.xMax && b <= f.yMax, `${ou} : une croix hors du graphique`));
+        }
+      } else {
+        assert.equal(q.forme, "qcm", ou);
+        assert.equal(q.choix.length, 3, ou);
+        assert.equal(new Set(q.choix).size, 3, `${ou} : deux choix pareils`);
+        q.choix.forEach((c, k) => { if (k !== q.bon) assert.ok(q.pourquoi[k] && sp(q.pourquoi[k]).length <= 31, `${ou} : pourquoi « ${q.pourquoi[k]} »`); });
+        if (d.type === "q9-piege") {
+          assert.equal(num(q.choix[q.bon]), d.km * 60 / (d.h * 60 + d.mn), ou);
+          assert.ok(q.choix.some(c => num(c) === d.km / Number(`${d.h}.${d.mn}`)), `${ou} : le piège ${d.h},${d.mn} h manque`);
+          assert.ok(!sp(q.relationCorr).includes(sp(q.choix[q.bon])), ou);
+        }
+        if (d.type === "q9-dense" || d.type === "q9-cher") {
+          const base = (m, u) => num(m) * F[u];
+          const pa = base(d.a[0], d.a[1]) / base(d.a[2], d.a[3]);
+          const pb = base(d.b[0], d.b[1]) / base(d.b[2], d.b[3]);
+          const egal = d.type === "q9-dense" ? "Aussi dense" : "Même prix";
+          const gagnant = Math.abs(pa - pb) < 1e-12 ? egal : (d.type === "q9-dense") === (pa > pb) ? 0 : 1;
+          const nom = gagnant === egal ? egal : sp(q.texte).split(" : ")[gagnant === 0 ? 0 : 1].replace(/^.*\. /, "");
+          assert.equal(sp(q.choix[q.bon]), nom, ou);
+        }
+        if (d.type === "q9-calcul") assert.ok(/[×÷]/.test(q.choix[q.bon]), ou);
+      }
+    });
+  }
+  ["debit", "duree", "cascade", "riviere", "vitesse", "vmoy", "temps", "mv", "prix", "conso", "pouce", "graphe", "piege", "fois", "dense", "cher", "calcul"]
+    .forEach(k => assert.ok(sortes[k] > 100, `Q9 : ${k} ${sortes[k] || 0}`));
+  // La typographie : les unités composées ne se coupent pas.
+  assert.equal(CARTE.typo("8 L par minute, 50 pouces, 2 milles"), "8\u00a0L par minute, 50\u00a0pouces, 2\u00a0milles");
 });
