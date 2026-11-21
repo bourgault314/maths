@@ -167,7 +167,7 @@ test("étoile et couronne : rien ne change — une erreur compte, la question su
 });
 
 test("la page : la course pose « no-skip » (plus de Passer) ; le compte des essais repart à chaque question", () => {
-  assert.match(source("renderLearnSequence"), /\$\("question-card"\)\.classList\.toggle\("no-skip", visible \|\| state\.configuration\?\.course === "records"\);/);
+  assert.match(source("renderLearnSequence"), /\$\("question-card"\)\.classList\.toggle\("no-skip", visible \|\| state\.configuration\?\.course === "records"( \|\| Boolean\(state\.configuration\?\.mesCalculs\))?\);/);
   assert.match(source("renderQuestion"), /const question = state\.questions\[state\.index\];\s*state\.essaisCourse = 0;/);
   assert.match(html, /\.question\.no-skip #skip \{ display: none; \}/);
 });

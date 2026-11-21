@@ -6550,7 +6550,14 @@
         const stickOnly = visible && ["construct", "gaps"].includes(state.configuration.learnActivity);
         // Lot « les règles des records » (11/10/2026) : pas de « Passer » dans
         // la course — la question reste jusqu'à la bonne réponse.
-        $("question-card").classList.toggle("no-skip", visible || state.configuration?.course === "records");
+        // Lot « Mes calculs du jour sans Passer » (21/11/2026, décision de
+        // Gwenaël) : pas de « Passer » non plus dans Mes calculs du jour — des
+        // tables déjà passées, sans chrono : l'élève a le temps de chercher ;
+        // s'il ne trouve pas, sa réponse est une erreur, il voit la correction
+        // et le calcul revient demain (comme un « Passer », qui ne servait
+        // qu'à sauter la série). Les entraînements, le test, Mon mélange, les
+        // étoiles et les évaluations gardent « Passer ».
+        $("question-card").classList.toggle("no-skip", visible || state.configuration?.course === "records" || Boolean(state.configuration?.mesCalculs));
         $("question-card").classList.toggle("stick-main", stickOnly);
         $("question-card").classList.toggle("stick-trace", visible && !stickOnly && !perles);
         $("question-card").classList.toggle("perles-main", perles);
