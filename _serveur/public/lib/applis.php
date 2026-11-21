@@ -720,9 +720,21 @@ function avant_de_classe_recu(mixed $recu): array
         throw new InvalidArgumentException("État d'avant illisible.");
     }
     foreach (array_keys($recu) as $cle) {
-        if (!in_array($cle, ['applis', 'reglages', 'jour'], true)) throw new InvalidArgumentException("État d'avant illisible.");
+        if (!in_array($cle, ['applis', 'reglages', 'jour', 'portes'], true)) throw new InvalidArgumentException("État d'avant illisible.");
     }
     $sortie = [];
+    // Lot B3 : les portes que la carte « Aujourd'hui » proposait (celles de la
+    // classe et celles de quelques élèves), pour reconnaître une page en
+    // retard — une liste de clés, sans ordre ; voir portes_perimees().
+    if (array_key_exists('portes', $recu)) {
+        if (!is_array($recu['portes']) || !array_is_list($recu['portes']) || count($recu['portes']) > count(CATALOGUE_APPLIS)) {
+            throw new InvalidArgumentException("État d'avant illisible.");
+        }
+        foreach ($recu['portes'] as $cle) {
+            if (!is_string($cle)) throw new InvalidArgumentException("État d'avant illisible.");
+        }
+        $sortie['portes'] = array_values(array_unique($recu['portes']));
+    }
     // Lot B2 « Ta liste dans Ma classe » : la liste du jour telle que la page
     // l'a reçue de « tableau » (jour_lu) — une liste de clés, comparée telle
     // quelle (l'ordre compte : c'est un ordre).
@@ -779,8 +791,10 @@ function reglage_canonique(array $reglage): array
 // La page croit-elle encore ce que la ligne contient ? Comparé sous le
 // verrou de la ligne (classes.modifier), seulement sur ce que « avant »
 // nomme : la liste des applis si elle est donnée, et, appli par appli, les
-// réglages donnés — ceux des autres applis ne comptent pas.
-function meme_etat_de_classe(array $avant, array $ligne): bool
+// réglages donnés — ceux des autres applis ne comptent pas. $enPlus : les
+// portes que quelques élèves ont en plus (portes_en_plus, lot B3) — la liste
+// du jour se compare telle que la classe la voit.
+function meme_etat_de_classe(array $avant, array $ligne, array $enPlus): bool
 {
     if (array_key_exists('applis', $avant)) {
         if ($avant['applis'] !== applis_canoniques(explode(',', (string)($ligne['applis'] ?? '')))) return false;
@@ -792,7 +806,7 @@ function meme_etat_de_classe(array $avant, array $ligne): bool
         }
     }
     if (array_key_exists('jour', $avant)) {
-        if ($avant['jour'] !== jour_de_classe($ligne)) return false;
+        if ($avant['jour'] !== jour_de_classe($ligne, $enPlus)) return false;
     }
     return true;
 }
@@ -818,22 +832,113 @@ function meme_etat_de_classe(array $avant, array $ligne): bool
 // et reglages_recus repart de là. Toute réécriture de la colonne (régler les
 // mondes de SPLAT!…) doit donc REMETTRE la liste — classes.modifier le fait
 // sous le verrou, depuis la ligne relue (reglages_pour_la_base).
+//
+// Lot B3 « Aujourd'hui : Aucun, et les portes de quelques élèves » (21/11/2026,
+// décisions de Gwenaël après son groupe mixte 4e/3e, où chaque élève a SES
+// chapitres) :
+//
+//  1. « Aucun » — pas de bloc « Aujourd'hui » pour la classe. Rangé comme une
+//     liste d'une seule clé RÉSERVÉE : {"jour": ["@aucun"]}. La liste garde
+//     ainsi partout la même forme (trois chaînes au plus) : « avant », le 409,
+//     tableau, la réponse à l'élève, la copie de l'onglet. « @aucun » n'est pas
+//     une appli et ne peut pas le devenir (un test : aucune clé du catalogue ne
+//     commence par « @ ») ; seule, elle est acceptée ; mêlée à autre chose, 400.
+//
+//  2. Les PORTES POSSIBLES d'une classe = celles de la classe, plus celles
+//     qu'au moins un de ses élèves a en plus (eleves.ajouts). Mes cours est une
+//     porte quand un chapitre est ouvert à la classe, ou à un élève en plus
+//     (portes_du_jour). L'élève, lui, ne reçoit que SES portes
+//     (jour_de_l_eleve) : il saute les autres étapes, sans apprendre ce que
+//     les autres ont ; s'il ne lui en reste aucune, sa liste est vide et il a
+//     le mode automatique.
+//
+//  3. PAS DE RÉÉCRITURE CROISÉE (voulu) : quand eleves.acces retire une porte
+//     au dernier élève qui l'avait, la ligne de la classe n'est pas réécrite —
+//     pas de second verrou, pas d'interblocage. L'étape disparaît à la LECTURE
+//     (plus personne ne l'a) et revient si la porte est redonnée à un élève…
+//     tant que la classe n'a pas été réécrite entre-temps : toute écriture de
+//     classes.modifier range la liste telle qu'elle se voit à ce moment-là
+//     (correctif B2, point 2).
 
 const JOUR_MAX = 3;
+const JOUR_AUCUN = '@aucun';
+
+function jour_sans_bloc(array $jour): bool
+{
+    return $jour === [JOUR_AUCUN];
+}
+
+// Les portes possibles d'une classe pour la liste du jour, dans l'ordre du
+// catalogue. $applis : les clés des applis de la classe ; $reglages : ses
+// réglages (reglages_lus) ; $enPlus : les clés que des élèves ont en plus.
+function portes_du_jour(array $applis, array $reglages, array $enPlus): array
+{
+    $applis = array_map('trim', $applis);
+    $chapitres = $reglages['cours']['chapitres'] ?? [];
+    $portes = [];
+    foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
+        if (!appli_ouverte($cle)) continue;
+        $parClasse = in_array($cle, $applis, true) && ($cle !== 'cours' || $chapitres !== []);
+        if ($parClasse || in_array($cle, $enPlus, true)) $portes[] = $cle;
+    }
+    return $portes;
+}
+
+// Les mêmes, par la ligne de la classe (SELECT * : la colonne peut manquer).
+function portes_de_classe(array $classe, array $enPlus): array
+{
+    return portes_du_jour(explode(',', (string)($classe['applis'] ?? '')), reglages_de_classe($classe), $enPlus);
+}
+
+// Les clés que les élèves d'une classe ont EN PLUS, à partir de leurs colonnes
+// eleves.ajouts (lues par ajouts_lus : une appli fermée, un ajout abîmé ne
+// comptent pas ; un ajout « cours » a toujours au moins un chapitre).
+function portes_des_ajouts(array $colonnes): array
+{
+    $cles = [];
+    foreach ($colonnes as $json) {
+        if ($json === null || $json === '') continue;
+        foreach (array_keys(ajouts_lus((string)$json)) as $cle) $cles[$cle] = true;
+    }
+    return array_keys($cles);
+}
+
+// Lues en base. Une lecture simple, SANS verrou sur les lignes des élèves :
+// dans classes.modifier elle se fait sous le verrou de la classe, et
+// eleves.acces ne verrouille que l'élève — aucun ordre de verrous à tenir.
+function portes_en_plus(PDO $pdo, int $classeId): array
+{
+    if (!ajouts_disponibles($pdo)) return [];
+    $requete = $pdo->prepare('SELECT ajouts FROM eleves WHERE classe_id = ? AND ajouts IS NOT NULL');
+    $requete->execute([$classeId]);
+    $colonnes = $requete->fetchAll(PDO::FETCH_COLUMN);
+    $requete->closeCursor();
+    return portes_des_ajouts($colonnes);
+}
+
+// Les portes d'UN élève, à partir de ce qu'il voit (acces_de_l_eleve) : ses
+// applis ; Mes cours seulement s'il a un chapitre.
+function portes_de_l_eleve(array $acces): array
+{
+    $chapitres = $acces['reglages']['cours']['chapitres'] ?? [];
+    return array_values(array_filter($acces['applis'] ?? [], fn($cle) => $cle !== 'cours' || $chapitres !== []));
+}
 
 // Lecture INDULGENTE (ce qui sort de la base) : des clés d'applis ouvertes au
-// catalogue ET à la classe, sans doublon, trois au plus ; Mes cours seulement
-// en dernier. Une porte fermée depuis à la classe sort de la liste ici.
-function jour_lu(?string $json, array $applisClasse): array
+// catalogue ET parmi $portes, sans doublon, trois au plus ; Mes cours seulement
+// en dernier. Une porte que plus personne n'a sort de la liste ici. « Aucun »
+// (exactement ["@aucun"]) passe tel quel.
+function jour_lu(?string $json, array $portes): array
 {
     if ($json === null || $json === '') return [];
     $brut = json_decode($json, true);
     if (!is_array($brut) || !isset($brut['jour']) || !is_array($brut['jour']) || !array_is_list($brut['jour'])) return [];
-    $applisClasse = array_map('trim', $applisClasse);
+    if (jour_sans_bloc($brut['jour'])) return [JOUR_AUCUN];
+    $portes = array_map('trim', $portes);
     $liste = [];
     foreach ($brut['jour'] as $cle) {
         if (count($liste) >= JOUR_MAX) break;
-        if (!is_string($cle) || !appli_ouverte($cle) || !in_array($cle, $applisClasse, true) || in_array($cle, $liste, true)) continue;
+        if (!is_string($cle) || !appli_ouverte($cle) || !in_array($cle, $portes, true) || in_array($cle, $liste, true)) continue;
         $liste[] = $cle;
     }
     $place = array_search('cours', $liste, true);
@@ -845,32 +950,63 @@ function jour_lu(?string $json, array $applisClasse): array
 }
 
 // La liste du jour d'une classe par sa ligne de la base (SELECT * : la colonne
-// peut manquer tant que migrer.php n'a pas été ouvert).
-function jour_de_classe(array $classe): array
+// peut manquer tant que migrer.php n'a pas été ouvert). $enPlus : les portes
+// que quelques élèves ont en plus (portes_en_plus ou portes_des_ajouts) —
+// demandé à chaque appel : l'oublier ferait sortir leurs étapes en silence.
+function jour_de_classe(array $classe, array $enPlus): array
 {
-    return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null,
-        explode(',', (string)($classe['applis'] ?? '')));
+    return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null, portes_de_classe($classe, $enPlus));
+}
+
+// Ce que reçoit UN élève : la liste de sa classe réduite à SES portes
+// ($acces : acces_de_l_eleve). Il n'apprend rien des portes des autres : une
+// étape qu'il n'a pas n'est pas dans sa réponse. « Aucun » passe tel quel.
+function jour_de_l_eleve(array $classe, array $acces): array
+{
+    return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null, portes_de_l_eleve($acces));
 }
 
 // Ce que le professeur envoie (classes.modifier) : lecture STRICTE, rien n'est
-// arrangé en silence. $applisClasse : les applis que la classe aura APRÈS
-// l'écriture ; null = la forme seulement (avant le verrou : les portes de la
-// classe se vérifient sous le verrou, après « avant »).
-function jour_recu(mixed $recu, ?array $applisClasse): array
+// arrangé en silence. $portes : les portes possibles de la classe APRÈS
+// l'écriture ; null = la forme seulement (avant le verrou : les portes se
+// vérifient sous le verrou, après « avant »). « Aucun » : ["@aucun"], seule.
+function jour_recu(mixed $recu, ?array $portes): array
 {
     if (!is_array($recu) || !array_is_list($recu)) throw new InvalidArgumentException("Liste du jour illisible.");
     if (count($recu) > JOUR_MAX) throw new InvalidArgumentException("Trois étapes au plus.");
-    $applisClasse = $applisClasse === null ? null : array_map('trim', $applisClasse);
+    if (jour_sans_bloc($recu)) return [JOUR_AUCUN];
+    $portes = $portes === null ? null : array_map('trim', $portes);
     $liste = [];
     foreach ($recu as $cle) {
         if (!is_string($cle)) throw new InvalidArgumentException("Liste du jour illisible.");
-        if (!appli_ouverte($cle) || ($applisClasse !== null && !in_array($cle, $applisClasse, true))) throw new InvalidArgumentException("Activité pas ouverte à la classe.");
+        if ($cle === JOUR_AUCUN) throw new InvalidArgumentException("« Aucun » ne se mêle pas à une liste.");
+        if (!appli_ouverte($cle) || ($portes !== null && !in_array($cle, $portes, true))) throw new InvalidArgumentException("Activité pas ouverte à la classe.");
         if (in_array($cle, $liste, true)) throw new InvalidArgumentException("Activité en double.");
         $liste[] = $cle;
     }
     $place = array_search('cours', $liste, true);
     if ($place !== false && $place !== count($liste) - 1) throw new InvalidArgumentException("Mes cours se met en dernier.");
     return $liste;
+}
+
+// Une liste réduite aux portes qui restent (classes.modifier, quand une porte
+// ferme) ; « Aucun » n'est jamais taillé.
+function jour_taille(array $jour, array $portes): array
+{
+    if (jour_sans_bloc($jour)) return $jour;
+    return array_values(array_filter($jour, fn($cle) => in_array($cle, $portes, true)));
+}
+
+// La page était-elle en retard sur les portes ? Les étapes de la liste reçue
+// que la carte croyait possibles (« avant.portes ») et qui ne le sont plus
+// sous le verrou : une porte retirée ailleurs au dernier élève qui l'avait,
+// le dernier chapitre fermé… Non vide = 409 avec l'état vrai, au lieu d'un 400
+// qui se répéterait (comme le point 1 du correctif B2 pour les applis de la
+// classe). Sans « avant.portes » (une page d'avant ce lot), rien n'est périmé.
+function portes_perimees(array $jour, ?array $avant, array $portes): array
+{
+    if ($avant === null || !array_key_exists('portes', $avant) || jour_sans_bloc($jour)) return [];
+    return array_values(array_diff(array_intersect(array_filter($jour, 'is_string'), $avant['portes']), $portes));
 }
 
 // La liste telle qu'elle est RANGÉE (sans rien filtrer) : sert seulement à

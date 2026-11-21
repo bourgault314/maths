@@ -258,7 +258,7 @@ function laCarte(classe, appels = []) {
   const messages = {};
   const etat = {classe, reglageEnCours: false};
   const outils = new Function("document", "$", "messager", "etat", "appelBorne",
-    `let classe = etat.classe; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages";
+    `let classe = etat.classe; let eleves = etat.eleves || []; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages";
      const SANS_VERIFICATION = "…"; function surErreur() {} function poserQuiVoit() {} async function relireBornee() { return false; }
      function poserEtatDeClasse(donnees) { if (donnees && Array.isArray(donnees.jour)) classe.jour = donnees.jour; if (donnees && Array.isArray(donnees.applis)) classe.applis = donnees.applis; }
      ${APPLIS_PROF}
@@ -328,11 +328,11 @@ test("Enregistrer : rien n'est envoyé avant ; puis classes.modifier avec la lis
   assert.equal(appels.length, 0, "rien n'est envoyé avant « Enregistrer »");
   await outils.enregistrerJour();
   assert.deepEqual(appels, [["classes.modifier", {classe_id: 2, jour: ["defi-tables", "splat"],
-    avant: {jour: [], applis: ["defi-tables", "coffres", "splat", "cours"]}}]], "« avant » dit aussi les portes connues (correctif Codex, point 1)");
+    avant: {jour: [], applis: ["defi-tables", "coffres", "splat", "cours"], portes: ["defi-tables", "coffres", "splat", "cours"]}}]], "« avant » dit aussi les portes connues (correctif Codex, point 1) et, depuis le lot B3, celles que la carte propose");
   assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: les élèves de la 405 voient Défi tables, puis SPLAT!`, "ok"]);
   outils.choisirModeDuJour("auto");
   await outils.enregistrerJour();
-  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"], applis: ["defi-tables", "coffres", "splat", "cours"]}}]);
+  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"], applis: ["defi-tables", "coffres", "splat", "cours"], portes: ["defi-tables", "coffres", "splat", "cours"]}}]);
   await outils.enregistrerJour();
   assert.equal(appels.length, 2, "rien n'a changé : rien n'est envoyé");
   assert.deepEqual(messages["message-jour"], ["Aucune modification dans cet onglet.", "info"], "sans affirmer ce que voient les élèves (point 8)");
@@ -378,7 +378,7 @@ test("la carte, côté page : en tête des Réglages, les mots des planches, pro
   const enregistrer = fonctionDe(prof, "enregistrerJour");
   assert.match(enregistrer, /droitClasse !== "proprietaire"/);
   assert.match(enregistrer, /reglageEnCours = true;/, "le même verrou que « Régler … »");
-  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\), applis: applisConnues\}\}\)/);
+  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\), applis: applisConnues, portes: portesProposees\}\}\)/); // (lot B3 : et les portes proposées)
   assert.match(enregistrer, /erreur\.statut === 409[\s\S]*poserEtatDeClasse\(erreur\.donnees\)/, "un 409 : l'état relu");
   assert.match(fonctionDe(prof, "poserEtatDeClasse"), /classe\.jour = donnees\.jour\.filter/);
   assert.match(fonctionDe(prof, "ouvrirReglages"), /poserJourClasse\(false\);/, "un second clic garde le brouillon (point 6)");

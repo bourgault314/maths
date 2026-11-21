@@ -727,6 +727,10 @@ try {
                     if (is_array($corps['avant']) && array_key_exists('jour', $corps['avant']) && !champ_est_liste_json('avant', 'jour')) {
                         throw new InvalidArgumentException("État d'avant illisible.");
                     }
+                    // Lot B3 : de même pour « avant.portes ».
+                    if (is_array($corps['avant']) && array_key_exists('portes', $corps['avant']) && !champ_est_liste_json('avant', 'portes')) {
+                        throw new InvalidArgumentException("État d'avant illisible.");
+                    }
                     $avant = avant_de_classe_recu($corps['avant']);
                 } catch (InvalidArgumentException $e) {
                     erreur("État d'avant illisible : recharge la page et refais ton réglage.", 400);
@@ -743,6 +747,10 @@ try {
             //    dernier) ; les portes de la classe se vérifient sous le verrou,
             //    APRÈS « avant » (point 1) : une porte fermée par un autre onglet
             //    donne 409 avec l'état actuel, pas un 400 qui se répète.
+            // Lot B3 (21/11/2026) : « Aucun » (["@aucun"], pas de bloc pour la
+            // classe) est une liste comme une autre ; et les portes possibles
+            // sont celles de la classe PLUS celles que quelques élèves ont en
+            // plus — lues sous le verrou de la classe (portes_en_plus).
             $jour = null;
             if (array_key_exists('jour', $corps)) {
                 if (!reglages_disponibles($pdo)) {
@@ -771,9 +779,15 @@ try {
                     transaction_annuler($pdo);
                     return ['disparue' => true];
                 }
-                if ($avant !== null && !meme_etat_de_classe($avant, $ligne)) {
+                // Lot B3 : les portes que des élèves ont en plus. Lecture simple,
+                // sous le verrou de la CLASSE seulement (eleves.acces ne
+                // verrouille que l'élève : aucun ordre de verrous, aucun
+                // interblocage). Un ajout retiré juste après cette lecture ne
+                // réécrit pas la classe : l'étape disparaît à la lecture.
+                $enPlus = portes_en_plus($pdo, $classeId);
+                if ($avant !== null && !meme_etat_de_classe($avant, $ligne, $enPlus)) {
                     transaction_annuler($pdo);
-                    return ['conflit' => true, 'ligne' => $ligne];
+                    return ['conflit' => true, 'ligne' => $ligne, 'en_plus' => $enPlus];
                 }
                 // Ce qui n'est pas envoyé est repris TEL QUEL de la ligne relue
                 // sous le verrou (lot B2 et son correctif, point 3) : enregistrer
@@ -782,26 +796,38 @@ try {
                 $libelleEcrit = $libelleRecu ? $libelle : (string)$ligne['libelle'];
                 $applisEcrites = $applisRecues ? implode(',', $applis) : (string)$ligne['applis'];
                 $applisFinales = array_map('trim', explode(',', $applisEcrites));
-                // La liste du jour : la reçue, vérifiée contre les applis que la
-                // classe aura (« avant » vient de dire que la page voyait juste :
-                // un refus ici est une vraie demande invalide, 400) ; sinon celle
-                // que voyait la classe (jour_de_classe, la liste EFFECTIVE de la
-                // ligne — point 2 : jamais le JSON brut, une étape déjà sortie ne
-                // revient pas quand on rouvre sa porte), TAILLÉE aux applis
-                // finales, dans la même écriture.
+                // Les réglages reçus remplacent ceux de l'appli DANS la valeur
+                // relue sous le verrou (pas dans celle lue avant lui).
+                $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
+                // Les portes possibles APRÈS l'écriture (lot B3) : les applis et
+                // les chapitres que la classe aura, plus ce que des élèves ont en
+                // plus.
+                $portesApres = portes_du_jour($applisFinales, $nouveaux ?? reglages_de_classe($ligne), $enPlus);
+                // La liste du jour : la reçue, vérifiée contre ces portes
+                // (« avant » vient de dire que la page voyait juste : un refus ici
+                // est une vraie demande invalide, 400) ; sinon celle que voyait la
+                // classe (jour_de_classe, la liste EFFECTIVE de la ligne — point
+                // 2 : jamais le JSON brut, une étape déjà sortie ne revient pas
+                // quand on rouvre sa porte), TAILLÉE aux portes qui restent, dans
+                // la même écriture. Une clé reste si un élève l'a encore en plus ;
+                // « Aucun » n'est jamais taillé.
                 if ($jour !== null) {
+                    // Lot B3 : une étape que la carte croyait possible
+                    // (« avant.portes ») et qui ne l'est plus — retirée ailleurs
+                    // au dernier élève qui l'avait : 409 avec l'état vrai.
+                    if (portes_perimees($jour, $avant, portes_de_classe($ligne, $enPlus)) !== []) {
+                        transaction_annuler($pdo);
+                        return ['conflit' => true, 'ligne' => $ligne, 'en_plus' => $enPlus];
+                    }
                     try {
-                        $nouveauJour = jour_recu($jour, $applisFinales);
+                        $nouveauJour = jour_recu($jour, $portesApres);
                     } catch (InvalidArgumentException $e) {
                         transaction_annuler($pdo);
                         return ['invalide' => $e->getMessage()];
                     }
                 } else {
-                    $nouveauJour = array_values(array_filter(jour_de_classe($ligne), fn($cle) => in_array($cle, $applisFinales, true)));
+                    $nouveauJour = jour_taille(jour_de_classe($ligne, $enPlus), $portesApres);
                 }
-                // Les réglages reçus remplacent ceux de l'appli DANS la valeur
-                // relue sous le verrou (pas dans celle lue avant lui).
-                $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
                 // La colonne est réécrite quand les réglages ou la liste changent,
                 // et aussi quand la liste rangée ne dit plus la liste effective
                 // (une ligne incohérente, restaurée : elle est nettoyée).
@@ -832,7 +858,10 @@ try {
                     'erreur' => "La {$resultat['ligne']['libelle']} a été changée ailleurs : la fenêtre montre l'état actuel, refais ton réglage.",
                     'applis' => explode(',', (string)$resultat['ligne']['applis']),
                     'reglages' => reglages_json(reglages_de_classe($resultat['ligne'])),
-                    'jour' => jour_de_classe($resultat['ligne']),
+                    'jour' => jour_de_classe($resultat['ligne'], $resultat['en_plus']),
+                    // Lot B3 : les portes possibles vraies (des clés d'applis,
+                    // aucun élève nommé) — la carte retire celles qui n'y sont plus.
+                    'portes' => portes_de_classe($resultat['ligne'], $resultat['en_plus']),
                 ], 409);
             }
             journaliser($pdo, $profId, 'classes.modifier', 'classe', $classeId);
@@ -1349,7 +1378,9 @@ try {
                     'applis' => explode(',', (string)$classe['applis']),
                     'reglages' => reglages_json(reglages_de_classe($classe)),
                     // Lot B2 : la liste du jour de Mon espace (vide = automatique).
-                    'jour' => jour_de_classe($classe),
+                    // Lot B3 : telle que la classe la voit, avec les portes
+                    // que quelques élèves ont en plus (déjà lues plus haut).
+                    'jour' => jour_de_classe($classe, portes_des_ajouts($avecAjouts ? array_column($brutes, 'ajouts') : [])),
                     'droit' => $classe['droit'],
                     // 17/10/2026 : « ● Reprendre la séance en direct » quand
                     // une séance de la classe est restée ouverte.

@@ -313,6 +313,10 @@ try {
                 padding: 14px 16px 16px; border-radius: 22px; background: var(--blue-dark); color: #fff;
                 text-decoration: none; box-shadow: 0 10px 26px rgba(5, 47, 103, .18); }
   .jour-zone > a:not([hidden]) ~ .jour-carte { display: none; }
+  /* Lot B3 (21/11/2026, choix de Gwenaël : « Aucun ») : quand aucune des trois
+     cartes ne se voit (la classe n'a pas de bloc « Aujourd'hui », ou aucune
+     activité), la zone ne prend aucune place — pas même sa marge. */
+  .jour-zone:not(:has(> .jour-carte:not([hidden]))) { display: none; }
   /* La même hauteur dans tous les états : plus que le plus haut d'entre eux
      (un sous-titre sur deux lignes au petit téléphone). */
   .jour-carte { min-height: 182px; }
@@ -387,6 +391,56 @@ try {
     .semaine-ligne { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
     .semaine-compte { width: 100%; text-align: center; }
     .semaine-compte strong { display: inline; font-size: 16px; }
+  }
+
+  /* --- Ma semaine SEULE (lot B3, 21/11/2026, choix de Gwenaël : variante C des
+     planches B3-1 et B3-2) : quand la classe n'a pas de bloc « Aujourd'hui »
+     (« Aucun » dans Ma classe › Réglages), Ma semaine devient la tête de la
+     page — en grand, dans le bleu du bloc, titre visible, compte à droite.
+     La règle suit l'écran (:has) : dès qu'une carte revient dans la zone (la
+     séance en direct, l'évaluation), Ma semaine reprend sa petite taille. */
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; row-gap: 14px;
+    padding: 15px 16px 16px; border-radius: 22px; background: var(--blue-dark); border-color: transparent;
+    box-shadow: 0 10px 26px rgba(5, 47, 103, .18); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine h2 {
+    position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0; text-align: left;
+    font: 900 16px/20px var(--sans); white-space: nowrap; color: #f9bf3b; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-ligne { display: contents; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte {
+    grid-column: 2; grid-row: 1; width: auto; text-align: right; font-size: 14px; line-height: 20px; white-space: nowrap;
+    color: rgba(255, 255, 255, .82); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte strong { display: inline; font-size: 16px; color: #fff; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 1 / -1; grid-row: 2; justify-content: center; --ecart: 8px; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 46px; gap: 9px; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 38px; height: 38px; background: transparent; border-color: rgba(255, 255, 255, .5); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .avenir .case-jour { border-color: rgba(255, 255, 255, .32); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .fait .case-jour { background: #08aaa5; border-color: #08aaa5; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .aujourdhui .case-jour { box-shadow: 0 0 0 2px var(--blue-dark), 0 0 0 4px var(--orange); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li:not(:first-child) .case-jour::before { background: rgba(255, 255, 255, .38); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .lettre { font-size: 13px; color: rgba(255, 255, 255, .78); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .aujourdhui .lettre { color: #fff; }
+  @media (max-width: 359px) {
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --ecart: 6px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 38px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 32px; height: 32px; }
+  }
+  @media (min-width: 900px) {
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine {
+      grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
+      column-gap: 28px; padding: 22px 30px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine h2 { font-size: 22px; line-height: 1.2; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 2; grid-row: 1; --ecart: 26px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 76px; gap: 10px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 50px; height: 50px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .lettre { font-size: 15px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte { grid-column: 3; font-size: 16px; line-height: 1.2; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte strong { display: block; font-size: 30px; }
+  }
+  /* Entre 900 et 1099 px, les jours se resserrent : le titre garde sa place. */
+  @media (min-width: 900px) and (max-width: 1099px) {
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --ecart: 14px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 64px; }
   }
 
   /* --- Les portes ------------------------------------------------------ */
@@ -688,7 +742,12 @@ try {
     // portes de la copie elle-même (correctif Codex, point 13 : pas la liste
     // des moteurs de jauge — une appli ouverte sans jauge reste dans la liste).
     const portesCopie = copie.applis.map(appli => appli.cle);
-    copie.jour = Array.isArray(copie.jour) ? copie.jour.filter(cle => typeof cle === "string"
+    // Lot B3 : « Aucun » (pas de bloc pour la classe : exactement ["@aucun"],
+    // la clé réservée de JOUR_AUCUN, plus bas) se garde tel quel — une copie
+    // qui le perdrait remontrerait le bloc au retour d'une appli.
+    const copieSansBloc = Array.isArray(copie.jour) && copie.jour.length === 1 && copie.jour[0] === "@aucun";
+    copie.jour = copieSansBloc ? ["@aucun"]
+      : Array.isArray(copie.jour) ? copie.jour.filter(cle => typeof cle === "string"
       && portesCopie.includes(cle)).slice(0, 3) : [];
     return copie;
   }
@@ -1800,8 +1859,21 @@ try {
   // l'élève, « jour ») quand elle donne au moins une de ses portes ; sinon le
   // mode AUTOMATIQUE du lot B1 : Défi tables quand la classe l'a, sinon la
   // première activité de la classe, puis Mes cours (l'idée de Gwenaël).
+  //
+  // Lot B3 (21/11/2026, choix de Gwenaël) : « AUCUN » — le professeur peut
+  // choisir que sa classe n'ait pas de bloc. La liste est alors ["@aucun"]
+  // (lib/applis.php, JOUR_AUCUN : une clé réservée, qui n'est pas une appli) :
+  // aucune étape, la carte reste cachée, et la feuille de style fait de « Ma
+  // semaine » la tête de la page. Et une liste peut nommer une porte que seuls
+  // quelques élèves ont : le serveur n'envoie à chacun que SES portes, et la
+  // règle d'ici (ignorer ce qui n'est pas une de ses portes) fait le reste.
   const CHECK_BLANC = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const JOUR_AUCUN = "@aucun";
+  function sansBloc(jour) {
+    return Array.isArray(jour) && jour.length === 1 && jour[0] === JOUR_AUCUN;
+  }
   function etapesDuJour(visibles, jour) {
+    if (sansBloc(jour)) return [];
     if (Array.isArray(jour) && jour.length) {
       const choisies = [];
       jour.forEach(cle => {

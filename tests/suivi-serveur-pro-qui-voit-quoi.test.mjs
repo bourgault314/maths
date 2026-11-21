@@ -615,7 +615,7 @@ test("conflit de classe (point 1) — un autre onglet a changé la 405 : « avan
   const modifier = api.slice(api.indexOf("case 'classes.modifier':"), api.indexOf("case 'classes.supprimer':"));
   assert.match(modifier, /avant_de_classe_recu\(\$corps\['avant'\]\)/);
   assert.match(modifier, /'SELECT \* FROM classes WHERE id = \?' \. pour_mise_a_jour\(\$pdo\)/, "la ligne verrouillée");
-  assert.match(modifier, /if \(\$avant !== null && !meme_etat_de_classe\(\$avant, \$ligne\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['conflit' => true/);
+  assert.match(modifier, /if \(\$avant !== null && !meme_etat_de_classe\(\$avant, \$ligne, \$enPlus\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['conflit' => true/); // (lot B3 : la liste du jour se compare avec les portes de quelques élèves)
   assert.match(modifier, /\], 409\);/);
   assert.doesNotMatch(modifier, /CREATE TRIGGER/);
 });

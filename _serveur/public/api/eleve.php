@@ -172,16 +172,19 @@ try {
         'prenom' => $eleve['prenom'],
         'classe' => $eleve['libelle'],
     ] + acces_affichable($eleve);
+    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null,
+        isset($eleve['reglages_eleve']) ? (string)$eleve['reglages_eleve'] : null);
     // Lot B2 « Ta liste dans Ma classe » (21/11/2026) : la liste du jour choisie
-    // par le professeur pour la classe (vide = le mode automatique). Des clés
-    // d'applis de la classe, rien d'autre ; la page ne garde que ses portes.
-    $reponse['jour'] = jour_de_classe($eleve);
+    // par le professeur pour la classe (vide = le mode automatique).
+    // Lot B3 : réduite aux portes de CET élève (ses applis ; Mes cours s'il a
+    // un chapitre) — la liste peut nommer une porte que seuls quelques élèves
+    // ont, et lui n'a pas à apprendre ce que les autres ont. « Aucun »
+    // (["@aucun"] : pas de bloc pour la classe) passe tel quel.
+    $reponse['jour'] = jour_de_l_eleve($eleve, $acces);
     // Lot « cours-appli » (08/11/2026) : l'appli Cours — les chapitres et les
     // fiches ouverts par le professeur, avec leurs adresses (lib/cours.php).
     // Ce que l'élève y ouvre est noté par api/cours.php (le jour seulement,
     // lot « cours-ouvertures », 10/11/2026), pas ici.
-    $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null,
-        isset($eleve['reglages_eleve']) ? (string)$eleve['reglages_eleve'] : null);
     if (in_array('cours', $acces['applis'], true)) {
         $reponse['cours'] = cours_de_l_eleve($acces['reglages']['cours'] ?? []);
     }
