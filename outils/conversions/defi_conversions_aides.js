@@ -938,6 +938,7 @@
   // côté, un poids de l'autre) ; le rectangle (la longueur dessous, la
   // largeur à droite, un angle droit marqué).
   function figurePb(fig) {
+    if (fig.type === "graphe") return grapheQ9(fig);
     if (fig.type === "rectangle") {
       const s = svg("svg", {viewBox: "0 0 212 92", class: "dessin pb-rect", role: "img",
         "aria-label": `Un rectangle de ${fig.longueur} sur ${fig.largeur}`});
@@ -2110,6 +2111,210 @@
     dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
     return enChaine(toucher, () => vus < chemin.length - 1, 600);
   }
+  // Lot B6-3 (Q9, choix de Gwenaël du 21/11) : le tableau de
+  // proportionnalité (S097 p. 40) — deux lignes, une par grandeur, l'unité
+  // écrite dans chaque case, la case cherchée « ? » en rouge, « × 60 » sur
+  // un arc fléché au-dessus et au-dessous ; trois colonnes pour le retour à
+  // l'unité (« ÷ 4 » puis « × 7 »). aide : {noms, lignes (la case cherchée :
+  // null ; la case du milieu de la 2e ligne : donnée, montrée seulement par
+  // la correction et On te montre), fleches, rep}.
+  // mode : "outil" (avec les arcs), "image" (sans les arcs : l'élève
+  // trouve le rapport), "correction" (la case trouvée en vert), "montre"
+  // (chaque toucher fait une étape : l'arc, puis la case).
+  function tableauProp(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const n = aide.lignes[0].length;
+    const g = el("div", `tab-prop${n > 2 ? " trois" : ""}`);
+    g.setAttribute("role", "table");
+    g.setAttribute("aria-label", "Le tableau de proportionnalité");
+    zone.appendChild(g);
+    const fleches = aide.fleches || [];
+    const etapes = fleches.length * 2;
+    let vus = mode === "montre" ? 0 : etapes;
+    const avecArcs = mode !== "image" && mode !== "correction" && fleches.length;
+    let cellules = [];
+    function dessiner() {
+      g.textContent = "";
+      cellules = [[], []];
+      const place = (e, ligne, col, fin) => { e.style.gridRow = String(ligne); e.style.gridColumn = fin ? `${col} / ${fin}` : String(col); g.appendChild(e); return e; };
+      const L0 = avecArcs ? 2 : 1;
+      aide.noms.forEach((nom, i) => place(el("span", "tp-nom", carte().typo(nom)), L0 + i, 1));
+      aide.lignes.forEach((ligne, i) => ligne.forEach((v, j) => {
+        const cherchee = i === 1 && j === n - 1;
+        const milieu = i === 1 && j > 0 && j < n - 1;
+        // (L'étape k du geste remplit la colonne k + 1.)
+        const montree = mode === "correction" || (mode === "montre" && vus >= 2 * j);
+        let classe = "tp-c";
+        let texte = v;
+        if (cherchee) {
+          if (mode === "correction" && aide.rep) { classe += " vert"; texte = aide.rep; }
+          else if (mode === "montre" && montree && aide.rep) { classe += vus >= etapes ? " vert" : " bleu"; texte = aide.rep; }
+          else { classe += " trou"; texte = "?"; }
+        } else if (milieu) {
+          if (montree && (mode === "correction" || mode === "montre")) classe += mode === "correction" ? " vert" : " bleu";
+          else { classe += " vide"; texte = ""; }
+        }
+        const c = place(el("span", classe, carte().typo(texte)), L0 + i, j + 2);
+        cellules[i][j] = c;
+        if (mode === "montre" && !montree && (cherchee || milieu) && vus === 2 * j - 1) c.classList.add("a-toucher");
+      }));
+      if (!avecArcs) return;
+      fleches.forEach((f, k) => {
+        const visible = mode !== "montre" || vus >= 2 * k + 1;
+        [true, false].forEach(dessus => {
+          const a = place(el("div", `tp-arc ${dessus ? "dessus" : "dessous"}${visible ? "" : " cache"}`), dessus ? 1 : L0 + 2, k + 2, k + 4);
+          a.dataset.k = String(k);
+          a.dataset.texte = carte().typo(f);
+          a.setAttribute("aria-label", carte().typo(f));
+          if (mode === "montre" && !visible && vus === 2 * k) a.classList.add("a-toucher");
+        });
+      });
+      tracerArcs();
+    }
+    // (Lot B6-3c, Gwenaël : « les nombres sont écrits à travers les flèches,
+    // les pointes ne sont pas bonnes ». Chaque arc se dessine d'après la
+    // vraie place des deux cases : du milieu de l'une au milieu de l'autre,
+    // la pointe au bout de la courbe et dans son axe, vers la case ;
+    // « × 60 » au-dessus de l'arc du haut, au-dessous de l'arc du bas,
+    // jamais sur le trait. Redessiné quand le tableau change de taille.)
+    function tracerArcs() {
+      if (!g.isConnected) return;
+      const taille = parseFloat(getComputedStyle(g).fontSize) || 16;
+      // (15 px au moins : WebKit réduit l'outil de 3 points de plus que
+      // Chromium au petit iPhone (90 %) ; à 14 px, « × 144 » tombait à
+      // 12,6 px, sous les 13 px.)
+      const tl = Math.max(15, taille * 0.82);
+      g.querySelectorAll(".tp-arc").forEach(a => {
+        const k = Number(a.dataset.k);
+        const dessus = a.classList.contains("dessus");
+        const ligne = cellules[dessus ? 0 : 1];
+        const A = ligne[k];
+        const B = ligne[k + 1];
+        if (!A || !B) return;
+        const W = a.clientWidth;
+        const H = a.clientHeight;
+        if (!W || !H) return;
+        // (Trois colonnes : deux arcs se suivent au milieu de la case du
+        // milieu ; un petit écart entre la pointe de l'un et le départ de
+        // l'autre.)
+        const ecart = n > 2 ? 4 : 0;
+        const x1 = A.offsetLeft + A.offsetWidth / 2 - a.offsetLeft + (k > 0 ? ecart : 0);
+        const x2 = B.offsetLeft + B.offsetWidth / 2 - a.offsetLeft - (k < n - 2 ? ecart : 0);
+        const ap = 5;
+        const al = 4;
+        // (y : 0 contre la case, vers le texte en s'éloignant.)
+        const pointe = 1;
+        const depart = 2;
+        // (Le chiffre occupe environ 0,72 de sa taille au-dessus de sa ligne
+        // de base : le haut de l'arc s'arrête juste sous lui ; l'arc garde
+        // ainsi 10 px de creux, sinon il ressemble à un crochet.)
+        const sommet = H - 0.88 * tl - 1.5;
+        const ctrl = (sommet - 0.25 * depart) / 0.75;
+        const Y = y => (dessus ? H - y : y);
+        const tx = (x1 + x2) / 2;
+        const ty = dessus ? tl * 0.8 : H - tl * 0.12;
+        const svgA = svg("svg", {class: "tp-trace", viewBox: `0 0 ${W.toFixed(1)} ${H.toFixed(1)}`, width: W.toFixed(1), height: H.toFixed(1), "aria-hidden": "true"});
+        // Une arche : les points de contrôle rentrés vers le milieu ; la
+        // pointe suit la direction de la courbe à son bout (pas toujours
+        // verticale), la courbe s'arrête à la base de la pointe.
+        const r = (x2 - x1) * 0.2;
+        const tipX = x2;
+        const tipY = Y(pointe);
+        const dx = r;
+        const dy = tipY - Y(ctrl);
+        const lg = Math.hypot(dx, dy) || 1;
+        const ux = dx / lg;
+        const uy = dy / lg;
+        const bx = tipX - ux * ap;
+        const by = tipY - uy * ap;
+        const f = v => v.toFixed(1);
+        svgA.appendChild(svg("path", {class: "tp-courbe", fill: "none", "stroke-width": "2.4", "stroke-linecap": "round",
+          d: `M ${f(x1)} ${f(Y(depart))} C ${f(x1 + r)} ${f(Y(ctrl))} ${f(x2 - r)} ${f(Y(ctrl))} ${f(bx + ux * 0.8)} ${f(by + uy * 0.8)}`}));
+        svgA.appendChild(svg("path", {class: "tp-pointe", d: `M ${f(tipX)} ${f(tipY)} L ${f(bx - uy * al)} ${f(by + ux * al)} L ${f(bx + uy * al)} ${f(by - ux * al)} Z`}));
+        const t = svg("text", {class: "tp-fois", x: tx.toFixed(1), y: ty.toFixed(1), "text-anchor": "middle", "font-size": tl.toFixed(1)});
+        t.textContent = a.dataset.texte;
+        svgA.appendChild(t);
+        a.querySelectorAll(".tp-trace").forEach(x => x.remove());
+        a.appendChild(svgA);
+      });
+    }
+    if (avecArcs && window.ResizeObserver) new ResizeObserver(() => tracerArcs()).observe(g);
+    dessiner();
+    // (Lot B6-3c : plus large que sa zone (une police large, trois
+    // colonnes), le tableau rapetisse ses textes, jusqu'à 84 % (13 px). La zone
+    // n'est pas toujours dans la page à ce moment : la correction s'y
+    // pose après.)
+    const ajuster = () => {
+      const z = g.closest(".zone");
+      if (!z || !g.isConnected) return;
+      const s = getComputedStyle(z);
+      const placeL = z.clientWidth - parseFloat(s.paddingLeft) - parseFloat(s.paddingRight);
+      const taille = parseFloat(getComputedStyle(g).fontSize) || 16;
+      const largeur = () => getComputedStyle(g).gridTemplateColumns.split(" ").reduce((a, v) => a + (parseFloat(v) || 0), 0);
+      for (let k = 1; k <= 4 && largeur() > placeL + 0.5; k += 1) g.style.fontSize = `${Math.max(13, taille * (1 - 0.04 * k)).toFixed(2)}px`;
+      tracerArcs();
+    };
+    if (g.isConnected) ajuster(); else requestAnimationFrame(ajuster);
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche le tableau");
+    zone.appendChild(note);
+    const toucher = () => {
+      if (vus >= etapes) return;
+      vus += 1;
+      dessiner();
+      if (vus >= etapes) { note.remove(); fini(); }
+    };
+    g.addEventListener("click", toucher);
+    g.setAttribute("tabindex", "0");
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < etapes, 600);
+  }
+  // Le graphique du bus de Clotilde (S097 p. 41) : la distance (km) selon la
+  // durée (min), une droite qui part de 0, les points marqués par des
+  // croix, la lecture en pointillés. Les textes à 13 px au moins au
+  // téléphone (Gwenaël, 21/11 : 11,5 px, c'était trop petit).
+  function grapheQ9(fig) {
+    // (Large et bas : la question ne doit pas passer 144 px au petit
+    // iPhone, sinon l'outil rapetisse ; dessiné à sa taille, ses textes à
+    // 15 font environ 14 px ; lot B6-3c : 13 px au moins à 360 px de large
+    // avec une police large.)
+    const W = 178;
+    const gx = 22;
+    const gy = 76;
+    const lx = 118;
+    const ly = 62;
+    const X = v => gx + (lx * v) / fig.xMax;
+    const Y = v => gy - (ly * v) / fig.yMax;
+    const s = svg("svg", {viewBox: `0 0 ${W} 94`, class: "dessin graphe-q", role: "img",
+      "aria-label": `Un graphique : la distance en km selon la durée en min ; la droite passe par ${fig.point[1]} km en ${fig.point[0]} min`});
+    // (Une graduation sur deux quand elles seraient trop serrées pour leur
+    // texte ; le quadrillage garde tous les kilomètres.)
+    const pasY = fig.yMax > 4 ? 2 : 1;
+    for (let v = 5; v <= fig.xMax; v += 5) s.appendChild(svg("line", {x1: X(v), y1: gy, x2: X(v), y2: Y(fig.yMax), stroke: "#d4e3ed", "stroke-width": 1}));
+    for (let v = 1; v <= fig.yMax; v += 1) s.appendChild(svg("line", {x1: gx, y1: Y(v), x2: X(fig.xMax), y2: Y(v), stroke: "#d4e3ed", "stroke-width": 1}));
+    s.appendChild(svg("line", {x1: gx, y1: gy, x2: X(fig.xMax) + 7, y2: gy, stroke: ENCRE, "stroke-width": 2}));
+    s.appendChild(svg("path", {d: `M${X(fig.xMax) + 11} ${gy} l-7 -3.5 v7 Z`, fill: ENCRE}));
+    s.appendChild(svg("line", {x1: gx, y1: gy, x2: gx, y2: Y(fig.yMax) - 7, stroke: ENCRE, "stroke-width": 2}));
+    s.appendChild(svg("path", {d: `M${gx} ${Y(fig.yMax) - 11} l-3.5 7 h7 Z`, fill: ENCRE}));
+    for (let v = 0; v <= fig.xMax; v += 10) s.appendChild(svg("text", {x: X(v), y: gy + 15, "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: ENCRE}, String(v)));
+    for (let v = pasY; v <= fig.yMax; v += pasY) s.appendChild(svg("text", {x: gx - 5, y: Y(v) + 5, "text-anchor": "end", "font-size": 15, "font-weight": 800, fill: ENCRE}, String(v)));
+    s.appendChild(svg("text", {x: W - 1, y: gy - 5, "text-anchor": "end", "font-size": 15, "font-weight": 900, fill: GRIS_Q9}, "min"));
+    s.appendChild(svg("text", {x: gx + 7, y: 11, "font-size": 15, "font-weight": 900, fill: GRIS_Q9}, "km"));
+    const [px, py] = fig.point;
+    const pente = py / px;
+    const xFin = Math.min(fig.xMax, fig.yMax / pente);
+    s.appendChild(svg("line", {x1: X(0), y1: Y(0), x2: X(xFin), y2: Y(pente * xFin), stroke: BLEU, "stroke-width": 2.4}));
+    s.appendChild(svg("line", {x1: X(px), y1: gy, x2: X(px), y2: Y(py), stroke: BLEU, "stroke-width": 1.5, "stroke-dasharray": "4 3"}));
+    s.appendChild(svg("line", {x1: gx, y1: Y(py), x2: X(px), y2: Y(py), stroke: BLEU, "stroke-width": 1.5, "stroke-dasharray": "4 3"}));
+    fig.croix.forEach(([a, b]) => {
+      const x = X(a);
+      const y = Y(b);
+      const d = 3.6;
+      s.appendChild(svg("path", {d: `M${x - d} ${y - d} L${x + d} ${y + d} M${x - d} ${y + d} L${x + d} ${y - d}`, stroke: ENCRE, "stroke-width": 2.1}));
+    });
+    return s;
+  }
+  const GRIS_Q9 = "#5d7486";
+
   // L'horaire du Car Jaune, les marées de Saint-Gilles (choix de Gwenaël du
   // 21/11) : un tableau de deux lignes, comme une vraie fiche à lire.
   function supportQ10(sup) {
@@ -2806,6 +3011,8 @@
     if (aide.type === "etapes-v") return etapesVitesse(zone, aide, {mode: "montre", fini: f});
     // Lot B6-2 (P6) : la bande des préfixes, les cases à toucher.
     if (aide.type === "bande-p") return bandePuissances(zone, aide, {mode: "montre", fini: f});
+    // Lot B6-3 (Q9) : le tableau de proportionnalité, l'arc puis la case.
+    if (aide.type === "tableau-p") return tableauProp(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
     return null;
   }
@@ -3014,6 +3221,14 @@
       zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
       return;
     }
+    // Lot B6-3 (Q9, choix de Gwenaël du 21/11) : le tableau de
+    // proportionnalité, la conversion dans l'étiquette.
+    if (question.outil === "tableau-p" && question.tableauP) {
+      const rel = question.relationOutil || question.relation;
+      if (rel) zone.appendChild(el("div", "rel petite", carte().typo(rel)));
+      tableauProp(zone, question.tableauP);
+      return;
+    }
     if (question.outil === "grandeurs") { grandeurs(zone); return; }
     if (question.outil === "ranger") {
       // (Lot B2-2b-1, C7 : l'échelle des unités de la question, et l'unité
@@ -3036,6 +3251,13 @@
     }
     // Lot B1-2 : les préfixes et les relations — l'échelle des unités.
     if (question.echelle) { echelle(zone, question.echelle); return; }
+    // Lot B6-3 (Q9) : le tableau sans « × k » (l'élève trouve le rapport).
+    if (question.tableauP) {
+      const rel = question.relationOutil || question.relation;
+      if (rel) zone.appendChild(el("div", "rel petite", carte().typo(rel)));
+      tableauProp(zone, question.tableauP, {mode: "image"});
+      return;
+    }
     // Lot B6-2 (P6) : la bande sans les puissances (on compte les cases).
     if (question.bandeP) {
       bandePuissances(zone, question.bandeP, {mode: "image"});
@@ -3157,6 +3379,6 @@
     return s;
   }
 
-  return Object.freeze({bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });

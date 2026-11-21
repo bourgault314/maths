@@ -25,7 +25,8 @@
 //   Q10 « Problèmes : durées et horaires » (palier 2, CM1) ;
 //   A5 « L'aire en carreaux » (palier 2, CM1).
 // Renommées : A4 « Toutes les unités d'aire » (ex « mm² et km² ») ; Q9
-// « Problèmes : vitesses et débits » (3e : grandeurs composées).
+// « Problèmes : vitesses et débits » (3e : grandeurs composées), puis
+// « Problèmes : vitesses, débits et masses volumiques » (carte v4, lot B6-3).
 // 8 repères de plus (le corps, l'eau, le verre, le dé) → 36 repères.
 // Une étape `cachee` existe dans les données (son code et son rang sont
 // réservés, le moteur l'accepte) mais l'élève ne la voit pas encore : elle
@@ -59,7 +60,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -190,7 +191,7 @@
     {code: "G1", rang: 45, palier: 6, famille: "grandeurs", classe: "4e", nom: "km/h et m/s", exemple: "36 km/h = 10 m/s"},
     {code: "P5", rang: 46, palier: 6, famille: "grandeurs", classe: "4e", nom: "Les préfixes de nano à giga", exemple: "1 Go = 1 000 Mo"},
     {code: "P6", rang: 47, palier: 6, famille: "grandeurs", classe: "3e", nom: "Les préfixes en puissances de 10", exemple: ""},
-    {code: "Q9", rang: 48, palier: 6, famille: "problemes", classe: "4e", nom: "Problèmes : vitesses et débits", nomCourt: "Vitesses et débits", exemple: ""},
+    {code: "Q9", rang: 48, palier: 6, famille: "problemes", classe: "4e", nom: "Problèmes : vitesses, débits et masses volumiques", nomCourt: "Grandeurs composées", exemple: "km/h, L/min, kg/m³"},
     // Carte v3 (12/11) : les ajouts du programme.
     {code: "E1", rang: 49, palier: 1, famille: "convertir", classe: "CE1 · CE2", nom: "Les euros et les centimes", exemple: "1 € = 100 c"},
     {code: "D7", rang: 50, palier: 1, famille: "durees", classe: "CE1 · CE2", nom: "Combien de temps entre deux heures ?", nomCourt: "Entre deux heures", exemple: "de 8 h 30 à 10 h 50"},
@@ -1132,6 +1133,36 @@
       titreRelations: "Les six préfixes",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["giga : 10⁹", "milli : 10⁻³", "méga : 10⁶", "micro : 10⁻⁶", "kilo : 10³", "nano : 10⁻⁹"],
+      reperes: []
+    },
+    // Lot B6-3 : les problèmes de vitesses, débits et masses volumiques (4e,
+    // 3e ; S097 p. 40-43 : le changement d'unité est une situation de
+    // proportionnalité ; brevet : le bassin, la bougie, le béton, l'écran
+    // de 50 pouces). Choix de Gwenaël du 21/11 : le tableau de
+    // proportionnalité, l'arc « × 60 » au-dessus et au-dessous ; sans
+    // calculatrice. On te montre : le tuyau d'arrosage, le bus de Clotilde
+    // (S097), le bassin.
+    Q9: {
+      pret: true,
+      aide: {outil: "tableau-p", image: "tableau-p"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Un tuyau d'arrosage donne 15 L par minute. Combien de litres en 1 h ?", avant: "", reponse: "900", apres: "L"},
+          consigne: "Touche le tableau :\n1 h = 60 min.",
+          aide: {type: "tableau-p", noms: ["Durée", "Volume"], lignes: [["1 min", "60 min"], ["15 L", null]], fleches: ["× 60"], rep: "900 L"},
+          apres: ["15 L × 60", "= 900 L"]},
+        {etiquette: "Je représente", question: {enonce: "Le bus de Clotilde roule à 9 km/h. Combien de kilomètres en 20 min ?", avant: "", reponse: "3", apres: "km"},
+          relation: ["9 km/h : 9 km en 60 min"],
+          aide: {type: "tableau-p", noms: ["Durée", "Distance"], lignes: [["60 min", "20 min"], ["9 km", null]], fleches: ["÷ 3"], rep: "3 km"},
+          apres: ["9 km ÷ 3", "= 3 km"]},
+        {etiquette: "Je vérifie", question: {enonce: "Il manque 3 m³ d'eau au bassin. Le tuyau donne 50 L par minute.", avant: "Durée :", reponse: "60", apres: "min"},
+          relation: ["1 m³ = 1 000 L"],
+          aide: {type: "tableau-p", noms: ["Volume", "Durée"], lignes: [["50 L", "3 000 L"], ["1 min", null]], fleches: ["× 60"], rep: "60 min"},
+          apres: ["1 min × 60", "= 60 min"]}
+      ],
+      retenir: "Je range les deux grandeurs dans un tableau, dans les mêmes unités (1 h = 60 min).\nD'une colonne à l'autre, je multiplie ou je divise : 15 L × 60 = 900 L.",
+      titreRelations: "Les relations utiles",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 h = 60 min", "1 min = 60 s", "1 h = 3 600 s", "1 m³ = 1 000 L", "1 t = 1 000 kg", "1 kg = 1 000 g"],
       reperes: []
     }
   };

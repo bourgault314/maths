@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-r1n">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-b63">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261121-r1n"></script>
-  <script src="./conversions_generateurs.js?v=20261121-r1n"></script>
+  <script src="./conversions_carte.js?v=20261121-b63"></script>
+  <script src="./conversions_generateurs.js?v=20261121-b63"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261121-r1n"></script>
+  <script src="./defi_conversions_aides.js?v=20261121-b63"></script>
   <script>
   (function () {
     "use strict";
@@ -311,7 +311,9 @@
       const ajouterD = (...e) => e.filter(Boolean).forEach(x => droite.appendChild(x));
       const p = etat.parcours;
       const code = P.monEtape(p, PRETS);
-      const palierN = code ? CARTE.etape(code).palier : 1;
+      // (Lot B6-3 : tout fini, l'accueil montre le dernier palier ouvert, pas
+      // le palier 1.)
+      const palierN = code ? CARTE.etape(code).palier : PRETS.length ? CARTE.etape(PRETS[PRETS.length - 1]).palier : 1;
       const codesPalier = PALIERS_CODES[palierN];
       const valideesPalier = codesPalier.filter(c => P.estValidee(p, c)).length;
       const solidesPalier = codesPalier.filter(c => P.estSolide(p, c)).length;
@@ -344,7 +346,14 @@
       const carteEtape = el("div", "carte bleue");
       carteEtape.appendChild(el("div", "eti", "Mon étape"));
       if (!code) {
-        carteEtape.appendChild(el("h2", "", `Le palier ${palierN + 1} arrive bientôt`));
+        // (Lot B6-3 : les paliers qui restent en construction, « Les
+        // paliers 3 à 5 arrivent bientôt » ; « Le palier 2 arrive bientôt »
+        // était faux dès l'ouverture du palier 2.)
+        const aVenir = CARTE.PALIERS.map(x => x.n).filter(n => !CARTE.palierPret(n));
+        const suiteA = aVenir.every((n, i) => !i || n === aVenir[i - 1] + 1);
+        carteEtape.appendChild(el("h2", "", !aVenir.length ? "Tu as tout fini !"
+          : aVenir.length === 1 ? `Le palier ${aVenir[0]} arrive bientôt`
+            : `Les paliers ${suiteA ? `${aVenir[0]} à ${aVenir[aVenir.length - 1]}` : `${aVenir.slice(0, -1).join(", ")} et ${aVenir[aVenir.length - 1]}`} arrivent bientôt`));
         carteEtape.appendChild(el("div", "petit", souvenirs.length ? "Tu as fini tout ce qui est prêt. Tes étapes reviennent : elles restent en mémoire."
           : "Tu as fini tout ce qui est prêt. Tes étapes reviendront dans les prochains jours."));
         if (souvenirs.length) carteEtape.appendChild(bouton("Je me souviens →", "", () => lancerSeance()));
@@ -606,10 +615,12 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && !qn.arcsCorr && !qn.droiteH && !qn.etapesV && !qn.ligneP6 && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.schemaCorr && !qn.arcsCorr && !qn.droiteH && !qn.etapesV && !qn.ligneP6 && !qn.tableauP && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
+      // (Lot B6-3, Q9 : la conversion, à côté de l'étiquette.)
+      if (qn.tableauP && (qn.relationCorr || qn.relation)) zone.appendChild(el("div", "rel petite", T(qn.relationCorr || qn.relation)));
       zone.appendChild(reponse);
       reponse.querySelectorAll(".mini-cartes span").forEach(dansLaCase);
       reponse.querySelectorAll(".grosse.longue, .calcul-pb").forEach(surUneLigne);
@@ -679,9 +690,16 @@
       const rel = zone.querySelector(":scope > .rel.petite:not(.libre)");
       const etiq = zone.querySelector(":scope > .etiq");
       if (rel && etiq && getComputedStyle(rel).position === "absolute") {
-        const a = rel.getBoundingClientRect();
-        const b = etiq.getBoundingClientRect();
-        if (a.left < b.right + 4 && a.bottom > b.top && a.top < b.bottom) rel.classList.add("libre");
+        const touche = () => {
+          const a = rel.getBoundingClientRect();
+          const b = etiq.getBoundingClientRect();
+          return a.left < b.right + 4 && a.bottom > b.top && a.top < b.bottom;
+        };
+        // (Lot B6-3c, Q9 : à côté de « La bonne réponse », la conversion
+        // essaie d'abord 13 px ; dessous, elle coûte une ligne au tableau
+        // (79 % à 360 × 640 avec une police large).)
+        if (touche() && zone.querySelector(".tab-prop")) rel.classList.add("serree");
+        if (touche()) { rel.classList.remove("serree"); rel.classList.add("libre"); }
       }
       const libre = n => n.nodeType === 1 && (n.classList.contains("etiq") || n.classList.contains("zone-in")
         || (n === zone.querySelector(":scope > .rel.petite:not(.libre)") && getComputedStyle(n).position === "absolute"));
@@ -1361,7 +1379,20 @@
       (question.lignesAvantP6 || []).forEach(t => zone.appendChild(el("div", "rel petite libre", t)));
       ligneVerte(zone, question.ligneP6, question.vertP6);
     }
+    // Lot B6-3 (Q9, décidé le 21/11, montré sur la maquette) : dans
+    // l'ordre, la conversion (l'étiquette), le tableau avec la case trouvée
+    // en vert, puis la ligne de calcul, la réponse en vert. (« Quel
+    // calcul ? » : le bon calcul ; « Le plus dense ? » : les deux produits
+    // pour 1 dm³.)
+    // (La conversion se pose à côté de l'étiquette, comme dans l'outil :
+    // remplirErreurZone. Le tableau sans ses arcs : la ligne dit « × 3 » ;
+    // avec, la correction passait à 65 % au petit iPhone.)
+    function tableauCorrige(zone, question) {
+      if (question.tableauP.rep) AIDES.tableauProp(zone, question.tableauP, {mode: "correction"});
+      ligneVerte(zone, question.ligneQ9, question.vertQ9);
+    }
     function bonneReponse(zone, question) {
+      if (question.tableauP) { tableauCorrige(zone, question); return; }
       if (question.ligneP6) { p6Corrige(zone, question); return; }
       if (question.droiteH) { droiteHCorrige(zone, question); return; }
       if (question.etapesV) { etapesCorrige(zone, question); return; }
