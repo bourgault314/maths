@@ -525,6 +525,34 @@ table.serie tr.sep td { border-bottom: .125rem solid #c3d4e0; }
    les trois étapes de km/h à m/s (G1). */
 .zone .dessin.droite-h, .zone .dessin.etapes-v { width: 100%; max-width: 21.25rem; max-height: min(8.5rem, 20vh); }
 .dessin.etapes-v.a-toucher, .dessin.droite-h.a-toucher { cursor: pointer; }
+/* Lot B6-2 (P6, choix de Gwenaël du 21/11) : la bande des 7 préfixes par
+   1 000 et leurs puissances de 10 ; la case de l'exposant, levée et collée
+   au 10 (Gwenaël, 21/11 : « on a l'impression que c'est à côté de litre »),
+   l'unité un peu plus loin. Les cases marquées : fond plein, lettres
+   blanches (lisible imprimé en noir et blanc). */
+.bande-p { width: 100%; max-width: 26rem; }
+.bp-rang { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .1875rem; }
+.bp { border: .125rem solid #0b67c6; border-radius: .5rem; background: #fff; display: flex; flex-direction: column; align-items: center; padding: .1875rem 0;
+  line-height: 1.15; min-width: 0; font: inherit; color: var(--ink); }
+.bp .nom { font-style: normal; font-size: .625rem; font-weight: 700; color: #4a6175; letter-spacing: -.02em; max-width: 100%; overflow: hidden; }
+.bp .sym { font-size: 1rem; font-weight: 900; white-space: nowrap; }
+.bp .pu { font-size: .9375rem; font-weight: 900; color: #0b67c6; white-space: nowrap; min-height: 1.1em; }
+.bp .pu.cache { color: #8ea1af; }
+.bp.base { border-style: dashed; }
+.bp.on { background: #0b67c6; }
+.bp.on .nom, .bp.on .sym, .bp.on .pu { color: #fff; }
+.bande-p.corr .bp.on { background: var(--green); border-color: var(--green); }
+.bp.a-toucher { cursor: pointer; border-style: dashed; box-shadow: 0 0 0 .1875rem #d5e5fb; }
+/* (La place de la case levée est comptée dans la ligne : elle ne sort
+   jamais du bloc de la question, même quand il est bas — « Tu connais
+   déjà ? ».) */
+.q .l1 .puiss { display: inline-flex; align-items: flex-start; margin-right: .25rem; padding-top: 1rem; }
+.q .puiss .case.exp { width: 3rem; height: 2.125rem; font-size: 1.3125rem; line-height: 1.75rem; padding: 0 .25rem; text-align: center; margin: -1rem 0 0 .0625rem; }
+/* (En projection, le nom du préfixe reste lisible du fond de la salle :
+   17 px au moins.) */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .bp .nom { font-size: max(.625rem, 17px); }
+}
 .etapes-boite { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .25rem; }
 .q .horaire { border-collapse: collapse; font-size: .875rem; line-height: 1.15; margin: 0 auto; flex: 0 0 auto; }
 .q .horaire th { font-size: .93em; font-weight: 800; color: var(--muted); padding: .0625rem .25rem; border: .0625rem solid #b9cbd8; background: #fff8d6; white-space: nowrap; }
@@ -1009,6 +1037,10 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
    même largeur (« 1 000 mm » sortait de son bouton en projection) ; au
    téléphone peu haut, la rangée de trois reste celle de tous les relier. */
 .assoc.sans-dessins { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+/* Lot B6-2 (P5) : des sens longs, « milliardième » : plus petits, la lettre
+   dans le coin (ils sortaient de leur bouton au petit téléphone). */
+.assoc.longs .mes { flex-direction: column; justify-content: center; gap: .0625rem; font-size: .8125rem; line-height: 1.05; padding: .125rem .1875rem; }
+.assoc.longs .mes .lettre { flex: 0 0 auto; width: 1rem; height: 1rem; font-size: .625rem; }
 @media (max-height: 640px), (max-height: 800px) and (max-width: 899px) {
   .assoc.sans-dessins { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   /* (« 1 000 mm » sortait de son bouton au petit téléphone avec une police

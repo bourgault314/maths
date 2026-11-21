@@ -497,7 +497,8 @@ async function repondre(page, _q, juste = true) {
     await appuyer(page, page.locator(".choix button").nth(i));
   } else {
     const r = Array.isArray(q.reponse) ? q.reponse : [q.reponse];
-    const valeurs = juste ? r : r.map(x => `${x}1`);
+    // (Lot B6-2 : un exposant a deux chiffres au plus ; le faux change son signe.)
+    const valeurs = juste ? r : q.forme === "exposant" ? r.map(x => (String(x).startsWith("−") ? String(x).slice(1) : `−${x}`)) : r.map(x => `${x}1`);
     if (page.tactile) {
       // Au doigt : les touches du pavé, la 2e case touchée, puis « Valider ».
       for (let k = 0; k < valeurs.length; k += 1) {
@@ -508,7 +509,7 @@ async function repondre(page, _q, juste = true) {
     } else {
       for (let k = 0; k < valeurs.length; k += 1) {
         if (k) await page.keyboard.press("Tab");
-        for (const c of String(valeurs[k]).replace(/\s/g, "")) await page.keyboard.press(c === "," ? "Comma" : c);
+        for (const c of String(valeurs[k]).replace(/\s/g, "")) await page.keyboard.press(c === "," ? "Comma" : c === "−" ? "Minus" : c);
       }
       await page.keyboard.press("Enter");
     }
@@ -595,7 +596,7 @@ async function faireLeGeste(page, aide) {
       await appuyer(page, a.first());
     } else if (["verre", "balance", "horloge"].includes(aide.type)) {
       await appuyer(page, page.locator(".zone .dessin").first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v"].includes(aide.type)) {
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v", "bande-p"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");

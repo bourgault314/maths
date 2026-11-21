@@ -2202,6 +2202,9 @@
   };
   const NOMS_BASE = {m: ["mètre", "mètres"], g: ["gramme", "grammes"], L: ["litre", "litres"]};
   function numeration(zone, aide, fini) {
+    // Lot B6-2 (P5) : des lignes données par la carte, [préfixe, nombre,
+    // = nombre, mesure, = mesure] (le millier, le million, le milliard).
+    if (aide.lignes) return numerationLignes(zone, aide, fini);
     const [un, plusieurs] = NOMS_BASE[aide.base];
     const lignesN = NUMERATION[aide.sens];
     const vues = lignesN.map(() => false);
@@ -2242,6 +2245,91 @@
     boutons.forEach(({b}, i) => b.addEventListener("click", () => voir(i)));
     zone.appendChild(boite);
     return enChaine(() => voir(vues.indexOf(false)), () => vues.includes(false), 420);
+  }
+
+  function numerationLignes(zone, aide, fini) {
+    const typo = t => carte().typo(t);
+    const vues = aide.lignes.map(() => false);
+    const boite = el("div", "numeration");
+    const tete = el("div", "num-tete");
+    tete.append(el("span", "", "Les nombres"), el("span", "", aide.titre || "Les mesures"));
+    boite.appendChild(tete);
+    const ligneT = (...morceaux) => {
+      const l = el("span", "l");
+      morceaux.forEach(m => l.appendChild(typeof m === "string" ? root.document.createTextNode(typo(m)) : m));
+      return l;
+    };
+    const boutons = aide.lignes.map(([pref, n1, n2]) => {
+      const b = el("button", "num-ligne");
+      b.type = "button";
+      const gauche = el("span", "num-n");
+      gauche.append(ligneT(n1), ligneT(n2));
+      const droite = el("span", "num-m");
+      droite.appendChild(el("span", "touche", "touche-moi"));
+      b.append(gauche, droite);
+      b.setAttribute("aria-label", `${pref} : touche pour voir la mesure`);
+      boite.appendChild(b);
+      return {b, droite};
+    });
+    function voir(i) {
+      if (vues[i]) return;
+      vues[i] = true;
+      const {b, droite} = boutons[i];
+      const [, , , m1, m2] = aide.lignes[i];
+      droite.textContent = "";
+      droite.append(ligneT(el("b", "", typo(m1))), ligneT(m2));
+      b.classList.add("vue");
+      if (vues.every(Boolean)) fini();
+    }
+    boutons.forEach(({b}, i) => b.addEventListener("click", () => voir(i)));
+    zone.appendChild(boite);
+    return enChaine(() => voir(vues.indexOf(false)), () => vues.includes(false), 420);
+  }
+
+  // ===================================== lot B6-2 : les puissances de 10 (P6)
+  // La bande des 7 préfixes par 1 000 (choix de Gwenaël du 21/11, maquette
+  // sur la vraie page) : le nom, le symbole, la puissance de 10. `base` :
+  // l'unité (m, g, L, o, W) ; `marque` : les symboles en jeu (bleu plein ;
+  // vert plein dans la correction). Modes : outil (toutes les puissances),
+  // image (sans les puissances, sauf 10⁰ : on compte les cases), correction,
+  // montre (les cases de `montre` à toucher : leur puissance apparaît).
+  const BANDE_P = [["giga", "G", "10⁹"], ["méga", "M", "10⁶"], ["kilo", "k", "10³"], ["unité", "1", "10⁰"],
+    ["milli", "m", "10⁻³"], ["micro", "µ", "10⁻⁶"], ["nano", "n", "10⁻⁹"]];
+  function bandePuissances(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    // (Les cases à toucher portent « a-toucher » tant qu'elles ne sont pas
+    // touchées ; la bande elle-même, jamais.)
+    const boite = el("div", `bande-p${mode === "correction" ? " corr" : ""}`);
+    boite.setAttribute("role", "img");
+    boite.setAttribute("aria-label", "Les préfixes et leurs puissances de 10");
+    const rang = el("div", "bp-rang");
+    const marque = aide.marque || [];
+    const aToucher = mode === "montre" ? (aide.montre || []) : [];
+    const vues = {};
+    const cases = BANDE_P.map(([nom, sym, pu]) => {
+      const unite = sym === "1";
+      const c = el(aToucher.includes(sym) ? "button" : "span", `bp${unite ? " base" : ""}${marque.includes(sym) ? " on" : ""}`);
+      if (aToucher.includes(sym)) { c.type = "button"; c.classList.add("a-toucher"); c.setAttribute("aria-label", `${nom} : touche pour voir sa puissance de 10`); }
+      const cache = (mode === "image" && !unite) || aToucher.includes(sym);
+      c.append(el("i", "nom", nom), el("b", "sym", unite ? (aide.base || "1") : sym), el("span", `pu${cache ? " cache" : ""}`, cache ? (mode === "montre" ? "?" : "") : pu));
+      rang.appendChild(c);
+      return {c, sym, pu};
+    });
+    boite.appendChild(rang);
+    zone.appendChild(boite);
+    if (mode !== "montre") return null;
+    const voir = sym => {
+      if (vues[sym]) return;
+      vues[sym] = true;
+      const x = cases.find(y => y.sym === sym);
+      const p = x.c.querySelector(".pu");
+      p.textContent = x.pu;
+      p.classList.remove("cache");
+      x.c.classList.remove("a-toucher");
+      x.c.classList.add("on");
+      if (aToucher.every(t => vues[t])) fini();
+    };
+    cases.forEach(x => { if (aToucher.includes(x.sym)) x.c.addEventListener("click", () => voir(x.sym)); });
+    return enChaine(() => voir(aToucher.find(t => !vues[t])), () => aToucher.some(t => !vues[t]), 420);
   }
 
   // ================================================ lot B2-3a : l'aire (A5)
@@ -2712,6 +2800,8 @@
     // Lot B6-1 : la double droite des heures (D6), les trois étapes (G1).
     if (aide.type === "droite-h") return droiteHeures(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "etapes-v") return etapesVitesse(zone, aide, {mode: "montre", fini: f});
+    // Lot B6-2 (P6) : la bande des préfixes, les cases à toucher.
+    if (aide.type === "bande-p") return bandePuissances(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne}); f(); }
     return null;
   }
@@ -2831,7 +2921,17 @@
       return;
     }
     if (question.outil === "lignes" && question.outilLignes) {
-      zone.appendChild(lignes("rel", question.outilLignes.join("\n")));
+      zone.appendChild(lignes(question.outilPetit ? "rel petite libre" : "rel", question.outilLignes.join("\n")));
+      // (Lot B6-2 : la phrase sous les lignes, « Je compte les rangs de la
+      // virgule. ».)
+      if (question.noteOutil) zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+      return;
+    }
+    // Lot B6-2 (P6, choix de Gwenaël du 21/11) : la bande des 7 préfixes et
+    // leurs puissances de 10, les préfixes de la question marqués.
+    if (question.outil === "bande-p" && question.bandeP) {
+      bandePuissances(zone, question.bandeP);
+      zone.appendChild(el("div", "note", carte().typo("D'une case à l'autre : × 1 000 = × 10³.")));
       return;
     }
     if (question.outil === "barre-heure" && question.heure) {
@@ -2912,6 +3012,12 @@
     }
     // Lot B1-2 : les préfixes et les relations — l'échelle des unités.
     if (question.echelle) { echelle(zone, question.echelle); return; }
+    // Lot B6-2 (P6) : la bande sans les puissances (on compte les cases).
+    if (question.bandeP) {
+      bandePuissances(zone, question.bandeP, {mode: "image"});
+      zone.appendChild(el("div", "note", carte().typo(question.image[0])));
+      return;
+    }
     // Lot B1-1 : « Est-ce vraisemblable ? » — l'image est le repère le plus
     // proche de la vraie mesure, et la phrase qui invite à comparer.
     if (question.repereProche) {
@@ -3027,6 +3133,6 @@
     return s;
   }
 
-  return Object.freeze({droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture});
 });
