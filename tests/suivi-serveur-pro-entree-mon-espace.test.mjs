@@ -62,11 +62,12 @@ test("Mon espace : un nom de classe long passe à la ligne, « Se déconnecter �
   assert.match(style, /#changer \{ flex: none; \}/);
 });
 
-test("la tuile Défi tables : « 👑 Légende », le nom entier pour le lecteur d'écran", () => {
-  const debut = script.indexOf("  function badgeRang(");
-  const badge = script.slice(debut, script.indexOf("\n  }\n", debut));
-  assert.match(badge, /rang\.cle === "legende" \? "\\u\{1F451\} Légende" : rang\.nom/);
-  assert.match(badge, /badge\.setAttribute\("aria-label", `Mon rang : \$\{rang\.lu \|\| rang\.nom\}`\);/);
+test("la porte Défi tables : l'insigne « Légende » (la couronne de l'appli), le nom entier pour le lecteur d'écran", () => {
+  // Lot B1 : le badge de la tuile est devenu l'insigne de la porte.
+  const debut = script.indexOf("  function insigneDe(");
+  const insigne = script.slice(debut, script.indexOf("\n  }\n", debut));
+  assert.match(insigne, /if \(r\.cle === "legende"\) insigne\.append\(dessinCouronne\(\), document\.createTextNode\("Légende"\)\);/);
+  assert.match(insigne, /insigne\.setAttribute\("aria-label", `Mon rang : \$\{texteCourt\(r\.lu \|\| r\.nom\)\}`\);/);
 });
 
 test("la connexion du professeur : grand logo, carte centrée, bouton large, sans en-tête", () => {

@@ -54,10 +54,11 @@ function fonction(nom) {
   return blocDepuis(page, m.index);
 }
 
-// Le bloc des jauges, des moteurs (JAUGES) jusqu'à leur pose
-// (poserLesJauges) : c'est là que vivent la lecture et le lot S3.
+// Le bloc des jauges, des moteurs (JAUGES) jusqu'à leur lecture
+// (lireJauges) : c'est là que vivent la lecture et le lot S3. (Lot B1 : la
+// pose des jauges sur les tuiles est devenue les portes.)
 const debut = page.indexOf("  const JAUGES = {");
-const fin = page.indexOf("\n  }", page.indexOf("for (let i = aLire.length - 1", debut)) + "\n  }".length;
+const fin = page.indexOf("async function lireJauges", debut) + blocDepuis(page, page.indexOf("async function lireJauges", debut)).length;
 const BLOC = page.slice(debut, fin).replace(/<\?=[\s\S]*?\?>/g, "0123456789");
 
 const MOTEURS = [
@@ -264,10 +265,12 @@ test("rien de nouveau n'est demandé au serveur : les mêmes trois adresses qu'a
 });
 
 test("Ma semaine et les gains : construits par textContent, jamais en HTML ; aucun temps passé ; des jours, pas des soirs", () => {
-  for (const nom of ["poserSemaine", "poserGain", "espaceLu"]) {
+  for (const nom of ["poserSemaine", "ligneDe", "espaceLu"]) {
     assert.doesNotMatch(fonction(nom), /innerHTML|insertAdjacentHTML/, `${nom} ne fabrique pas de HTML`);
   }
-  assert.match(fonction("poserGain"), /gain\.textContent = jauge\.gain;/);
+  // Lot B1 (choix de Gwenaël, 21/11/2026) : la semaine d'un gain, la ligne de
+  // la porte devient le gain, en vert.
+  assert.match(fonction("ligneDe"), /ligne\.classList\.add\("gain"\);\s*ligne\.textContent = jauge\.gain;/);
   assert.match(fonction("poserSemaine"), /`\$\{compte\} jour\$\{compte > 1 \? "s" : ""\}`/);
   const s3 = page.slice(page.indexOf("// ------------------------------------------- lot S3"), page.indexOf("  async function lireJauges"));
   assert.doesNotMatch(s3 + fonction("poserSemaine"), /minute|soir|\bmin\b/i, "ni minutes ni soirs");
@@ -286,13 +289,13 @@ test("la copie de l'onglet : une semaine abîmée ou trafiquée ne passe pas (de
   assert.equal(espaceLu({}), null);
   assert.equal(espaceLu({"@espace": "texte"}), null);
   assert.deepEqual(espaceLu({"@espace": {jours: ["2026-11-10", "<img src=x>", 3], travail: "oui", ouvertes: ["splat", {}]}}),
-    {aujourdhui: "", jours: ["2026-11-10"], travail: false, ouvertes: ["splat"]});
+    {aujourdhui: "", jours: ["2026-11-10"], travail: false, faits: [], ouvertes: ["splat"]});
   // Correctif S3 (Codex, nº 5) : la copie trafiquée du relecteur.
   assert.deepEqual(espaceLu({"@espace": {
     aujourdhui: "2026-02-30", travail: true,
     jours: ["2026-02-31", "2026-99-99", "<img src=x>", "2026-11-10"],
     ouvertes: ["splat", "<img src=x>", "inconnue", "__proto__", "constructor", "toString", {}]
-  }}), {aujourdhui: "", jours: ["2026-11-10"], travail: true, ouvertes: ["splat"]},
+  }}), {aujourdhui: "", jours: ["2026-11-10"], travail: true, faits: [], ouvertes: ["splat"]},
   "des dates du calendrier et les applis que la page connaît, rien d'autre");
   assert.equal(espaceLu({"@espace": {aujourdhui: "2026-11-12"}}).aujourdhui, "2026-11-12", "le jour de la lecture est gardé");
 });
@@ -328,7 +331,7 @@ test("la copie du dimanche relue le lundi : plus aucun gain, dès le premier des
 test("le lundi, la copie se redessine sans les gains AVANT de poser les jauges ; la lecture fraîche garde son jour", () => {
   const espace = fonction("afficherEspace");
   assert.ok(espace.indexOf("jauges = sansGainsPerimes(jauges, espace);") > 0
-    && espace.indexOf("jauges = sansGainsPerimes(jauges, espace);") < espace.indexOf("poserLesJauges(jauges || {}"));
+    && espace.indexOf("jauges = sansGainsPerimes(jauges, espace);") < espace.indexOf("porteDe(appli"));
   assert.match(fonction("lireJauges"), /const espace = \{aujourdhui, jours: \[\]/);
 });
 
@@ -384,9 +387,10 @@ test("un clic d'activité quand le serveur ne connaît plus le code : pas de dé
   assert.deepEqual((await essayer(503)).departs, ["https://mathsgo.re/x.html#b=ancien"], "une panne : le billet de l'entrée sert de secours, comme avant");
 });
 
-test("la tuile épurée : la phrase se cache seulement pour une appli que le serveur connaît ; « Se déconnecter » efface la semaine", () => {
+test("une porte jamais ouverte n'a pas de ligne (lot B1, choix de Gwenaël) ; « Se déconnecter » efface la semaine", () => {
   const espace = fonction("afficherEspace");
-  assert.match(espace, /lien\.querySelector\("span"\)\.hidden = ouvertes\.includes\(appli\.cle\);/);
+  assert.match(fonction("ligneDe"), /if \(!jauge \|\| typeof jauge !== "object"\) return ligne;/);
+  assert.doesNotMatch(fonction("porteDe") + fonction("ligneDe"), /description/, "la phrase de présentation n'est plus sur la porte");
   assert.match(espace, /const espace = espaceLu\(jauges\);/);
   assert.match(fonction("revenirAuCode"), /poserSemaine\(null\);/);
   assert.match(fonction("poserSemaine"), /if \(!espace \|\| !espace\.travail\) \{ carte\.hidden = true; return; \}/);
@@ -394,7 +398,7 @@ test("la tuile épurée : la phrase se cache seulement pour une appli que le ser
 
 test("la carte « Ma semaine » est entre les tuiles du haut et les activités, cachée au départ", () => {
   const html = page.slice(page.indexOf('<section id="ecran-espace"'), page.indexOf("</main>"));
-  const ordre = ["id=\"direct-lien\"", "id=\"evaluation-lien\"", "id=\"semaine\"", "id=\"applis\""].map(x => html.indexOf(x));
-  assert.ok(ordre.every((x, i) => x > 0 && (i === 0 || x > ordre[i - 1])), "séance en direct, évaluation, Ma semaine, activités");
+  const ordre = ["id=\"direct-lien\"", "id=\"evaluation-lien\"", "id=\"jour\"", "id=\"semaine\"", "id=\"applis\""].map(x => html.indexOf(x));
+  assert.ok(ordre.every((x, i) => x > 0 && (i === 0 || x > ordre[i - 1])), "le bloc « Aujourd'hui » (séance en direct, évaluation, la journée), Ma semaine, activités");
   assert.match(html, /<section class="semaine" id="semaine" aria-labelledby="semaine-titre" hidden>/);
 });

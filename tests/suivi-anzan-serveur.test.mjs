@@ -31,8 +31,10 @@ test("la tuile de Mon espace : le soroban comme dessin, et une ligne « N calcul
   assert.equal((dessin.match(/<rect x="\d+" y="[\d.]+" width="6" height="3"/g) || []).length, 15, "trois tiges de cinq perles");
   const jauges = espace.slice(espace.indexOf("  const JAUGES = {"), espace.indexOf("  const moteursEnCours = {};"));
   assert.match(jauges, /"flash-anzan": \{\s*url: "prof\/flash_anzan_parcours\.js\?v=<\?= htmlspecialchars\(\$versionAnzan, ENT_QUOTES\) \?>",\s*global: "MathsGoFlashAnzanParcours",/);
-  assert.match(jauges, /const resume = P\.resumeTuile\(brut\);\s*if \(resume\.vide\) return null;\s*return \{lignes: \[\{texte: resume\.texte, bonus: ""\}\]\};/,
-    "rien tant qu'aucun calcul n'est fait ; les mots sont ceux du moteur");
+  assert.match(jauges, /const resume = P\.resumeTuile\(brut\);\s*if \(resume\.vide\) return null;/,
+    "rien tant qu'aucun calcul n'est fait");
+  // Lot B1 : les mots sont ceux du moteur (le résumé, et les grades nommés par nomGrade).
+  assert.match(jauges, /return \{lignes: \[\{texte: resume\.texte, bonus: ""\}\], texte: resume\.texte,\s*grade: nom\(prof\.grade\), colonne: nom\(prof\.gradeColonne\)\};/);
   assert.doesNotMatch(jauges.slice(jauges.indexOf('"flash-anzan"')), /innerHTML/, "rien du serveur ne devient du HTML");
 });
 

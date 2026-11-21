@@ -128,12 +128,15 @@ test("le badge : les métaux sans étoile, puis les étoiles gagnées, puis la L
   assert.equal(MOTEUR.rang(MOTEUR.rangDeLEtat(neuf(4, 0))).cle, "diamant", "l'appli dit encore « Diamant » à 4 étoiles (écart accepté par Gwenaël)");
   assert.equal(lire(P, neuf(5, 0), {}).rang.cle, "legende");
   assert.equal(lire(P, neuf(5, 0), {}).rang.nom, "Légende des tables");
-  // Le badge dessiné : ni point de métal ni « Mon rang : ★★ » lu tel quel.
-  const debut = page.indexOf("  function badgeRang(");
-  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
-  assert.match(bloc, /if \(rang\.cle !== "legende" && rang\.cle !== "etoiles"\) \{/);
-  assert.match(bloc, /badge\.setAttribute\("aria-label", `Mon rang : \$\{rang\.lu \|\| rang\.nom\}`\);/);
-  assert.match(page, /\.appli \.rang\.etoiles \{ background: linear-gradient\(135deg, #fff1c2, #ffe08a\); color: #6b4a00;\s*border-color: #e6c25a;/, "l'or du badge Légende");
+  // Lot B1 : le badge est l'INSIGNE de la porte. Ni point de métal pour les
+  // étoiles et la couronne, ni « Mon rang : ★★ » lu tel quel ; la couronne est
+  // le dessin de l'appli, plus l'emoji.
+  const debut = page.indexOf("  function insigneDe(");
+  const bloc = page.slice(debut, page.indexOf("\n  }\n", debut));
+  assert.match(bloc, /if \(r\.cle === "legende"\) insigne\.append\(dessinCouronne\(\), document\.createTextNode\("Légende"\)\);/);
+  assert.match(bloc, /else if \(r\.cle === "etoiles"\) insigne\.append\(document\.createTextNode\(texteCourt\(r\.nom\)\)\);/);
+  assert.match(bloc, /insigne\.setAttribute\("aria-label", `Mon rang : \$\{texteCourt\(r\.lu \|\| r\.nom\)\}`\);/);
+  assert.match(page, /\.insigne\.legende, \.insigne\.etoiles, \.insigne\.or \{ background: linear-gradient\(135deg, #fff1c2, #ffe08a\); color: #6b4a00; border-color: #e6c25a; \}/, "l'or du badge Légende");
 });
 
 test("la pastille dit l'étape suivante QUI CHANGE : jamais « la table de 5, puis la table de 5 »", () => {
@@ -154,25 +157,25 @@ test("un parcours illisible n'affiche rien ; un parcours tout neuf, la pastille 
   assert.deepEqual(Object.keys(lire(P, MOTEUR.creerParcours(), {})), ["aujourdhui"], "ni barre, ni compte, ni rang");
 });
 
-test("la pastille : construite par textContent, dans la tuile, verte quand la séance est faite", () => {
-  const debut = page.indexOf("  function pastilleAujourdhui(");
-  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
-  assert.ok(debut > 0);
-  assert.match(bloc, /pastille\.className = aujourdhui\.faite \? "jauge-aujourdhui faite" : "jauge-aujourdhui";/);
-  assert.match(bloc, /pastille\.textContent = aujourdhui\.texte;/);
-  assert.doesNotMatch(bloc, /innerHTML/);
-  const poser = page.slice(page.indexOf("  function poserJauge("), page.indexOf("\n  }\n", page.indexOf("  function poserJauge(")));
-  assert.match(poser, /if \(jauge\.aujourdhui && !jauge\.compte\) \{\s*bloc\.className = "jauge seule";\s*bloc\.append\(pastilleAujourdhui\(jauge\.aujourdhui\)\);/, "sans table passée : la pastille seule");
-  // Lot S3 (08/11/2026) : le gain de la semaine, en vert, vient après la pastille.
-  assert.match(poser, /if \(jauge\.aujourdhui\) bloc\.append\(pastilleAujourdhui\(jauge\.aujourdhui\)\);\s*poserGain\(bloc, jauge\);\s*tuile\.classList\.add\("a-jauge"\);/, "sous le compte et le badge");
-  // `.appli span { color: var(--muted) }` grise tout span de la tuile : la
-  // pastille passe devant par « .appli ».
-  assert.match(page, /\.appli \.jauge-aujourdhui \{ display: inline-block;[^}]*color: #a15c11;/);
-  assert.match(page, /\.appli \.jauge-aujourdhui\.faite \{ border-color: #b8dfc8; background: #e5f7eb; color: #147447; \}/);
+// Lot B1 « Mon espace redessiné » (21/11/2026) : la pastille « Aujourd'hui »
+// de la tuile est devenue le bloc « Aujourd'hui » en tête de Mon espace. Ce
+// que la séance du jour annonce (« 10 calculs, puis ton record ») en est le
+// sous-titre, lu par le moteur ; « faite » = le jour vert de Défi tables.
+test("le bloc « Aujourd'hui » : la séance du jour en sous-titre, par textContent ; faite, on passe à la suite", () => {
+  const lire = lecteur();
+  assert.equal(lire(P, neuf(5, 10), {}).aujourdhui.quoi, `10${NB}calculs, puis ton record`);
+  assert.equal(lire(P, eleve({acquises: [2, 10]}), {}).aujourdhui.quoi, `la table de${NB}5`);
+  const sous = page.slice(page.indexOf("  function sousTitre("), page.indexOf("\n  }\n", page.indexOf("  function sousTitre(")));
+  assert.match(sous, /jauge\.aujourdhui && typeof jauge\.aujourdhui\.quoi === "string" && jauge\.aujourdhui\.quoi\) return jauge\.aujourdhui\.quoi;/);
+  const jour = page.slice(page.indexOf("  function poserJour("), page.indexOf("\n  }\n", page.indexOf("  function poserJour(")));
+  assert.match(jour, /\$\("jour-sous"\)\.textContent = sousTitre\(/, "le sous-titre en texte");
+  assert.deepEqual(jour.match(/innerHTML[^;]*;/g), ['innerHTML = CHECK_BLANC;', 'innerHTML = icone(appli.cle);'],
+    "en HTML, seulement les dessins écrits dans la page");
+  assert.match(jour, /faits\.includes\(appli\.cle\)/, "faite = le jour vert d'aujourd'hui");
 });
 
-test("la pastille seule ne fait pas remonter la tuile ; une tuile avec un compte, si", () => {
-  // Lot 8 (31/10/2026) : la pose des jauges a sa fonction (poserLesJauges).
-  const habiller = page.slice(page.indexOf("  function poserLesJauges("), page.indexOf("\n  }\n", page.indexOf("  function poserLesJauges(")));
-  assert.match(habiller, /poserJauge\(tuile, jauge\);\s*\/\/[^\n]*\n[^\n]*\n\s*if \(!jauge\.aujourdhui \|\| jauge\.compte\) remonter\(tuile\.closest\("li"\)\);/);
+test("les portes ne remontent plus : leur ordre est celui de la classe, quoi que disent les jauges", () => {
+  const espace = page.slice(page.indexOf("  function afficherEspace("), page.indexOf("\n  }\n", page.indexOf("  function afficherEspace(")));
+  assert.match(espace, /const rang = a => \(a\.cle === "cours" \? 0 : a\.cle === "splat" \? 2 : 1\);/);
+  assert.doesNotMatch(page, /function remonter|insertBefore/);
 });

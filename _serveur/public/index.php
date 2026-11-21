@@ -32,6 +32,12 @@ $versionCharte = is_file($charte) ? substr(md5_file($charte), 0, 10) : '0';
 // <head> pour que les cases soient dessinées dès le premier rendu.
 $cases = __DIR__ . '/code-en-cases.js';
 $versionCases = is_file($cases) ? substr(md5_file($cases), 0, 10) : '0';
+// Lot B1 « Mon espace redessiné » : Nunito, servie d'ici (font-src 'self'),
+// avec son empreinte dans l'adresse — gardée un an (lot A, .htaccess).
+$nunito = __DIR__ . '/polices/nunito-latin-wght-normal.woff2';
+$versionNunito = is_file($nunito) ? substr(md5_file($nunito), 0, 10) : '0';
+$nunitoExt = __DIR__ . '/polices/nunito-latin-ext-wght-normal.woff2';
+$versionNunitoExt = is_file($nunitoExt) ? substr(md5_file($nunitoExt), 0, 10) : '0';
 ?>
 <!doctype html>
 <html lang="fr">
@@ -62,6 +68,7 @@ try {
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Mon espace | maths&amp;go</title>
 <link rel="stylesheet" href="suivi.css?v=<?= htmlspecialchars($versionCharte, ENT_QUOTES) ?>">
+<link rel="preload" href="polices/nunito-latin-wght-normal.woff2?v=<?= htmlspecialchars($versionNunito, ENT_QUOTES) ?>" as="font" type="font/woff2" crossorigin>
 <script src="code-en-cases.js?v=<?= htmlspecialchars($versionCases, ENT_QUOTES) ?>"></script>
 <style>
   /* Serveur pro (31/10/2026) : la charte (suivi.css) donne les couleurs, le
@@ -143,106 +150,16 @@ try {
   /* Lot « retours de classe » (06/10/2026, décision de Gwenaël) : plus de
      tuiles « Bientôt » — une appli n'apparaît que lorsqu'elle existe (le
      serveur ne les envoie plus, lib/applis.php). */
-  /* La jauge d'une activite COMMENCEE : une barre, le compte, le rang. Les
-     memes mots et le meme badge que sur l'accueil de l'activite
-     (outils/calcul_mental/defi_tables.html) : l'eleve doit retrouver son
-     chiffre a l'identique d'un ecran a l'autre, sinon il croit avoir perdu
-     quelque chose. Une activite sans table acquise n'a pas de jauge du tout
-     (jamais ouverte, ou jouee sans encore reussir une table) : une barre vide
-     n'apprend rien et ressemble a un reproche. */
-  /* La jauge occupe toute la largeur de la tuile, sous la ligne du nom : la
-     barre est lisible, et « 4 tables acquises sur 9 » tient a cote du rang
-     meme sur un telephone. Seule une tuile qui PORTE une jauge passe en
-     plusieurs lignes ; les autres gardent leur mise en page d'avant. */
-  .appli.a-jauge { flex-wrap: wrap; }
-  /* Lot S3 : à l'ordinateur, deux tuiles d'une même rangée ont la même
-     hauteur ; le contenu de la plus courte reste en haut au lieu de
-     s'étaler (la ligne « Niveau 1 : 1 trésor » de Coffres tombait en bas). */
-  .appli.a-jauge { align-content: flex-start; }
-  .appli.a-jauge .jauge { flex: 0 0 100%; }
-  /* Sans base zero, le texte garde sa largeur de contenu et c'est LUI qui
-     passe a la ligne : le dessin se retrouvait seul sur la premiere. */
-  .appli.a-jauge .texte { flex: 1 1 0; }
-  .jauge { margin-top: 8px; }
-  .jauge-barre { height: 7px; border-radius: 999px; background: #e6ecf3; overflow: hidden; }
-  .jauge-barre i { display: block; height: 100%; border-radius: 999px;
-                   background: linear-gradient(90deg, #08aaa5, #0b67b2); }
-  .jauge-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
-  /* Défi calcul (lot 4) : la ceinture devant le compte. */
-  .jauge-ligne .ceinture-tuile { display: flex; flex: none; }
-  .jauge-ligne:has(.ceinture-tuile) { flex-wrap: nowrap; }
-  .jauge-ligne:has(.ceinture-tuile) .compte { min-width: 0; }
-  .appli .jauge-ligne .compte { color: var(--ink); font-size: var(--texte-secondaire); font-weight: 800; }
-  .appli .jauge-note { display: block; margin-top: 4px; color: #a15c11;
-                       font-size: var(--texte-secondaire); font-weight: 700; }
-  /* Le badge de rang, repris tel quel de l'accueil de Defi tables : un point de
-     metal et le nom (une couronne pour la Legende). */
-  .rang { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 6px;
-          border-radius: 999px; font-size: .74rem; font-weight: 950; border: 1px solid transparent;
-          white-space: nowrap; }
-  .rang:empty { display: none; }
-  .rang i { width: 12px; height: 12px; border-radius: 50%; display: inline-block;
-            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
-  .appli .rang.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; }
-  .rang.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
-  .appli .rang.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; }
-  .rang.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
-  .appli .rang.or { background: #fff4cc; color: #7a5a00; border-color: #f0dc8c; }
-  .rang.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
-  .appli .rang.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; }
-  .rang.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
-  .appli .rang.diamant { background: #e9f0ff; color: #2a4c93; border-color: #c2d3f7; }
-  .rang.diamant i { background: linear-gradient(135deg, #b9d3ff, #4f7fd6); border-radius: 3px;
-                    transform: rotate(45deg) scale(.85); }
-  .appli .rang.legende { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
-                         border-color: #e6c25a; }
-  /* Lot « fignolage du 22/10 » (planche 3, choix de Gwenaël) : dès la 1re
-     étoile, le badge n'est plus un métal mais les étoiles gagnées (★ à ★★★★),
-     dans l'or de la Légende ; à la couronne, le badge Légende d'avant. */
-  .appli .rang.etoiles { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00;
-                         border-color: #e6c25a; padding: 3px 9px; letter-spacing: .06em; }
-  /* « Aujourd'hui » (même lot) : la prochaine chose à faire dans Défi tables,
-     lue dans la séance du jour par le moteur. Orange du site, une seule
-     ligne au téléphone ; en vert quand la séance du jour est faite. */
-  .appli .jauge-aujourdhui { display: inline-block; max-width: 100%; margin-top: 9px; padding: 4px 11px;
-                             border: 1px solid #f5c48a; border-radius: 999px; background: #fff4e6;
-                             color: #a15c11; font-size: .8rem; font-weight: 800; line-height: 1.35; }
-  .appli .jauge-aujourdhui.faite { border-color: #b8dfc8; background: #e5f7eb; color: #147447; }
-  .appli .jauge.seule { margin-top: 2px; }
-  .appli .jauge.seule .jauge-aujourdhui { margin-top: 0; }
   /* SPLAT! (lot « splat-suivi-3 », 07/10/2026, choix B de Gwenaël) : une
      pastille par monde dans la couleur du monde sur la carte — vide, à moitié
      (en cours), pleine (fini) —, le compte des étapes réussies dessous, et les
      Bonus à part, dans une pastille dorée. */
   .mondes { display: flex; flex-wrap: wrap; gap: 8px; }
   .monde-p { display: block; flex: 0 0 auto; overflow: visible; }
-  .appli .jauge-ligne .bonus { padding: 2px 9px; border-radius: 999px; border: 1px solid #f0dc8c;
-                               background: #fff4cc; color: #7a5a00; font-size: .78rem; font-weight: 800;
-                               white-space: nowrap; }
-  /* Coffres magiques (lot « Coffres magiques sur le suivi », 21/10/2026,
-     planche validée par Gwenaël) : ni barre ni pastilles — une ligne par
-     niveau commencé (« Niveau 1 : 5 trésors »), et au bout de la ligne du
-     niveau où l'élève s'est arrêté, la partie en cours dans la pastille
-     dorée (« 🔑 6 / 10 »). Le minimum, rien d'autre. */
-  .appli .jauge.niveaux { margin-top: 2px; }
-  .appli .jauge.niveaux .jauge-ligne { margin-top: 4px; min-height: 24px; }
-  /* Lot « le chemin des coffres » (09/11/2026, choix A de Gwenaël) : « Niveau 1 »
-     puis ses trois coffres, la pastille « 🔑 6 / 10 » au bout ; les coffres
-     d'une ligne à l'autre l'un sous l'autre. */
-  .appli .jauge.niveaux .compte { min-width: 68px; }
+  /* Les trois coffres d'un niveau (lot « le chemin des coffres », 09/11/2026). */
   .coffres-niveau { display: inline-flex; gap: 2px; }
   .coffres-niveau svg { display: block; flex: 0 0 auto; }
-  /* La séance en direct (07/10/2026) : une tuile de plus, AU-DESSUS des
-     activités, qui n'existe que pendant que le professeur mène une séance
-     avec la classe. Même dessin qu'une activité, liseré orange. */
-  .appli.direct-lien { height: auto; margin-top: 18px; border-left-color: var(--orange); }
-  .appli.direct-lien + ul { margin-top: 12px; }
-  /* Lot E4 (16/10/2026, choix de Gwenaël) : l'évaluation de Défi tables
-     s'annonce à la même place et du même dessin que la séance en direct — une
-     tuile au-dessus des activités (une seule séance par classe : jamais les
-     deux). Elle remplace la pastille « 📝 Évaluation ouverte » du lot E2,
-     qui faisait doublon. */
-  li.aide { margin-top: 20px; }
+  li.aide { margin-top: 20px; grid-column: 1 / -1; }
   /* Lot S3 « Mon espace côté élève » (chantier « Suivre ses élèves », choix
      de Gwenaël du 07/11/2026, planches 4 et 5) : « Ma semaine », sept cases
      du lundi au dimanche, ✓ les jours où l'élève a travaillé, toutes applis
@@ -271,15 +188,6 @@ try {
   .semaine-compte { margin: 0 0 4px; color: var(--ink); font-size: var(--texte-secondaire); }
   .semaine-compte:empty { display: none; }
   .semaine-compte strong { font-weight: 800; }
-  /* Lot S3 : sous la tuile, en vert, ce que l'élève a GAGNÉ cette semaine
-     (une table passée, un monde fini, un grade, des compétences), et
-     seulement quand il y en a. Les mots sont ceux de « À féliciter » de la
-     page du professeur. */
-  .appli .jauge-gain { display: block; margin-top: 8px; color: #147447;
-                       font-size: var(--texte-secondaire); font-weight: 800; line-height: 1.35; }
-  /* Lot S3 : une tuile épurée — la phrase sous le nom de l'appli ne reste que
-     tant que l'élève ne l'a jamais ouverte. */
-  .appli .texte span[hidden] { display: none; }
   /* L'appli Cours (lot « cours-appli », 08/11/2026, choix de Gwenaël) : la
      tuile « Mes cours » est la PREMIÈRE de la liste des activités, comme les
      autres (« est-ce qu'on sépare vraiment Mes cours ? … tu peux tout
@@ -346,6 +254,190 @@ try {
   @media (max-width: 700px), (max-height: 560px) {
     .garde { align-items: flex-start; padding-top: max(16px, min(9vh, 80px)); overflow-y: auto; }
   }
+
+  /* ======================================================================
+     Lot B1 « Mon espace redessiné » (audit du 20/11/2026, maquette validée
+     par Gwenaël le 21/11). Nunito côté élève — Mon espace et Mes cours ;
+     l'écran du code et la question « C'est toujours toi ? » ne changent pas.
+     ====================================================================== */
+  @font-face { font-family: "Nunito"; font-style: normal; font-display: swap; font-weight: 200 1000;
+    src: url(polices/nunito-latin-wght-normal.woff2?v=<?= htmlspecialchars($versionNunito, ENT_QUOTES) ?>) format("woff2");
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: "Nunito"; font-style: normal; font-display: swap; font-weight: 200 1000;
+    src: url(polices/nunito-latin-ext-wght-normal.woff2?v=<?= htmlspecialchars($versionNunitoExt, ENT_QUOTES) ?>) format("woff2");
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+  body:not(.sur-code) .entete, #ecran-espace, #ecran-cours { --sans: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: var(--sans); font-family: var(--sans); }
+  body:not(.sur-code) .entete button { font-family: var(--sans); }
+  #ecran-espace h1, #ecran-cours h1 { font-family: var(--sans); font-weight: 900; letter-spacing: -.01em; }
+  #ecran-espace > h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.15; }
+  main.etroit:has(#ecran-espace:not([hidden])) { max-width: 720px; padding-top: 16px; }
+
+  /* --- Le bloc « Aujourd'hui » : une seule chose à faire, en grand. Trois
+     cartes possibles à la même place (séance en direct, évaluation, la
+     journée) ; une seule se voit. Même hauteur dans tous ses états. ------ */
+  .jour-zone { margin: 0 0 12px; }
+  .jour-carte { position: relative; display: flex; flex-direction: column; gap: 11px; min-height: 176px;
+                padding: 14px 16px 16px; border-radius: 22px; background: var(--blue-dark); color: #fff;
+                text-decoration: none; box-shadow: 0 10px 26px rgba(5, 47, 103, .18); }
+  .jour-zone > a:not([hidden]) ~ .jour-carte { display: none; }
+  /* La même hauteur dans tous les états : plus que le plus haut d'entre eux
+     (un sous-titre sur deux lignes au petit téléphone). */
+  .jour-carte { min-height: 182px; }
+  @media (max-width: 359px) { .jour-carte { min-height: 204px; } }
+  .jour-haut { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-height: 20px; }
+  .jour-tete { display: block; margin: 0; color: #f9bf3b; font: 900 16px/20px var(--sans); white-space: nowrap; }
+  .jour-quoi { display: flex; align-items: center; gap: 13px; min-height: 54px; }
+  .jour-icone { flex: 0 0 54px; width: 54px; height: 54px; display: grid; place-items: center;
+                border-radius: 16px; background: #fff; }
+  .jour-icone .icone { width: 42px; height: 42px; }
+  .jour-icone .icone > rect:first-child[width="46"] { fill: #fff; }
+  .jour-textes { min-width: 0; }
+  .jour-textes strong { display: block; font-size: 22px; line-height: 1.15; font-weight: 900; color: #fff; }
+  .jour-textes span { display: block; margin-top: 2px; font-size: 15.5px; line-height: 1.3; color: rgba(255, 255, 255, .86); }
+  .jour-bouton { display: flex; align-items: center; justify-content: center; min-height: 50px; margin-top: auto;
+                 padding: 0 16px; border-radius: 14px; background: #fff; color: var(--blue-dark);
+                 border-bottom: 4px solid var(--orange); font: 900 19px/1.2 var(--sans); text-decoration: none; }
+  @media (hover: hover) { .jour-bouton:hover, a.jour-carte:hover .jour-bouton { background: #fff4e6; color: var(--blue-dark); } }
+  .jour-ensuite { margin: 0; min-width: 0; font-size: 14px; line-height: 20px; color: rgba(255, 255, 255, .8);
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .jour-faits { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; min-height: 50px; margin: auto 0 0; }
+  .jour-faits span { padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .12);
+                     color: #fff; font-size: 14.5px; font-weight: 800; white-space: nowrap; }
+  .jour-ensuite b { color: #fff; font-weight: 800; }
+  /* Le clavier : sur le bleu nuit, l'anneau bleu de la charte ne se verrait pas. */
+  .jour-carte .jour-bouton:focus-visible, a.jour-carte:focus-visible { outline: 3px solid #f9bf3b; outline-offset: 3px; box-shadow: none; }
+  .porte:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .jour-carte.fini .jour-icone { background: #08aaa5; }
+  .jour-carte.fini .jour-icone svg { width: 34px; height: 34px; }
+  .jour-direct .jour-tete { color: #ffb36b; }
+  .jour-direct .jour-tete::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 7px;
+                                    border-radius: 50%; background: var(--orange); vertical-align: 1px; }
+
+  /* --- Ma semaine, en perles ------------------------------------------- */
+  .semaine { margin: 0 0 12px; padding: 8px 14px 7px; border-radius: 18px; }
+  .semaine h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+  .semaine-ligne { flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .semaine-jours { position: relative; display: flex; gap: 0; flex: 0 1 auto; grid-template-columns: none; }
+  .semaine-jours li { flex-direction: column-reverse; gap: 8px; width: 33px; }
+  .semaine-jours .case-jour { position: relative; width: 26px; height: 26px; aspect-ratio: auto; border-radius: 50%;
+                              border: 2px solid #cfdae6; background: #fff; }
+  .semaine-jours li:not(:first-child) .case-jour::before { content: ""; position: absolute; right: 100%; top: 50%;
+                              width: 8px; height: 2px; margin-top: -1px; background: #cfdae6; }
+  .semaine-jours .fait .case-jour { border-color: #08aaa5; background: #08aaa5; }
+  .semaine-jours .avenir .case-jour { border-style: dashed; border-color: #cfdae6; background: transparent; }
+  .semaine-jours .aujourdhui .case-jour { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--orange); }
+  .semaine-jours .lettre { font-size: 12px; font-weight: 800; }
+  .semaine-compte { margin: 0; text-align: right; line-height: 1.15; color: var(--muted); font-size: 13.5px; white-space: nowrap; }
+  .semaine-compte strong { display: block; color: var(--blue-dark); font-size: 21px; font-weight: 900; }
+  .semaine-jours li:not(:first-child) .case-jour::before { width: 7px; }
+  @media (max-width: 359px) {
+    .semaine-ligne { flex-wrap: wrap; justify-content: center; row-gap: 4px; }
+    .semaine-compte { width: 100%; text-align: center; }
+    .semaine-compte strong { display: inline; font-size: 16px; }
+  }
+
+  /* --- Les portes ------------------------------------------------------ */
+  .portes-titre { margin: 2px 0 9px; font: 900 18px/1.2 var(--sans); color: var(--blue-dark); }
+  #applis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; }
+  #applis > li.long { grid-column: 1 / -1; }
+  .porte { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 112px;
+           padding: 11px 12px 10px; border-radius: 18px; text-decoration: none; color: var(--ink);
+           background: var(--porte-fond, #fff); border: 1px solid rgba(16, 41, 74, .08);
+           border-bottom: 5px solid var(--porte-bord, var(--teal)); }
+  @media (hover: hover) { .porte:hover { border-color: var(--porte-bord, var(--blue)); } }
+  .porte .icone { width: 40px; height: 40px; flex: none; }
+  /* Sur la porte, le dessin sans son carré de fond (sauf Solèy : son ciel violet fait le dessin). */
+  .porte:not([data-cle="soley"]) .icone > rect:first-child[width="46"] { fill: transparent; }
+  .porte-nom { display: block; margin-top: 6px; font-size: 16.5px; line-height: 1.2; font-weight: 900; color: var(--blue-dark); }
+  .porte-ligne { display: block; margin-top: 2px; font-size: 13.5px; line-height: 1.3; font-weight: 700; color: #3c5068;
+                 overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  /* La semaine d'un gain (lot S3) : le gain, en vert, à la place de la ligne. */
+  .porte-ligne.gain { color: #147447; font-weight: 800; }
+  .porte-ligne .coffres-niveau svg { width: 22px; height: 22px; }
+  .porte-ligne.avec-dessin { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; -webkit-line-clamp: unset; }
+  .porte-ligne .cle { font-weight: 800; color: #7a5a00; white-space: nowrap; }
+  /* L'insigne : ce que l'élève a gagné, en haut à droite. Les quatre ont la
+     même forme et la même taille ; pas d'insigne tant que rien n'est gagné. */
+  .insigne { position: absolute; top: 9px; right: 9px; display: inline-flex; align-items: center; gap: 5px;
+             height: 26px; padding: 0 9px 0 7px; border-radius: 999px; background: #fff;
+             border: 1px solid rgba(16, 41, 74, .14); color: var(--ink); font-size: 13px; font-weight: 900;
+             line-height: 1; white-space: nowrap; }
+  .insigne svg { display: block; flex: none; }
+  .insigne.legende, .insigne.etoiles, .insigne.or { background: linear-gradient(135deg, #fff1c2, #ffe08a); color: #6b4a00; border-color: #e6c25a; }
+  .insigne.bronze { background: #f7e9dc; color: #7a4416; border-color: #e6c9ad; }
+  .insigne.argent { background: #eef1f4; color: #465563; border-color: #d3dbe3; }
+  .insigne.platine { background: #e8f4f8; color: #2c5d70; border-color: #bfdde8; }
+  .insigne i { width: 12px; height: 12px; border-radius: 50%; display: inline-block;
+               box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .7); }
+  .insigne.bronze i { background: linear-gradient(135deg, #e0a06a, #b8722f); }
+  .insigne.argent i { background: linear-gradient(135deg, #e6ebf0, #98a5b3); }
+  .insigne.or i { background: linear-gradient(135deg, #ffe17a, #d9a300); }
+  .insigne.platine i { background: linear-gradient(135deg, #e6f6fa, #7db7c9); }
+  /* Les portes longues : SPLAT! (ses six mondes à droite) et Mes cours. */
+  li.long .porte { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center;
+                   column-gap: 12px; min-height: 0; padding: 10px 13px 9px; }
+  li.long .porte-nom { margin-top: 0; }
+  li.long .mondes { gap: 4px; flex-wrap: nowrap; }
+  li.long .monde-p { width: 22px; height: 22px; }
+  li.long .mondes { gap: 3px; }
+  /* Petit téléphone (moins de 360 px) : une porte par ligne, l'insigne ne
+     passe jamais sur le dessin. */
+  @media (max-width: 359px) {
+    #applis { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+    .porte { min-height: 0; }
+  }
+  @media (max-width: 380px) {
+    li.long .porte { grid-template-columns: 40px minmax(0, 1fr); row-gap: 8px; }
+    li.long .mondes { grid-column: 1 / -1; }
+  }
+  /* --- Grand écran (900 px et plus) : une mise en page à lui. En haut, le
+     bloc « Aujourd'hui » et « Ma semaine » côte à côte, même hauteur, les
+     jours centrés ; dessous, les portes sur quatre colonnes (les portes
+     longues sur deux). Rien d'autre ne change. ---------------------------- */
+  @media (min-width: 900px) {
+    main.etroit:has(#ecran-espace:not([hidden])) { max-width: 1080px; padding-top: 28px; }
+    #ecran-espace { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); column-gap: 18px; align-items: stretch; }
+    #ecran-espace > h1 { grid-column: 1 / -1; font-size: 38px; margin-bottom: 16px; }
+    #ecran-espace > .jour-zone { grid-column: 1; margin: 0; }
+    #ecran-espace > .semaine { grid-column: 2; margin: 0; display: flex; flex-direction: column; justify-content: center;
+                               padding: 18px 16px; border-radius: 22px; }
+    #ecran-espace > .semaine[hidden] { display: none !important; }
+    #ecran-espace > .jour-zone:has(+ .semaine[hidden]) { grid-column: 1 / -1; }
+    .semaine .semaine-ligne { flex-direction: column; align-items: center; gap: 14px; }
+    .semaine-jours li { width: 40px; }
+    .semaine-jours .case-jour { width: 32px; height: 32px; }
+    .semaine-jours .lettre { font-size: 13px; }
+    .semaine-compte { text-align: center; font-size: 15px; }
+    .semaine-compte strong { font-size: 30px; }
+    .semaine h2 { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 0 14px;
+                  text-align: center; font: 900 17px/1.2 var(--sans); color: var(--blue-dark); }
+    #ecran-espace > .portes-titre, #ecran-espace > #applis { grid-column: 1 / -1; }
+    .portes-titre { margin: 26px 0 12px; font-size: 22px; }
+    #applis { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; }
+    #applis > li.long { grid-column: span 2; }
+    #applis > li.long.pleine { grid-column: 1 / -1; }
+    .porte { min-height: 150px; padding: 16px 16px 14px; border-radius: 20px; }
+    .porte .icone { width: 52px; height: 52px; }
+    .porte-nom { margin-top: 10px; font-size: 19px; }
+    .porte-ligne { font-size: 15px; }
+    li.long .porte { grid-template-columns: 52px minmax(0, 1fr) auto; padding: 16px 18px 14px; min-height: 150px; column-gap: 16px; }
+    li.long .monde-p { width: 26px; height: 26px; }
+    li.long .mondes { gap: 5px; }
+    .insigne { top: 14px; right: 14px; height: 28px; font-size: 14px; }
+    .jour-carte, .jour-carte.fini { min-height: 210px; padding: 20px 24px 22px; gap: 14px; }
+    .jour-icone { flex-basis: 64px; width: 64px; height: 64px; }
+    .jour-icone .icone { width: 50px; height: 50px; }
+    .jour-textes strong { font-size: 27px; }
+    .jour-textes span { font-size: 17px; }
+    .jour-tete, .jour-ensuite { font-size: 16px; }
+    /* Le bouton à droite de l'activité : la carte se lit d'un coup d'œil. */
+    .jour-carte, .jour-carte.fini { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 1fr;
+                                    align-items: center; column-gap: 24px; }
+    .jour-haut { grid-column: 1 / -1; align-self: start; }
+    .jour-bouton, .jour-faits { margin: 0; min-width: 260px; min-height: 56px; font-size: 20px; }
+    .jour-faits { justify-content: center; }
+  }
 </style>
 </head>
 <body class="sur-code">
@@ -386,20 +478,27 @@ try {
 
   <section id="ecran-espace" hidden>
     <h1 id="titre">Mon espace</h1>
-    <p class="sous-titre">Choisis une activité. Ton travail est enregistré tout seul.</p>
-    <a class="appli direct-lien" id="direct-lien" href="direct.php" hidden>
-      <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="9" y="11" width="28" height="19" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M19 36h8M23 30v6" stroke="#063f86" stroke-width="2.4" stroke-linecap="round"/><g fill="#f58220"><rect x="14" y="21" width="4" height="5" rx="1"/><rect x="21" y="16" width="4" height="10" rx="1"/><rect x="28" y="19" width="4" height="7" rx="1"/></g></svg>
-      <div class="texte"><strong>Séance en direct</strong><span>Ton professeur a lancé une séance : rejoins la classe.</span></div>
-      <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
-    <a class="appli direct-lien" id="evaluation-lien" href="#" hidden>
-      <svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="11" y="8" width="21" height="29" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M16 16h11M16 22h11M16 28h6" stroke="#063f86" stroke-width="2.2" stroke-linecap="round"/><path d="M27.5 35.5l1.2-5.2 9.4-9.4 4 4-9.4 9.4z" fill="#f58220" stroke="#9a4b00" stroke-width="1.6" stroke-linejoin="round"/></svg>
-      <div class="texte"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Commencer l’évaluation.</span></div>
-      <svg class="fleche" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-    </a>
-    <!-- Lot S3 : « Ma semaine ». Les cases et le compte sont écrits par la
-         page (poserSemaine), d'après les moteurs des applis : rien du
-         serveur n'y entre en HTML. -->
+    <!-- Lot B1 : le bloc « Aujourd'hui ». Trois cartes à la même place ; la
+         séance en direct et l'évaluation passent devant tout (règle CSS :
+         une carte-lien visible cache la carte de la journée). -->
+    <div class="jour-zone" id="jour-zone">
+      <a class="jour-carte jour-direct" id="direct-lien" href="direct.php" hidden>
+        <span class="jour-haut"><span class="jour-tete">En direct</span></span>
+        <span class="jour-quoi"><span class="jour-icone"><svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="9" y="11" width="28" height="19" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M19 36h8M23 30v6" stroke="#063f86" stroke-width="2.4" stroke-linecap="round"/><g fill="#f58220"><rect x="14" y="21" width="4" height="5" rx="1"/><rect x="21" y="16" width="4" height="10" rx="1"/><rect x="28" y="19" width="4" height="7" rx="1"/></g></svg></span><span class="jour-textes"><strong>Séance en direct</strong><span>Ton professeur a lancé une séance.</span></span></span>
+        <span class="jour-bouton">Rejoindre la classe</span>
+      </a>
+      <a class="jour-carte" id="evaluation-lien" href="#" hidden>
+        <span class="jour-haut"><span class="jour-tete">Aujourd’hui</span></span>
+        <span class="jour-quoi"><span class="jour-icone"><svg class="icone" width="40" height="40" viewBox="0 0 46 46" aria-hidden="true" focusable="false"><rect width="46" height="46" rx="12" fill="#fdf0e3"/><rect x="11" y="8" width="21" height="29" rx="3" fill="#fff" stroke="#063f86" stroke-width="2.4"/><path d="M16 16h11M16 22h11M16 28h6" stroke="#063f86" stroke-width="2.2" stroke-linecap="round"/><path d="M27.5 35.5l1.2-5.2 9.4-9.4 4 4-9.4 9.4z" fill="#f58220" stroke="#9a4b00" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="jour-textes"><strong>Évaluation de tables</strong><span id="evaluation-lien-texte">Commencer l’évaluation.</span></span></span>
+        <span class="jour-bouton">Commencer</span>
+      </a>
+      <section class="jour-carte" id="jour" aria-labelledby="jour-tete" hidden>
+        <div class="jour-haut"><h2 class="jour-tete" id="jour-tete">Aujourd’hui</h2><p class="jour-ensuite" id="jour-ensuite"></p></div>
+        <div class="jour-quoi"><span class="jour-icone" id="jour-icone"></span><span class="jour-textes"><strong id="jour-nom"></strong><span id="jour-sous"></span></span></div>
+        <a class="jour-bouton" id="jour-bouton" href="#">Commencer</a>
+        <p class="jour-faits" id="jour-faits" hidden></p>
+      </section>
+    </div>
     <section class="semaine" id="semaine" aria-labelledby="semaine-titre" hidden>
       <h2 id="semaine-titre">Ma semaine</h2>
       <div class="semaine-ligne">
@@ -407,7 +506,8 @@ try {
         <p class="semaine-compte" id="semaine-compte"></p>
       </div>
     </section>
-    <ul id="applis"></ul>
+    <h2 class="portes-titre" id="portes-titre">Mes activités</h2>
+    <ul id="applis" aria-labelledby="portes-titre"></ul>
   </section>
 
   <!-- L'appli Cours : la liste des chapitres (#cours) et le sommaire d'un
@@ -1014,12 +1114,22 @@ try {
         // choix A de Gwenaël) : « Niveau 1 » puis ses trois coffres (bronze,
         // argent, or : gagnés en couleur, à gagner en pointillés), comme sur la
         // carte « Tes coffres » de l'appli ; rien de Gloubi.
+        const lignes = resume.lignes.map(ligne => ({
+          texte: `Niveau ${ligne.niveau}`,
+          coffres: Math.max(0, Math.min(3, ligne.coffres || 0)),
+          bonus: ligne.cles !== null ? `\u{1F511} ${ligne.cles} / ${ligne.total}` : ""
+        }));
+        // Lot B1 : l'insigne, le plus haut niveau où un coffre est gagné ; la
+        // ligne, le niveau de la partie en cours (sinon ce même niveau), ses
+        // trois coffres et la clé.
+        const gagnes = resume.lignes.filter(ligne => ligne.coffres > 0);
+        const enCours = resume.lignes.find(ligne => ligne.cles !== null) || gagnes[gagnes.length - 1] || resume.lignes[0];
         return {
-          lignes: resume.lignes.map(ligne => ({
-            texte: `Niveau ${ligne.niveau}`,
-            coffres: Math.max(0, Math.min(3, ligne.coffres || 0)),
-            bonus: ligne.cles !== null ? `\u{1F511} ${ligne.cles} / ${ligne.total}` : ""
-          }))
+          lignes,
+          niveauGagne: gagnes.length ? gagnes[gagnes.length - 1].niveau : 0,
+          niveau: enCours.niveau,
+          coffres: Math.max(0, Math.min(3, enCours.coffres || 0)),
+          cles: enCours.cles !== null ? `\u{1F511} ${enCours.cles} / ${enCours.total}` : ""
         };
       }
     },
@@ -1034,7 +1144,11 @@ try {
       lecteur: (P, brut) => {
         const resume = P.resumeTuile(brut);
         if (resume.vide) return null;
-        return {lignes: [{texte: resume.texte, bonus: ""}]};
+        // Lot B1 : les grades réussis, nommés par le moteur (« 10e kyu »).
+        const prof = typeof P.resumeProf === "function" ? P.resumeProf(brut) : {};
+        const nom = n => (n && typeof P.nomGrade === "function" ? P.nomGrade(n) : "");
+        return {lignes: [{texte: resume.texte, bonus: ""}], texte: resume.texte,
+          grade: nom(prof.grade), colonne: nom(prof.gradeColonne)};
       }
     },
     // Défi calcul (lot 2b, 31/10/2026, planche validée par Gwenaël) : une
@@ -1129,7 +1243,8 @@ try {
       .map(etape => motEtapeDefiTables(P, etape)).filter(Boolean);
     if (!mots.length) return null;
     const ensuite = mots.find(mot => mot !== mots[0]);
-    return {faite: false, texte: `\u{1F514} Aujourd’hui\u00a0: ${mots[0]}${ensuite ? `, puis ${ensuite}` : ""}`};
+    const quoi = `${mots[0]}${ensuite ? `, puis ${ensuite}` : ""}`;
+    return {faite: false, texte: `\u{1F514} Aujourd’hui\u00a0: ${quoi}`, quoi};
   }
 
   // Un moteur est chargé UNE fois, et seulement si son activité a un parcours
@@ -1174,26 +1289,6 @@ try {
       if (!donnees || !donnees.ok || !donnees.existe || !donnees.parcours) return null;
       return donnees.parcours;
     } catch (_) { return null; }
-  }
-
-  // Le badge du rang : le même dessin que sur l'accueil de l'activité (un point
-  // de métal et le nom ; la couronne pour la Légende). Une seule différence,
-  // voulue (choix de Gwenaël, 31/10/2026, planche 5 du lot 6) : sur la tuile,
-  // la Légende s'écrit « 👑 Légende » — le nom entier ne tenait pas à côté de
-  // « 9 tables passées sur 9 » et prenait une ligne à lui seul. Le lecteur
-  // d'écran entend toujours le nom entier (aria-label).
-  function badgeRang(rang) {
-    const badge = document.createElement("span");
-    if (!rang || !rang.niveau) return badge;
-    badge.className = `rang ${rang.cle}`;
-    if (rang.cle !== "legende" && rang.cle !== "etoiles") {
-      const point = document.createElement("i");
-      point.setAttribute("aria-hidden", "true");
-      badge.append(point);
-    }
-    badge.append(document.createTextNode(rang.cle === "legende" ? "\u{1F451} Légende" : rang.nom));
-    badge.setAttribute("aria-label", `Mon rang : ${rang.lu || rang.nom}`);
-    return badge;
   }
 
   // Les couleurs des six mondes SPLAT!, celles de la carte des mondes
@@ -1274,140 +1369,6 @@ try {
     chiffre.textContent = String(monde.numero);
     dessin.append(chiffre);
     return dessin;
-  }
-
-  // La pastille « Aujourd'hui » de Défi tables (lot « fignolage du 22/10 »),
-  // orange, ou verte quand la séance du jour est faite.
-  function pastilleAujourdhui(aujourdhui) {
-    const pastille = document.createElement("span");
-    pastille.className = aujourdhui.faite ? "jauge-aujourdhui faite" : "jauge-aujourdhui";
-    pastille.textContent = aujourdhui.texte;
-    return pastille;
-  }
-
-  // Lot S3 : le gain de la semaine, en vert, au bas de la jauge.
-  function poserGain(bloc, jauge) {
-    if (!jauge.gain || typeof jauge.gain !== "string") return;
-    const gain = document.createElement("span");
-    gain.className = "jauge-gain";
-    gain.textContent = jauge.gain;
-    bloc.append(gain);
-  }
-
-  // La jauge posée dans la tuile. Tout est construit par createElement et
-  // textContent : rien du serveur ne devient du HTML.
-  function poserJauge(tuile, jauge) {
-    const bloc = document.createElement("div");
-    bloc.className = "jauge";
-    // Défi tables sans table passée (lot « fignolage du 22/10 ») : la
-    // pastille « Aujourd'hui » seule — ni barre, ni compte, ni rang.
-    if (jauge.aujourdhui && !jauge.compte) {
-      bloc.className = "jauge seule";
-      bloc.append(pastilleAujourdhui(jauge.aujourdhui));
-      poserGain(bloc, jauge);
-      tuile.classList.add("a-jauge");
-      tuile.append(bloc);
-      return;
-    }
-    // Coffres magiques : des lignes de texte, une par niveau commencé, et la
-    // partie en cours au bout de la sienne — ni barre, ni rang, ni note.
-    if (jauge.lignes) {
-      bloc.className = "jauge niveaux";
-      jauge.lignes.forEach(ligneNiveau => {
-        const ligne = document.createElement("div");
-        ligne.className = "jauge-ligne";
-        const compte = document.createElement("span");
-        compte.className = "compte";
-        compte.textContent = ligneNiveau.texte;
-        ligne.append(compte);
-        if (typeof ligneNiveau.coffres === "number") ligne.append(coffresDuNiveau(ligneNiveau.coffres));
-        if (ligneNiveau.bonus) {
-          const bonus = document.createElement("span");
-          bonus.className = "bonus";
-          bonus.textContent = ligneNiveau.bonus;
-          ligne.append(bonus);
-        }
-        bloc.append(ligne);
-      });
-      poserGain(bloc, jauge);
-      tuile.classList.add("a-jauge");
-      tuile.append(bloc);
-      return;
-    }
-    // Lot S3 : un gain sans jauge (cas limite : une table passée cette
-    // semaine dont la jauge n'a pas pu être lue) — le gain seul.
-    if (!jauge.compte) {
-      if (!jauge.gain) return;
-      bloc.className = "jauge seule";
-      poserGain(bloc, jauge);
-      tuile.classList.add("a-jauge");
-      tuile.append(bloc);
-      return;
-    }
-    if (jauge.mondes) {
-      const mondes = document.createElement("div");
-      mondes.className = "mondes";
-      mondes.setAttribute("role", "img");
-      mondes.setAttribute("aria-label", jauge.mondes
-        .map(monde => `Monde ${monde.numero} : ${ETATS_MONDE[monde.etat] || ETATS_MONDE.vide}`).join(", "));
-      jauge.mondes.forEach(monde => mondes.append(pastilleMonde(monde)));
-      bloc.append(mondes);
-    } else {
-      const barre = document.createElement("div");
-      barre.className = "jauge-barre";
-      const remplie = document.createElement("i");
-      const part = jauge.total > 0 ? Math.max(0, Math.min(1, jauge.fait / jauge.total)) : 0;
-      remplie.style.width = `${Math.round(part * 100)}%`;
-      barre.append(remplie);
-      bloc.append(barre);
-    }
-    const ligne = document.createElement("div");
-    ligne.className = "jauge-ligne";
-    const compte = document.createElement("span");
-    compte.className = "compte";
-    compte.textContent = jauge.compte;
-    // Défi calcul (lot 4) : le dessin de la ceinture devant le compte. Le
-    // dessin vient du noyau de l'appli servi par ce serveur, fait par
-    // createElementNS (aucun HTML) avec des nombres bornés (la ceinture 0 à
-    // 4, les barrettes 0 à 3) : rien de l'élève.
-    if (jauge.ceinture && window.MATHSGO_DEFI_CALCUL_CORE) {
-      const dessin = document.createElement("span");
-      dessin.className = "ceinture-tuile";
-      dessin.setAttribute("aria-hidden", "true");
-      const n = Math.max(0, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 0)));
-      const barrettes = Math.max(0, Math.min(3, Math.floor(Number(jauge.ceinture.barrettes) || 0)));
-      dessin.replaceChildren(window.MATHSGO_DEFI_CALCUL_CORE.elementCeinture(document, n, {barrettes, taille: 34}));
-      ligne.append(dessin);
-    }
-    ligne.append(compte);
-    if (jauge.rang) ligne.append(badgeRang(jauge.rang));
-    if (jauge.bonus) {
-      const bonus = document.createElement("span");
-      bonus.className = "bonus";
-      bonus.textContent = jauge.bonus;
-      ligne.append(bonus);
-    }
-    bloc.append(ligne);
-    if (jauge.note) {
-      const note = document.createElement("span");
-      note.className = "jauge-note";
-      note.textContent = jauge.note;
-      bloc.append(note);
-    }
-    if (jauge.aujourdhui) bloc.append(pastilleAujourdhui(jauge.aujourdhui));
-    poserGain(bloc, jauge);
-    tuile.classList.add("a-jauge");
-    tuile.append(bloc);
-  }
-
-  // Les activités commencées passent en tête : c'est là que l'élève retourne.
-  // L'ordre des autres ne bouge pas.
-  function remonter(li) {
-    const liste = $("applis");
-    // Lot « cours-appli » : « Mes cours » reste la première tuile.
-    const tete = liste.firstChild && liste.firstChild.classList && liste.firstChild.classList.contains("cours-li")
-      ? liste.firstChild.nextSibling : liste.firstChild;
-    if (tete && tete !== li) liste.insertBefore(li, tete);
   }
 
   // Lot 8 (retours du 31/10/2026) : la LECTURE des jauges est séparée de leur
@@ -1527,7 +1488,7 @@ try {
     const moteurs = await Promise.all(aLire.map((cle, i) => (parcours[i] ? chargerMoteur(cle) : null)));
     // Lot S3 : la semaine, toutes applis ensemble, et les applis ouvertes.
     const aujourdhui = jourDeLAppareil();
-    const espace = {aujourdhui, jours: [], travail: false, ouvertes: aLire.filter((cle, i) => Boolean(parcours[i]))};
+    const espace = {aujourdhui, jours: [], travail: false, faits: [], ouvertes: aLire.filter((cle, i) => Boolean(parcours[i]))};
     aLire.forEach((cle, i) => {
       const P = moteurs[i];
       if (!parcours[i] || !P) return;
@@ -1538,6 +1499,8 @@ try {
       if (semaine) {
         semaine.jours.forEach(jour => { if (!espace.jours.includes(jour)) espace.jours.push(jour); });
         if (semaine.travail) espace.travail = true;
+        // Lot B1 : le jour vert d'aujourd'hui, pour le bloc « Aujourd'hui ».
+        if (semaine.jours.includes(aujourdhui)) espace.faits.push(cle);
       }
       let gain = "";
       try { gain = gainDe(cle, P, parcours[i], semaine, aujourdhui); } catch (_) { gain = ""; }
@@ -1549,18 +1512,260 @@ try {
     return jauges;
   }
 
-  // Les jauges posées sur les tuiles (dans l'ordre des activités `cles`).
-  function poserLesJauges(jauges, cles) {
-    const aLire = cles.filter(cle => Object.prototype.hasOwnProperty.call(jauges, cle) && jauges[cle]);
-    // À l'envers : la première activité commencée finit bien la première.
-    for (let i = aLire.length - 1; i >= 0; i -= 1) {
-      const jauge = jauges[aLire[i]];
-      const tuile = $("applis").querySelector(`.appli[data-cle="${CSS.escape(aLire[i])}"]`);
-      if (!tuile || tuile.querySelector(".jauge")) continue;
-      poserJauge(tuile, jauge);
-      // La pastille « Aujourd'hui » seule (aucune table passée) ne fait pas
-      // remonter la tuile : l'ordre des tuiles ne change pas avec ce lot.
-      if (!jauge.aujourdhui || jauge.compte) remonter(tuile.closest("li"));
+
+  // ======================================================== lot B1 : les portes
+  //
+  // Lot B1 « Mon espace redessiné » (21/11/2026, maquette et planches validées
+  // par Gwenaël). Une porte par activité, sur deux colonnes (quatre au grand
+  // écran) ; SPLAT! (ses six mondes) et Mes cours en portes longues. L'ORDRE
+  // NE CHANGE JAMAIS — Mes cours, les activités de la classe, SPLAT! : l'élève
+  // retrouve ses portes à la même place, et rien ne remonte quand une jauge
+  // arrive après coup. Chaque porte : son dessin, en haut à droite un INSIGNE
+  // (ce qui est gagné — rien tant que rien ne l'est), son nom, et une ligne qui
+  // dit où l'élève en est ; la semaine d'un gain, la ligne devient le gain, en
+  // vert. Tout est écrit par textContent ou createElement : rien du serveur ni
+  // de la copie de l'onglet ne devient du HTML.
+  // Les teintes : celles des dessins des applis et de la charte (choix A).
+  const TEINTES = {
+    "cours":        {fond: "#ffffff", bord: "#063f86"},
+    "defi-tables":  {fond: "#eaf1fa", bord: "#0b67b2"},
+    "coffres":      {fond: "#fdf0e3", bord: "#a77b50"},
+    "flash-anzan":  {fond: "#fdfbf6", bord: "#10294a"},
+    "defi-calcul":  {fond: "#e6f6f5", bord: "#08aaa5"},
+    "splat":        {fond: "#ffffff", bord: "#be185d"},
+    "automatismes": {fond: "#eff6ff", bord: "#f58220"},
+    "soley":        {fond: "#ffffff", bord: "#241b4d"}
+  };
+  const TEINTE_DEFAUT = {fond: "#ffffff", bord: "#08aaa5"};
+  const PORTES_LONGUES = ["cours", "splat"];
+  // La couronne de Défi tables (le dessin de l'appli, defi_tables.html).
+  const COURONNE = "M2 6.5 7.2 11 12 3l4.8 8L22 6.5 19.6 17H4.4Z M4.4 18.5h15.2v1.5H4.4Z";
+
+  function dessinCouronne() {
+    const svg = elementSvg("svg", {width: "16", height: "14", viewBox: "0 0 24 20", "aria-hidden": "true", focusable: "false"});
+    svg.append(elementSvg("path", {d: COURONNE, fill: "currentColor"}));
+    return svg;
+  }
+  // Une perle du soroban (le dessin d'Anzan).
+  function dessinPerle() {
+    const svg = elementSvg("svg", {width: "16", height: "12", viewBox: "0 0 16 12", "aria-hidden": "true", focusable: "false"});
+    svg.append(elementSvg("path", {d: "M8 1v10", stroke: "#9fb4c4", "stroke-width": "1.4"}));
+    svg.append(elementSvg("rect", {x: "1", y: "3", width: "14", height: "6", rx: "3", fill: "#087a71"}));
+    return svg;
+  }
+  // Le coffre d'or (le dessin de Coffres magiques).
+  function dessinCoffre() {
+    const svg = elementSvg("svg", {width: "18", height: "18", viewBox: "8 12 30 26", "aria-hidden": "true", focusable: "false"});
+    svg.append(elementSvg("path", {d: "M9 20a14 9 0 0 1 28 0Z", fill: "#f6c13d", stroke: "#9a5b06", "stroke-width": "2", "stroke-linejoin": "round"}));
+    svg.append(elementSvg("rect", {x: "9", y: "20", width: "28", height: "16", rx: "2.5", fill: "#f6c13d", stroke: "#9a5b06", "stroke-width": "2"}));
+    svg.append(elementSvg("rect", {x: "19.5", y: "20.5", width: "7", height: "9", rx: "1.6", fill: "#ffe08a", stroke: "#9a5b06", "stroke-width": "1.6"}));
+    return svg;
+  }
+  const texteCourt = valeur => (typeof valeur === "string" ? valeur.slice(0, 60) : "");
+
+  // L'insigne d'une porte : Défi tables, le rang (les étoiles, la couronne) ;
+  // Défi calcul, la ceinture ; Anzan, le grade Flash (choix 1 : le grade
+  // Colonne est sur la ligne du bas) ; Coffres, le plus haut niveau où un
+  // coffre est gagné. Rien quand rien n'est gagné (pas de « débutant »).
+  const CLES_RANG = ["bronze", "argent", "or", "platine", "diamant", "legende", "etoiles"];
+  function insigneDe(cle, jauge) {
+    if (!jauge || typeof jauge !== "object") return null;
+    const insigne = document.createElement("span");
+    insigne.className = "insigne";
+    if (cle === "defi-tables" && jauge.rang && jauge.rang.niveau && CLES_RANG.includes(jauge.rang.cle)) {
+      const r = jauge.rang;
+      insigne.classList.add(r.cle);
+      if (r.cle === "legende") insigne.append(dessinCouronne(), document.createTextNode("Légende"));
+      else if (r.cle === "etoiles") insigne.append(document.createTextNode(texteCourt(r.nom)));
+      else {
+        const point = document.createElement("i");
+        point.setAttribute("aria-hidden", "true");
+        insigne.append(point, document.createTextNode(texteCourt(r.nom)));
+      }
+      insigne.setAttribute("aria-label", `Mon rang : ${texteCourt(r.lu || r.nom)}`);
+      return insigne;
+    }
+    const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
+    if (cle === "defi-calcul" && jauge.ceinture && CORE && typeof CORE.elementCeinture === "function") {
+      const n = Math.max(0, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 0)));
+      const barrettes = Math.max(0, Math.min(3, Math.floor(Number(jauge.ceinture.barrettes) || 0)));
+      const ceinture = CORE.CEINTURES && CORE.CEINTURES[n];
+      if ((!n && !barrettes) || !ceinture) return null;
+      insigne.append(CORE.elementCeinture(document, n, {barrettes, taille: 22}), document.createTextNode(ceinture.court));
+      insigne.setAttribute("aria-label", ceinture.nom);
+      return insigne;
+    }
+    if (cle === "flash-anzan" && jauge.grade) {
+      insigne.append(dessinPerle(), document.createTextNode(texteCourt(jauge.grade)));
+      insigne.setAttribute("aria-label", `Flash : ${texteCourt(jauge.grade)} réussi`);
+      return insigne;
+    }
+    if (cle === "coffres" && Number.isInteger(jauge.niveauGagne) && jauge.niveauGagne > 0) {
+      insigne.append(dessinCoffre(), document.createTextNode(`Niveau ${jauge.niveauGagne}`));
+      return insigne;
+    }
+    return null;
+  }
+
+  // La ligne du bas : où l'élève en est, jamais une répétition de l'insigne.
+  // Une porte jamais ouverte n'a pas de ligne (choix de Gwenaël, 21/11).
+  function ligneDe(cle, jauge, nCours) {
+    const ligne = document.createElement("span");
+    ligne.className = "porte-ligne";
+    if (cle === "cours") { ligne.textContent = nCours > 1 ? `${nCours} chapitres` : "1 chapitre"; return ligne; }
+    if (!jauge || typeof jauge !== "object") return ligne;
+    // La semaine d'un gain (lot S3) : le gain, en vert, à la place de la ligne.
+    if (typeof jauge.gain === "string" && jauge.gain) {
+      ligne.classList.add("gain");
+      ligne.textContent = jauge.gain;
+      return ligne;
+    }
+    if (cle === "coffres" && Number.isInteger(jauge.niveau)) {
+      ligne.classList.add("avec-dessin");
+      ligne.append(coffresDuNiveau(Math.max(0, Math.min(3, jauge.coffres || 0))));
+      if (jauge.cles) {
+        const cles = document.createElement("span");
+        cles.className = "cle";
+        cles.textContent = texteCourt(jauge.cles);
+        ligne.append(cles);
+      }
+      return ligne;
+    }
+    if (cle === "flash-anzan") { ligne.textContent = jauge.colonne ? `Colonne : ${texteCourt(jauge.colonne)}` : texteCourt(jauge.texte); return ligne; }
+    if (cle === "defi-calcul" && jauge.fait) {
+      ligne.textContent = `${jauge.fait} compétence${jauge.fait > 1 ? "s" : ""} sue${jauge.fait > 1 ? "s" : ""} sur ${jauge.total}`;
+      return ligne;
+    }
+    if (cle === "splat" && jauge.fait) {
+      ligne.textContent = `${jauge.fait} étape${jauge.fait > 1 ? "s" : ""} sur ${jauge.total}` + (jauge.bonus ? ` · ${texteCourt(jauge.bonus)}` : "");
+      return ligne;
+    }
+    if (typeof jauge.compte === "string") ligne.textContent = jauge.compte;
+    return ligne;
+  }
+
+  function porteDe(appli, jauge, donnees, code, nCours) {
+    const li = document.createElement("li");
+    if (PORTES_LONGUES.includes(appli.cle)) li.className = "long";
+    const porte = document.createElement("a");
+    porte.className = "porte";
+    // La clé vient du catalogue du serveur, pas de l'élève.
+    porte.dataset.cle = appli.cle;
+    const teinte = Object.prototype.hasOwnProperty.call(TEINTES, appli.cle) ? TEINTES[appli.cle] : TEINTE_DEFAUT;
+    porte.style.setProperty("--porte-fond", teinte.fond);
+    porte.style.setProperty("--porte-bord", teinte.bord);
+    if (appli.cle === "cours") { porte.id = "cours-lien"; porte.href = "#cours"; }
+    else {
+      // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans
+      // un nouvel onglet ») ; un clic ordinaire en demande un frais.
+      porte.href = adresseAppli(appli, donnees.billet || "");
+      porte.addEventListener("click", event => ouvrirAppli(event, porte, appli, code, donnees.billet || ""));
+    }
+    porte.innerHTML = icone(appli.cle);
+    const textes = document.createElement("span");
+    textes.className = "porte-textes";
+    const nom = document.createElement("strong");
+    nom.className = "porte-nom";
+    nom.textContent = appli.nom;
+    textes.append(nom, ligneDe(appli.cle, jauge, nCours));
+    porte.append(textes);
+    if (appli.cle === "splat" && jauge && Array.isArray(jauge.mondes)) {
+      const mondes = document.createElement("span");
+      mondes.className = "mondes";
+      mondes.setAttribute("role", "img");
+      mondes.setAttribute("aria-label", jauge.mondes
+        .map(monde => `Monde ${monde.numero} : ${ETATS_MONDE[monde.etat] || ETATS_MONDE.vide}`).join(", "));
+      jauge.mondes.forEach(monde => mondes.append(pastilleMonde(monde)));
+      porte.append(mondes);
+    }
+    const insigne = insigneDe(appli.cle, jauge);
+    if (insigne) porte.append(insigne);
+    li.append(porte);
+    return li;
+  }
+
+  // ===================================================== lot B1 : « Aujourd'hui »
+  //
+  // Une seule chose à faire, en grand. Mode AUTOMATIQUE (lot B1 ; la liste
+  // choisie par le professeur, classe par classe, arrive au lot B2) : Défi
+  // tables quand la classe l'a, sinon la première activité de la classe ;
+  // puis Mes cours (l'idée de Gwenaël). On montre la première étape pas
+  // encore faite AUJOURD'HUI — « faite » = le jour vert de l'appli (resumeSuivi
+  // de son moteur, la même règle que « Ma semaine ») ; une activité finie pour
+  // de bon est sautée ; Mes cours n'est jamais « faite » (on ne peut pas savoir
+  // si une leçon a été lue) : quand c'est son tour, elle reste pour la journée.
+  // Rien n'est verrouillé : toutes les portes restent ouvertes. La séance en
+  // direct et l'évaluation passent devant (règle CSS : leur carte, visible,
+  // cache celle-ci). Le bloc garde la même hauteur dans tous ses états.
+  const CHECK_BLANC = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function etapesDuJour(visibles) {
+    const activites = visibles.filter(appli => appli.cle !== "cours");
+    const liste = [];
+    const tables = activites.find(appli => appli.cle === "defi-tables");
+    if (tables) liste.push(tables); else if (activites.length) liste.push(activites[0]);
+    const cours = visibles.find(appli => appli.cle === "cours");
+    if (cours) liste.push(cours);
+    return liste.slice(0, 3);
+  }
+  function termineePourDeBon(appli, jauge) {
+    return appli.cle === "splat" && Boolean(jauge) && jauge.total > 0 && jauge.fait >= jauge.total;
+  }
+  function sousTitre(appli, jauge, nCours) {
+    if (appli.cle === "cours") return nCours > 1 ? `${nCours} chapitres` : "1 chapitre";
+    if (!jauge) return "Ta première séance";
+    if (appli.cle === "defi-tables" && jauge.aujourdhui && typeof jauge.aujourdhui.quoi === "string" && jauge.aujourdhui.quoi) return jauge.aujourdhui.quoi;
+    return "Reprends où tu en es";
+  }
+  function poserJour(visibles, jauges, espace, donnees, code, nCours) {
+    const carte = $("jour");
+    const bouton = $("jour-bouton");
+    const ensuite = $("jour-ensuite");
+    const faitsDuJour = $("jour-faits");
+    const liste = etapesDuJour(visibles);
+    if (!liste.length) { carte.hidden = true; return; }
+    const faits = espace ? espace.faits : [];
+    const estFaite = appli => appli.cle !== "cours"
+      && (faits.includes(appli.cle) || termineePourDeBon(appli, jauges[appli.cle] || null));
+    const reste = liste.filter(appli => !estFaite(appli));
+    const faites = liste.filter(appli => estFaite(appli) && faits.includes(appli.cle));
+    carte.hidden = false;
+    ensuite.textContent = "";
+    faitsDuJour.textContent = "";
+    if (!reste.length) {
+      carte.classList.add("fini");
+      $("jour-icone").innerHTML = CHECK_BLANC;
+      $("jour-nom").textContent = "C’est fait !";
+      $("jour-sous").textContent = "Pour aujourd’hui, à toi de choisir.";
+      bouton.hidden = true;
+      faites.forEach(appli => {
+        const fait = document.createElement("span");
+        fait.textContent = `✓ ${appli.nom}`;
+        faitsDuJour.append(fait);
+      });
+      faitsDuJour.hidden = false;
+      return;
+    }
+    carte.classList.remove("fini");
+    faitsDuJour.hidden = true;
+    bouton.hidden = false;
+    const appli = reste[0];
+    $("jour-icone").innerHTML = icone(appli.cle);
+    $("jour-nom").textContent = appli.nom;
+    $("jour-sous").textContent = sousTitre(appli, jauges[appli.cle] || null, nCours);
+    if (appli.cle === "cours") {
+      bouton.textContent = "Ouvrir mes cours";
+      bouton.href = "#cours";
+      bouton.onclick = null;
+    } else {
+      bouton.textContent = "Commencer";
+      bouton.href = adresseAppli(appli, donnees.billet || "");
+      bouton.onclick = event => ouvrirAppli(event, bouton, appli, code, donnees.billet || "");
+    }
+    if (faites.length) ensuite.textContent = faites.map(fait => `✓ ${fait.nom}`).join("  ");
+    else if (reste[1]) {
+      const nom = document.createElement("b");
+      nom.textContent = reste[1].nom;
+      ensuite.append("Ensuite : ", nom);
     }
   }
 
@@ -1688,6 +1893,9 @@ try {
       aujourdhui: jourValide(brut.aujourdhui) ? brut.aujourdhui : "",
       jours: Array.isArray(brut.jours) ? brut.jours.filter(jourValide) : [],
       travail: brut.travail === true,
+      // Lot B1 : les applis faites AUJOURD'HUI (leur jour vert), lues le jour même.
+      faits: Array.isArray(brut.faits) && jourValide(brut.aujourdhui) && brut.aujourdhui === jourDeLAppareil()
+        ? brut.faits.filter(c => typeof c === "string" && Object.prototype.hasOwnProperty.call(JAUGES, c)) : [],
       ouvertes: Array.isArray(brut.ouvertes)
         ? brut.ouvertes.filter(c => typeof c === "string" && Object.prototype.hasOwnProperty.call(JAUGES, c)) : []
     };
@@ -1798,36 +2006,26 @@ try {
 
     const liste = $("applis");
     liste.textContent = "";
-    // Seules les applis ouvertes (le serveur n'envoie plus que celles-là ; un
-    // serveur d'avant le lot « retours de classe » enverrait encore les
-    // annonces : elles sont simplement ignorées).
     const disponibles = (donnees.applis || []).filter(a => a.disponible && a.url);
-
-    disponibles.forEach(appli => {
-      // L'appli Cours a sa tuile à elle, en tête (poserTuileCours).
-      if (appli.cle === "cours") return;
-      const li = document.createElement("li");
-      const lien = document.createElement("a");
-      lien.className = "appli";
-      // La clé sert à retrouver la tuile pour y poser sa jauge (voir
-      // poserLesJauges). Elle vient du catalogue du serveur, pas de l'élève.
-      lien.dataset.cle = appli.cle;
-      // Le billet de l'entrée sert de secours (clic du milieu, « ouvrir dans un
-      // nouvel onglet ») ; un clic ordinaire en demande un frais.
-      lien.href = adresseAppli(appli, donnees.billet || "");
-      lien.addEventListener("click", event => ouvrirAppli(event, lien, appli, code, donnees.billet || ""));
-      lien.innerHTML = `${icone(appli.cle)}<div class="texte"><strong></strong><span></span></div>${FLECHE}`;
-      lien.querySelector("strong").textContent = appli.nom;
-      lien.querySelector("span").textContent = appli.description;
-      // Lot S3 : la tuile épurée — la phrase n'est plus utile à l'élève qui
-      // a déjà ouvert l'appli (le serveur a son parcours).
-      lien.querySelector("span").hidden = ouvertes.includes(appli.cle);
-      li.appendChild(lien);
-      liste.appendChild(li);
+    const cours = coursLus(donnees.cours);
+    coursOuverts = cours;
+    const nCours = cours ? cours.length : 0;
+    const visibles = disponibles.filter(a => a.cle !== "cours" || nCours);
+    // L'ordre : Mes cours, puis les activités de la classe, puis SPLAT! (porte
+    // longue) — fixe, quoi que disent les jauges.
+    const rang = a => (a.cle === "cours" ? 0 : a.cle === "splat" ? 2 : 1);
+    const portes = visibles.map((a, i) => [a, i]).sort((x, y) => rang(x[0]) - rang(y[0]) || x[1] - y[1]).map(x => x[0]);
+    // Un nombre impair de portes courtes : la dernière devient longue.
+    const courtes = portes.filter(a => !PORTES_LONGUES.includes(a.cle));
+    portes.forEach(appli => {
+      const li = porteDe(appli, (jauges || {})[appli.cle] || null, donnees, code, nCours);
+      if (courtes.length % 2 && appli === courtes[courtes.length - 1]) li.classList.add("long");
+      liste.append(li);
     });
-
-    // Lot E4 : la tuile de l'évaluation mène à Défi tables, comme sa tuile —
-    // même adresse, même billet. Cachée jusqu'à la première lecture.
+    // Grand écran, quatre colonnes : une porte longue seule sur sa rangée
+    // prend toute la largeur.
+    const cases = [...liste.children].reduce((n, li) => n + (li.classList.contains("long") ? 2 : 1), 0);
+    if (cases % 4 === 2 && liste.lastElementChild) liste.lastElementChild.classList.add("pleine");
     appliEvaluation = disponibles.find(appli => appli.cle === "defi-tables") || null;
     const tuileEvaluation = $("evaluation-lien");
     if (!dejaSuivi) tuileEvaluation.hidden = true;
@@ -1835,9 +2033,7 @@ try {
     tuileEvaluation.onclick = appliEvaluation
       ? event => ouvrirAppli(event, tuileEvaluation, appliEvaluation, code, donnees.billet || "")
       : event => event.preventDefault();
-
-    // L'appli Cours : sa tuile en tête de la liste.
-    poserTuileCours(coursLus(donnees.cours));
+    poserJour(visibles, jauges || {}, espace, donnees, code, nCours);
     if (!liste.children.length) {
       const li = document.createElement("li");
       li.className = "aide";
@@ -1848,7 +2044,6 @@ try {
     // Les jauges sont posées AVANT que la grille se montre (lot 8) : un seul
     // dessin, à sa place définitive. Celles qui manquent (serveur muet,
     // moteur absent) ne manquent qu'à leur tuile.
-    poserLesJauges(jauges || {}, disponibles.map(appli => appli.cle));
 
     $("ecran-code").hidden = true;
     $("ecran-espace").hidden = false;
@@ -1929,24 +2124,6 @@ try {
         imprimable: adresseCours(c.imprimable)
       }))
       .filter(c => c.fiches.length || c.brevet);
-  }
-
-  // La tuile : « Mes cours », la PREMIÈRE de la liste des activités, et
-  // dessous le nombre de chapitres ouverts (choix de Gwenaël du 08/11/2026).
-  // Aucun chapitre ouvert : pas de tuile. Une activité commencée remonte en
-  // tête, mais sous « Mes cours » (remonter).
-  function poserTuileCours(cours) {
-    coursOuverts = cours;
-    const liste = $("applis");
-    const ancienne = liste.querySelector("li.cours-li");
-    if (ancienne) ancienne.remove();
-    const n = cours ? cours.length : 0;
-    if (!n) return;
-    const li = document.createElement("li");
-    li.className = "cours-li";
-    li.innerHTML = `<a class="appli cours-tuile" id="cours-lien" href="#cours">${icone("cours")}<div class="texte"><strong>Mes cours</strong><span></span></div>${FLECHE}</a>`;
-    li.querySelector(".texte span").textContent = n > 1 ? `${n} chapitres` : "1 chapitre";
-    liste.prepend(li);
   }
 
   // « LE TRIANGLE RECTANGLE », au-dessus d'un titre de chapitre. Pas d'étiquette

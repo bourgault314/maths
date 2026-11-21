@@ -257,7 +257,8 @@ test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmat
   // tables faisait doublon ; l'évaluation s'annonce comme la séance en direct.
   const espace = lire("_serveur/public/index.php");
   assert.ok(!espace.includes("pastille-evaluation") && !espace.includes("poserPastilleEvaluation") && !espace.includes("a-evaluation"), "plus de pastille");
-  assert.match(espace, /<a class="appli direct-lien" id="direct-lien" href="direct\.php" hidden>[\s\S]*?<\/a>\s*<a class="appli direct-lien" id="evaluation-lien" href="#" hidden>/, "juste sous la tuile de la séance en direct, même dessin, cachée par défaut");
+  // Lot B1 : une carte du bloc « Aujourd'hui », juste après celle de la séance en direct, même dessin.
+  assert.match(espace, /<a class="jour-carte jour-direct" id="direct-lien" href="direct\.php" hidden>[\s\S]*?<\/a>\s*<a class="jour-carte" id="evaluation-lien" href="#" hidden>/, "juste sous la tuile de la séance en direct, même dessin, cachée par défaut");
   assert.match(espace, /<strong>Évaluation de tables<\/strong><span id="evaluation-lien-texte">Commencer l’évaluation\.<\/span>/);
   assert.match(espace, /function poserTuileEvaluation\(etat\) \{\s*const ouverte = Boolean\(appliEvaluation && etat && etat\.etat === "ouverte" && !etat\.fini && !etat\.close\);\s*\$\("evaluation-lien"\)\.hidden = !ouverte;\s*if \(ouverte\) \$\("evaluation-lien-texte"\)\.textContent = etat\.commence \? "Continuer l’évaluation\." : "Commencer l’évaluation\.";/, "ouverte et pas finie ; « continuer » s'il a commencé ; textContent");
   assert.match(espace, /poserTuileEvaluation\(donnees\.evaluation\);/, "posée à chaque lecture de api/direct.php");
@@ -266,7 +267,8 @@ test("E2 — Ma classe : la liste dépliée, « Faire repasser » avec confirmat
   assert.match(espace, /appliEvaluation = disponibles\.find\(appli => appli\.cle === "defi-tables"\) \|\| null;/);
   assert.match(espace, /tuileEvaluation\.href = appliEvaluation \? adresseAppli\(appliEvaluation, donnees\.billet \|\| ""\) : "#";/);
   assert.match(espace, /tuileEvaluation\.onclick = appliEvaluation\s*\? event => ouvrirAppli\(event, tuileEvaluation, appliEvaluation, code, donnees\.billet \|\| ""\)/);
-  assert.match(espace, /lien\.addEventListener\("click", event => ouvrirAppli\(event, lien, appli, code, donnees\.billet \|\| ""\)\);/, "les tuiles des activités passent par la même fonction");
+  assert.match(espace, /porte\.addEventListener\("click", event => ouvrirAppli\(event, porte, appli, code, donnees\.billet \|\| ""\)\);/, "les portes des activités passent par la même fonction");
+  assert.match(espace, /bouton\.onclick = event => ouvrirAppli\(event, bouton, appli, code, donnees\.billet \|\| ""\);/, "le bouton du bloc « Aujourd'hui » aussi");
 });
 
 test("E4 — Mon espace : la tuile « Évaluation de tables », jouée — ouverte et pas finie seulement, « continuer » s'il a commencé, jamais sans Défi tables", () => {

@@ -404,7 +404,7 @@ test("le rang de la tuile est celui de l'état ; plus jamais de « Mon mélange 
 // le lecteur n'est pas appelé (test « aucun parcours » plus bas).
 test("un parcours tout neuf : ni barre, ni compte, ni rang — la pastille « Aujourd'hui » seule", () => {
   const lire = lecteurDeJauge()["defi-tables"];
-  assert.deepEqual(lire(PARCOURS, PARCOURS.creerParcours()), {aujourdhui: {faite: false, texte: "\u{1F514} Aujourd’hui\u00a0: la table de\u00a02"}},
+  assert.deepEqual(lire(PARCOURS, PARCOURS.creerParcours()), {aujourdhui: {faite: false, texte: "\u{1F514} Aujourd’hui\u00a0: la table de\u00a02", quoi: "la table de\u00a02"}},
     "une barre vide n'apprend rien à l'élève et ressemble à un reproche ; « par où commencer » si");
   assert.equal(lire(PARCOURS, "pas un objet"), null, "un parcours illisible : rien");
   assert.equal(lire(PARCOURS, null), null);
@@ -458,8 +458,12 @@ test("les moteurs sont servis d'ici et ne sont chargés que s'il y a un parcours
 // nº 1 tient toujours : une jauge qui ne vient pas n'empêche rien.
 test("la grille se montre d'un coup, jauges posées ; elle ne les attend qu'un instant (lot 8)", () => {
   const espace = page.slice(page.indexOf("  function afficherEspace("), page.indexOf("\n  }\n", page.indexOf("  function afficherEspace(")));
-  const pose = espace.indexOf("poserLesJauges(jauges || {}, disponibles.map(appli => appli.cle));");
+  // Lot B1 : chaque porte est construite avec sa jauge (porteDe), et le bloc
+  // « Aujourd'hui » aussi, AVANT que la grille se montre.
+  const pose = espace.indexOf("const li = porteDe(appli, (jauges || {})[appli.cle] || null, donnees, code, nCours);");
+  const jour = espace.indexOf("poserJour(visibles, jauges || {}, espace, donnees, code, nCours);");
   assert.ok(pose > 0 && pose < espace.indexOf('$("ecran-espace").hidden = false;'), "les jauges sont posées avant que la grille se montre");
+  assert.ok(jour > 0 && jour < espace.indexOf('$("ecran-espace").hidden = false;'), "le bloc « Aujourd'hui » aussi");
   assert.doesNotMatch(espace, /await/, "afficherEspace n'attend rien : elle dessine ce qu'on lui donne");
   assert.match(page, /const ATTENTE_JAUGES = 1000;/);
   assert.match(page, /const lecture = lireJauges\(donnees, code\)\.catch\(\(\) => \(\{\}\)\);/, "une lecture qui échoue rend « aucune jauge »");
@@ -467,12 +471,16 @@ test("la grille se montre d'un coup, jauges posées ; elle ne les attend qu'un i
 });
 
 test("la jauge se construit par textContent, jamais en HTML", () => {
-  const debut = page.indexOf("  function poserJauge(");
-  const bloc = page.slice(debut, page.indexOf("\n  }", debut));
-  assert.doesNotMatch(bloc, /innerHTML/, "un parcours est fabriqué par l'appareil d'un élève");
-  assert.match(bloc, /compte\.textContent = jauge\.compte;/);
-  assert.match(bloc, /note\.textContent = jauge\.note;/);
-  assert.match(bloc, /bonus\.textContent = jauge\.bonus;/);
+  // Lot B1 : la jauge est dans la porte (son insigne et sa ligne).
+  const debut = page.indexOf("// ======================================================== lot B1 : les portes");
+  const bloc = page.slice(debut, page.indexOf("// ===================================================== lot B1 : « Aujourd'hui »", debut));
+  assert.ok(debut > 0, "les portes ont leur section");
+  assert.deepEqual(bloc.match(/innerHTML[^;]*;/g), ["innerHTML = icone(appli.cle);"],
+    "un parcours est fabriqué par l'appareil d'un élève : seul le dessin de l'appli (écrit dans la page) passe en HTML");
+  assert.match(bloc, /ligne\.textContent = jauge\.compte;/);
+  assert.match(bloc, /ligne\.textContent = jauge\.gain;/);
+  assert.match(bloc, /cles\.textContent = texteCourt\(jauge\.cles\);/);
+  assert.match(bloc, /document\.createTextNode\(texteCourt\(jauge\.grade\)\)/);
   const debutPastille = page.indexOf("  function pastilleMonde(");
   const pastille = page.slice(debutPastille, page.indexOf("\n  }", debutPastille));
   assert.ok(debutPastille > 0, "les pastilles de SPLAT! sont dessinées par pastilleMonde");
@@ -518,18 +526,24 @@ function serveurDesParcours(parActivite) {
 function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"], reglages}) {
   const debut = page.indexOf("  const JAUGES = {");
   assert.ok(debut > 0, "la page doit nommer les moteurs qu'elle charge");
-  // Lot 8 : la lecture (lireJauges) puis la pose (poserLesJauges), jouées
-  // ensemble comme le fait la page.
+  // Lot 8 : la lecture (lireJauges) ; lot B1 : puis une porte par activité
+  // (porteDe), jouées ensemble comme le fait la page.
   const ancre = page.indexOf("  async function lireJauges(donnees, code) {", debut);
   assert.ok(ancre > debut, "la lecture des jauges suit les moteurs");
-  const fin = page.indexOf("\n  }", page.indexOf("for (let i = aLire.length - 1", ancre)) + "\n  }".length;
-  const source = page.slice(debut, fin)
+  const finLecture = page.indexOf("\n  }\n", ancre) + "\n  }".length;
+  const debutPortes = page.indexOf("  // ======================================================== lot B1 : les portes");
+  const finPortes = page.indexOf("  // ===================================================== lot B1 : « Aujourd'hui »");
+  assert.ok(debutPortes > 0 && finPortes > debutPortes, "les portes ont leur section");
+  const source = (page.slice(debut, finLecture) + "\n" + page.slice(debutPortes, finPortes))
     .replace(/<\?=[\s\S]*?\?>/g, "0123456789")
     + "\n  return async (donnees, code) => { const jauges = await lireJauges(donnees, code); "
-    + "poserLesJauges(jauges, (donnees.applis || []).map(appli => appli.cle)); return jauges; };";
+    + "const portes = {}; (donnees.applis || []).forEach(appli => { portes[appli.cle] = porteDe(appli, jauges[appli.cle] || null, donnees, code, 0).enfants[0]; }); "
+    + "return {jauges, portes}; };";
 
   const faireNoeud = (nom, espace) => {
-    const noeud = {nom, espace, style: {}, textContent: "", enfants: [], ecouteurs: {}, attributs: {},
+    const noeud = {nom, espace, style: {setProperty() {}}, textContent: "", enfants: [], ecouteurs: {}, attributs: {},
+      className: "", dataset: {}, innerHTML: "",
+      classList: {add(c) { noeud.className = `${noeud.className} ${c}`.trim(); }},
       append(...n) { noeud.enfants.push(...n); },
       // La page écoute « load » et « error » par addEventListener : sans cette
       // ligne, le faux <script> n'a pas d'écouteur du tout et la promesse du
@@ -539,22 +553,6 @@ function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"],
       querySelector: () => null};
     return noeud;
   };
-  const tuiles = {};
-  applis.forEach(cle => {
-    const tuile = {cle, classes: [], enfants: [],
-      classList: {add(nom) { tuile.classes.push(nom); }},
-      querySelector: () => (tuile.enfants.length ? tuile.enfants[0] : null),
-      closest: () => ({cle}),
-      append(noeud) { tuile.enfants.push(noeud); }};
-    tuiles[cle] = tuile;
-  });
-  const remontees = [];
-  const liste = {
-    querySelector: selecteur => tuiles[(selecteur.match(/data-cle="([^"]+)"/) || [])[1]] || null,
-    firstChild: {cle: "premiere"},
-    insertBefore(li) { remontees.push(li.cle); }
-  };
-  const $ = () => liste;
   // Le moteur se charge par un <script> ajouté à la volée. Le faux document
   // installe le moteur et rend « load », ou rend « error » selon
   // `moteurCharge` (un booléen, ou une fonction de l'adresse) : c'est le seul
@@ -564,7 +562,7 @@ function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"],
   const fenetre = {};
   const charges = [];
   const doc = {createElement: nom => faireNoeud(nom), createElementNS: (espace, nom) => faireNoeud(nom, espace),
-    createTextNode: t => ({texte: t}),
+    createTextNode: t => ({texte: t, textContent: t}),
     head: {appendChild(script) {
       charges.push(script.src);
       const reussit = typeof moteurCharge === "function" ? moteurCharge(script.src) : moteurCharge;
@@ -576,26 +574,41 @@ function jouerHabillage({reponse, moteurCharge = true, applis = ["defi-tables"],
         script.ecouteurs[reussit ? "load" : "error"]?.();
       }, 0);
     }}};
-  const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math", source)(
-    $, fenetre, doc, reponse, {escape: x => x}, Promise, Math);
-  const donnees = {applis: applis.map(cle => ({cle, disponible: true, url: "https://exemple/", ancre: null})),
+  // Les dessins (pastilles des mondes, coffres) sont dans le même morceau de
+  // page que la lecture ; le dessin de l'appli et le lien sont remplacés.
+  const habiller = new Function("$", "window", "document", "fetch", "CSS", "Promise", "Math",
+    "icone", "adresseAppli", "ouvrirAppli", source)(
+    () => null, fenetre, doc, reponse, {escape: x => x}, Promise, Math,
+    () => "<svg></svg>", () => "https://exemple/#b=", () => {});
+  const donnees = {applis: applis.map(cle => ({cle, nom: cle, disponible: true, url: "https://exemple/", ancre: null})),
     ...(reglages ? {reglages} : {})};
-  return {habiller: habiller(donnees, "ABC123"), tuile: tuiles[applis[0]], tuiles, charges, remontees};
+  const resultat = habiller(donnees, "ABC123").then(r => { Object.assign(portes, r.portes); return r.jauges; });
+  const portes = {};
+  return {habiller: resultat, get tuile() { return portes[applis[0]]; }, tuiles: portes, charges};
 }
 
+// Ce que montre une porte : son insigne, sa ligne, ses mondes (et tous ses nœuds).
+const tousLesNoeuds = (noeud, sortie = []) => { (noeud.enfants || []).forEach(n => { sortie.push(n); tousLesNoeuds(n, sortie); }); return sortie; };
+const insigneDe = porte => tousLesNoeuds(porte).find(n => /^insigne/.test(n.className || "")) || null;
+const ligneDe = porte => tousLesNoeuds(porte).find(n => /porte-ligne/.test(n.className || ""));
+
 test("serveur muet : la tuile reste exactement ce qu'elle était", async () => {
-  const {habiller, tuile} = jouerHabillage({reponse: () => Promise.reject(new Error("réseau"))});
+  const jeu = jouerHabillage({reponse: () => Promise.reject(new Error("réseau"))});
+  const {habiller} = jeu;
   await habiller;
-  assert.deepEqual(tuile.enfants, [], "rien n'a été ajouté à la tuile");
-  assert.deepEqual(tuile.classes, [], "et elle n'a même pas changé de classe");
+  const porte = jeu.tuile;
+  assert.equal(insigneDe(porte), null, "pas d'insigne");
+  assert.equal(ligneDe(porte).textContent, "", "la porte reste nue : son nom et son dessin");
 });
 
 test("réponse illisible : pas de jauge, pas d'erreur affichée", async () => {
-  const {habiller, tuile} = jouerHabillage({
+  const jeu = jouerHabillage({
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: "pas un objet"})})
   });
-  await habiller;
-  assert.deepEqual(tuile.enfants, [], "un parcours illisible ne casse rien et n'écrit rien");
+  const jauges = await jeu.habiller;
+  assert.equal("defi-tables" in jauges, false, "un parcours illisible ne casse rien et n'écrit rien");
+  assert.equal(insigneDe(jeu.tuile), null);
+  assert.equal(ligneDe(jeu.tuile).textContent, "");
 });
 
 // Le moteur absent, c'est le fichier oublié pendant un dépôt FTP, ou un cache
@@ -608,24 +621,24 @@ test("réponse illisible : pas de jauge, pas d'erreur affichée", async () => {
 // rejouant le sabotage q le 09/09/2026.)
 test("moteur introuvable : la grille reste entière, sans jauge et sans message", {timeout: 5000}, async () => {
   const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
-  const {habiller, tuile} = jouerHabillage({
+  const jeu = jouerHabillage({
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})}),
     moteurCharge: false
   });
-  await habiller;
-  assert.deepEqual(tuile.enfants, [],
-    "le parcours est bien arrivé, mais rien ne peut le lire : la tuile ne bouge pas");
-  assert.deepEqual(tuile.classes, [], "et elle ne change même pas de classe");
+  const jauges = await jeu.habiller;
+  assert.equal("defi-tables" in jauges, false, "le parcours est bien arrivé, mais rien ne peut le lire");
+  assert.equal(insigneDe(jeu.tuile), null, "la porte ne bouge pas : ni insigne,");
+  assert.equal(ligneDe(jeu.tuile).textContent, "", "ni ligne");
 });
 
-test("parcours reçu : la jauge est posée sur la tuile", async () => {
+test("parcours reçu : la jauge est posée sur la porte (lot B1 : la ligne et l'insigne)", async () => {
   const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises: 4})));
-  const {habiller, tuile} = jouerHabillage({
+  const jeu = jouerHabillage({
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})})
   });
-  await habiller;
-  assert.equal(tuile.enfants.length, 1, "la jauge est ajoutée");
-  assert.deepEqual(tuile.classes, ["a-jauge"], "et la tuile passe en plusieurs lignes");
+  await jeu.habiller;
+  assert.equal(ligneDe(jeu.tuile).textContent, "4 tables passées sur 9", "la ligne dit où l'élève en est");
+  assert.ok(insigneDe(jeu.tuile), "le rang gagné est dans l'insigne");
 });
 
 // La barre est le seul élément graphique du lot, et jusqu'ici aucun test ne la
@@ -633,22 +646,23 @@ test("parcours reçu : la jauge est posée sur la tuile", async () => {
 // verts (relevé par Claude Code le 09/09/2026). Elle se mesure ici sur la
 // tuile construite par la page : la partie remplie a une largeur en pour cent,
 // arrondie, égale à la part des tables acquises.
-async function largeurDeLaBarre(acquises) {
-  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises, melangeAJour: true})));
-  const {habiller, tuile} = jouerHabillage({
+// Lot B1 (maquette validée le 21/11/2026) : plus de barre — la ligne de la
+// porte donne le compte, l'insigne le rang. Le compte se mesure ici sur la
+// porte construite par la page.
+async function ligneDesTables(acquises, etoiles = 0) {
+  const parcours = JSON.parse(JSON.stringify(parcoursFabrique({acquises, melangeAJour: true, etoiles})));
+  const jeu = jouerHabillage({
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours})})
   });
-  await habiller;
-  const [bloc] = tuile.enfants;
-  const [barre] = bloc.enfants;
-  const [remplie] = barre.enfants;
-  return remplie.style.width;
+  await jeu.habiller;
+  const insigne = insigneDe(jeu.tuile);
+  return [ligneDe(jeu.tuile).textContent, insigne ? insigne.className : ""];
 }
 
-test("la barre de la tuile est remplie à la mesure des tables acquises", async () => {
-  assert.equal(await largeurDeLaBarre(4), "44%", "4 tables sur 9 : 44,4 % arrondi à 44");
-  assert.equal(await largeurDeLaBarre(1), "11%", "1 table sur 9");
-  assert.equal(await largeurDeLaBarre(9), "100%", "9 sur 9 : la barre est pleine");
+test("la porte Défi tables : le compte des tables sur la ligne, le rang dans l'insigne", async () => {
+  assert.deepEqual(await ligneDesTables(4), ["4 tables passées sur 9", "insigne argent"]);
+  assert.deepEqual(await ligneDesTables(1), ["1 table passée sur 9", "insigne bronze"]);
+  assert.deepEqual(await ligneDesTables(9, 5), ["9 tables passées sur 9", "insigne legende"], "la Légende : la couronne");
 });
 
 // -------------------------------------------------------------------------
@@ -729,13 +743,12 @@ test("SPLAT! : la page lit le parcours par le moteur, jamais elle-même", () => 
 });
 
 test("parcours SPLAT! reçu : six pastilles numérotées, la moitié pour le monde en cours, le compte dessous", async () => {
-  const {habiller, tuiles} = jouerHabillage({reponse: serveurDesParcours({splat: LEA()}), applis: ["defi-tables", "splat"]});
-  await habiller;
-  const tuile = tuiles.splat;
-  assert.deepEqual(tuile.classes, ["a-jauge"]);
-  assert.deepEqual(tuiles["defi-tables"].enfants, [], "Défi tables, jamais ouvert, reste sans jauge");
-  const [bloc] = tuile.enfants;
-  const [mondes, ligne] = bloc.enfants;
+  const jeu = jouerHabillage({reponse: serveurDesParcours({splat: LEA()}), applis: ["defi-tables", "splat"]});
+  await jeu.habiller;
+  const tuile = jeu.tuiles.splat;
+  assert.equal(ligneDe(jeu.tuiles["defi-tables"]).textContent, "", "Défi tables, jamais ouvert, reste sans jauge");
+  const mondes = tousLesNoeuds(tuile).find(n => n.className === "mondes");
+  const ligne = ligneDe(tuile);
   assert.equal(mondes.className, "mondes");
   assert.equal(mondes.attributs.role, "img");
   assert.equal(mondes.attributs["aria-label"],
@@ -763,10 +776,8 @@ test("parcours SPLAT! reçu : six pastilles numérotées, la moitié pour le mon
   assert.equal(chiffreDe(mondes.enfants[3]).fill, "#92400e", "vide : chiffre de la couleur du monde");
   assert.deepEqual([chiffreDe(mondes.enfants[2]).fill, chiffreDe(mondes.enfants[2]).stroke, chiffreDe(mondes.enfants[2])["paint-order"]],
     ["#fff", "#be185d", "stroke"], "à moitié : chiffre blanc cerné de la couleur, lisible des deux côtés");
-  const [compte, bonus] = ligne.enfants;
-  assert.equal(compte.textContent, "13 étapes réussies sur 40");
-  assert.equal(bonus.className, "bonus");
-  assert.equal(bonus.textContent, "✨ 1 bonus");
+  // Lot B1 : la ligne de la porte longue, courte (« étapes », le Bonus au bout).
+  assert.equal(ligne.textContent, "13\u00a0étapes sur 40 · ✨ 1 bonus");
 });
 
 test("le moteur SPLAT! n'est chargé que si l'élève a un parcours SPLAT!", async () => {
@@ -774,29 +785,29 @@ test("le moteur SPLAT! n'est chargé que si l'élève a un parcours SPLAT!", asy
   const seulTables = jouerHabillage({reponse: serveurDesParcours({"defi-tables": tables}), applis: ["defi-tables", "splat"], moteurCharge: true});
   await seulTables.habiller;
   assert.deepEqual(seulTables.charges, ["prof/defi_tables_mon_parcours.js?v=0123456789"], "pas de moteur SPLAT! sans parcours SPLAT!");
-  assert.equal(seulTables.tuiles["defi-tables"].enfants.length, 1);
+  assert.equal(ligneDe(seulTables.tuiles["defi-tables"]).textContent, "4 tables passées sur 9");
   const seulSplat = jouerHabillage({reponse: serveurDesParcours({splat: LEA()}), applis: ["defi-tables", "splat"]});
   await seulSplat.habiller;
   assert.deepEqual(seulSplat.charges, ["prof/splat-parcours.js?v=0123456789"], "et pas celui de Défi tables sans parcours de tables");
   const lesDeux = jouerHabillage({reponse: serveurDesParcours({"defi-tables": tables, splat: LEA()}), applis: ["defi-tables", "splat"]});
   await lesDeux.habiller;
   assert.equal(lesDeux.charges.length, 2);
-  assert.equal(lesDeux.tuiles["defi-tables"].enfants.length, 1);
-  assert.equal(lesDeux.tuiles.splat.enfants.length, 1);
-  assert.deepEqual(lesDeux.remontees, ["splat", "defi-tables"],
-    "les deux commencées remontent, la première de la liste finit en tête");
+  assert.equal(ligneDe(lesDeux.tuiles["defi-tables"]).textContent, "4 tables passées sur 9");
+  assert.match(ligneDe(lesDeux.tuiles.splat).textContent, /^13\u00a0étapes sur 40/);
+  // Lot B1 : l'ordre des portes ne change plus avec les jauges (rien ne remonte).
+  assert.doesNotMatch(page, /insertBefore|function remonter/, "plus rien ne remonte quand une jauge arrive");
 });
 
 test("moteur SPLAT! introuvable : la tuile SPLAT! reste nue, celle de Défi tables a sa jauge", {timeout: 5000}, async () => {
-  const {habiller, tuiles} = jouerHabillage({
+  const jeu = jouerHabillage({
     reponse: serveurDesParcours({"defi-tables": parcoursFabrique({acquises: 4}), splat: LEA()}),
     applis: ["defi-tables", "splat"],
     moteurCharge: adresse => !adresse.includes("splat-parcours.js")
   });
-  await habiller;
-  assert.deepEqual(tuiles.splat.enfants, [], "rien ne peut lire le parcours SPLAT! : la tuile ne bouge pas");
-  assert.deepEqual(tuiles.splat.classes, []);
-  assert.equal(tuiles["defi-tables"].enfants.length, 1, "l'autre activité n'en souffre pas");
+  await jeu.habiller;
+  assert.equal(ligneDe(jeu.tuiles.splat).textContent, "", "rien ne peut lire le parcours SPLAT! : la porte ne bouge pas");
+  assert.equal(tousLesNoeuds(jeu.tuiles.splat).some(n => n.className === "mondes"), false, "ni mondes");
+  assert.equal(ligneDe(jeu.tuiles["defi-tables"]).textContent, "4 tables passées sur 9", "l'autre activité n'en souffre pas");
 });
 
 // -------------------------------------------------------------------------
@@ -840,13 +851,10 @@ test("SPLAT! : du travail seulement dans des mondes fermés, pas de jauge ; tous
 });
 
 test("SPLAT! : l'espace passe les réglages de la classe à la jauge, et la pastille d'un monde fermé est grise en pointillés", async () => {
-  const {habiller, tuiles} = jouerHabillage({applis: ["splat"], reglages: MONDES_1_2,
+  const jeu = jouerHabillage({applis: ["splat"], reglages: MONDES_1_2,
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: LEA()})})});
-  await habiller;
-  const tuile = tuiles.splat;
-  assert.equal(tuile.enfants.length, 1, "la jauge est posée");
-  const tous = (noeud, sortie = []) => { (noeud.enfants || []).forEach(n => { sortie.push(n); tous(n, sortie); }); return sortie; };
-  const noeuds = tous(tuile);
+  await jeu.habiller;
+  const noeuds = tousLesNoeuds(jeu.tuiles.splat);
   const svgs = noeuds.filter(n => n.nom === "svg");
   assert.deepEqual(svgs.map(s => s.attributs.class), ["monde-p fini", "monde-p fini", "monde-p ferme", "monde-p ferme", "monde-p ferme", "monde-p ferme"]);
   const ferme = svgs[2];
@@ -858,7 +866,7 @@ test("SPLAT! : l'espace passe les réglages de la classe à la jauge, et la past
   assert.ok(!ferme.enfants.some(n => n.nom === "path"), "pas de moitié : le travail d'un monde fermé ne se lit pas dans la tuile");
   assert.equal(chiffre.attributs.y, "16.375", "le chiffre centré comme sur les autres pastilles");
   assert.equal(chiffre.textContent, "3");
-  assert.ok(noeuds.some(n => n.textContent === "9 étapes réussies sur 9"));
+  assert.ok(noeuds.some(n => n.textContent === "9\u00a0étapes sur 9"));
   const etiquette = noeuds.find(n => n.attributs && n.attributs["aria-label"]);
   assert.match(etiquette.attributs["aria-label"], /Monde 3 : fermé pour ta classe/);
 });
@@ -886,18 +894,14 @@ test("qui-voit-quoi — la page ne lit que « applis » et « reglages » : elle
 test("qui-voit-quoi — Léa, 405 (mondes 1 et 2) avec le monde 3 en plus : la tuile compte sur SES mondes, sans une ligne de plus dans la page", async () => {
   // Ce que le serveur rend pour Léa : {"splat": {"mondes": [1, 2, 3]}} — la
   // classe plus son ajout, déjà additionnés. La page n'y voit qu'un réglage.
-  const {habiller, tuiles} = jouerHabillage({applis: ["splat"], reglages: {splat: {mondes: [1, 2, 3]}},
+  const jeu = jouerHabillage({applis: ["splat"], reglages: {splat: {mondes: [1, 2, 3]}},
     reponse: () => Promise.resolve({ok: true, json: () => Promise.resolve({ok: true, existe: true, parcours: LEA()})})});
-  await habiller;
-  const tuile = tuiles.splat;
-  assert.equal(tuile.enfants.length, 1, "la jauge est posée");
-  const tous = (noeud, sortie = []) => { (noeud.enfants || []).forEach(n => { sortie.push(n); tous(n, sortie); }); return sortie; };
-  const noeuds = tous(tuile);
+  await jeu.habiller;
+  const noeuds = tousLesNoeuds(jeu.tuiles.splat);
   const svgs = noeuds.filter(n => n.nom === "svg");
   assert.deepEqual(svgs.map(s => s.attributs.class), ["monde-p fini", "monde-p fini", "monde-p cours", "monde-p ferme", "monde-p ferme", "monde-p ferme"],
     "le monde 3 est ouvert pour elle (en cours), les trois autres fermés");
-  assert.ok(noeuds.some(n => n.textContent === "13 étapes réussies sur 24"), "9 + 4 étapes, sur 9 + 15 : ses mondes à elle");
-  assert.ok(noeuds.some(n => n.textContent === "✨ 1 bonus"), "son Bonus du monde 3 compte");
+  assert.ok(noeuds.some(n => n.textContent === "13\u00a0étapes sur 24 · ✨ 1 bonus"), "9 + 4 étapes, sur 9 + 15 : ses mondes à elle ; son Bonus du monde 3 compte");
   // Lucas, même classe, sans ajout : exactement ce qu'il recevait avant le lot.
   const lucas = lecteurDeJauge().splat(SPLAT, LEA(), MONDES_1_2);
   assert.equal(lucas.compte, "9 étapes réussies sur 9");
@@ -910,6 +914,6 @@ test("qui-voit-quoi — une appli donnée à un seul élève (Coffres) a sa tuil
   const debut = page.indexOf("  const ICONES = {");
   const icones = page.slice(debut, page.indexOf("\n  };", debut));
   assert.ok(icones.includes('"coffres":'), "Coffres a son dessin");
-  assert.match(page, /lien\.dataset\.cle = appli\.cle;/, "la tuile porte la clé que le serveur rend");
+  assert.match(page, /porte\.dataset\.cle = appli\.cle;/, "la porte porte la clé que le serveur rend");
   assert.doesNotMatch(page, /applis\.filter\([^)]*classe/, "la page ne filtre jamais sur la classe : la liste reçue est la liste");
 });

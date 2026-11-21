@@ -147,7 +147,9 @@ test("le code de l'élève ne voyage que dans le corps d'un POST", () => {
 });
 
 test("l'espace élève : la tuile n'existe que pendant une séance, et part avec le ménage", () => {
-  assert.match(espace, /<a class="appli direct-lien" id="direct-lien" href="direct\.php" hidden>/, "cachée par défaut");
+  // Lot B1 : la séance en direct est une carte du bloc « Aujourd'hui », qui passe devant tout.
+  assert.match(espace, /<a class="jour-carte jour-direct" id="direct-lien" href="direct\.php" hidden>/, "cachée par défaut");
+  assert.match(espace, /\.jour-zone > a:not\(\[hidden\]\) ~ \.jour-carte \{ display: none; \}/, "visible, elle cache la carte de la journée");
   assert.match(espace, /\$\("direct-lien"\)\.hidden = !donnees\.direct;/, "montrée seulement si le serveur annonce une séance");
   const menage = espace.slice(espace.indexOf("  function revenirAuCode("), espace.indexOf("  $(\"changer\")"));
   assert.ok(menage.includes("arreterDirect();"), "« Se déconnecter » arrête la surveillance et retire la tuile");

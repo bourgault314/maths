@@ -103,12 +103,11 @@ test("le serveur : l'appli « cours » sans progression ; l'espace élève et Ma
   assert.match(cours, /const COURS_MOTIF_CHAPITRE = '\/\^\[0-9\]e-\[A-Z\]\{2,8\}\$\/';/);
   assert.match(cours, /const COURS_SITE = 'https:\/\/mathsgo\.re';/);
   const espace = lire("_serveur/public/index.php");
-  // La tuile « Mes cours » : la première de la liste des activités (choix de Gwenaël du 08/11/2026), posée
-  // seulement si un chapitre est ouvert ; une activité commencée remonte sous elle, jamais au-dessus.
-  assert.match(espace, /li\.className = "cours-li";[\s\S]*?liste\.prepend\(li\);/, "la tuile, en tête de la liste");
-  assert.match(espace, /if \(!n\) return;/, "pas de tuile sans chapitre ouvert");
-  assert.match(espace, /liste\.firstChild\.classList\.contains\("cours-li"\)/, "remonter() laisse « Mes cours » en tête");
-  assert.match(espace, /if \(appli\.cle === "cours"\) return;/, "pas de tuile ordinaire pour Cours");
+  // La porte « Mes cours » : la première des activités (choix de Gwenaël du 08/11/2026 ; lot B1 : une
+  // porte longue, l'ordre des portes ne change plus), posée seulement si un chapitre est ouvert.
+  assert.match(espace, /const rang = a => \(a\.cle === "cours" \? 0 : a\.cle === "splat" \? 2 : 1\);/, "la porte, en tête de la liste");
+  assert.match(espace, /const visibles = disponibles\.filter\(a => a\.cle !== "cours" \|\| nCours\);/, "pas de porte sans chapitre ouvert");
+  assert.match(espace, /if \(appli\.cle === "cours"\) \{ porte\.id = "cours-lien"; porte\.href = "#cours"; \}/, "elle mène à la liste des chapitres, sans billet");
   assert.match(espace, /"cours": '<svg class="icone"/, "son dessin, dans ICONES");
   assert.match(espace, /const ADRESSE_COURS = \/\^https:\\\/\\\/mathsgo\\\.re\\\/cours\\\//, "une adresse de fiche vérifiée");
   const blocEspace = espace.slice(espace.indexOf("// ------------------------------------------- l'appli Cours"), espace.indexOf("// Lot 8 : à la première entrée"));
