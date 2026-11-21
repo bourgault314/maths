@@ -1229,6 +1229,31 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   #ecran-connexion .logo-accueil { display: block; width: 180px; height: auto; margin: 4px auto 16px; }
   #ecran-connexion .carte { max-width: 420px; margin: 0 auto; text-align: left; }
   #ecran-connexion .actions button { flex: 1 1 100%; }
+  /* Lot E « Arriver » (21/11/2026, planche E-5) : sur ordinateur, la connexion
+     était petite au milieu d'un grand vide. À partir de 900 px : logo, titre,
+     carte, champs et bouton plus grands ; le bloc descend d'une hauteur fixe.
+     Sur un écran bas (768 px et moins, fenêtre de 720 px), tout se resserre
+     pour que la carte ET le pied tiennent (mesuré à 1366 × 657). Le titre
+     reste en Georgia (côté prof). En dessous de 900 px, rien ne change. */
+  @media (min-width: 900px) {
+    #ecran-connexion { padding-top: clamp(4px, 4vh, 48px); }
+    #ecran-connexion .logo-accueil { width: 240px; margin: 0 auto 20px; }
+    #ecran-connexion h1 { font-size: 2.6rem; }
+    #ecran-connexion .sous { font-size: 1.05rem; margin-bottom: 24px; }
+    #ecran-connexion .carte { max-width: 540px; padding: 18px 40px 32px; border-radius: 22px; }
+    #ecran-connexion label { font-size: 1.1rem; margin-top: 14px; }
+    #ecran-connexion input { min-height: 52px; font-size: 1.15rem; padding-left: 14px; }
+    #ecran-connexion .actions { margin-top: 24px; }
+    #ecran-connexion .actions button { min-height: 56px; font-size: 1.15rem; border-radius: 14px; }
+  }
+  @media (min-width: 900px) and (max-height: 720px) {
+    #ecran-connexion .logo-accueil { width: 190px; margin-bottom: 14px; }
+    #ecran-connexion h1 { font-size: 2.3rem; }
+    #ecran-connexion .sous { margin-bottom: 10px; }
+    #ecran-connexion .carte { padding: 12px 40px 26px; }
+    #ecran-connexion label { margin-top: 10px; }
+    #ecran-connexion .actions { margin-top: 20px; }
+  }
   /* Lot « cours-appli » (08/11/2026) : l'onglet Cours n'a pas de tableau. Tout
      ce qui sert aux applis suivies (cartes, outils, tableau) s'efface ; restent
      la ligne « qui voit », la carte d'un onglet grisé, le message et le panneau. */

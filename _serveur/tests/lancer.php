@@ -650,9 +650,12 @@ verifier("le manifeste connaît la page Infos", function () {
     // code-en-cases.js, copie du module commun du site.
     // 71 depuis Mon espace redessiné (lot B1, 21/11/2026) : les deux fichiers de
     // Nunito, polices/nunito-latin-wght-normal.woff2 et polices/nunito-latin-ext-wght-normal.woff2.
-    vrai((bool)preg_match('/^fichiers 71$/m', $manifeste),
-        'le serveur compte 71 fichiers depuis les polices de Mon espace (lot B1)');
-    foreach (['polices/nunito-latin-wght-normal.woff2', 'polices/nunito-latin-ext-wght-normal.woff2',
+    // 75 depuis l'icône de l'écran d'accueil (lot E « Arriver », 21/11/2026) :
+    // app.webmanifest, icone-192.png, icone-512.png, icone-masquable-512.png.
+    vrai((bool)preg_match('/^fichiers 75$/m', $manifeste),
+        "le serveur compte 75 fichiers depuis l'icône de l'écran d'accueil (lot E)");
+    foreach (['app.webmanifest', 'icone-192.png', 'icone-512.png', 'icone-masquable-512.png',
+              'polices/nunito-latin-wght-normal.woff2', 'polices/nunito-latin-ext-wght-normal.woff2',
               'suivi.css', 'direct.php', 'prof/direct.php', 'api/direct.php', 'lib/direct.php', 'prof/questionnaire.js',
               'lib/evaluation.php', 'prof/defi_tables_core.js', 'prof/coffres-parcours.js', 'prof/flash_anzan_parcours.js',
               'prof/defi_calcul_core.js', 'prof/defi_calcul_mon_parcours.js', 'lib/cours.php', 'lib/cours.json', 'api/cours.php',
@@ -2028,6 +2031,27 @@ verifier("le logo et les icônes sont servis d'ici, identiques à ceux du dépô
         vrai(!str_contains($texte, 'https://mathsgo.re/assets/img/'), "$quoi : plus d'image de mathsgo.re");
         vrai(!str_contains($texte, 'https://mathsgo.re/favicon'), "$quoi : plus de favicon de mathsgo.re");
     }
+});
+
+// Lot E « Arriver » (21/11/2026) — l'icône de l'écran d'accueil : le manifeste
+// et ses trois images sont servis d'ici, et Mon espace (seulement) les annonce.
+verifier("arriver-E — le manifeste de l'icône et ses images sont servis ; Mon espace l'annonce, Ma classe non", function () {
+    $m = page('/app.webmanifest');
+    egal(200, $m['code'], '/app.webmanifest servi');
+    $json = json_decode($m['texte'], true);
+    vrai(is_array($json), 'le manifeste est du JSON');
+    egal('maths&go', $json['short_name'] ?? null, 'nom court');
+    egal('browser', $json['display'] ?? null, 'ouvert dans le navigateur');
+    foreach ($json['icons'] ?? [] as $icone) {
+        $r = page('/' . $icone['src']);
+        egal(200, $r['code'], "/{$icone['src']} servi");
+        egal("\x89PNG", substr($r['texte'], 0, 4), "/{$icone['src']} est un PNG");
+    }
+    egal(3, count($json['icons'] ?? []), 'trois images');
+    $eleve = page('/')['texte'];
+    vrai(str_contains($eleve, '<link rel="manifest" href="app.webmanifest">'), 'Mon espace annonce le manifeste');
+    vrai(str_contains($eleve, '<meta name="apple-mobile-web-app-title" content="maths&amp;go">'), "le nom sous l'icône de l'iPhone");
+    vrai(!str_contains(page('/prof/')['texte'], 'rel="manifest"'), "Ma classe n'a pas de manifeste");
 });
 
 verifier("Ma classe charge le moteur de Défi tables d'ici, identique à celui du dépôt, avec une version qui suit son contenu", function () use ($racine) {

@@ -62,11 +62,12 @@ test("Nunito est servie par le suivi : copie exacte du site, préchargée, et ri
   assert.match(manifeste, / polices\/nunito-latin-wght-normal\.woff2\n/, "au manifeste : verifier.php dit si elle manque après le FTP");
 });
 
-test("l'écran du code et la question « C'est toujours toi ? » ne changent pas de police", () => {
+// Lot E « Arriver » (21/11/2026, choix de Gwenaël) : l'écran du code passe à
+// son tour en Nunito ; la question « C'est toujours toi ? » des applis, non.
+test("la question « C'est toujours toi ? » ne change pas de police ; l'écran du code est en Nunito depuis le lot E", () => {
   const regles = style.replace(/\/\*[\s\S]*?\*\//g, "").match(/[^{}]*\{[^{}]*Nunito[^{}]*\}/g).map(r => r.trim());
   const selecteurs = regles.filter(r => !r.startsWith("@font-face")).map(r => r.slice(0, r.indexOf("{")));
-  assert.deepEqual(selecteurs.map(s => s.trim()), ["body:not(.sur-code) .entete, #ecran-espace, #ecran-cours"]);
-  assert.doesNotMatch(style, /#ecran-code[^{]*\{[^}]*Nunito/);
+  assert.deepEqual(selecteurs.map(s => s.trim()), ["body:not(.sur-code) .entete, #ecran-espace, #ecran-cours", "#ecran-code"]);
   assert.doesNotMatch(style, /\.garde[^{]*\{[^}]*Nunito/);
   // L'écran du code garde son HTML (logo, titre, phrase, six cases).
   const code = page.slice(page.indexOf('<section id="ecran-code">'), page.indexOf('<section id="ecran-espace"'));
