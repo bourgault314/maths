@@ -122,7 +122,10 @@ test("lot 7b (règle revue au lot 6 « programmes ») : la règle commune de M12
 });
 
 test("lot 7b : D8, le double et la moitié suivent le même chemin — deux morceaux, la partie entière et la partie décimale", () => {
-  const moitie = CORE.genererSerie("D8-2", {graine: 3, total: 40}).find(c => c.forme === "moitie");
+  // (Lot C1 : la première moitié de la série est la plus facile — « moitié
+  // de 0,6 », un seul morceau, sans J'écris ; on prend une moitié à deux
+  // morceaux.)
+  const moitie = CORE.genererSerie("D8-2", {graine: 3, total: 40}).find(c => c.forme === "moitie" && CORE.ecrisDuCalcul("D8-2", c));
   const ecris = CORE.ecrisDuCalcul("D8-2", moitie);
   const {e, dec} = moitie.donnees;
   assert.equal(espaces(ecris.consigne), espaces(`moitié de ${CORE.formaterNombre(moitie.donnees.n)} = ${e} ÷ 2 + ${CORE.formaterNombre(dec)} ÷ 2`));

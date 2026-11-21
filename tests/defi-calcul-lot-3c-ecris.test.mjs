@@ -263,7 +263,11 @@ test("lot 3c : la même graine rend le même calcul ; une autre en rend souvent 
     assert.equal(a.calcul.texte, b.calcul.texte, cle);
     const autres = new Set(Array.from({length: 40}, (_, g) => CORE.ecrisTire(cle, {graine: g + 1}).calcul.texte));
     // Les niveaux « par cœur » de fractions n'ont que 1 ou 2 calculs possibles.
-    assert.ok(autres.size >= (["F2-1", "F2-2", "F1-2"].includes(cle) ? 1 : 2), `${cle} : ${autres.size} calcul(s) en 40 tirages`);
+    // (Lot C1 : J'écris n'est jamais plus facile que l'exemple de « On te
+    // montre » ; dans « Fractions égales : multiplier », l'exemple 3/4 = □/12
+    // est le plus dur de son écriture — un seul calcul reste, jusqu'au lot C3
+    // qui prend un exemple moyen.)
+    assert.ok(autres.size >= (["F2-1", "F2-2", "F1-2", "F6-1"].includes(cle) ? 1 : 2), `${cle} : ${autres.size} calcul(s) en 40 tirages`);
   });
 });
 

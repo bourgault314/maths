@@ -312,7 +312,7 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261120-1"></script>
+  <script src="./defi_calcul_core.js?v=20261121-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261121-1"></script>
   <script src="./defi_calcul_aides.js?v=20261120-1"></script>
   <script>
@@ -3503,7 +3503,10 @@
       // il ne compte pas : le rappel de la relecture 2b).
       function commencerPratique(lecon, {depart = 0} = {}) {
         const {module: id, niveau: n} = lecon;
-        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: PARCOURS.SEUILS.entraine.maximum, exclure: lecon.base.textes});
+        // (Lot C1 : la série sait combien de calculs aidés viendront d'abord —
+        // repris au dessin, 2 ; sans aide, aucun.)
+        const aides = depart === PARCOURS.REPRISE.seul ? 0 : depart === PARCOURS.REPRISE.dessin ? 2 : null;
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: PARCOURS.SEUILS.entraine.maximum, exclure: lecon.base.textes, aides});
         if (!calculs.length) return;
         // Correctif F4 (point 11) : la reprise sans aide commence par un
         // calcul AVEC son dessin (le rappel, qui ne compte pas) ; si le tirage
@@ -3519,6 +3522,9 @@
           depart, rappelDepart: depart === PARCOURS.REPRISE.seul,
           formes: [...new Set(calculs.map(calcul => calcul.forme))],
           outil: PARCOURS.suivreEntrainement([], {genre: "apprends", manip, depart}).outil,
+          // Lot C1 : les calculs tirés avec la série et pas pris (le calcul
+          // un cran plus facile, après une erreur, y est choisi).
+          reserve: (calculs.reserve || []).slice(),
           questions: calculs.map(calcul => ({calcul, retour: false}))
         }, state.origine);
       }
@@ -3894,7 +3900,8 @@
         // Jamais un calcul déjà vu dans « J'apprends ». Assez de calculs pour
         // aller au bout (25 pour Je m'entraîne, 20 pour « encore »).
         const maximum = genre === "rattrape" ? PARCOURS.SEUILS.rattrapage.maximum : PARCOURS.SEUILS.entraine.maximum;
-        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: maximum, exclure: trouve.niveau.apprends.textes});
+        // (Lot C1 : « encore » commence au dessin — 2 calculs aidés.)
+        const calculs = CORE.genererSerie(`${id}-${n}`, {graine: nouvelleGraine(), genre: "entraine", total: maximum, exclure: trouve.niveau.apprends.textes, aides: genre === "rattrape" ? 2 : null});
         if (!calculs.length) return;
         // Je m'entraîne commence à l'outil à manipuler quand le niveau en a
         // un (pas de perles au-delà de 100 : à l'image) ; « encore », à l'image.
@@ -3905,6 +3912,7 @@
           // série n'est réussie qu'une fois toutes vues.
           formes: [...new Set(calculs.map(calcul => calcul.forme))],
           outil: PARCOURS.suivreEntrainement([], {genre, manip}).outil,
+          reserve: (calculs.reserve || []).slice(),
           questions: calculs.map(calcul => ({calcul, retour: false}))
         }, origine);
       }
@@ -4269,6 +4277,7 @@
           serie.outil = suivi.outil;
           if (!suivi.fini) allongerSerie(serie);
           if (suivi.fini || serie.index + 1 >= serie.questions.length) { finish(); return; }
+          placerUnCranPlusFacile(serie);
           if (serie.genre !== "rattrape" && suivi.outil === "aucun") amenerSorteManquante();
           // J'apprends (lot 2) : le dessin s'en va pour la première fois —
           // ④ J'écris, une fois, avant « sans aide ».
@@ -4293,8 +4302,34 @@
         const trouve = CORE.niveauDe(`${serie.module}-${serie.niveau}`);
         const exclure = trouve && trouve.niveau.apprends ? trouve.niveau.apprends.textes : [];
         const encore = CORE.genererSerie(`${serie.module}-${serie.niveau}`, {graine: nouvelleGraine(), genre: "entraine", total: maximum, exclure});
-        const reprendre = (encore.length ? encore : deja).slice(0, maximum - serie.questions.length);
+        // Lot C1 : on ne repart pas du plus facile — la suite d'une série
+        // neuve (le plus dur du niveau), sans ses 9 premiers.
+        const suite = encore.slice(encore.fenetre || 0);
+        const reprendre = (suite.length ? suite : encore.length ? encore : deja).slice(0, maximum - serie.questions.length);
         serie.questions.push(...reprendre.map(calcul => ({calcul, retour: false})));
+        serie.total = serie.questions.length;
+      }
+
+      // Lot C1 (règle unique, choix de Gwenaël du 20/11/2026) : après une
+      // erreur seulement, le calcul suivant est un cran plus facile, de la
+      // même écriture — pris dans la réserve tirée avec la série (même
+      // graine), sinon dans la suite pas encore jouée ; puis la série reprend
+      // où elle en était (on remonte). Rien de plus facile : on continue.
+      function placerUnCranPlusFacile(serie) {
+        const derniere = serie.reponses[serie.reponses.length - 1];
+        const question = serie.questions[serie.index];
+        if (!derniere || derniere.juste || !question || derniere.calcul !== question.calcul) return;
+        const joues = new Set(serie.questions.slice(0, serie.index + 1).map(q => q.calcul.texte));
+        const reserve = (serie.reserve || []).filter(calcul => !joues.has(calcul.texte));
+        const avenir = serie.questions.slice(serie.index + 1).map(q => q.calcul).filter(calcul => !joues.has(calcul.texte));
+        const facile = CORE.unCranPlusFacile(question.calcul, reserve.length ? reserve : avenir)
+          || (reserve.length ? CORE.unCranPlusFacile(question.calcul, avenir) : null);
+        if (!facile) return;
+        const i = (serie.reserve || []).indexOf(facile);
+        if (i >= 0) serie.reserve.splice(i, 1);
+        const j = serie.questions.findIndex((q, rang) => rang > serie.index && q.calcul === facile);
+        if (j >= 0) serie.questions.splice(j, 1);
+        serie.questions.splice(serie.index + 1, 0, {calcul: facile, retour: false, plusFacile: true});
         serie.total = serie.questions.length;
       }
 
@@ -4328,6 +4363,11 @@
       }
       // Sans outil, le calcul suivant est pris d'une sorte pas encore vue
       // dans la suite de justes, s'il y en a une plus loin dans la série.
+      // Lot C1 : celui qui ne fait pas redescendre son écriture (le plus
+      // facile de ceux qui sont au moins aussi durs que le dernier de son
+      // écriture, sinon le plus dur), et il est AVANCÉ à sa place : le reste
+      // de la série garde son ordre (avant, l'échange envoyait le calcul prévu
+      // au bout de la série).
       function amenerSorteManquante() {
         const serie = state.serie;
         const vues = sortesDeLaFin();
@@ -4335,8 +4375,16 @@
         const suivant = serie.index + 1;
         if (!manquantes.length || suivant >= serie.questions.length) return;
         if (manquantes.includes(CORE.sorteDe(serie.questions[suivant].calcul))) return;
-        const loin = serie.questions.findIndex((question, i) => i > suivant && manquantes.includes(CORE.sorteDe(question.calcul)));
-        if (loin > suivant) [serie.questions[suivant], serie.questions[loin]] = [serie.questions[loin], serie.questions[suivant]];
+        const plusDur = new Map();
+        serie.questions.slice(0, suivant).forEach(q => plusDur.set(q.calcul.forme, Math.max(plusDur.get(q.calcul.forme) ?? -Infinity, CORE.difficulte(q.calcul))));
+        const loin = serie.questions.map((question, i) => ({question, i})).filter(({question, i}) => i > suivant && manquantes.includes(CORE.sorteDe(question.calcul)));
+        if (!loin.length) return;
+        const monte = loin.filter(({question}) => CORE.difficulte(question.calcul) >= (plusDur.get(question.calcul.forme) ?? -Infinity));
+        const choisi = monte.length
+          ? monte.reduce((a, b) => (CORE.difficulte(b.question.calcul) < CORE.difficulte(a.question.calcul) ? b : a))
+          : loin.reduce((a, b) => (CORE.difficulte(b.question.calcul) > CORE.difficulte(a.question.calcul) ? b : a));
+        serie.questions.splice(choisi.i, 1);
+        serie.questions.splice(suivant, 0, choisi.question);
       }
 
       // Au test, le premier faux d'une marche : un calcul de plus, de la sorte
@@ -5267,7 +5315,9 @@
               commencerPratique({module: id, niveau: n, base: trouve.niveau.apprends});
               const serie = state.serie;
               let vise = null;
-              for (let graine = 1; graine <= 400 && !vise; graine += 1) vise = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}).find(c => c.texte === texte) || null;
+              // (Lot C1 : la série commence par les plus faciles ; le calcul
+              // cherché peut n'être que dans sa réserve.)
+              for (let graine = 1; graine <= 400 && !vise; graine += 1) { const s = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}); vise = [...s, ...(s.reserve || [])].find(c => c.texte === texte) || null; }
               if (!vise) return false;
               serie.questions = [{calcul: vise, retour: false}, ...serie.questions.filter(q => q.calcul.texte !== texte)];
               serie.index = 0;

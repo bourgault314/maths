@@ -707,7 +707,9 @@
   // (ou plusieurs), puis on retire.
   function a5Perles(calcul) {
     const {n, a} = calcul.donnees;
-    if (n + a > 100) return null;
+    // (Lot C1 : le geste passe par n + r — 82 + 20 = 102 pour 82 + 18 — et
+    // le boulier n'a que 100 perles : au-delà, pas de perles, le dessin.)
+    if (n + a5Arrondi(a) > 100) return null;
     const r = a5Arrondi(a);
     const d = r - a;
     const rangees = r / 10;
@@ -1945,6 +1947,10 @@
   const PLUS_FORMES = Object.freeze({somme: 0, difference: 0, complement: 1, "complement-egal": 2, "complement-gauche": 2, "complement-gauche-egal": 2});
   function plusDifficulte(calcul) {
     const {n, d, m} = calcul.donnees;
+    // Lot C1 : dans « Sommes jusqu'à 20 », « + 10 » est le plus facile (le
+    // chiffre des unités ne change pas) ; avant, |d| × 20 le classait le
+    // plus dur (« 1 + 10 » après « 9 + 9 »).
+    if (calcul.module === "A1" && calcul.forme === "somme" && (n === 10 || Math.abs(d) === 10)) return Math.min(n, Math.abs(d)) * 5;
     const franchi = estTrou(calcul) ? (sautsDuCalcul(calcul).palier === null ? 0 : 1)
       : franchit(n, d, 1000) ? 3 : franchit(n, d, 100) ? 2 : franchit(n, d, 10) ? 1 : 0;
     return PLUS_FORMES[calcul.forme] * 2000 + franchi * 400 + Math.abs(d) * 20 + String(Math.max(n, m)).length * 5 + (n % 10 === 0 ? 3 : 0);
@@ -7034,7 +7040,11 @@
   function deuxDifficulte(calcul) {
     const {a, b, xa, xb, casse} = calcul.donnees;
     const echange = calcul.module === "D6" ? xa + xb >= 100 : casse;
-    return (echange ? 1000 : 0) + (decimalesDe(a) + decimalesDe(b)) * 100 + Math.min(99, Math.floor(a + b));
+    // Lot C1 : « 5 − 4,7 » (d'un entier) casse une unité qui n'a pas de
+    // dixièmes : il n'est pas parmi les plus faciles, il vient après « unités
+    // et dixièmes » (avant, l'entier sans décimale le classait en tête).
+    const entier = calcul.module === "D7" && casse && Number.isInteger(a) ? 150 : 0;
+    return (echange ? 1000 : 0) + (decimalesDe(a) + decimalesDe(b)) * 100 + entier + Math.min(99, Math.floor(a + b));
   }
   // Les erreurs connues : D6 (1, 2, 3) et D7 (1, 2, 3), chacune les siennes.
   const ERREUR_ALIGNE = c => Object.freeze({
@@ -11437,8 +11447,10 @@
     "M2-1": [["× 10", (c, d) => d.p === 10], ["× 100", toutes]],
     "A4-1": [["+ 1 dizaine et des unités", (c, d) => d.d < 20], ["+ des dizaines et des unités", toutes]],
     "A4-2": [["sans 9 aux unités", (c, d) => d.n % 10 !== 9 && d.d % 10 !== 9], ["un nombre en 9", toutes]],
-    "A5-1": [["en passant la centaine", (c, d) => centaineFranchie(d.n, d.n + d.a)], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
-    "A6-1": [["en passant la centaine", (c, d) => centaineFranchie(d.n, d.n - d.a)], ["à 2 chiffres", (c, d) => d.n < 100], ["à 3 chiffres", toutes]],
+    // (Lot C1 : les sortes dans l'ordre de leur difficulté ; un calcul est
+    // rangé dans les mêmes qu'avant.)
+    "A5-1": [["à 2 chiffres", (c, d) => d.n < 100 && !centaineFranchie(d.n, d.n + d.a)], ["à 3 chiffres", (c, d) => !centaineFranchie(d.n, d.n + d.a)], ["en passant la centaine", toutes]],
+    "A6-1": [["à 2 chiffres", (c, d) => d.n < 100 && !centaineFranchie(d.n, d.n - d.a)], ["à 3 chiffres", (c, d) => !centaineFranchie(d.n, d.n - d.a)], ["en passant la centaine", toutes]],
     "M4-2": parFormes(["a × b", "produit"], ["a × □ = c", "trou-facteur"], ["c = □ × b", "trou-egal"], ["c ÷ b", "division"]),
     "A2-3": parFormes(["a + □ = 100", "complement", "complement-gauche"], ["100 − a", "difference"]),
     "A3-2": parFormes(["+ dizaines", "somme"], ["− dizaines", "difference"]),
@@ -11815,11 +11827,21 @@
   // Une série d'un niveau. `genre` :
   //  - « valide » (mode professeur) : 12 calculs pour un fait, 10 pour une
   //    procédure, les imposés dedans, placés au hasard ;
-  //  - « entraine » : jusqu'à 20 calculs sans imposé, rangés du plus simple
-  //    au plus dur (`ordonne: false` les laisse mélangés), jamais ceux dont
-  //    la clé est dans `exclure` (les calculs de « J'apprends »).
+  //  - « entraine » : jusqu'à 20 calculs sans imposé, rangés par la règle
+  //    unique du lot C1 (`ordonnerSerie`, plus bas ; `ordonne: false` les
+  //    laisse mélangés), jamais ceux dont la clé est dans `exclure` (les
+  //    calculs de « J'apprends »).
   // La même graine rend la même série.
-  function genererSerie(cleNiveau, {graine = 1, genre = "entraine", total = null, ordonne = true, exclure = []} = {}) {
+  // Lot C1 (21/11/2026) : la série rangée est tirée dans un vivier plus
+  // grand (3 fois le nombre de calculs), de la même graine ; ce qui n'est pas
+  // pris reste dans `serie.reserve` (le calcul « un cran plus facile » après
+  // une erreur y est choisi), et `serie.fenetre` dit combien de calculs vont
+  // du plus facile au plus dur (les 9 premiers).
+  // `aides` (lot C1) : combien de calculs aidés la page donnera d'abord (4 :
+  // l'outil puis le dessin ; 2 : le dessin seul — un niveau sans outil, la
+  // reprise au dessin, « Je m'entraîne encore » ; 0 : la reprise sans aide) ;
+  // null : 4 si le niveau a un outil à manipuler, sinon 2.
+  function genererSerie(cleNiveau, {graine = 1, genre = "entraine", total = null, ordonne = true, exclure = [], aides = null} = {}) {
     const trouve = niveauDe(cleNiveau);
     if (!trouve || typeof trouve.niveau.composer !== "function") return [];
     const {niveau} = trouve;
@@ -11830,11 +11852,19 @@
     // `exclure` : des clés ou des textes de calculs (ceux de « J'apprends »).
     const interdits = new Set(exclure);
     const garder = calcul => !interdits.has(calcul.cle) && !interdits.has(calcul.texte);
-    const brut = niveau.composer(rng, nombre + interdits.size, imposes);
+    const range = !validation && ordonne;
+    const vivier = range ? Math.max(3 * nombre, 60) : nombre;
+    const brut = niveau.composer(rng, vivier + interdits.size, imposes);
     // Les écritures du niveau, lues sur un grand tirage à part (un tirage
     // de 20 peut en manquer une).
     const formes = [...new Set(niveau.composer(mulberry32((graine ^ 0x9e3779b9) >>> 0), 60, []).map(calcul => calcul.forme))];
-    const serie = melanger(rng, brut).filter(garder).slice(0, nombre);
+    let serie = melanger(rng, brut).filter(garder);
+    if (range) {
+      // (Un même calcul tiré deux fois n'est gardé qu'une.)
+      const vus = new Set();
+      serie = serie.filter(calcul => !vus.has(calcul.cle) && vus.add(calcul.cle));
+    } else serie = serie.slice(0, nombre);
+    const cible = range ? vivier : nombre;
     // Un vivier trop petit (A2-2 : 19 nombres), une écriture entièrement
     // exclue ou tombée hors des 20 premiers : on complète par d'autres
     // tirages, sans redonner un calcul déjà là, jusqu'au nombre voulu et à
@@ -11843,7 +11873,7 @@
     for (let essai = 0; essai < 4 && manque(); essai += 1) {
       const deja = new Set(serie.map(calcul => calcul.cle));
       melanger(rng, niveau.composer(rng, nombre, [])).filter(calcul => garder(calcul) && !deja.has(calcul.cle)).forEach(calcul => {
-        if (serie.length < nombre) { serie.push(calcul); deja.add(calcul.cle); return; }
+        if (serie.length < cible) { serie.push(calcul); deja.add(calcul.cle); return; }
         if (serie.some(c => c.forme === calcul.forme)) return;
         // Une écriture manque encore : elle prend la place du dernier calcul
         // de l'écriture la plus présente.
@@ -11853,40 +11883,238 @@
         deja.add(calcul.cle);
       });
     }
-    if (validation || !ordonne) return serie;
-    return ordonnerSerie(serie);
+    if (!range) return serie;
+    const lecon = niveau.apprends && niveau.apprends.calculs ? niveau.apprends.calculs.montre : null;
+    return ordonnerSerie(serie, {cleNiveau, nombre, rng, formeLecon: lecon ? lecon.forme : null, aides});
   }
 
-  // Du plus simple au plus dur, et les écritures nouvelles annoncées.
-  // Relecture 2 (08/11/2026, choix de Gwenaël) : l'élève rapide finit son
-  // entraînement en 7 calculs (2 justes avec l'outil, puis 5 sans) ; avant,
-  // la première écriture prenait les 6 premières places et ses calculs les
-  // plus durs arrivaient tard (A2-2 : jamais de nombre en 5 avant le 9e
-  // calcul ; 31 niveaux sur 95 gardaient une écriture après le 7e). Dans
-  // les 7 premiers calculs, chaque écriture arrive au moins une fois (son
-  // calcul le plus simple), et la première écriture y montre toute son
-  // étendue (du plus simple au plus dur, à intervalles réguliers) ; la
-  // suite reste par difficulté.
-  const ORDRE_SERIE = Object.freeze({fenetre: 7, premiereMini: 2});
-  function etales(liste, nombre) {
-    if (nombre >= liste.length) return liste.slice();
-    if (nombre <= 1) return liste.slice(0, nombre);
-    const rangs = new Set(Array.from({length: nombre}, (_, i) => Math.round(i * (liste.length - 1) / (nombre - 1))));
-    return liste.filter((_, i) => rangs.has(i));
+  // ------------------------------------------- lot C1 : l'ordre des calculs
+  // La place d'un calcul dans SON écriture, de 0 (le plus facile) à 1 (le
+  // plus dur) : « plus facile, plus dur » ne se compare qu'entre calculs de
+  // la même écriture (les « double de » ne sont pas plus faciles que les
+  // « moitié de »). Mesurée sur un grand tirage du niveau, toujours le même.
+  const REFERENCES = new Map();
+  function referenceDe(cleNiveau) {
+    if (REFERENCES.has(cleNiveau)) return REFERENCES.get(cleNiveau);
+    const parForme = new Map();
+    const trouve = niveauDe(cleNiveau);
+    if (trouve && typeof trouve.niveau.composer === "function") {
+      const rng = mulberry32(0x0c1c1c1);
+      const vus = new Set();
+      for (let tour = 0; tour < 4; tour += 1) {
+        trouve.niveau.composer(rng, 120, []).forEach(calcul => {
+          if (vus.has(calcul.cle)) return;
+          vus.add(calcul.cle);
+          if (!parForme.has(calcul.forme)) parForme.set(calcul.forme, []);
+          parForme.get(calcul.forme).push(difficulte(calcul));
+        });
+      }
+      parForme.forEach(liste => liste.sort((a, b) => a - b));
+    }
+    REFERENCES.set(cleNiveau, parForme);
+    return parForme;
   }
-  function ordonnerSerie(calculs) {
-    const tries = calculs.map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang).map(({calcul}) => calcul);
-    const formes = [...new Set(tries.map(calcul => calcul.forme))];
-    // Relecture 2b : un calcul qu'une fiche dit « tardif » (M4-2 : × 10)
-    // n'entre pas dans les premiers calculs de l'étendue.
+  function rangDansEcriture(calcul, cleNiveau = null) {
+    if (!calcul) return 0.5;
+    const liste = referenceDe(cleNiveau || `${calcul.module}-${calcul.niveau}`).get(calcul.forme);
+    if (!liste || liste.length < 2) return 0.5;
+    const d = difficulte(calcul);
+    let dessous = 0;
+    let egaux = 0;
+    liste.forEach(x => { if (x < d) dessous += 1; else if (x === d) egaux += 1; });
+    // (Un calcul plus dur, ou plus facile, que tout le grand tirage.)
+    if (!egaux && !dessous) return 0;
+    if (!egaux && dessous === liste.length) return 1;
+    return (dessous + egaux / 2) / liste.length;
+  }
+
+  // La règle unique (lot C1, choix de Gwenaël du 20/11/2026), pour toute
+  // l'appli :
+  //  1. les 9 premiers calculs (2 avec l'outil, 2 avec le dessin, 5 sans
+  //     aide : l'élève qui ne se trompe pas) vont du plus facile au plus dur
+  //     du niveau, chaque écriture à part ; les 4 aidés (2 sans outil à
+  //     manipuler) sont de l'écriture de la leçon ; chaque autre écriture
+  //     arrive ensuite, une à la fois, par
+  //     son calcul le plus facile, puis elles se mélangent en montant ;
+  //  2. les 5 sans aide de ces 9 prennent une sorte différente tant qu'il en
+  //     reste (Je m'entraîne n'est réussi que sur toutes les sortes) ;
+  //  3. ensuite, on reste dans le plus dur du niveau : le plus dur de chaque
+  //     sorte, mélangé, sans jamais revenir au début (chaque sorte garde sa
+  //     part du tirage de la fiche) ;
+  //  4. après une erreur seulement, un calcul un cran plus facile, de la même
+  //     écriture (`unCranPlusFacile`, choisi par la page dans `reserve`).
+  // Relecture 2 (fenêtre de 7, « tardif ») : la fenêtre passe à 9 ; un
+  // calcul qu'une fiche dit « tardif » (M4-2 : × 10) n'y entre pas.
+  const ORDRE_SERIE = Object.freeze({fenetre: 9, outil: 2, aides: 4, cran: 1 / 8});
+  function ordonnerSerie(calculs, {cleNiveau = null, nombre = calculs.length, rng = mulberry32(1), formeLecon = null, aides: aidesVoulus = null} = {}) {
+    const vide = Object.defineProperties([], {reserve: {value: []}, fenetre: {value: 0}});
+    if (!calculs.length || nombre <= 0) return vide;
+    const cle = cleNiveau || `${calculs[0].module}-${calculs[0].niveau}`;
+    const rang = new Map(calculs.map(calcul => [calcul, rangDansEcriture(calcul, cle)]));
+    const sorte = new Map(calculs.map(calcul => [calcul, sorteBrute(cle, calcul)]));
     const tardif = calcul => { const fiche = moduleDe(calcul.module); return Boolean(fiche && typeof fiche.tardif === "function" && fiche.tardif(calcul)); };
-    const premiere = tries.filter(calcul => calcul.forme === formes[0] && !tardif(calcul));
-    const place = Math.max(ORDRE_SERIE.premiereMini, ORDRE_SERIE.fenetre - (formes.length - 1));
-    const debut = etales(premiere, Math.min(place, premiere.length));
-    const pris = new Set(debut);
-    const nouvelles = formes.slice(1).map(forme => tries.find(calcul => calcul.forme === forme && !pris.has(calcul))).filter(Boolean);
-    nouvelles.forEach(calcul => pris.add(calcul));
-    return [...debut, ...nouvelles, ...tries.filter(calcul => !pris.has(calcul))];
+    const parForme = new Map();
+    calculs.forEach(calcul => { if (!parForme.has(calcul.forme)) parForme.set(calcul.forme, []); parForme.get(calcul.forme).push(calcul); });
+    parForme.forEach(liste => liste.sort((a, b) => rang.get(a) - rang.get(b) || difficulte(a) - difficulte(b)));
+    // L'écriture de la leçon d'abord, puis les autres par leur calcul le plus
+    // simple (comme avant le lot C1).
+    let formes = [...parForme.keys()].sort((a, b) => difficulte(parForme.get(a)[0]) - difficulte(parForme.get(b)[0]));
+    if (formeLecon && parForme.has(formeLecon)) formes = [formeLecon, ...formes.filter(forme => forme !== formeLecon)];
+    // Les places de la fenêtre : 4 de l'écriture de la leçon, une par
+    // écriture nouvelle, puis toutes à tour de rôle jusqu'à 9.
+    // (Un niveau sans outil à manipuler commence au dessin : 2 calculs
+    // aidés, pas 4 — comme la page.)
+    const aides = Number.isInteger(aidesVoulus) ? Math.max(0, Math.min(ORDRE_SERIE.aides, aidesVoulus))
+      : calculs.some(calcul => manipulationDe(calcul)) ? ORDRE_SERIE.aides : ORDRE_SERIE.aides - ORDRE_SERIE.outil;
+    const avecOutil = Math.max(0, aides - (ORDRE_SERIE.aides - ORDRE_SERIE.outil));
+    // L'écriture de la leçon garde au moins 2 places en tête (à la reprise
+    // sans aide, le rappel au dessin, puis un calcul pareil, sans dessin) :
+    // une écriture nouvelle ramène son dessin.
+    const places = [];
+    for (let i = 0; i < Math.max(aides, ORDRE_SERIE.aides - ORDRE_SERIE.outil); i += 1) places.push(formes[0]);
+    formes.slice(1).forEach(forme => places.push(forme));
+    for (let i = 0; places.length < ORDRE_SERIE.fenetre; i += 1) places.push(formes[i % formes.length]);
+    const pris = new Set();
+    const dernier = new Map();
+    const dernierD = new Map();
+    const sortesVuesSeul = new Set();
+    const toutesSortes = new Set(calculs.map(calcul => sorte.get(calcul)));
+    const serie = [];
+    const choisir = (forme, place) => {
+      const premiereFois = !dernier.has(forme);
+      const vise = premiereFois ? 0 : place / (ORDRE_SERIE.fenetre - 1);
+      const plancher = premiereFois ? -1 : dernier.get(forme);
+      // (Deux calculs au-delà du grand tirage ont le même rang : la
+      // difficulté départage.)
+      const plancherD = premiereFois ? -Infinity : dernierD.get(forme);
+      let candidats = parForme.get(forme).filter(calcul => !pris.has(calcul) && rang.get(calcul) >= plancher - 1e-9 && difficulte(calcul) >= plancherD);
+      if (!candidats.length) return null;
+      if (candidats.some(calcul => !tardif(calcul))) candidats = candidats.filter(calcul => !tardif(calcul));
+      // Avec l'outil et le dessin : un calcul qui a son dessin (« 0 × 8 »
+      // n'en a pas), et pour les 2 premiers son outil à manipuler (les billes
+      // ne vont pas au-delà de 100).
+      if (place < aides && candidats.some(calcul => aideDe(calcul))) candidats = candidats.filter(calcul => aideDe(calcul));
+      if (place < avecOutil && candidats.some(calcul => manipulationDe(calcul))) candidats = candidats.filter(calcul => manipulationDe(calcul));
+      // Les sortes pas encore vues sans aide, et le calcul le plus dur de
+      // chacune : on ne monte jamais au-dessus du plus bas de ces « plus
+      // durs », sinon cette sorte ne pourrait plus venir sans redescendre.
+      const haut = new Map();
+      const bas = new Map();
+      candidats.forEach(calcul => {
+        const s = sorte.get(calcul);
+        if (toutesSortes.has(s) && !sortesVuesSeul.has(s)) {
+          haut.set(s, Math.max(haut.get(s) ?? -1, rang.get(calcul)));
+          bas.set(s, Math.min(bas.get(s) ?? 2, rang.get(calcul)));
+        }
+      });
+      let presse = null;
+      if (place >= aides && haut.size) {
+        // Sans aide : une sorte pas encore vue — celle dont le prochain
+        // calcul est le plus facile (à égalité, celle qui finit le plus bas).
+        presse = [...haut.keys()].sort((a, b) => bas.get(a) - bas.get(b) || haut.get(a) - haut.get(b))[0];
+        candidats = candidats.filter(calcul => sorte.get(calcul) === presse);
+      }
+      const autres = [...haut.entries()].filter(([s]) => s !== presse).map(([, r]) => r);
+      if (autres.length) {
+        const plafond = Math.min(...autres);
+        if (candidats.some(calcul => rang.get(calcul) <= plafond + 1e-9)) candidats = candidats.filter(calcul => rang.get(calcul) <= plafond + 1e-9);
+        // (Et le plus dur de chacune de ces sortes est gardé pour elle.)
+        const gardes = new Set();
+        haut.forEach((r, s) => {
+          if (s === presse) return;
+          const garde = parForme.get(forme).filter(calcul => !pris.has(calcul) && sorte.get(calcul) === s).sort((a, b) => rang.get(b) - rang.get(a))[0];
+          if (garde) gardes.add(garde);
+        });
+        if (candidats.some(calcul => !gardes.has(calcul))) candidats = candidats.filter(calcul => !gardes.has(calcul));
+      }
+      // De la place pour la suite : il doit rester, au-dessus du calcul
+      // choisi, assez de calculs de son écriture pour les places qui la
+      // reprennent dans les 9 (sinon les 9 s'arrêtent trop tôt).
+      const restantes = places.slice(place + 1, nombre).filter(f => f === forme).length;
+      if (restantes) {
+        const libres = parForme.get(forme).filter(calcul => !pris.has(calcul) && !tardif(calcul));
+        const auDessus = calcul => libres.filter(autre => autre !== calcul && rang.get(autre) >= rang.get(calcul) - 1e-9 && difficulte(autre) >= difficulte(calcul)).length;
+        const assez = candidats.filter(calcul => auDessus(calcul) >= restantes);
+        if (assez.length) candidats = assez;
+      }
+      const choisi = candidats.reduce((meilleur, calcul) => {
+        const ecart = Math.abs(rang.get(calcul) - vise);
+        const ecartMeilleur = Math.abs(rang.get(meilleur) - vise);
+        return ecart < ecartMeilleur - 1e-9 ? calcul : meilleur;
+      });
+      pris.add(choisi);
+      dernier.set(forme, rang.get(choisi));
+      dernierD.set(forme, difficulte(choisi));
+      if (place >= aides) sortesVuesSeul.add(sorte.get(choisi));
+      serie.push(choisi);
+      return choisi;
+    };
+    // Une écriture épuisée (rare : D2-1 n'a que 2 « 10 × a ») laisse sa place
+    // à la suivante qui a encore un calcul ; aucune : les 9 s'arrêtent là (le
+    // plus dur du niveau est atteint).
+    places.slice(0, nombre).forEach((forme, place) => {
+      if (choisir(forme, place)) return;
+      formes.filter(autre => autre !== forme).some(autre => choisir(autre, place));
+    });
+    const fenetre = serie.length;
+    // La suite : le plus dur de chaque sorte (dans chaque écriture), le
+    // tiers du haut d'abord, mélangé. Chaque sorte (et chaque calcul
+    // « tardif ») garde dans la série la part qu'elle a dans le tirage de la
+    // fiche (« Fraction et quotient » : 4 fractions cherchées sur 10 ;
+    // M4-2 : × 10 rare).
+    const besoin = Math.max(0, nombre - serie.length);
+    const groupes = new Map();
+    const groupeDe = calcul => `${calcul.forme}|${sorte.get(calcul)}|${tardif(calcul) ? 1 : 0}`;
+    calculs.forEach(calcul => {
+      const g = groupeDe(calcul);
+      if (!groupes.has(g)) groupes.set(g, {tous: 0, deja: 0, libres: []});
+      const groupe = groupes.get(g);
+      groupe.tous += 1;
+      if (pris.has(calcul)) groupe.deja += 1;
+      else groupe.libres.push(calcul);
+    });
+    groupes.forEach(groupe => groupe.libres.sort((a, b) => rang.get(b) - rang.get(a) || difficulte(b) - difficulte(a)));
+    // Combien chaque groupe en prend : sa part de la série entière, moins ce
+    // que la fenêtre a déjà pris (les restes au plus grand reste).
+    const liste = [...groupes.values()];
+    const parts = liste.map(groupe => Math.max(0, groupe.tous / calculs.length * nombre - groupe.deja));
+    const somme = parts.reduce((a, b) => a + b, 0) || 1;
+    const voulus = parts.map(part => part * besoin / somme);
+    const nombres = voulus.map((v, i) => Math.min(Math.floor(v), liste[i].libres.length));
+    let reste = besoin - nombres.reduce((a, b) => a + b, 0);
+    const ordre = voulus.map((v, i) => i).sort((a, b) => (voulus[b] - Math.floor(voulus[b])) - (voulus[a] - Math.floor(voulus[a])));
+    for (let tour = 0; reste > 0 && tour < 4; tour += 1) {
+      ordre.forEach(i => { if (reste > 0 && nombres[i] < liste[i].libres.length) { nombres[i] += 1; reste -= 1; } });
+    }
+    const suite = [];
+    liste.forEach((groupe, i) => groupe.libres.slice(0, nombres[i]).forEach(calcul => suite.push(calcul)));
+    const prendre = melanger(rng, suite);
+    serie.push(...prendre);
+    prendre.forEach(calcul => pris.add(calcul));
+    const reserve = calculs.filter(calcul => !pris.has(calcul));
+    return Object.defineProperties(serie, {reserve: {value: reserve}, fenetre: {value: fenetre}});
+  }
+
+  // Lot C1 : après une erreur, le calcul suivant est un cran plus facile, de
+  // la même écriture (et de la même sorte quand il y en a un), pris dans
+  // `candidats` (la réserve de la série, puis la suite pas encore jouée) :
+  // le plus proche d'un cran (1/8 de l'écriture) sous le calcul raté,
+  // jamais plus dur que lui. null : rien de plus facile (on continue).
+  function unCranPlusFacile(calcul, candidats = []) {
+    if (!calcul) return null;
+    const cle = `${calcul.module}-${calcul.niveau}`;
+    const d = difficulte(calcul);
+    const memes = (candidats || []).filter(autre => autre && autre.forme === calcul.forme && autre.cle !== calcul.cle && autre.texte !== calcul.texte && difficulte(autre) < d);
+    if (!memes.length) return null;
+    const s = sorteBrute(cle, calcul);
+    const deLaSorte = memes.filter(autre => sorteBrute(cle, autre) === s);
+    const liste = deLaSorte.length ? deLaSorte : memes;
+    const vise = rangDansEcriture(calcul, cle) - ORDRE_SERIE.cran;
+    return liste.reduce((meilleur, autre) => {
+      const ecart = Math.abs(rangDansEcriture(autre, cle) - vise);
+      const ecartMeilleur = Math.abs(rangDansEcriture(meilleur, cle) - vise);
+      return ecart < ecartMeilleur - 1e-9 || (Math.abs(ecart - ecartMeilleur) <= 1e-9 && difficulte(autre) > difficulte(meilleur)) ? autre : meilleur;
+    });
   }
 
   // Le test d'entrée en escalier (« Tu connais déjà ? ») : une marche par
@@ -11929,7 +12157,9 @@
         if (autre) { calculs.push(autre); pris.add(autre); }
       }
       if (calculs.length < TEST_MINIMUM) serie.filter(calcul => !pris.has(calcul)).slice(0, TEST_MINIMUM - calculs.length).forEach(calcul => { calculs.push(calcul); pris.add(calcul); });
-      calculs.sort((a, b) => sortes.indexOf(a.sorte) - sortes.indexOf(b.sorte) || difficulte(a) - difficulte(b));
+      // Lot C1 : du plus simple au plus dur (avant : rangés par sorte —
+      // « ajouter 9 » commençait par 199 + 9, puis 66 + 9).
+      calculs.sort((a, b) => difficulte(a) - difficulte(b) || sortes.indexOf(a.sorte) - sortes.indexOf(b.sorte));
       const reserves = {};
       sortes.forEach(n => {
         const reserve = serie.find(calcul => calcul.sorte === n && !pris.has(calcul)) || serie.find(calcul => !pris.has(calcul));
@@ -12769,17 +12999,30 @@
     // (F1-1, « 0,7 = 7/□ » : la première étape, 7/10 = 0,7, écrit le 10
     // cherché — c'est la leçon qui le veut.)
     const voulu = devoile(modele, lecon.ecris);
+    // Lot C1 : jamais plus facile que l'exemple de « On te montre » — dans
+    // la même écriture, au moins aussi dur que lui ; dans une autre, au moins
+    // à la même place dans son écriture. Si le niveau n'a rien d'aussi dur
+    // (l'exemple est le plus dur), le plus dur trouvé.
+    const montre = lecon.calculs.montre;
+    const assezDur = calcul => (calcul.forme === montre.forme ? difficulte(calcul) >= difficulte(montre)
+      : rangDansEcriture(calcul, cleNiveau) >= rangDansEcriture(montre, cleNiveau) - 1e-9);
+    let plusDur = null;
     const rng = mulberry32(graine >>> 0);
     for (let essai = 0; essai < 12; essai += 1) {
       for (const calcul of melanger(rng, trouve.niveau.composer(rng, 40, []))) {
         if (interdits.has(calcul.texte) || interdits.has(calcul.cle)) continue;
         if (calcul.forme !== modele.forme || sorteBrute(cleNiveau, calcul) !== sorte) continue;
         if (!UNITES_LIBRES.has(cleNiveau) && gabaritDe(calcul.texte) !== gabarit) continue;
+        // (Le repli : le plus dur trouvé, à un cran près — il change avec la
+        // graine.)
+        if (!assezDur(calcul) && plusDur && rangDansEcriture(calcul, cleNiveau) < rangDansEcriture(plusDur.calcul, cleNiveau) - ORDRE_SERIE.cran) continue;
         const ecris = ecrisDuCalcul(cleNiveau, calcul);
-        if (ecris && (voulu || !devoile(calcul, ecris))) return Object.freeze({calcul, ecris});
+        if (!ecris || (!voulu && devoile(calcul, ecris))) continue;
+        if (assezDur(calcul)) return Object.freeze({calcul, ecris});
+        if (!plusDur || rangDansEcriture(calcul, cleNiveau) > rangDansEcriture(plusDur.calcul, cleNiveau) + ORDRE_SERIE.cran) plusDur = {calcul, ecris};
       }
     }
-    return null;
+    return plusDur ? Object.freeze(plusDur) : null;
   }
 
   return Object.freeze({
@@ -12816,6 +13059,10 @@
     carte,
     difficulte,
     genererSerie,
+    // Lot C1 : l'ordre des calculs.
+    ORDRE_SERIE,
+    rangDansEcriture,
+    unCranPlusFacile,
     genererTest,
     genererUn,
     sortesDe,

@@ -17,7 +17,8 @@ const lire = chemin => readFileSync(new URL(chemin, import.meta.url), "utf8");
 const espaces = t => String(t).replace(/[  ]/g, " ");
 const tous = (cle, n = 120) => {
   const vus = new Map();
-  for (let g = 1; g <= n; g += 1) ["valide", "entraine"].forEach(genre => CORE.genererSerie(cle, {graine: g * 37 + 11, genre, ...(genre === "entraine" ? {total: 60} : {})}).forEach(c => vus.set(c.cle, c)));
+  // (Lot C1 : le vivier, c'est la série rangée et sa réserve.)
+  for (let g = 1; g <= n; g += 1) ["valide", "entraine"].forEach(genre => { const s = CORE.genererSerie(cle, {graine: g * 37 + 11, genre, ...(genre === "entraine" ? {total: 60} : {})}); [...s, ...(s.reserve || [])].forEach(c => vus.set(c.cle, c)); });
   return [...vus.values()];
 };
 const textes = cle => new Set(tous(cle).map(c => espaces(c.texte)));
@@ -256,7 +257,7 @@ test("la progression : version 9 (10 depuis le lot F4) ; une progression de vers
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261120-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261121-1/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
