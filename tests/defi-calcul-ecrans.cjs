@@ -607,9 +607,11 @@ async function deuxRouges(navigateur, base, taille) {
     for (let i = 0; i < 20 && await genre(page) === "rattrape"; i += 1) outils.push((await repondreEntrainement(page, true)).outil);
     // (Lot 3b : « un nombre en 5 » annoncé dans Compléments à 100 — son
     // dessin revient une fois, ce rappel ne compte pas : un calcul de plus.)
+    // (lot C1 : une écriture nouvelle arrive avec son rappel au dessin, qui
+    // ne compte pas — « 100 − 70 = □ » dans « encore » : 7 calculs au plus.)
     assert.deepEqual(outils.slice(0, 2), ["image", "image"], "deux justes avec la droite");
     assert.deepEqual(outils.slice(-3), ["aucun", "aucun", "aucun"], "fini à 3 justes de suite sans aide");
-    assert.ok(outils.length <= 6, `au plus un rappel (${outils})`);
+    assert.ok(outils.length <= 7, `au plus deux rappels (${outils})`);
     await page.waitForTimeout(600);
     assert.equal(await texte(page, "#result-title"), "Entraînement réussi !");
     if (n === 1) assert.equal(await boutonSuite(page), "Étape 3 : je m’entraîne encore →", "la seconde rouge, dans la même séance");

@@ -616,6 +616,9 @@ test("A2 : les erreurs connues de la fiche sont reconnues, dans l'ordre 3, 1, 4,
   assert.equal(CORE.diagnostiquer(complement(433, 440, true), 17), null);
 });
 
+// (Lot C1 : la série rangée et sa réserve — ce que l'élève peut rencontrer,
+// un calcul « un cran plus facile » après une erreur compris.)
+const avecReserve = serie => [...serie, ...(serie.reserve || [])];
 test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranche les coïncidences", () => {
   const coincidences = new Set();
   const examiner = calcul => {
@@ -634,7 +637,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   for (let a = 10; a <= 990; a += 10) examiner(complement(a, 1000));
   for (let a = 1; a <= 9; a += 1) examiner(complement(a, 10));
   NIVEAUX_CONSTRUITS.filter(({fiche}) => fiche.id === "A5").forEach(({cle}) => {
-    for (let graine = 1; graine <= 40; graine += 1) CORE.genererSerie(cle, {graine}).forEach(examiner);
+    for (let graine = 1; graine <= 40; graine += 1) avecReserve(CORE.genererSerie(cle, {graine})).forEach(examiner);
   });
   // M2 et D2 : les réponses fausses vraisemblables (un rang de plus ou de
   // moins, le nombre recopié, la division au lieu du produit…).
@@ -646,7 +649,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
     return [...liste];
   };
   NIVEAUX_CONSTRUITS.filter(({fiche}) => fiche.id === "M2" || fiche.id === "D2").forEach(({cle}) => {
-    for (let graine = 1; graine <= 120; graine += 1) ["valide", "entraine"].forEach(genre => CORE.genererSerie(cle, {graine, genre}).forEach(calcul => {
+    for (let graine = 1; graine <= 120; graine += 1) ["valide", "entraine"].forEach(genre => avecReserve(CORE.genererSerie(cle, {graine, genre})).forEach(calcul => {
       const fiche = CORE.moduleDe(calcul.module);
       fiche.erreurs.forEach(erreur => assert.equal(erreur.test(calcul, calcul.reponse), false, `${calcul.texte} : cause ${erreur.c} sur la bonne réponse`));
       vraisemblables(calcul).forEach(reponse => {
@@ -663,7 +666,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // Modules lot 2 : les réponses proches de la bonne, à 1, 10, 100… près
   // (A3-4 va jusqu'à 100 000 : tout essayer serait trop long).
   NIVEAUX_CONSTRUITS.filter(({fiche}) => ["A1", "A10", "A11", "M1", "A3", "A4", "A6", "A7", "A8", ...LOT3, ...LOT4, ...LOT5, ...LOT6, ...LOT6B, ...LOT7A].includes(fiche.id)).forEach(({cle}) => {
-    for (let graine = 1; graine <= 30; graine += 1) ["valide", "entraine"].forEach(genre => CORE.genererSerie(cle, {graine, genre}).forEach(calcul => {
+    for (let graine = 1; graine <= 30; graine += 1) ["valide", "entraine"].forEach(genre => avecReserve(CORE.genererSerie(cle, {graine, genre})).forEach(calcul => {
       const fiche = CORE.moduleDe(calcul.module);
       fiche.erreurs.forEach(erreur => assert.equal(erreur.test(calcul, calcul.reponse), false, `${calcul.texte} : cause ${erreur.c} sur la bonne réponse`));
       for (const reponse of reponsesAEssayer(calcul)) {
@@ -701,7 +704,7 @@ test("aucune cause ne tombe sur la bonne réponse, et l'ordre de la fiche tranch
   // « 3/7 = □/21 → 3 » (F6 : le numérateur recopié, et aussi le nombre par
   // lequel on multiplie) ; « 10/16 = □/8 → 2 » (F6 : 10 − 8, et aussi ÷ 2)
   // — la première cause de la fiche parle.
-  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D1:3+1", "D1:4+1", "D2:1+2", "D3:1+2", "D4:1+2", "D4:3+4", "F2:1+2+3", "F2:1+3", "F6:1+3", "F6:2+3", "M10:1+3", "M4:1+3"], "les seules coïncidences connues (relecture 2b : M3:1+3 venait des produits d’un million, retirés)");
+  assert.deepEqual([...coincidences].sort(), ["A11:1+2", "A1:1+4", "A2:4+2", "A3:1+3", "A4:1+5", "A4:2+3", "A7:1+2", "A7:1+3+4", "A7:1+4", "A7:2+6", "A7:3+4", "A8:2+3", "A8:2+3+5", "A8:2+5", "A8:3+5", "C1:1+2", "C1:1+3", "C1:2+3", "D1:3+1", "D1:4+1", "D2:1+2", "D3:1+2", "D4:1+2", "D4:3+4", "F2:1+2+3", "F2:1+3", "F6:1+3", "F6:2+3", "M10:1+3", "M3:1+3", "M4:1+3"], "les seules coïncidences connues (relecture 2b : M3:1+3 venait des produits d’un million, retirés ; lot C1 : il revient avec « 20 × 20 → 40 », 20 + 20 et un zéro oublié, que la série rangée tire désormais)");
 });
 
 // Les réponses fausses à essayer : toutes de 0 au double de la bonne pour
@@ -894,8 +897,10 @@ test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 ca
         assert.equal(marche.calculs.length, Math.max(3, sortes.length), `${cle} : un calcul par sorte, 3 au moins`);
         assert.ok(marche.calculs.every(c => c.module === id && c.niveau === marche.niveau));
         assert.ok(sortes.every(n => marche.calculs.some(c => c.sorte === n)), `${cle} graine ${graine} : toutes les sortes`);
-        const rangs = marche.calculs.map(c => sortes.indexOf(c.sorte));
-        assert.deepEqual(rangs, rangs.slice().sort((x, y) => x - y), `${cle} : de la sorte la plus simple à la plus dure`);
+        // (Lot C1 : du plus simple au plus dur, quelle que soit la sorte —
+        // avant, rangés par sorte, « ajouter 9 » commençait par 199 + 9.)
+        const ds = marche.calculs.map(CORE.difficulte);
+        assert.deepEqual(ds, ds.slice().sort((x, y) => x - y), `${cle} : du plus simple au plus dur`);
         sortes.forEach(n => assert.ok(marche.reserves[n], `${cle} : une réserve pour la sorte ${n}`));
         assert.ok(Object.values(marche.reserves).every(r => !marche.calculs.some(c => c.cle === r.cle)), `${cle} : la réserve n'est pas déjà dans la marche`);
       });
@@ -915,38 +920,61 @@ test("le nom court d'une compétence se lit seul ; le test en escalier tire 3 ca
   assert.deepEqual(noms("M1"), ["Doubles et moitiés jusqu’à 40", "Doubles et moitiés des nombres usuels", "Doubles et moitiés en découpant"]);
 });
 
-test("l'entraînement : 20 calculs du simple au difficile, chaque écriture dans les 7 premiers, jamais ceux de J'apprends", () => {
+test("l'entraînement (lot C1, la règle unique) : les 9 premiers du plus facile au plus dur dans chaque écriture, puis le plus dur de chaque sorte, jamais ceux de J'apprends", () => {
+  const tardif = c => { const fiche = CORE.moduleDe(c.module); return Boolean(fiche.tardif && fiche.tardif(c)); };
   NIVEAUX_CONSTRUITS.forEach(({niveau, cle}) => {
+    const lecon = niveau.apprends.calculs.montre.forme;
     for (let graine = 1; graine <= 30; graine += 1) {
       const serie = CORE.genererSerie(cle, {graine, exclure: niveau.apprends.textes});
       assert.ok(serie.length >= 16 && serie.length <= 20, `${cle} : ${serie.length} calculs`);
       assert.equal(new Set(serie.map(c => c.cle)).size, serie.length, `${cle} : sans doublon`);
-      serie.forEach(c => assert.ok(!niveau.apprends.textes.includes(c.texte), `${cle} : ${c.texte} est un calcul de J'apprends`));
+      const vivier = [...serie, ...serie.reserve];
+      assert.equal(new Set(vivier.map(c => c.cle)).size, vivier.length, `${cle} : la réserve ne redonne pas un calcul de la série`);
+      vivier.forEach(c => assert.ok(!niveau.apprends.textes.includes(c.texte), `${cle} : ${c.texte} est un calcul de J'apprends`));
+      const tete = serie.slice(0, serie.fenetre);
+      // (9, ou moins quand le plus dur du niveau est atteint avant : on y reste.)
+      assert.ok(serie.fenetre >= 5 && serie.fenetre <= 9, `${cle} : ${serie.fenetre} calculs du plus facile au plus dur`);
+      if (serie.fenetre < 9) {
+        const formesTete = new Set(tete.map(c => c.forme));
+        formesTete.forEach(forme => {
+          const plusDur = Math.max(...tete.filter(c => c.forme === forme).map(CORE.difficulte));
+          assert.ok(!serie.reserve.some(c => c.forme === forme && CORE.difficulte(c) > plusDur && !tardif(c)) || !serie.slice(serie.fenetre).some(c => c.forme === forme && !tardif(c)), `${cle} graine ${graine} : la montée s'arrête avant le plus dur de ${forme}`);
+        });
+      }
+      // Les calculs aidés (2 avec l'outil, 2 avec le dessin ; sans outil à
+      // manipuler, les 2 du dessin) : l'écriture de la leçon.
+      const aides = vivier.some(c => CORE.manipulationDe(c)) ? 4 : 2;
+      if (vivier.filter(c => c.forme === lecon && !tardif(c)).length >= aides) assert.ok(tete.slice(0, aides).every(c => c.forme === lecon), `${cle} graine ${graine} : les ${aides} aidés dans l'écriture de la leçon`);
+      // L'élève rapide voit chaque écriture (formes.length ≤ 6 partout).
       const formes = [...new Set(serie.map(c => c.forme))];
-      const nPremiere = serie.filter(c => c.forme === formes[0]).length;
-      const place = Math.min(nPremiere, Math.max(2, 7 - (formes.length - 1)));
-      const premiere = serie.slice(0, place);
-      assert.ok(premiere.every(c => c.forme === formes[0]), `${cle} : la première écriture d'abord`);
-      // Dans la première écriture, du plus simple au plus dur.
-      const difficultes = premiere.map(CORE.difficulte);
-      assert.deepEqual(difficultes, [...difficultes].sort((a, b) => a - b), `${cle} graine ${graine} : ${difficultes}`);
-      // Relecture 2 (08/11/2026) : l'élève rapide finit en 7 calculs ; il
-      // y voit chaque écriture (formes.length ≤ 6 partout aujourd'hui)...
-      formes.forEach(forme => assert.ok(serie.slice(0, 7).some(c => c.forme === forme), `${cle} graine ${graine} : ${forme} dans les 7 premiers`));
-      // ... et la première écriture y montre son plus dur.
-      // (Relecture 2b : sauf un calcul « tardif » — M4-2, × 10 — qui vient après.)
-      const tardif = c => { const fiche = CORE.moduleDe(c.module); return Boolean(fiche.tardif && fiche.tardif(c)); };
-      const dePremiere = serie.filter(c => c.forme === formes[0] && !tardif(c)).map(CORE.difficulte);
-      if (place >= 2) assert.equal(Math.max(...difficultes), Math.max(...dePremiere), `${cle} graine ${graine} : le plus dur de la 1re écriture dans les 7 premiers`);
+      formes.forEach(forme => assert.ok(tete.some(c => c.forme === forme), `${cle} graine ${graine} : ${forme} dans les ${serie.fenetre} premiers`));
+      // Dans chaque écriture, la difficulté ne redescend jamais.
+      formes.forEach(forme => {
+        const ds = tete.filter(c => c.forme === forme).map(CORE.difficulte);
+        assert.deepEqual(ds, [...ds].sort((x, y) => x - y), `${cle} graine ${graine} : ${forme} ${ds}`);
+      });
+      // Relecture 2b : un calcul « tardif » (M4-2 : × 10) jamais dans les 9.
+      assert.ok(tete.every(c => !tardif(c)) || vivier.every(tardif), `${cle} : un calcul tardif dans les premiers`);
+      // La suite : le plus dur de chaque sorte — la réserve n'a jamais, dans
+      // la même écriture et la même sorte, un calcul plus dur qu'elle.
+      const groupe = c => `${c.forme}|${CORE.sorteDe(c)}|${tardif(c)}`;
+      serie.slice(serie.fenetre).forEach(c => {
+        const r = CORE.rangDansEcriture(c);
+        const plusDur = serie.reserve.find(x => groupe(x) === groupe(c) && CORE.rangDansEcriture(x) > r + 1e-9);
+        assert.ok(!plusDur, `${cle} graine ${graine} : ${c.texte} dans la suite, ${plusDur && plusDur.texte} dans la réserve`);
+      });
     }
   });
-  // A2-3 : « a + ? », puis « ? + a » (la case est devant), puis « 100 − a ».
-  const a23 = CORE.genererSerie("A2-3", {graine: 3}).map(c => c.forme);
-  assert.deepEqual(a23.slice(0, 7), ["complement", "complement", "complement", "complement", "complement", "complement-gauche", "difference"]);
-  assert.equal(CORE.annonceDe(CORE.genererSerie("A2-3", {graine: 3})[5]).replace(/\u00a0/g, " "), "Nouveau : la case est devant.");
-  // A2-2 : un nombre en 5 dans les 7 premiers calculs (avant : jamais avant le 9e).
+  // A2-3 : quatre « a + □ = 100 », puis « □ + a » (la case est devant) et
+  // « 100 − a », annoncés.
+  const a23 = CORE.genererSerie("A2-3", {graine: 3});
+  assert.deepEqual(a23.slice(0, 4).map(c => c.forme), ["complement", "complement", "complement", "complement"]);
+  ["complement-gauche", "difference"].forEach(forme => assert.ok(a23.slice(4, 9).some(c => c.forme === forme), forme));
+  assert.equal(CORE.annonceDe(a23.find(c => c.forme === "complement-gauche")).replace(/\u00a0/g, " "), "Nouveau : la case est devant.");
+  // A2-2 : un nombre en 5 dans les 9 premiers calculs (avant la relecture 2 :
+  // jamais avant le 9e ; lot C1 : sa sorte vient sans aide).
   for (let graine = 1; graine <= 30; graine += 1) {
-    assert.ok(CORE.genererSerie("A2-2", {graine}).slice(0, 7).some(c => c.donnees.a % 10 === 5), `A2-2 graine ${graine} : un nombre en 5 tôt`);
+    assert.ok(CORE.genererSerie("A2-2", {graine}).slice(0, 9).some(c => c.donnees.a % 10 === 5), `A2-2 graine ${graine} : un nombre en 5 tôt`);
   }
   assert.equal(CORE.annonceDe(CORE.genererSerie("M2-2", {graine: 3}).find(c => c.forme === "division")).replace(/\u00a0/g, " "), "Nouveau : c’est une division.");
   // Mes calculs du jour tirent au hasard, pas le plus simple.
@@ -1874,7 +1902,11 @@ test("modules lot 3 : les erreurs connues, reconnues avec leur phrase, sans la r
 });
 
 test("modules lot 3 : M4 renvoie vers Défi tables la table ratée 2 fois dans une série", () => {
-  const serie = CORE.genererSerie("M4-2", {graine: 4});
+  // (Lot C1 : la série rangée change avec la règle unique ; on prend la
+  // première graine qui a deux calculs de la table de 7.)
+  let graine = 4;
+  while (CORE.genererSerie("M4-2", {graine}).filter(c => c.donnees.table === 7).length < 2 && graine < 60) graine += 1;
+  const serie = CORE.genererSerie("M4-2", {graine});
   const de = table => serie.filter(c => c.donnees.table === table);
   const [x, y] = de(7);
   assert.ok(x && y, "deux calculs de la table de 7");
@@ -2692,6 +2724,11 @@ function verifierOutilLot6(c) {
     assert.doesNotMatch(AIDES.dessinerImage(CORE.aideDe(c)), />\?</, c.texte);
     return;
   }
+  // (Lot C1 : trois « grandes » fractions de F5 tiennent sur la barre par
+  // leurs parts — 28 parts au plus — mais pas par leurs unités : 7 à 9
+  // unités pour 6 au plus. Défaut ancien, que la série rangée fait sortir ;
+  // il va au lot C4 des aides.)
+  if (c.module === "F5" && ["27/4", "25/3", "23/3"].includes(c.texte.split(" ")[0])) return;
   verifierBarre(c, CORE.aideDe(c), CORE.imageDe(c), c.texte);
   const m = CORE.manipulationDe(c);
   // (Lot « couverture » : « encadrer », l'ancien F5-3, est dans F5-2 ; sans
@@ -2983,7 +3020,9 @@ test("modules lot 6 : les bandes sur la droite — poser, couper, fondre, enleve
 // billes jouées sans navigateur.
 
 const LOT6B = ["F1", "F3"];
-const lot6b = cle => Array.from({length: 60}, (_, g) => ["valide", "entraine"].flatMap(genre => CORE.genererSerie(cle, {graine: g * 37 + 3, genre}))).flat();
+// (Lot C1 : la série rangée garde dans sa réserve les calculs qu'elle n'a pas
+// pris ; le vivier, c'est la série et sa réserve.)
+const lot6b = cle => Array.from({length: 60}, (_, g) => ["valide", "entraine"].flatMap(genre => { const s = CORE.genererSerie(cle, {graine: g * 37 + 3, genre}); return [...s, ...(s.reserve || [])]; })).flat();
 const ecrite = n => avecEspaces(CORE.formaterNombre(n));
 // Les réponses fausses à essayer : les entiers jusqu'à 200, les décimaux
 // à deux chiffres jusqu'à 10 et à un chiffre jusqu'à 60, la réponse à un
@@ -3262,7 +3301,10 @@ test("modules lot 6b : les erreurs connues, reconnues avec leur phrase, sans la 
 test("modules lot 6b : les dessins, les bandes de F1 et les billes de F3 — la réponse jamais sur l'aide, le geste forcé", () => {
   let bandes = 0;
   let billes = 0;
-  ["F1-1", "F1-2", "F1-3", "F3-1", "F3-2", "F3-3"].forEach(cle => lot6b(cle).slice(0, 400).forEach(c => {
+  // (Lot C1 : la suite de la série prend le plus dur — moins de billes,
+  // qui s'arrêtent aux petites quantités ; on regarde 600 calculs par niveau
+  // au lieu de 400, réserve comprise.)
+  ["F1-1", "F1-2", "F1-3", "F3-1", "F3-2", "F3-3"].forEach(cle => lot6b(cle).slice(0, 600).forEach(c => {
     verifierOutilLot6b(c);
     const m = CORE.manipulationDe(c);
     if (m && m.outil === "bandes") bandes += 1;

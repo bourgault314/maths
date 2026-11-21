@@ -194,7 +194,8 @@ test("M4-2 : × 10 rare et après les tables de 6 à 9 (remarque 47) ; A8-1 : 5 
     const dix = s.filter(c => c.donnees.a === 10 || c.donnees.b === 10);
     assert.ok(dix.length <= 4, `graine ${graine} : ${dix.length} × 10`);
     total += dix.length;
-    assert.ok(s.slice(0, 7).every(c => c.donnees.a !== 10 && c.donnees.b !== 10), `graine ${graine} : pas de × 10 dans les 7 premiers`);
+    // (Lot C1 : les 9 premiers.)
+    assert.ok(s.slice(0, 9).every(c => c.donnees.a !== 10 && c.donnees.b !== 10), `graine ${graine} : pas de × 10 dans les 9 premiers`);
   }
   assert.ok(total / 40 < 2, `en moyenne moins de 2 × 10 sur 20 calculs (${total / 40})`);
   serie("A8-1", 40).forEach(c => {
@@ -229,7 +230,7 @@ test("les copies pour la page prof, les adresses de cache", async () => {
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261121-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261120-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
 });
 

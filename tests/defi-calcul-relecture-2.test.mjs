@@ -17,7 +17,8 @@
 //    leur laisse ; la bande « Mode professeur » sur deux lignes propres ;
 //  - sur ordinateur : un écran qui ne tient pas descend jusqu'à ×0,7 (le
 //    bouton « Valider » n'est plus coupé, A2-5).
-// L'ordre de l'entraînement (chaque écriture dans les 7 premiers calculs) est
+// L’ordre de l’entraînement (chaque écriture dans les 9 premiers calculs depuis
+// le lot C1, avant dans les 7 premiers) est
 // gardé par tests/defi-calcul-core.test.mjs. Ce qui se voit (mesures sur les
 // 95 niveaux) : tests/defi-calcul-relecture-2-ecrans.cjs.
 
@@ -218,7 +219,7 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261121-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261120-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

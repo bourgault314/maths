@@ -207,12 +207,13 @@ async function jouer(page, choisir) {
         const C = window.MATHSGO_DEFI_CALCUL_CORE;
         const exclure = C.niveauDe("M4-1").niveau.apprends.textes;
         let graine = 0;
-        for (let g = 1; g < 20000 && !graine; g += 1) if (!C.aideDe(C.genererSerie("M4-1", {graine: g, genre: "entraine", total: 25, exclure})[0])) graine = g;
+        // (Lot C1 : la reprise sans aide tire sa série avec 0 calcul aidé, comme la page.)
+        for (let g = 1; g < 20000 && !graine; g += 1) if (!C.aideDe(C.genererSerie("M4-1", {graine: g, genre: "entraine", total: 25, exclure, aides: 0})[0])) graine = g;
         const [now, hasard] = [Date.now, Math.random];
         Date.now = () => 0;
         Math.random = () => (graine + 0.5) / 4294967296;
         try { window.__MATHSGO_DEFI_CALCUL_TEST__.reprendre("M4", 1, 2); } finally { Date.now = now; Math.random = hasard; }
-        return {graine, texte: C.genererSerie("M4-1", {graine, genre: "entraine", total: 25, exclure})[0].texte};
+        return {graine, texte: C.genererSerie("M4-1", {graine, genre: "entraine", total: 25, exclure, aides: 0})[0].texte};
       });
       assert.ok(vise.graine, "une graine qui tire un calcul sans dessin en premier");
       await pause(s.page, 600);
