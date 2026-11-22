@@ -199,6 +199,54 @@ function attendue(q) {
       const b = versUnite(lire(d.b), d.ub, d.vers);
       return [d.op === "+" ? a + b : a - b];
     }
+    // Lot B3-3 : D3, la quantité relue à part (dans le texte, ou depuis les
+    // instants), puis rangée dans les cases ([h, min, s], [jours, h]…).
+    case "d3": {
+      const T = {s: {h: 3600, min: 60, s: 1}, h: {jours: 24, h: 1}}[d.base];
+      let qte;
+      if (d.depart !== undefined && d.sorte !== "depart") {
+        qte = d.arrivee - d.depart;
+        const pas = q.degre === 1 && qte < 60 ? 60 : 3600;
+        assert.ok(Math.ceil(d.depart / pas) * pas < d.arrivee, "la durée passe une pile");
+        assert.ok(d.depart % 60 && d.arrivee % 60, "des secondes au départ et à l'arrivée");
+      } else if (d.sorte === "depart") qte = d.arrivee - d.duree;
+      else if (d.sorte === "lire") qte = d.h * 3600 + d.m * 60 + d.s;
+      else if (d.sorte === "triathlon") qte = d.total - d.nage - d.velo;
+      else {
+        // (La durée écrite dans la situation, ou avant « = ».)
+        const m = q.morceaux;
+        const src = `${m.enonce || ""} ${(m.avant || m.phrase || "").split("=")[0]}`.replace(/[\u00a0\u202f]/g, " ").replace(/(\d) (?=\d{3}\b)/g, "$1");
+        const lu = [...src.matchAll(/(\d+(?:,\d+)?) (h|min|s)(?![\wÀ-ÿ])/g)];
+        assert.ok(lu.length, `pas de durée dans « ${src} »`);
+        const unite = {h: d.base === "h" ? 1 : 3600, min: 60, s: 1};
+        qte = lu.reduce((a, [, n, u]) => a + Number(lire(n)) * unite[u] / 1000, 0);
+      }
+      assert.equal(qte, d.q, `D3 : la quantité ${d.q} ≠ ${qte}`);
+      let reste = qte;
+      return d.unites.map(u => { const n = Math.floor(reste / T[u]); reste -= n * T[u]; return BigInt(n) * 1000n; });
+    }
+    // Lot B3-3 : Q3 (plusieurs fois, partager, combien de parts, fois plus
+    // ou moins, les étagères, deux étapes), recalculé à part.
+    case "q3": {
+      const v = (m, u) => versUnite(lire(m), u, d.vers);
+      if (d.sorte === "fois") return [BigInt(d.n) * v(d.a, d.ua)];
+      if (d.sorte === "partage") { assert.equal(v(d.a, d.ua) % BigInt(d.n), 0n); return [v(d.a, d.ua) / BigInt(d.n)]; }
+      if (d.sorte === "parts") { const T = versUnite(lire(d.a), d.ua, d.up); assert.equal(T % lire(d.part), 0n); return [(T / lire(d.part)) * 1000n]; }
+      if (d.sorte === "fois-plus") return [d.plus ? v(d.a, d.ua) * BigInt(d.k) : v(d.a, d.ua) / BigInt(d.k)];
+      if (d.sorte === "planches") {
+        const L = versUnite(lire(d.L), d.uL, d.ue);
+        assert.ok(L % lire(d.e) !== 0n, "les étagères : il reste un bout");
+        return [BigInt(d.n) * (L / lire(d.e)) * 1000n];
+      }
+      if (d.sorte === "deux") { const tot = BigInt(d.n) * v(d.a, d.ua); assert.equal(tot % BigInt(d.k), 0n); return [tot / BigInt(d.k)]; }
+      return null;
+    }
+    // Lot B3-3 : Q4, k⁄n d'une quantité (dans l'unité de la réponse).
+    case "q4": {
+      const Q = versUnite(lire(d.q), d.u, d.vers);
+      assert.equal(Q % BigInt(d.n), 0n, "la fraction ne tombe pas juste");
+      return [(Q / BigInt(d.n)) * BigInt(d.k)];
+    }
     default: return null;
   }
 }
@@ -225,6 +273,9 @@ function ecriture(texte, ou) {
   // (Lot B2-3b-2, Gwenaël : « 52 / min à la ligne, c'est pas joli » : une
   // heure ou une durée ne se coupe pas non plus entre « h » et les minutes.)
   pasDe(texte, /\d\u00a0h (?=\d)/, () => `${ou} : « h » et les minutes séparables dans « ${texte} »`);
+  // (Lot B3-3 : à la seconde, « 12 min 15 s » et « 83 jours 8 h » non plus ;
+  // « 15 s » insécable.)
+  pasDe(texte, /\d\u00a0min (?=\d)|\d\u00a0jours (?=\d)|\d (?:s|jours)(?![\wÀ-ÿ'])/, () => `${ou} : une durée à la seconde séparable dans « ${texte} »`);
   const sansImpersonnel = texte.replace(IMPERSONNEL, "");
   assert.doesNotMatch(sansImpersonnel, PERSONNE, `${ou} : « il » ou « elle » pour une personne dans « ${texte} »`);
   // (Un nom propre, « le sentier du Trou de Fer mesure », n'en est pas une ;
@@ -273,6 +324,10 @@ function controlerQuestion(q, ou) {
         else if (d.type === "entre") attenduTexte = q.reponseTexte.replace(/\u00a0/g, " ");
         else if (d.type === "q10") attenduTexte = `${rec[0] / 1000n} h ${String(rec[1] / 1000n).padStart(2, "0")}`;
         else if (d.type === "frac") attenduTexte = G.ecrire(rec[0]).replace(/\u202f/g, " ");
+        // (Lot B3-3 : « 2 min 30 s », « 60 s » — correctif : l'unité dans le
+        // choix, toujours ; « 24 kg ».)
+        else if (d.type === "d3") attenduTexte = d.unites.map((u, k) => `${rec[k] / 1000n} ${u}`).join(" ");
+        else if (d.type === "q4") attenduTexte = `${G.ecrire(rec[0]).replace(/\u202f/g, " ")} ${d.vers}`;
         else attenduTexte = String(rec[0] / 1000n);
         assert.equal(bonTexte, attenduTexte, `${ou} : le bon choix « ${bonTexte} » ≠ ${attenduTexte}`);
       } else assert.ok(G.verifier(q, Array.isArray(q.reponse) ? q.reponse : q.reponse).juste, `${ou} : la bonne réponse est refusée`);
@@ -880,7 +935,8 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"],
       P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"],
       R7: ["qcm"], R8: ["qcm", "associer", "phrase", "ranger"], R9: ["qcm"],
-      C9: ["nombre", "phrase", "qcm", "deux-cases"], A1: ["nombre", "phrase", "qcm"], A2: ["nombre", "phrase", "qcm"]}[code];
+      C9: ["nombre", "phrase", "qcm", "deux-cases"], A1: ["nombre", "phrase", "qcm"], A2: ["nombre", "phrase", "qcm"],
+      D3: ["nombre", "phrase", "deux-cases", "qcm"], Q3: ["nombre", "vrai-faux"], Q4: ["nombre", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -2557,4 +2613,234 @@ test("lot B3-2 : C9, A1, A2 — recalculés à part, l'outil sans la réponse, l
   assert.equal(CARTE.etape("A1").nomCourt, "m², dm² et cm²");
   assert.equal(CARTE.etape("A2").nomCourt, "Convertir des aires");
   ["C9", "A1", "A2"].forEach(c => assert.doesNotMatch(JSON.stringify(CARTE.etape(c)), /tableau/i, `${c} : un tableau`));
+});
+
+test("lot B3-3 : D3, Q3, Q4 — recalculés à part, l'outil sans la réponse, les places, les pourquoi, l'écriture", () => {
+  const sp = t => String(t).replace(/[  ‑]/g, x => (x === "‑" ? "-" : " "));
+  const places = {};
+  const noter = (k, b) => { (places[k] = places[k] || new Set()).add(b); };
+  const parTexte = {};
+  const sortes = {D3: {}, Q3: {}, Q4: {}};
+  const reunion = new Set();
+  for (let g = 1; g <= 400; g += 1) {
+    for (const code of ["D3", "Q3", "Q4"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        G.serie(code, {usage, graine: g}).forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees;
+          const sorte = code === "D3" ? q.sorteD3 : code === "Q3" ? (q.forme === "vrai-faux" ? "vrai" : q.sorteQ3) : `${q.sorteQ4}${q.forme === "qcm" ? "-qcm" : d.k === 1 ? "-1" : d.u !== d.vers ? "-conv" : ""}`;
+          sortes[code][sorte] = (sortes[code][sorte] || 0) + 1;
+          if (/Saint|Piton|Maïdo|letchi|goyave|canne|varangue|pirogue|cari/.test(q.texte)) reunion.add(`${code}:${sorte}`);
+          // La correction : les lignes avec les unités ; la dernière, la
+          // réponse en vert au milieu (le nombre de parts : sans unité, S023).
+          // (Correctif B3-3 : le triathlon complète par l'heure pile, quatre lignes courtes.)
+          assert.ok(Array.isArray(q.lignesB33) && q.lignesB33.length >= 1 && q.lignesB33.length <= (q.sorteD3 === "triathlon" ? 4 : 3), `${ou} : les lignes de la correction`);
+          const der = q.lignesB33[q.lignesB33.length - 1];
+          assert.ok(Array.isArray(der) && der.length === 3, `${ou} : la dernière ligne en trois morceaux`);
+          if (q.forme !== "vrai-faux" && q.forme !== "qcm") {
+            const vert = sp(der[1]);
+            const rep = sp(q.reponseTexte);
+            assert.ok(vert === rep || (q.morceaux.apres && rep === `${vert} ${q.morceaux.apres}`), `${ou} : la réponse en vert « ${vert} » ≠ « ${rep} »`);
+          }
+          if (q.forme === "qcm") assert.ok([sp(q.choix[q.bon]), `${sp(q.choix[q.bon])} ${q.morceaux.apres || ""}`.trim()].includes(sp(der[1])), `${ou} : le vert de la correction`);
+          assert.deepEqual(q.correction, q.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l)), `${ou} : correction et lignes`);
+          // Les unités restent écrites dans les calculs (S023 p. 5).
+          q.lignesB33.slice(0, -1).forEach(l => { if (!/^Une planche/.test(l)) assert.match(sp(l), /\d (s|min|h|jours|kg|g|km|m|cm|L|cL|mL|€|t)(?![\wÀ-ÿ])/, `${ou} : une ligne sans unité « ${l} »`); });
+          // L'outil, l'image et la note ne donnent jamais la réponse.
+          // (L'espace fine des milliers reste : « 3 500 m » ne contient pas « 500 m ».)
+          const nb = s => String(s).replace(/\u00a0/g, " ");
+          const rep = nb(q.reponseTexte);
+          const re = new RegExp(`(^|[^\\d,\u202f])${rep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\d,])`);
+          const textesOutil = [q.noteOutil, ...(q.image || []), ...(q.outilLignes || []), q.relation || "",
+            ...(q.barreQ3 ? [q.barreQ3.tout, ...q.barreQ3.parts, q.barreQ3.dessous] : []), ...(q.barreQ4 ? [q.barreQ4.tout] : []),
+            ...(q.axeD3 ? q.axeD3.arcs.map(a => a.texte) : []), ...(q.schemaD3 ? [q.schemaD3.tout, ...q.schemaD3.parts] : [])].filter(Boolean).map(nb).join(" | ");
+          // (Les instants de l'énoncé, « 8 h 46 min 36 s », sont des données :
+          // leurs secondes ne sont pas la réponse « 36 s ».)
+          const sansInstants = d.type === "d3" && d.depart !== undefined && d.sorte !== "depart" ? textesOutil.replace(/\d+ h \d+ min( \d+ s)?/g, "⟂") : textesOutil;
+          if (q.forme !== "vrai-faux") assert.ok(!re.test(sansInstants), `${ou} : l'aide « ${textesOutil} » donne « ${rep} »`);
+          if (q.axeD3) {
+            // (Ni l'heure pile grise, ni un instant de l'axe n'est la réponse.)
+            q.axeD3.instants.filter(i => !i.cache).forEach(i => assert.notEqual(i.t, d.sorte === "depart" ? d.q : -1, `${ou} : l'instant cherché sur l'axe`));
+            assert.ok(q.axeD3.instants.some(i => i.gris), `${ou} : la pile en gris`);
+          }
+          if (q.barreD3 && d.sorte === "min-s") assert.ok(q.barreD3.n <= 5, `${ou} : la barre de plus de 5 minutes`);
+          // Au choix : tous différents, un pourquoi de 31 signes au plus ; la
+          // bonne réponse à toutes les places.
+          if (q.forme === "qcm" || q.forme === "vrai-faux") {
+            noter(`${code} ${sorte}`, q.bon);
+            const tx = `${code} ${sp(q.texte)}`;
+            (parTexte[tx] = parTexte[tx] || []).push(q.bon);
+            q.choix.forEach((c, k) => {
+              if (k === q.bon) return;
+              const v = G.verifier(q, k);
+              assert.ok(v.retour, `${ou} : « ${c} » sans pourquoi`);
+              assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`);
+            });
+          } else {
+            // Les erreurs au pavé : une ligne (31 signes).
+            const r = Array.isArray(q.reponse) ? q.reponse.map(x => lire(x)) : [lire(q.reponse)];
+            const essais = [r.map(x => x * 10n), r.map(x => x / 10n), r.map(x => x + 1000n), r.map(x => x * 60n)];
+            if (d.type === "d3" && d.unites.length > 1) essais.push(r.slice().reverse());
+            essais.forEach(y => {
+              const v = G.verifier(q, y.length > 1 ? y.map(x => G.ecrire(x).replace(/ /g, "")) : G.ecrire(y[0]).replace(/ /g, ""));
+              if (v.retour) assert.ok(v.retour.length <= 31, `${ou} : retour trop long « ${v.retour} »`);
+            });
+          }
+          // L'écriture : aucune espace normale devant « : ; ? ! » ; une
+          // durée ne se coupe jamais ; la ligne longue plus petite ; sous un
+          // énoncé, deux lignes au plus.
+          const m = q.morceaux || {};
+          const affiches = [q.texte, q.resume, q.noteOutil, m.phrase, m.avant, m.enonce, m.consigne, ...(q.correction || []), ...(q.image || []),
+            ...(q.choix || []), ...Object.values(q.pourquoi || {}), ...q.lignesB33.flat()].filter(t => typeof t === "string");
+          affiches.forEach(t => {
+            assert.doesNotMatch(t, / [:;?!]/, `${ou} : une espace normale devant la ponctuation « ${t} »`);
+            assert.doesNotMatch(t, /\d (h|min|s|jours)(?![\wÀ-ÿ])|\d (h|min|jours) (?=\d)/, `${ou} : une durée séparable « ${t} »`);
+            assert.doesNotMatch(t, /\d\/\d|[½¼¾]/, `${ou} : une fraction sans la barre U+2044`);
+            ecriture(t, ou);
+          });
+          if (m.avant !== undefined && m.avant.length + (m.apres || "").length + (m.cases || []).join("").length >= 11) assert.ok(m.long, `${ou} : ligne longue sans « long »`);
+          if (m.enonce && (q.forme === "nombre" || q.forme === "deux-cases")) assert.ok(m.deuxLignes && m.serre, `${ou} : sous un énoncé`);
+          if (m.etroite) assert.ok(String(q.reponse).length <= 6, `${ou} : la réponse ne tient pas dans la case étroite`);
+          // D3 : la durée passe une pile ; lire l'heure, les aiguilles écartées.
+          if (code === "D3" && d.sorte === "lire") {
+            assert.ok(Math.abs(d.m - d.s) >= 4, `${ou} : la grande aiguille sur la trotteuse`);
+            assert.equal(d.s % 5 === 0, q.degre === 1, `${ou} : les secondes de 5 en 5 au degré 1 seulement`);
+            assert.deepEqual(q.morceaux.cases, ["h", "min", "s"]);
+          }
+          if (code === "D3" && d.depart !== undefined) {
+            const [, mDep] = [Math.floor(d.depart / 3600), Math.floor((d.depart % 3600) / 60)];
+            if (q.degre >= 2) assert.ok(mDep && Math.floor((d.arrivee % 3600) / 60), `${ou} : « 0 min » dans une heure`);
+          }
+          // Q3 : la valeur d'une part, 10 au plus aux degrés 1 et 2 (S003 p. 11).
+          if (code === "Q3" && d.sorte === "parts") {
+            const p = Number(lire(d.part) / 1000n);
+            if (q.degre <= 2) assert.ok(p <= 10, `${ou} : une part de ${p}`);
+            else assert.ok([20, 25, 50].includes(p), `${ou} : une part de ${p}`);
+          }
+          // Q4 : les dénominateurs du cours moyen ; le degré 3 convertit (ou le cocktail).
+          if (code === "Q4") {
+            assert.ok([2, 3, 4, 5, 6, 8, 10].includes(d.n), `${ou} : ${d.k}⁄${d.n}`);
+            assert.ok(d.k >= 1 && d.k < d.n, ou);
+            if (q.degre === 3 && q.forme !== "qcm" && q.sorteQ4 !== "cocktail") assert.notEqual(d.u, d.vers, `${ou} : le degré 3 sans conversion`);
+            if (q.degre === 1 && q.forme !== "qcm") assert.equal(d.k, 1, `${ou} : une fraction unité au degré 1`);
+            if (d.vers === "€") assert.equal(lire(q.reponse) % 1000n, 0n, `${ou} : des centimes`);
+          }
+        });
+      }
+    }
+  }
+  // Toutes les sortes tombent.
+  ["fait", "min-s", "s-min", "situation", "jours", "lire", "duree", "depart", "triathlon", "choix"].forEach(k => assert.ok(sortes.D3[k] > 100, `D3 : ${k} ${sortes.D3[k] || 0}`));
+  ["fois", "partage", "parts", "fois-plus", "planches", "deux", "vrai"].forEach(k => assert.ok(sortes.Q3[k] > 100, `Q3 : ${k} ${sortes.Q3[k] || 0}`));
+  ["fraction-1", "fraction", "fraction-conv", "cocktail", "choix-qcm"].forEach(k => assert.ok(sortes.Q4[k] > 100, `Q4 : ${k} ${sortes.Q4[k] || 0}`));
+  ["D3", "Q3", "Q4"].forEach(c => assert.ok([...reunion].some(k => k.startsWith(c)), `${c} : La Réunion`));
+  // La bonne réponse à toutes les places (par sorte et par question vue souvent).
+  Object.entries(places).forEach(([k, v]) => assert.deepEqual([...v].sort(), k.endsWith("vrai") ? [0, 1] : [0, 1, 2], `${k} : la bonne réponse aux places ${[...v]}`));
+  Object.entries(parTexte).filter(([, v]) => v.length >= 30).forEach(([tx, v]) => assert.deepEqual([...new Set(v)].sort(), tx.includes("vraisemblable") ? [0, 1] : [0, 1, 2], `${tx} : la bonne réponse aux places ${[...new Set(v)]}`));
+  // Les exemples de On te montre (S003) ; les noms courts ; pas de tableau de conversion.
+  assert.deepEqual([...G.clesExemples("D3")], ["D3:255s>s", "D3:d:course:35920-36735"]);
+  assert.deepEqual([...G.clesExemples("Q3")], ["Q3:n:ruban:1,2m/8cm", "Q3:f:goyave:6x25cL", "Q3:e:6x5m/2m"]);
+  assert.deepEqual([...G.clesExemples("Q4")], ["Q4:sable:2/5:60kg>kg", "Q4:farine:3/10:500g>g", "Q4:lait:3/4:2L>cL"]);
+  assert.equal(CARTE.etape("Q3").nomCourt, "Plusieurs fois, partager");
+  assert.equal(CARTE.etape("Q4").nomCourt, "Une fraction d'une quantité");
+  assert.equal(CARTE.etape("D3").nomCourt, "Minutes et secondes");
+  ["D3", "Q3", "Q4"].forEach(c => {
+    assert.doesNotMatch(JSON.stringify(CARTE.etape(c)), /tableau/i, `${c} : un tableau`);
+    assert.equal(CARTE.etape(c).apprends.length, 3, `${c} : On te montre en trois temps`);
+    assert.ok(CARTE.etape(c).apprends.some(a => a.aide && a.aide.touche || ["trotteuse", "axe-sec"].includes(a.aide && a.aide.type)), `${c} : un geste dans On te montre`);
+  });
+  // Les erreurs connues : la base 100, la trotteuse, le partage, le piège des étagères.
+  const une = (code, f) => { for (let g = 1; g < 3000; g += 1) { const x = G.serie(code, {usage: "entraine", graine: g}).find(f); if (x) return x; } return null; };
+  const ms = une("D3", q => q.sorteD3 === "min-s" && q.degre === 2);
+  const [, m2, s2] = [0, Math.floor(ms.donnees.q / 60), ms.donnees.q % 60];
+  assert.equal(G.verifier(ms, String(m2 * 100 + s2)).retour, CARTE.typo("1 min = 60 s, pas 100 s."));
+  const pl = une("Q3", q => q.sorteQ3 === "planches" && q.forme === "nombre");
+  const Lv = Number(lire(pl.donnees.L)) * (pl.donnees.uL === pl.donnees.ue ? 1 : 100) / 1000;
+  const faux = Math.floor(pl.donnees.n * Lv / Number(lire(pl.donnees.e) / 1000n));
+  assert.match(G.verifier(pl, String(faux)).retour, /^Il reste .+ par planche\.$/);
+  const fr = une("Q4", q => q.forme === "nombre" && q.donnees.k > 1 && q.donnees.u === q.donnees.vers);
+  const part = lire(fr.donnees.q) / BigInt(fr.donnees.n);
+  assert.equal(G.verifier(fr, G.ecrire(part).replace(/ /g, "")).retour, "C'est une seule part.");
+  const li = une("D3", q => q.sorteD3 === "lire");
+  assert.equal(G.verifier(li, [String(li.donnees.h), String(li.donnees.s), String(li.donnees.m)]).retour, CARTE.typo("La grande : les minutes."));
+});
+
+test("lot B3-3, correctif de la relecture : les 28 défauts ne reviennent pas", () => {
+  const sp = t => String(t).replace(/[\u00a0\u202f]/g, " ");
+  const sec = t => { let n = 0; const re = /(\d+) (h|min|s)(?![a-zà-ÿ])/g; let m; while ((m = re.exec(sp(t)))) n += Number(m[1]) * (m[2] === "h" ? 3600 : m[2] === "min" ? 60 : 1); return n; };
+  let retenues = 0;
+  let departs = 0;
+  for (let g = 1; g <= 400; g += 1) {
+    for (const code of ["D3", "Q3", "Q4"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide"]) {
+        const serie = G.serie(code, {usage, graine: g});
+        // Défaut 9 : dans Je valide, un même contexte une fois.
+        if (usage === "valide") {
+          const k = {D3: "modeleD3", Q3: "modeleQ3", Q4: "modeleQ4"}[code];
+          const vus = serie.map(q => q[k]).filter(Boolean);
+          assert.equal(new Set(vus).size, vus.length, `${code} valide ${g} : un contexte deux fois (${vus})`);
+        }
+        serie.forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees;
+          const e = sp(q.morceaux.enonce || q.texte);
+          if (code === "D3") {
+            // Défaut 5 : pas de durée décimale au CM2.
+            assert.doesNotMatch(sp(q.texte) + " " + (q.choix || []).map(sp).join(" "), /\d,\d+ (h|min|s)(?![a-zà-ÿ])/, `${ou} : une durée décimale`);
+            // Défauts 2 et 22 : les choix ont leur unité ; un seul vaut la bonne réponse.
+            if (q.forme === "qcm") {
+              q.choix.forEach(c => assert.match(sp(c), /\d (h|min|s)$/, `${ou} : un choix sans unité « ${c} »`));
+              q.choix.forEach((c, i) => { if (i !== q.bon) assert.notEqual(sec(c), sec(q.choix[q.bon]), `${ou} : « ${sp(c)} » vaut la bonne réponse`); });
+            }
+            // Défaut 21 : le marathon et le semi-marathon partent entre 7 h et 10 h.
+            if (/marathon|semi/.test(q.modeleD3 || "")) assert.ok(d.depart >= 7 * 3600 && d.depart <= 10 * 3600, `${ou} : départ à ${d.depart} s`);
+            // Défaut 3 : la retenue des secondes se voit dans la correction.
+            if (d.cherche === "duree" && q.degre >= 2) {
+              const pile = Math.ceil(d.depart / 3600) * 3600;
+              const ss = ((pile - d.depart) % 60) + ((d.arrivee - pile) % 60);
+              if (ss >= 60) { retenues += 1; assert.equal(sp(q.noteCorrB33), `${ss} s = 1 min ${ss - 60} s`, ou); } else assert.ok(!q.noteCorrB33, ou);
+            }
+            // Défaut 4 : l'heure de départ par les bonds de l'axe ; on ne retire
+            // une durée que d'une durée ou d'une heure pile.
+            if (d.cherche === "depart") {
+              departs += 1;
+              const l1 = q.lignesB33[0];
+              const l2 = q.lignesB33[q.lignesB33.length - 1];
+              const [a, b] = sp(l1).split(" = ")[0].split(" − ");
+              assert.ok(sec(a) % 60 >= sec(b) % 60 && Math.floor(sec(a) / 60) % 60 >= Math.floor(sec(b) / 60) % 60, `${ou} : une retenue dans « ${sp(l1)} »`);
+              assert.equal(sec(sp(l2[0]).split(" − ")[0]) % 3600, 0, `${ou} : « ${sp(l2[0])} » ne part pas d'une heure pile`);
+            }
+            if (q.sorteD3 === "triathlon") assert.ok(q.lignesB33.every(l => !/ − /.test(Array.isArray(l) ? l.join("") : l)), `${ou} : une soustraction posée`);
+            // Défaut 25 : au degré 1, une minute de trop.
+            if (d.cherche === "duree" && q.degre === 1) assert.match(sp(G.verifier(q, String(d.q + 60)).retour), /^Moins d'une minute : \d+ s\.$/, ou);
+          }
+          if (code === "Q3" || code === "Q4") {
+            // Défaut 6 : un verre de jus, de 15 cL à 25 cL.
+            if (/verres? de \d+ cL de jus|verres de \d+ cL\./.test(e)) { const v = Number(e.match(/verres? de (\d+) cL/)[1]); assert.ok(v >= 15 && v <= 25, `${ou} : un verre de ${v} cL`); }
+            if (/Combien dans un verre/.test(e) && q.forme === "nombre") assert.ok(Number(q.reponse) >= 15 && Number(q.reponse) <= 25 && q.unite === "cL", `${ou} : un verre de ${q.reponse} ${q.unite}`);
+            // Défaut 7 : une dose de sirop, quelques centilitres.
+            if (/doses de (\d+) cL/.test(e)) assert.ok(Number(e.match(/doses de (\d+) cL/)[1]) <= 5, ou);
+            // Défaut 8 : pas de demi-mètre, de demi-millilitre, de demi-gramme.
+            const unite = q.unite;
+            if (q.forme === "nombre" && ["mL", "g"].includes(unite)) assert.doesNotMatch(String(q.reponse), /,/, `${ou} : ${q.reponse} ${unite}`);
+            if (q.forme === "nombre" && unite === "m" && (code === "Q4" || q.sorteQ3 === "fois-plus")) assert.doesNotMatch(String(q.reponse), /,/, `${ou} : ${q.reponse} m`);
+            if (code === "Q4" && q.forme === "qcm" && ["m", "mL", "g"].includes(q.unite)) q.choix.forEach(c => assert.doesNotMatch(sp(c), /,/, `${ou} : le choix ${sp(c)}`));
+            // Défaut 20 : pas de « 498 g » pour la moitié de 500 g.
+            if (code === "Q4" && q.forme === "qcm") Object.values(q.pourquoi).forEach(p => assert.doesNotMatch(p, /enlève/, `${ou} : « ${p} »`));
+          }
+          // Défaut 11 : les retours de 31 signes au plus.
+          if (code === "Q3" && q.sorteQ3 === "partage" && q.forme === "nombre") {
+            const fois = G.verifier(q, G.ecrire(lire(q.reponse) * BigInt(d.n) * BigInt(d.n)).replace(/ /g, ""));
+            if (fois.retour) assert.ok(fois.retour.length <= 31, `${ou} : « ${fois.retour} »`);
+          }
+          // Défaut 19 : l'unité dans la correction des étagères.
+          if (q.sorteQ3 === "planches" && q.forme === "nombre") assert.match(sp(q.lignesB33[q.lignesB33.length - 1][2]), /^ étagères$/, ou);
+        });
+      }
+    }
+  }
+  assert.ok(retenues > 200, `des retenues : ${retenues}`);
+  assert.ok(departs > 200, `des heures de départ : ${departs}`);
+  // Défaut 5 : « 0,5 min » n'est plus dans les exemples à connaître de D3.
+  assert.doesNotMatch(JSON.stringify(CARTE.etape("D3")), /0,5/);
 });

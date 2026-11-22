@@ -60,7 +60,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?|morceaux|étagères|planches?|verres?|barquettes|tours|longueurs|tronçons|sachets|sacs|seaux|doses|parts|parties|coupons|fois";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -74,6 +74,9 @@
     // (Lot B2-3b-2 : une heure ou une durée ne se coupe pas entre « h » et
     // les minutes : « 10 h 40 », « 1 h 10 min ».)
     t = t.replace(new RegExp(`(\\d${INSECABLE}h) (?=\\d)`, "g"), `$1${INSECABLE}`);
+    // (Lot B3-3 : à la seconde, « 12 min 15 s » ne se coupe pas non plus.)
+    t = t.replace(new RegExp(`(\\d${INSECABLE}min) (?=\\d+${INSECABLE}s(?![\\wÀ-ÿ]))`, "g"), `$1${INSECABLE}`);
+    t = t.replace(new RegExp(`(\\d${INSECABLE}jours) (?=\\d+${INSECABLE}h(?![\\wÀ-ÿ]))`, "g"), `$1${INSECABLE}`);
     // (Lot B6-2 : « 3 × 10⁻⁶ L » ne se coupe pas : ni après l'exposant, ni
     // autour du « × » devant une puissance de 10.)
     t = t.replace(new RegExp(`([⁰¹²³⁴⁵⁶⁷⁸⁹]) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g"), `$1${INSECABLE}`);
@@ -830,6 +833,90 @@
       titreRelations: "Des exemples à connaître",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["3,7 dm² = 370 cm²", "2,45 m² = 245 dm²", "0,6 dm² = 60 cm²", "1,5 m² = 150 dm²", "4 dm² = 400 cm²", "1 m² = 10 000 cm²"],
+      reperes: []
+    },
+    // ============================================ palier 3 (lot B3-3)
+    // D3 « Minutes et secondes » (S003 p. 18-19 : la trotteuse ; de 8 h 52 min
+    // 27 s à 11 h 37 min 18 s ; les secondes dans 2 h 20 min ; un axe orienté,
+    // sans algorithme posé en base soixante ; S433 : 2 000 h en jours). Choix
+    // pris en l'absence de Gwenaël (B3-3a, réversibles) : la barre de la
+    // minute (comme la barre de l'heure de D1), l'axe à arcs de Q10.
+    D3: {
+      pret: true,
+      aide: {outil: "barre-minute", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 min =", reponse: "60", apres: "s"},
+          consigne: "Touche l'horloge : la trotteuse avance de 15 s.",
+          aide: {type: "trotteuse", pas: 15},
+          apres: ["15 s + 15 s + 15 s + 15 s", "= 60 s"],
+          legende: "Un tour de trotteuse : 1 min."},
+        {etiquette: "Je représente", question: {avant: "4 min 15 s =", reponse: "255", apres: "s"},
+          relation: ["1 min = 60 s", "donc 4 min = 4 × 60 s"],
+          aide: {type: "barre-minute", n: 4, plus: 15, touche: true},
+          apres: ["4 × 60 s + 15 s", "= 255 s"]},
+        {etiquette: "Je calcule", question: {enonce: "Noa part à 9 h 58 min 40 s et arrive à 10 h 12 min 15 s.", avant: "Durée :", reponse: "13 min 35 s", apres: ""},
+          consigne: "Touche l'axe : je passe par l'heure pile.",
+          aide: {type: "axe-sec",
+            avant: {instants: [{t: 35920}, {t: 36000, gris: true}, {t: 36735}], arcs: [{de: 0, a: 2, texte: "?"}]},
+            apres: {instants: [{t: 35920}, {t: 36000}, {t: 36735}], arcs: [{de: 0, a: 1, texte: "1 min 20 s", vert: true}, {de: 1, a: 2, texte: "12 min 15 s", vert: true}]}},
+          apres: ["1 min 20 s + 12 min 15 s", "= 13 min 35 s"]}
+      ],
+      retenir: "1 min = 60 s, pas 100 s.\n4 min 15 s = 4\u00a0×\u00a060 s + 15 s = 255 s.\nPour une durée, je passe par l'heure pile : 1 min 20 s + 12 min 15 s = 13 min 35 s.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 min = 60 s", "1 h = 3 600 s", "1 jour = 24 h", "4 min 15 s = 255 s", "200 s = 3 min 20 s"],
+      reperes: []
+    },
+    // Q3 « Problèmes : plusieurs fois, partager » (S003 p. 11-13 ; S023 p. 5 :
+    // « 35 cm : 7 cm = 5 », « 35 cm ÷ 7 = 5 cm » ; l'exerciseur :
+    // « Multiplications », « Divisions »). Choix pris en l'absence de
+    // Gwenaël (B3-3a, réversible) : la barre du document.
+    Q3: {
+      pret: true,
+      aide: {outil: "barre-q3", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Lina coupe 1,2 m de ruban en morceaux de 8 cm. Combien de morceaux ?", avant: "", reponse: "15", apres: "morceaux"},
+          consigne: "Touche la barre : tout en cm.",
+          aide: {type: "barre-q3", tout: "1,2 m", toutApres: "1,2 m = 120 cm", parts: ["8 cm", "8 cm", "8 cm", "…", "8 cm", "8 cm"], dessous: "? morceaux", touche: true},
+          apres: ["120 cm ÷ 8 cm", "= 15"],
+          legende: "15 morceaux de 8 cm."},
+        {etiquette: "Je représente", question: {enonce: "Noa remplit 6 verres de 25 cL de jus de goyave. Quelle quantité en tout ?", avant: "En tout :", reponse: "1,5", apres: "L"},
+          consigne: "Une case par verre.",
+          aide: {type: "barre-q3", tout: "? L", parts: ["25 cL", "25 cL", "25 cL", "25 cL", "25 cL", "25 cL"], dessous: "6 verres"},
+          apres: ["6 × 25 cL = 150 cL", "= 1,5 L"]},
+        {etiquette: "Je vérifie", question: {enonce: "Léo a 6 planches de 5 m. Une étagère : un morceau de 2 m. Combien d'étagères ?", avant: "", reponse: "12", apres: "étagères"},
+          consigne: "Touche la planche : je coupe des morceaux de 2 m.",
+          aide: {type: "planche-q3", tout: "Une planche : 5 m", parts: ["2 m", "2 m"], perdu: "1 m", touche: true},
+          apres: ["Une planche : 2 étagères.", "6 × 2 = 12 étagères"],
+          legende: "Pas 15 : il reste 1 m par planche."}
+      ],
+      retenir: "Je fais un schéma en barres, puis j'écris toutes les mesures dans la même unité.\nPlusieurs fois la même mesure : je multiplie. Partager, ou chercher combien de fois : je divise.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Q4 « Problèmes : une fraction d'une quantité » (S003 p. 4 : 2⁄5 de 60 kg
+    // de sable, 3⁄10 de 500 g de farine ; p. 22 : le cocktail ; S001 : deux
+    // tiers de 12 €, trois quarts de 100 m). Choix pris en l'absence de
+    // Gwenaël (B3-3a, réversible) : la barre du document et de C6.
+    Q4: {
+      pret: true,
+      aide: {outil: "barre-q4", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Pour la varangue, on prend 2⁄5 d'un sac de 60 kg de sable.", avant: "Masse :", reponse: "24", apres: "kg"},
+          consigne: "Touche la barre : je partage 60 kg en 5.",
+          aide: {type: "barre-q4", tout: "60 kg", n: 5, k: 2, valeur: "12 kg", total: "24 kg", frac: "2⁄5", touche: true},
+          apres: ["60 kg ÷ 5 = 12 kg", "2 × 12 kg = 24 kg"]},
+        {etiquette: "Je représente", question: {enonce: "Une recette demande 3⁄10 d'un paquet de farine de 500 g.", avant: "Masse :", reponse: "150", apres: "g"},
+          consigne: "Touche la barre : je partage 500 g en 10.",
+          aide: {type: "barre-q4", tout: "500 g", n: 10, k: 3, valeur: "50 g", total: "150 g", frac: "3⁄10", touche: true},
+          apres: ["500 g ÷ 10 = 50 g", "3 × 50 g = 150 g"]},
+        {etiquette: "Je vérifie", question: {enonce: "On verse 3⁄4 d'un bidon de 2 L de lait dans la marmite.", avant: "Volume :", reponse: "150", apres: "cL"},
+          consigne: "Touche la barre : je partage 200 cL en 4.",
+          aide: {type: "barre-q4", tout: "2 L = 200 cL", n: 4, k: 3, valeur: "50 cL", total: "150 cL", frac: "3⁄4", touche: true},
+          apres: ["200 cL ÷ 4 = 50 cL", "3 × 50 cL = 150 cL"]}
+      ],
+      retenir: "Pour prendre 2⁄5 de 60 kg, je partage 60 kg en 5 parts égales :\n60 kg ÷ 5 = 12 kg.\nPuis je prends 2 parts : 2\u00a0×\u00a012 kg = 24 kg.",
+      cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
     // ============================================ palier 2 (lot B1-2)
