@@ -111,5 +111,5 @@ test("le dos : la créature, le message (qui nomme son grade), le proverbe en ja
 
 test("la page charge le moteur qui porte les cartes sous une nouvelle version (un navigateur qui a l'ancien en cache le recharge)", () => {
   const page = readFileSync(new URL("flash_anzan.html", DOSSIER), "utf8");
-  assert.match(page, /<script src="\.\/flash_anzan_core\.js\?v=20261107-5"><\/script>/);
+  assert.match(page, /<script src="\.\/flash_anzan_core\.js\?v=20261122-2"><\/script>/);
 });

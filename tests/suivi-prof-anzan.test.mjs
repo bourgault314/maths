@@ -666,49 +666,84 @@ test("lot 4b-bis — une impression à la fois : la feuille des codes, sans « a
 
 // ------------------------------------------------------------ les grades
 // Lot « grades » (07/11/2026), demande de Gwenaël : voir où en est l'élève
-// sans ouvrir l'historique — le plus haut grade réussi sous le compte de
-// calculs, et dans sa fenêtre ; chaque passage et entraînement dans ses
-// séances, avec les mots du moteur.
-const G = (ordre, jour, mode, n, faits, score) => {
-  const g = ANZAN.GRADES[n - 1];
-  return S(ordre, jour, mode, "plus", g.chiffres, g.chiffres, g.nombres, n, 10, faits, score);
+// sans ouvrir l'historique. Barème révisé (22/11/2026) : un grade se gagne
+// étape par étape — sous le compte de calculs, le plus haut grade GAGNÉ et,
+// dessous, le grade et l'étape en cours ; chaque passage et entraînement
+// dans ses séances, avec les mots du moteur.
+const G = (ordre, jour, mode, numero, calculs, faits, score) => {
+  const e = ANZAN.etape(numero);
+  return S(ordre, jour, mode, e.operations, e.chiffresMin, e.chiffresMax, e.nombres, numero, calculs, faits, score);
 };
 const RANIA_GRADES = parcoursDe(RANIA_SEANCES.concat([
-  G(13, "2026-11-07", "grade", 1, 10, 9),
-  G(14, "2026-11-07", "entrainement", 2, 10, 6),
-  G(15, "2026-11-08", "grade", 2, 10, 6)
+  G(13, "2026-11-22", "grade", 101, 10, 10, 9),
+  G(14, "2026-11-22", "grade", 102, 10, 10, 8),
+  G(15, "2026-11-23", "entrainement", 103, 5, 5, 3),
+  G(16, "2026-11-23", "grade", 103, 10, 10, 6)
 ]));
+// Une étape réussie sur deux : aucun grade gagné encore.
+const RANIA_ETAPE = parcoursDe(RANIA_SEANCES.concat([G(13, "2026-11-22", "grade", 101, 10, 10, 9)]));
 
-test("grades : le plus haut grade réussi sous le compte de calculs (sans ouvrir la fenêtre) ; rien pour qui n'en a pas", () => {
+test("grades : sous le compte de calculs, le plus haut grade gagné puis « En cours : grade · étape » (sans ouvrir la fenêtre) ; rien pour qui n'en a pas", () => {
   const liste = classe405();
   liste[2].parcours = RANIA_GRADES;
   const {lignes} = ongletAnzan(liste);
   // Lot S4c : le grade Flash sous les calculs Flash (passages compris).
   const calculs = cellules(lignes[0])[1];
-  assert.equal(calculs.premier(n => n.tag === "b").textContent, `${parMode(RANIA_SEANCES).flash + 30} calculs`);
-  const grade = calculs.premier(n => n.tag === "small");
-  assert.equal(grade.className, "anzan-grade");
-  assert.equal(grade.textContent, "🥋 20e kyu", "le 19e kyu n'est que « presque » : le grade réussi reste le 20e kyu");
+  assert.equal(calculs.premier(n => n.tag === "b").textContent, `${parMode(RANIA_SEANCES).flash + 35} calculs`);
+  const petits = calculs.children.filter(n => n.tag === "small");
+  assert.deepEqual(petits.map(n => n.className), ["anzan-grade", "anzan-grade en-cours"]);
+  // « 19e kyu » et « étape 1 sur 2 » d'un bloc chacun : la ligne ne se coupe qu'après « · ».
+  assert.deepEqual(petits.map(n => n.textContent), ["🥋 20e kyu", "En\u00a0cours\u00a0: 19e\u00a0kyu · étape\u00a01\u00a0sur\u00a02"],
+    "les deux étapes du 20e kyu sont réussies : il est gagné ; l'étape 1 du 19e kyu n'est que « presque »");
+  // La Colonne : aucune étape tentée, rien sous ses calculs.
+  assert.deepEqual(cellules(lignes[0])[2].children.filter(n => n.tag === "small"), []);
+  // Une seule étape réussie : pas de grade gagné, mais on voit où en est l'élève.
+  const debut = classe405();
+  debut[2].parcours = RANIA_ETAPE;
+  const enCours = cellules(ongletAnzan(debut).lignes[0])[1].children.filter(n => n.tag === "small");
+  assert.deepEqual(enCours.map(n => n.textContent), ["En\u00a0cours\u00a0: 20e\u00a0kyu · étape\u00a02\u00a0sur\u00a02"]);
+  assert.match(lire("_serveur/public/prof/index.php"), /\.anzan-grade\.en-cours \{ font-weight: 400; white-space: normal; \}/, "au téléphone, la ligne se coupe au lieu d'élargir le tableau");
   const sans = ongletAnzan(classe405());
   assert.equal(cellules(sans.lignes[0])[1].premier(n => n.tag === "small"), null);
 });
 
-test("grades : dans la fenêtre, « 🥋 Grade réussi : 20e kyu » sous le compte, et les séances de grade avec les mots du moteur (imprimées aussi)", () => {
+test("grades : dans la fenêtre, le grade gagné et l'étape en cours sous le compte, et les séances de grade avec les mots du moteur (imprimées aussi)", () => {
   const r = fenetre({id: 3, prenom: "Rania", parcours: RANIA_GRADES});
   r.f.ouvrirParcoursAnzan(r.lu);
   assert.equal(r.$("pa-grade").hidden, false);
-  assert.equal(r.$("pa-grade").textContent, "🥋 Grade réussi : 20e kyu");
+  assert.equal(r.$("pa-grade").textContent, "🥋 Flash\u00a0: 20e kyu réussi, 19e kyu · étape 1 sur 2 en cours");
   const items = r.$("pa-liste").children;
-  const ligne = li => li.children.slice(1).map(span => span.textContent.replace(/ /g, " "));
-  assert.deepEqual(ligne(items[0]), ["🥋 19e kyuPassage · presque", "6/10"]);
-  assert.deepEqual(ligne(items[1]), ["🎯 19e kyuEntraînement au grade", "6/10"]);
-  assert.deepEqual(ligne(items[2]), ["🥋 20e kyuPassage · réussi", "9/10"]);
+  const ligne = li => li.children.slice(1).map(span => span.textContent.replace(/\u00a0/g, " "));
+  assert.deepEqual(ligne(items[0]), ["🥋 19e kyuÉtape 1 sur 2 · presque", "6/10"]);
+  assert.deepEqual(ligne(items[1]), ["🎯 19e kyuEntraînement · étape 1 sur 2", "3/5"]);
+  assert.deepEqual(ligne(items[2]), ["🥋 20e kyuÉtape 2 sur 2 · réussie", "8/10"]);
+  assert.deepEqual(ligne(items[3]), ["🥋 20e kyuÉtape 1 sur 2 · réussie", "9/10"]);
   r.f.imprimerParcoursAnzan();
-  assert.deepEqual(r.impressions[0].lignes[0].slice(1), ["🥋 19e kyu", "Passage · presque", "6/10"]);
+  assert.deepEqual(r.impressions[0].lignes[0].slice(1), ["🥋 19e kyu", "Étape 1 sur 2 · presque", "6/10"]);
   r.f.fermerParcoursAnzan();
   assert.equal(r.$("pa-grade").hidden, true);
   assert.equal(r.$("pa-grade").textContent, "");
+  const debut = fenetre({id: 3, prenom: "Rania", parcours: RANIA_ETAPE});
+  debut.f.ouvrirParcoursAnzan(debut.lu);
+  assert.equal(debut.$("pa-grade").textContent, "🥋 Flash\u00a0: 20e kyu · étape 2 sur 2 en cours");
   const sans = fenetre({id: 3, prenom: "Rania", parcours: RANIA});
   sans.f.ouvrirParcoursAnzan(sans.lu);
-  assert.equal(sans.$("pa-grade").hidden, true, "pas de ligne sans grade réussi");
+  assert.equal(sans.$("pa-grade").hidden, true, "pas de ligne sans étape réussie");
+});
+
+test("grades : des séances de l'ancienne grille (numéros de grade 1 à 53, clés gradeReussi et gradeColonne) ne se lisent plus — ni grade, ni ligne, ni erreur", () => {
+  const ancien = parcoursDe(RANIA_SEANCES.concat([
+    S(13, "2026-11-07", "grade", "plus", 1, 1, 3, 1, 10, 10, 9),
+    S(14, "2026-11-08", "grade", "plus", 1, 1, 5, 41, 10, 10, 9)]));
+  ancien.gradeReussi = 12;
+  ancien.gradeColonne = 5;
+  const lu = ANZAN.resumeProf(ancien);
+  assert.equal(lu.grade, 0);
+  assert.equal(lu.gradeColonne, 0);
+  assert.equal(lu.enCours, "");
+  assert.equal(lu.texteGrade, "");
+  assert.equal(lu.seances, RANIA_SEANCES.length, "les séances libres restent, celles de l'ancienne grille partent");
+  const liste = classe405();
+  liste[2].parcours = ancien;
+  assert.deepEqual(cellules(ongletAnzan(liste).lignes[0])[1].children.filter(n => n.tag === "small"), []);
 });

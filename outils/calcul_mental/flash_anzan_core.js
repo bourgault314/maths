@@ -40,246 +40,6 @@
   });
 
   // ---------------------------------------------------------------------
-  // Les grades (lot « grades », 07/11/2026)
-  // ---------------------------------------------------------------------
-  // La grille officielle de l'Association japonaise du test de Flash Anzan
-  // (一般社団法人日本フラッシュ暗算検定協会, https://www.flash-anzan.jp/school/),
-  // du 20e kyu au 20e dan : le nombre de chiffres, le nombre de nombres et le
-  // temps de TOUTE la série, en dixièmes de seconde (pas le temps par nombre).
-  // Chaque grade = 10 calculs ; réussi à 7 justes sur 10 (« 10問中7題以上の
-  // 正解で合格 »), « presque » à 5 ou 6 (準合格). Du 20e au 11e kyu : sans
-  // retenue (voir SANS_RETENUE, sous la grille) ; ensuite, des additions.
-  // Le numéro d'un grade va de 1 (20e kyu) à 40 (20e dan).
-  const GRADES = Object.freeze([
-    [1, 3, 50], [1, 3, 50], [1, 5, 70], [1, 8, 100], [1, 10, 120], [1, 12, 150], [1, 15, 150], [1, 20, 150], [2, 10, 100], [2, 15, 150],
-    [2, 2, 40], [2, 3, 60], [2, 4, 70], [2, 5, 80], [2, 6, 90], [2, 7, 100], [2, 8, 110], [2, 10, 120], [2, 12, 120], [2, 15, 130],
-    [2, 15, 100], [3, 4, 40], [3, 6, 50], [3, 8, 60], [3, 10, 70], [3, 12, 80], [3, 15, 80], [3, 15, 60], [3, 15, 45], [3, 15, 30],
-    [3, 15, 28], [3, 15, 26], [3, 15, 24], [3, 15, 22], [3, 15, 20], [3, 15, 19], [3, 15, 18], [3, 15, 17], [3, 15, 16], [3, 15, 15]
-  ].map(([chiffres, nombres, dixiemes]) => Object.freeze({chiffres, nombres, dixiemes})));
-  const NB_GRADES = GRADES.length;
-  // SANS RETENUE (07/11/2026, après la question de Gwenaël « c'est quoi la
-  // différence entre le 19 et le 20 ? ») : la grille ci-dessus ne dit pas
-  // tout. Trois grilles détaillées (kentei.soroban-soft.com, kani-math.com,
-  // la grille de l'école rakutama-soroban.com) précisent : « 繰り上がりなし »
-  // (sans retenue) au début — du 20e au 13e kyu en 1 chiffre, puis le 12e en
-  // dizaines rondes (« 10+20 ») et le 11e en 2 chiffres (« 11+22 ») ;
-  // « 11級まではひき算あり » (des soustractions jusqu'au 11e kyu) et
-  // « 10級からたし算のみ » (additions seules dès le 10e kyu, où la retenue
-  // arrive : d'où ses 2 nombres seulement). Vingt nombres d'un chiffre sans retenue, ce n'est
-  // possible qu'en ajoutant ET en enlevant : chaque colonne du boulier reste
-  // entre 0 et 9. Le 20e et le 19e kyu restent identiques dans ces grilles :
-  // choix de Claude, le 20e kyu n'a que des additions (total jusqu'à 9), le
-  // 19e ajoute les soustractions.
-  // Grade → {forme : "unites" (1 chiffre), "dizaines" (10, 20 … 90) ou
-  // "deux" (2 chiffres), plusmoins : + et −}.
-  const SANS_RETENUE = Object.freeze({
-    1: Object.freeze({forme: "unites", plusmoins: false}),
-    2: Object.freeze({forme: "unites", plusmoins: true}),
-    3: Object.freeze({forme: "unites", plusmoins: true}),
-    4: Object.freeze({forme: "unites", plusmoins: true}),
-    5: Object.freeze({forme: "unites", plusmoins: true}),
-    6: Object.freeze({forme: "unites", plusmoins: true}),
-    7: Object.freeze({forme: "unites", plusmoins: true}),
-    8: Object.freeze({forme: "unites", plusmoins: true}),
-    9: Object.freeze({forme: "dizaines", plusmoins: true}),
-    10: Object.freeze({forme: "deux", plusmoins: true})
-  });
-  const GRADE_CALCULS = 10;
-  // « 🎯 M'entraîner » : 5 ou 10 calculs, au choix de l'élève (choix du
-  // 07/11/2026 : Rania trouvait 10 trop long). Le PASSAGE reste à 10.
-  const ENTRAINEMENT_CALCULS = Object.freeze([5, 10]);
-  const GRADE_REUSSI = 7;
-  const GRADE_PRESQUE = 5;
-  // Les quatre groupes de l'écran des grades (le premier numéro de chacun).
-  const GROUPES_GRADES = Object.freeze([
-    Object.freeze({nom: "Débutant", debut: 1}),
-    Object.freeze({nom: "Intermédiaire", debut: 11}),
-    Object.freeze({nom: "Avancé", debut: 21}),
-    Object.freeze({nom: "Expert", debut: 31})
-  ]);
-
-  const gradeValide = n => Number.isInteger(n) && n >= 1 && n <= NB_GRADES;
-
-  // ---------------------------------------------------------------------
-  // Les grades en Colonne (lot « grades-colonne », 07/11/2026)
-  // ---------------------------------------------------------------------
-  // La colonne du 暗算検定 (examen de calcul mental) du 日本珠算連盟, celui
-  // des chambres de commerce japonaises : みとり暗算. Sources : la page
-  // officielle https://www.shuzan.jp/kentei/anzan/, le document de la chambre
-  // de commerce de Kurashiki (anzan1-6_teido.pdf) et dix sujets modèles
-  // officiels (shuzan.jp/kentei/mihon/an-*.pdf), vérifiés un par un.
-  // 13 grades, du 10e kyu (十級) au 1er kyu (一級), 準 compris (« pré-3e
-  // kyu », 準三級). À l'examen : 50 calculs en 12 minutes du 10e au 7e kyu
-  // (réussi à 50, 60, 70, 80 %), 20 calculs ensuite (80 %), mêlés à des
-  // multiplications et des divisions, en 12 minutes pour le tout : AUCUN
-  // temps officiel propre à la colonne du 6e au 1er kyu.
-  // Ce qui n'est PAS officiel (choix du 07/11/2026, dit dans la fiche) :
-  // 10 calculs par grade ; 15 s par calcul du 10e au 7e kyu (12 min ÷ 50 ≈
-  // 14 s) ; aucune limite ensuite.
-  // Un grade en Colonne porte le NUMÉRO 40 + rang (41 = 10e kyu … 53 = 1er
-  // kyu), dans le même espace que ceux du Flash (1 … 40) : une séance de
-  // grade garde ce numéro dans son champ « temps », sans nouveau mot pour le
-  // serveur. Chaque ligne : le nom (kyu, pré), les chiffres de … à, le plus
-  // grand nombre de nombres d'un calcul, les opérations, le seuil (sur 10),
-  // la limite par calcul (s, 0 = sans) et le PLAN des 10 calculs — une
-  // forme par calcul, dans l'ordre de la feuille :
-  //   "u3" … "u5" : 3 à 5 nombres d'un chiffre (10e-7e : sans zéro, aucun
-  //                 chiffre deux fois dans un même calcul, comme les 50
-  //                 calculs du sujet modèle) ;
-  //   "m6", "m8"  : 5 nombres, 6 ou 8 chiffres en tout (un ou trois nombres
-  //                 de 2 chiffres, à une place tirée au hasard) ;
-  //   "d5"        : 5 nombres de 2 chiffres ;
-  //   "t5", "t7", "t10" : 5, 7 ou 10 nombres de 3 chiffres ;
-  //   "s10"       : 10 nombres de 3 chiffres, dont 4 enlevés (jamais le 1er,
-  //                 le 2e ni le dernier ; total et sous-totaux positifs, comme
-  //                 au sujet modèle).
-  // La place des calculs « s10 » parmi les autres est tirée au hasard.
-  const PREMIER_COLONNE = NB_GRADES + 1;
-  const UNITES = ["u3", "u3", "u3", "u4", "u4", "u4", "u5", "u5", "u5", "u5"]; // 15/15/20 sur 50
-  const fois = (forme, k) => Array.from({length: k}, () => forme);
-  const GRADES_COLONNE = Object.freeze([
-    [10, false, 1, 1, 5, "plus", 5, 15, UNITES],
-    [9, false, 1, 1, 5, "plus", 6, 15, UNITES],
-    [8, false, 1, 1, 5, "plus", 7, 15, UNITES],
-    [7, false, 1, 1, 5, "plus", 8, 15, UNITES],
-    [6, false, 1, 2, 5, "plus", 8, 0, fois("m6", 10)],
-    [5, false, 1, 2, 5, "plus", 8, 0, fois("m8", 10)],
-    [4, false, 2, 2, 5, "plus", 8, 0, fois("d5", 10)],
-    [3, true, 2, 3, 5, "plus", 8, 0, fois("d5", 5).concat(fois("t5", 5))],
-    [3, false, 3, 3, 5, "plus", 8, 0, fois("t5", 10)],
-    [2, true, 3, 3, 7, "plus", 8, 0, fois("t5", 5).concat(fois("t7", 5))],
-    [2, false, 3, 3, 7, "plus", 8, 0, fois("t7", 10)],
-    [1, true, 3, 3, 10, "plusmoins", 8, 0, fois("t7", 5).concat(fois("t10", 3), fois("s10", 2))],
-    [1, false, 3, 3, 10, "plusmoins", 8, 0, fois("t10", 6).concat(fois("s10", 4))]
-  ].map(([kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil, limite, plan]) =>
-    Object.freeze({kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil, limite, plan: Object.freeze(plan.slice())})));
-  const NB_GRADES_COLONNE = GRADES_COLONNE.length;
-  const DERNIER_GRADE = NB_GRADES + NB_GRADES_COLONNE;
-  const estGradeColonne = n => Number.isInteger(n) && n >= PREMIER_COLONNE && n <= DERNIER_GRADE;
-  const gradeExiste = n => gradeValide(n) || estGradeColonne(n);
-  const ligneColonne = n => (estGradeColonne(n) ? GRADES_COLONNE[n - PREMIER_COLONNE] : null);
-  // Le dernier grade de la même liste (40 pour le Flash, 53 pour la Colonne).
-  const dernierDeSaListe = n => (estGradeColonne(n) ? DERNIER_GRADE : NB_GRADES);
-  // Le nombre de bonnes réponses sur 10 pour réussir le grade n.
-  function seuilGrade(n) {
-    const c = ligneColonne(n);
-    return c ? c.seuil : GRADE_REUSSI;
-  }
-
-  // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan ».
-  function nomGrade(n) {
-    const c = ligneColonne(n);
-    if (c) return `${c.pre ? "pré-" : ""}${c.kyu}${c.kyu === 1 ? "er" : "e"} kyu`;
-    if (!gradeValide(n)) return "";
-    if (n <= 20) { const k = 21 - n; return `${k}${k === 1 ? "er" : "e"} kyu`; }
-    const d = n - 20;
-    return `${d}${d === 1 ? "er" : "e"} dan`;
-  }
-
-  // Le vrai nom japonais d'un grade (lot « grades-estampe », 07/11/2026),
-  // écrit en petit à côté du nom français : « 二十級 » (20e kyu) … « 一級 »
-  // (1er kyu), « 初段 » (1er dan, « shodan »), « 二段 » … « 二十段 ».
-  const KANJI_CHIFFRES = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
-  function kanjiNombre(k) {
-    if (k <= 10) return KANJI_CHIFFRES[k];
-    if (k < 20) return `十${KANJI_CHIFFRES[k - 10]}`;
-    return "二十";
-  }
-  function nomJaponais(n) {
-    const c = ligneColonne(n);
-    if (c) return `${c.pre ? "準" : ""}${kanjiNombre(c.kyu)}級`;
-    if (!gradeValide(n)) return "";
-    if (n <= 20) return `${kanjiNombre(21 - n)}級`;
-    const d = n - 20;
-    return d === 1 ? "初段" : `${kanjiNombre(d)}段`;
-  }
-
-  // Les réglages d'un grade, au format d'une séance : additions, un seul
-  // nombre de chiffres, 10 calculs ; `grade` est son numéro ; le temps par
-  // nombre est en millisecondes (pas forcément un nombre rond : 5 s pour
-  // 3 nombres, c'est 1 666,7 ms) ; `son` est celui des réglages du Flash.
-  // `calculs` (facultatif) : pour « 🎯 M'entraîner », 5 ou 10
-  // (ENTRAINEMENT_CALCULS) ; tout autre nombre donne 10, ceux d'un passage.
-  function reglagesGrade(n, son, calculs) {
-    const nb = ENTRAINEMENT_CALCULS.includes(calculs) ? calculs : GRADE_CALCULS;
-    const c = ligneColonne(n);
-    // Un grade en Colonne : les nombres écrits les uns sous les autres, le
-    // temps limite par calcul (0 : sans), le plan des 10 calculs.
-    if (c) {
-      return {
-        operations: c.operations,
-        chiffresMin: c.chiffresMin,
-        chiffresMax: c.chiffresMax,
-        nombres: c.nombres,
-        calculs: nb,
-        grade: n,
-        colonne: true,
-        limite: c.limite
-      };
-    }
-    if (!gradeValide(n)) return null;
-    const g = GRADES[n - 1];
-    const sr = SANS_RETENUE[n];
-    return {
-      operations: sr && sr.plusmoins ? "plusmoins" : "plus",
-      chiffresMin: g.chiffres,
-      chiffresMax: g.chiffres,
-      nombres: g.nombres,
-      calculs: nb,
-      grade: n,
-      ...(sr ? {sansRetenue: sr.forme} : {}),
-      tempsMs: g.dixiemes * 100 / g.nombres,
-      son: SONS.includes(son) ? son : "bip"
-    };
-  }
-
-  // Le verdict d'un passage : « reussi » (7 ou plus sur 10), « presque »
-  // (5 ou 6), « pasencore » (4 ou moins) ; « arrete » s'il manque des calculs.
-  // `n` (facultatif) : le grade, pour son seuil (les grades en Colonne ont
-  // le leur, 5 à 8) ; « presque » à deux réponses du seuil, comme au Flash.
-  function verdictGrade(faits, score, n) {
-    const seuil = n === undefined ? GRADE_REUSSI : seuilGrade(n);
-    if (faits < GRADE_CALCULS) return "arrete";
-    if (score >= seuil) return "reussi";
-    if (score >= seuil - (GRADE_REUSSI - GRADE_PRESQUE)) return "presque";
-    return "pasencore";
-  }
-
-  // « 20 nombres d'un chiffre », « 5 nombres d'un chiffre, + et −, sans
-  // retenue », « 10 dizaines rondes, + et −, sans retenue ».
-  function texteNombresGrade(n) {
-    const c = ligneColonne(n);
-    if (c) {
-      const forme = c.plan[0];
-      if (forme[0] === "u") return "3 à 5 nombres d’un chiffre";
-      if (forme[0] === "m") return "5 nombres de 1 ou 2 chiffres";
-      if (c.chiffresMin !== c.chiffresMax) return "5 nombres de 2, puis de 3 chiffres";
-      const premiers = Number(c.plan[0].slice(1));
-      const combien = premiers === c.nombres ? String(c.nombres) : `${premiers} puis ${c.nombres}`;
-      return `${combien} nombres de ${c.chiffresMax} chiffres${c.operations === "plusmoins" ? ", + et −" : ""}`;
-    }
-    if (!gradeValide(n)) return "";
-    const g = GRADES[n - 1];
-    const sr = SANS_RETENUE[n];
-    const quoi = sr && sr.forme === "dizaines" ? `${g.nombres} dizaines rondes`
-      : `${g.nombres} nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`}`;
-    if (!sr) return quoi;
-    return `${quoi}${sr.plusmoins ? ", + et −" : ""}, sans retenue`;
-  }
-
-  // « 20 nombres d'un chiffre · 15 s en tout »
-  function texteGrade(n) {
-    const c = ligneColonne(n);
-    if (c) return c.limite ? `${texteNombresGrade(n)}${POINT}${c.limite} s par calcul` : texteNombresGrade(n);
-    if (!gradeValide(n)) return "";
-    const g = GRADES[n - 1];
-    // « en tout » collé au temps (espaces insécables) : la ligne ne se coupe
-    // qu'aux points, jamais entre « 8 s » et « en tout » (lot « entraînement
-    // 5 ou 10 »).
-    return `${texteNombresGrade(n)}${POINT}${secondes(g.dixiemes / 10)}\u00a0en\u00a0tout`;
-  }
-
-  // ---------------------------------------------------------------------
   // Les cartes des grades (lot « anzan-cartes », 07/11/2026)
   // ---------------------------------------------------------------------
   // Une carte par kyu, du 20e au 1er : une créature japonaise (les images de
@@ -287,8 +47,8 @@
   // créature, un message et un proverbe. Textes et images se refont depuis
   // _sources/anzan-cartes/ (generer_textes.py écrit les lignes ci-dessous).
   // Les dan ont leur série (CARTES_DAN, plus bas, 07/11/2026).
-  // Rien de nouveau n'est enregistré : une carte est gagnée quand son grade
-  // est réussi (gradeReussi du parcours).
+  // Rien de nouveau n'est enregistré : une carte est gagnée quand la
+  // dernière étape de son grade est réussie (etapeFlash du parcours).
   const DOSSIER_CARTES = "./anzan-cartes/";
   // Les kyu font 640 × 904 (vignettes 160 × 226), les dan 640 × 984
   // (vignettes 160 × 246) : leur timbre doré est plus haut. Chaque carte
@@ -560,92 +320,17 @@
     return Number(texte);
   }
 
-  // Un calcul : une suite de termes {signe, valeur} et le total.
+  // Un calcul d'une séance libre : une suite de termes {signe, valeur} et le
+  // total.
   //  - le premier nombre est toujours ajouté ;
-  //  - un grade (reglages.grade) ne montre jamais deux fois le même nombre
-  //    de suite ;
   //  - en « + et − », le total en cours ne passe jamais sous zéro : une
   //    soustraction qui le rendrait négatif devient une addition.
-  //  - un grade SANS RETENUE (reglages.sansRetenue, du 20e au 11e kyu) :
-  //    voir tirerSansRetenue.
-  //
-  // Sans retenue, additions seules (le 20e kyu) : une suite tirée au hasard
-  // parmi TOUTES celles qui conviennent (3 nombres de 1 à 9, total jusqu'à
-  // 9, jamais deux fois le même de suite) — tirer nombre par nombre pouvait
-  // bloquer (8 puis 1 : plus rien pour le 3e).
-  const suitesAdditions = new Map();
-  function suitesSansRetenue(nombres) {
-    if (!suitesAdditions.has(nombres)) {
-      const toutes = [];
-      const suite = [];
-      (function etendre(total) {
-        if (suite.length === nombres) { toutes.push(suite.slice()); return; }
-        for (let v = 1; v <= 9 && total + v <= 9; v += 1) {
-          if (suite.length && v === suite[suite.length - 1]) continue;
-          suite.push(v);
-          etendre(total + v);
-          suite.pop();
-        }
-      })(0);
-      suitesAdditions.set(nombres, toutes);
-    }
-    return suitesAdditions.get(nombres);
-  }
-  // Les nombres permis d'une forme : 1 à 9, 10 à 90 de dix en dix, 10 à 99.
-  function nombresDeForme(forme) {
-    if (forme === "dizaines") return Array.from({length: 9}, (_, i) => (i + 1) * 10);
-    if (forme === "deux") return Array.from({length: 90}, (_, i) => i + 10);
-    return Array.from({length: 9}, (_, i) => i + 1);
-  }
-  // Sans retenue : chaque chiffre du total (unités, dizaines) reste entre
-  // 0 et 9 après chaque nombre — sur le boulier, jamais de retenue ni
-  // d'emprunt. En « + et − » : le premier nombre est ajouté ; ensuite le
-  // signe est tiré parmi ceux qui ont encore un nombre possible.
-  function sansRetenueApres(total, signe, valeur) {
-    for (let p = 1; p <= 10; p *= 10) {
-      const chiffre = Math.floor(total / p) % 10 + signe * (Math.floor(valeur / p) % 10);
-      if (chiffre < 0 || chiffre > 9) return false;
-    }
-    return true;
-  }
-  function tirerSansRetenue(reglages, rng) {
-    if (reglages.operations !== "plusmoins") {
-      const toutes = suitesSansRetenue(reglages.nombres);
-      const suite = toutes[Math.floor(rng() * toutes.length)];
-      return {termes: suite.map(valeur => ({signe: 1, valeur})), total: suite.reduce((a, v) => a + v, 0)};
-    }
-    const forme = nombresDeForme(reglages.sansRetenue);
-    const termes = [];
-    let total = 0;
-    for (let i = 0; i < reglages.nombres; i += 1) {
-      const avant = i > 0 ? termes[i - 1].valeur : null;
-      // Le dernier nombre ne ramène jamais le total à 0 (« 0 » comme réponse
-      // revenait une fois sur huit).
-      const dernier = i === reglages.nombres - 1;
-      const choix = signe => forme.filter(v => v !== avant && sansRetenueApres(total, signe, v) && !(dernier && total + signe * v === 0));
-      const signes = (i === 0 ? [1] : [1, -1]).filter(signe => choix(signe).length);
-      // Jamais vu : il reste toujours un nombre (à 0, on peut ajouter ; à 9,
-      // enlever) ; par prudence, on accepte alors le même nombre qu'avant.
-      const signe = signes.length ? signes[Math.floor(rng() * signes.length)] : (sansRetenueApres(total, 1, avant) ? 1 : -1);
-      const possibles = signes.length ? choix(signe) : [avant];
-      const valeur = possibles[Math.floor(rng() * possibles.length)];
-      total += signe * valeur;
-      termes.push({signe, valeur});
-    }
-    return {termes, total};
-  }
+  // (Les étapes des grades ont leur propre tirage : tirerEtape, plus bas.)
   function tirerCalcul(reglages, rng) {
-    if (reglages.grade && reglages.sansRetenue) return tirerSansRetenue(reglages, rng);
     const termes = [];
     let total = 0;
     for (let i = 0; i < reglages.nombres; i += 1) {
-      let valeur = nombreDeChiffres(rng, entierEntre(rng, reglages.chiffresMin, reglages.chiffresMax));
-      // Les grades : jamais deux fois le même nombre de suite (à 0,1 s par
-      // nombre, on ne verrait pas qu'il a changé). Seulement pour eux : les
-      // séances d'entraînement gardent leurs tirages d'avant.
-      if (reglages.grade && i > 0) {
-        while (valeur === termes[i - 1].valeur) valeur = nombreDeChiffres(rng, entierEntre(rng, reglages.chiffresMin, reglages.chiffresMax));
-      }
+      const valeur = nombreDeChiffres(rng, entierEntre(rng, reglages.chiffresMin, reglages.chiffresMax));
       let signe = 1;
       if (i > 0 && reglages.operations === "plusmoins" && rng() < 0.5 && total - valeur >= 0) signe = -1;
       total += signe * valeur;
@@ -654,107 +339,609 @@
     return {termes, total};
   }
 
-  // ---- Les calculs d'un grade en Colonne (voir GRADES_COLONNE) ----
-  // Un nombre de 1 à 9 que le calcul n'a pas encore (10e-7e kyu).
-  function chiffreNeuf(rng, deja) {
-    const libres = [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(v => deja.indexOf(v) < 0);
-    return libres[Math.floor(rng() * libres.length)];
+  // ---------------------------------------------------------------------
+  // Les gestes du boulier (barème révisé, 22/11/2026)
+  // ---------------------------------------------------------------------
+  // Une tige porte quatre boules de 1 et une boule de 5. Un nombre s'ajoute
+  // ou s'enlève de la gauche vers la droite, chiffre par chiffre, et chaque
+  // chiffre demande UN geste — c'est lui que les étapes des grades
+  // garantissent. Le modèle (preuves/soroban.py du barème, porté ici ligne
+  // pour ligne) :
+  //   D    geste direct : les boules à pousser sont là (2 + 5, 6 + 3) ;
+  //   P    complément à 5 : on passe par la boule de 5 (4 + 3 : +5, −2) ;
+  //   R    retenue : +10, et le complément à 10 s'enlève directement (8 + 4) ;
+  //   RC   retenue avec complément à 5 : le complément à 10 s'enlève en
+  //        passant par la boule de 5 (7 + 6 : +10, puis −4 = −5 + 1) ;
+  //   CASC cascade : la retenue arrive sur une tige à 9 (67 + 35) ;
+  //   rD, rP : ce que fait la retenue sur la tige d'à côté.
+  // Les mêmes à l'envers pour une soustraction : d, p, E (emprunt), EC, casc
+  // (l'emprunt arrive sur une tige à 0 : 302 − 108), ed, ep.
+  function ajouterChiffre(tiges, p, d, ev, report) {
+    const a = tiges[p];
+    if (a + d <= 9) {
+      const direct = !(d < 5 && a < 5 && (a % 5) + d >= 5);
+      ev.push([report ? (direct ? "rD" : "rP") : (direct ? "D" : "P"), p]);
+      tiges[p] = a + d;
+      return;
+    }
+    if (report && a === 9 && d === 1) {
+      ev.push(["CASC", p]);
+      tiges[p] = 0;
+      ajouterChiffre(tiges, p + 1, 1, ev, true);
+      return;
+    }
+    const c = 10 - d;
+    const simple = !(c < 5 && a >= 5 && (a % 5) < c);
+    ev.push([simple ? "R" : "RC", p]);
+    tiges[p] = a + d - 10;
+    ajouterChiffre(tiges, p + 1, 1, ev, true);
   }
-  // Un nombre de `chiffres` chiffres, différent du précédent.
-  function nombrePasPareil(rng, chiffres, avant) {
-    let v = nombreDeChiffres(rng, chiffres);
-    while (v === avant) v = nombreDeChiffres(rng, chiffres);
-    return v;
+  function enleverChiffre(tiges, p, d, ev, report) {
+    const a = tiges[p];
+    if (a >= d) {
+      const direct = !(d < 5 && a >= 5 && (a % 5) < d);
+      ev.push([report ? (direct ? "ed" : "ep") : (direct ? "d" : "p"), p]);
+      tiges[p] = a - d;
+      return;
+    }
+    if (report && a === 0 && d === 1) {
+      ev.push(["casc", p]);
+      tiges[p] = 9;
+      enleverChiffre(tiges, p + 1, 1, ev, true);
+      return;
+    }
+    const c = 10 - d;
+    const simple = !(c < 5 && a < 5 && (a % 5) + c >= 5);
+    ev.push([simple ? "E" : "EC", p]);
+    tiges[p] = a + c;
+    enleverChiffre(tiges, p + 1, 1, ev, true);
   }
-  // Les places des nombres enlevés d'un calcul « s10 » : 4 parmi la 3e …
-  // la 9e (jamais la 1re, la 2e ni la dernière).
-  function placesEnleves(rng) {
-    const places = [2, 3, 4, 5, 6, 7, 8];
-    for (let i = places.length - 1; i > 0; i -= 1) {
+  // Les gestes d'un calcul (des termes {signe, valeur}) : {total, parTerme}
+  // — pour chaque terme, la liste de ses gestes [code, tige] (tige 0 = les
+  // unités) ; null si le total en cours passe sous zéro.
+  function gestes(termes) {
+    const tiges = new Array(16).fill(0);
+    const parTerme = [];
+    let total = 0;
+    for (let i = 0; i < termes.length; i += 1) {
+      const t = termes[i];
+      total += t.signe * t.valeur;
+      if (total < 0) return null;
+      const ev = [];
+      const texte = String(t.valeur);
+      for (let k = 0; k < texte.length; k += 1) {
+        const d = texte.charCodeAt(k) - 48;
+        if (d) (t.signe > 0 ? ajouterChiffre : enleverChiffre)(tiges, texte.length - 1 - k, d, ev, false);
+      }
+      parTerme.push(ev);
+    }
+    return {total, parTerme};
+  }
+  const CODES_GESTES = Object.freeze(["D", "P", "R", "RC", "CASC", "rD", "rP", "d", "p", "E", "EC", "casc", "ed", "ep"]);
+  // Ce qu'une étape regarde d'un calcul : le compte de chaque geste (n), les
+  // retenues (R, RC, CASC) et les emprunts (E, EC, casc), et les tiges où ils
+  // se font (« 0 », « 1 », « 01 » : unités, dizaines, les deux).
+  function analyser(termes) {
+    const g = gestes(termes);
+    if (!g) return null;
+    const n = {};
+    CODES_GESTES.forEach(code => { n[code] = 0; });
+    const tr = {};
+    const te = {};
+    g.parTerme.forEach(ev => ev.forEach(([code, p]) => {
+      n[code] += 1;
+      if (code === "R" || code === "RC") tr[p] = true;
+      if (code === "E" || code === "EC") te[p] = true;
+    }));
+    return {total: g.total, parTerme: g.parTerme, n,
+      retenues: n.R + n.RC + n.CASC, emprunts: n.E + n.EC + n.casc,
+      tigesRetenue: Object.keys(tr).sort().join(""), tigesEmprunt: Object.keys(te).sort().join("")};
+  }
+
+  // ---------------------------------------------------------------------
+  // Les grades et leurs étapes (barème révisé, 22/11/2026)
+  // ---------------------------------------------------------------------
+  // Les grades gardent leurs noms et leurs cartes : en Flash, 20 kyu puis
+  // 20 dan (numéros 1 = 20e kyu … 40 = 20e dan) ; en Colonne, 10 kyu
+  // (numéros 41 = 10e kyu … 50 = 1er kyu ; les 10 dan, 51 … 60, viendront
+  // au lot 2 : nombres de 4 à 8 chiffres, finale de 30 colonnes).
+  // Un grade se gagne en réussissant ses ÉTAPES, dans l'ordre (1 à 5 par
+  // grade). Une étape = 10 calculs ; réussie à 7 sur 10 en Flash (la règle
+  // japonaise), 8 sur 10 en Colonne ; « presque » à deux réponses du seuil.
+  // Une étape porte un NUMÉRO : 101 … 165 en Flash, 201 … 226 en Colonne —
+  // hors des numéros de l'ancienne grille (1 … 53), dont les séances sont
+  // ainsi ignorées sans erreur (aucun élève n'avait commencé, décision du
+  // 22/11/2026). C'est ce numéro qu'une séance de grade garde.
+  // Ce que le tirage d'une étape GARANTIT : chaque calcul contient le geste
+  // annoncé et aucun geste plus difficile. Trois sortes de tirage :
+  //  - un PROFIL : le calcul est pris au hasard parmi TOUS ceux qui
+  //    conviennent (on tire des nombres au hasard, on garde le premier
+  //    calcul qui a le profil : chaque calcul possible a la même chance) ;
+  //  - un PLAN : les 10 calculs se partagent entre plusieurs profils, dans
+  //    le désordre (un geste rare qui fixe la réponse, comme la cascade à
+  //    2 chiffres — total toujours entre 100 et 108 —, n'occupe jamais les
+  //    dix calculs) ;
+  //  - LIBRE : des nombres tirés au hasard, sans rien forcer ; la série est
+  //    seulement retirée quand son nombre de retenues sort de la fourchette
+  //    de son format (la partie centrale du hasard, 8 à 9 tirages naturels
+  //    sur 10 : preuves/bandes.py) — deux passages de la même étape ont
+  //    ainsi une difficulté comparable.
+  // Jamais deux fois le même nombre de suite, sauf dans les deux étapes
+  // « les dix » : les dix compléments à 5 et les dix retenues avec
+  // complément à 5 qui existent entre deux nombres d'un chiffre, posés
+  // chacun une fois (3 + 3, 4 + 4, 6 + 6 et 7 + 7 en font partie).
+  // En Colonne avec soustractions : le premier nombre est toujours ajouté,
+  // le total en cours ne passe jamais sous zéro, le résultat vaut au moins 1.
+  const NB_GRADES = 40;
+  const NB_GRADES_COLONNE = 10;
+  const PREMIER_COLONNE = NB_GRADES + 1;
+  const DERNIER_GRADE = NB_GRADES + NB_GRADES_COLONNE;
+  const GRADE_CALCULS = 10;
+  // « 🎯 M'entraîner » : 5 calculs, la moitié du plan de l'étape (choix du
+  // 22/11/2026 : un seul bouton ; « Rejouer » en redonne 5).
+  const ENTRAINEMENT_CALCULS = Object.freeze([5]);
+  const GRADE_REUSSI = 7;
+  const GRADE_PRESQUE = 5;
+  const SEUIL_COLONNE = 8;
+  const ETAPE_FLASH = 100;
+  const ETAPE_COLONNE = 200;
+  // Les quatre groupes de l'écran des grades (le premier numéro de chacun).
+  const GROUPES_GRADES = Object.freeze([
+    Object.freeze({nom: "Débutant", debut: 1}),
+    Object.freeze({nom: "Intermédiaire", debut: 11}),
+    Object.freeze({nom: "Avancé", debut: 21}),
+    Object.freeze({nom: "Expert", debut: 31})
+  ]);
+  const gradeValide = n => Number.isInteger(n) && n >= 1 && n <= NB_GRADES;
+  const estGradeColonne = n => Number.isInteger(n) && n >= PREMIER_COLONNE && n <= DERNIER_GRADE;
+  const gradeExiste = n => gradeValide(n) || estGradeColonne(n);
+  // Le dernier grade de la même liste (40 pour le Flash, 50 pour la Colonne).
+  const dernierDeSaListe = n => (estGradeColonne(n) ? DERNIER_GRADE : NB_GRADES);
+
+  const fois = (valeur, k) => Array.from({length: k}, () => valeur);
+  // Tous les gestes du calcul sont parmi ceux-ci.
+  const seulement = (...codes) => a => CODES_GESTES.every(code => !a.n[code] || codes.indexOf(code) >= 0);
+  const contient = (ev, code) => ev.some(e => e[0] === code);
+  const entre = (x, mini, maxi) => x >= mini && x <= maxi;
+  // Les retenues qu'UN nombre fait naître en entrant : les tiges où il en
+  // pose une, et s'il en fait courir une en cascade.
+  const retenuesDe = ev => ({
+    tiges: ev.filter(e => e[0] === "R" || e[0] === "RC").map(e => e[1]).sort().join(""),
+    cascade: contient(ev, "CASC")
+  });
+  // Un seul nombre du calcul fait naître des retenues, et ce sont celles-là.
+  const unSeulGeste = test => a => {
+    const avec = a.parTerme.map(retenuesDe).filter(r => r.tiges || r.cascade);
+    return avec.length === 1 && test(avec[0]);
+  };
+  // Un profil : les largeurs des nombres (l), les signes (rien : des
+  // additions ; moins : k → k nombres enlevés à des places tirées au hasard,
+  // jamais la première ; moins : "libre" → chaque nombre après le premier
+  // est ajouté ou enlevé, au moins un enlevé ; signes : la liste des suites
+  // de signes permises), et ce que le calcul doit vérifier (ok). Un profil
+  // « places » borne les rangs des nombres enlevés (comptés à partir de 0).
+  const libre = (largeurs, mini, maxi) => Object.freeze({l: largeurs, ok: a => entre(a.retenues, mini, maxi), hasard: true});
+  const PROFILS = Object.freeze({
+    // ---- un chiffre, additions ----
+    direct2: {l: fois(1, 2), ok: seulement("D")},
+    direct3: {l: fois(1, 3), ok: seulement("D")},
+    complement2e: {l: fois(1, 3), ok: a => a.n.P === 1 && seulement("D", "P")(a) && contient(a.parTerme[1], "P")},
+    complement3e: {l: fois(1, 3), ok: a => a.n.P === 1 && seulement("D", "P")(a) && contient(a.parTerme[2], "P")},
+    retenue2: {l: fois(1, 2), ok: a => a.n.R === 1 && a.retenues === 1},
+    retenue2e: {l: fois(1, 3), ok: a => a.n.R === 1 && seulement("D", "R", "rD")(a) && contient(a.parTerme[1], "R")},
+    retenue3e: {l: fois(1, 3), ok: a => a.n.R === 1 && seulement("D", "R", "rD")(a) && contient(a.parTerme[2], "R")},
+    uneRetenue3: {l: fois(1, 3), ok: a => a.n.R === 1 && a.retenues === 1},
+    uneRetenueComplement3: {l: fois(1, 3), ok: a => a.n.RC === 1 && a.retenues === 1},
+    uneRetenue4: {l: fois(1, 4), ok: a => a.retenues === 1},
+    deuxRetenues5: {l: fois(1, 5), ok: a => a.retenues === 2},
+    // ---- deux chiffres, additions ----
+    deuxUnSans: {l: [2, 1], ok: a => a.retenues === 0},
+    deuxUnAvec: {l: [2, 1], ok: a => a.tigesRetenue === "0" && !a.n.CASC && a.total < 100},
+    deuxUnUn: {l: [2, 1, 1], ok: a => a.tigesRetenue === "0" && !a.n.CASC && entre(a.retenues, 1, 2) && a.total < 100},
+    aucune22: {l: [2, 2], ok: a => a.retenues === 0},
+    unites22: {l: [2, 2], ok: a => a.tigesRetenue === "0" && !a.n.CASC},
+    centaine22: {l: [2, 2], ok: a => a.tigesRetenue === "1" && !a.n.CASC},
+    double22: {l: [2, 2], ok: a => a.tigesRetenue === "01" && !a.n.CASC},
+    cascade22: {l: [2, 2], ok: a => a.n.CASC >= 1},
+    // ---- trois chiffres, additions ----
+    aucune33: {l: [3, 3], ok: a => a.retenues === 0},
+    dizaines33: {l: [3, 3], ok: a => a.tigesRetenue === "0" && !a.n.CASC},
+    centaines33: {l: [3, 3], ok: a => a.tigesRetenue === "1" && !a.n.CASC},
+    millier33: {l: [3, 3], ok: a => a.tigesRetenue === "2" && !a.n.CASC},
+    double33: {l: [3, 3], ok: a => a.tigesRetenue.length === 2 && !a.n.CASC},
+    cascade33: {l: [3, 3], ok: a => a.n.CASC >= 1},
+    // ---- Colonne : un chiffre, + et − ----
+    cDirect: {l: fois(1, 3), moins: "libre", ok: seulement("D", "d")},
+    cComplementPlus: {l: fois(1, 3), moins: "libre", ok: a => a.n.P === 1 && a.n.p === 0 && !a.retenues && !a.emprunts},
+    cComplementMoins: {l: fois(1, 3), moins: "libre", ok: a => a.n.p === 1 && a.n.P === 0 && !a.retenues && !a.emprunts},
+    cSansRetenue5: {l: fois(1, 5), moins: 2, ok: a => !a.retenues && !a.emprunts && a.n.P + a.n.p >= 1},
+    cRetenuePuisEmprunt: {l: fois(1, 3), signes: [[1, 1, -1]], ok: a => a.n.R === 1 && a.n.E === 1 && a.retenues === 1 && a.emprunts === 1},
+    // C06 — deux groupes qui ne se recouvrent pas : 5 calculs avec UNE retenue
+    // avec complément à 5 et aucun emprunt de cette sorte (7 + 6, 1 + 7 + 6,
+    // 8 + 6 − 1 : les additions seules en sont) ; 5 AUTRES avec un emprunt
+    // avec complément à 5 et aucune retenue de cette sorte (8 + 5 − 6).
+    cRetenueComplement: {l: fois(1, 3), moins: "possible", ok: a => a.n.RC === 1 && a.retenues === 1 && !a.n.EC},
+    cEmpruntComplement: {l: fois(1, 3), moins: "libre", ok: a => a.n.EC === 1 && !a.n.RC},
+    cMele5: {l: fois(1, 5), moins: 2, ok: a => a.retenues >= 1 && a.emprunts >= 1},
+    cMele7: {l: fois(1, 7), moins: 3, ok: a => a.retenues >= 1 && a.emprunts >= 1},
+    // ---- Colonne : deux chiffres ----
+    cSansEmprunt22: {l: [2, 2], signes: [[1, -1]], ok: a => a.emprunts === 0},
+    cEmprunt22: {l: [2, 2], signes: [[1, -1]], ok: a => a.emprunts === 1},
+    // C12 — le geste annoncé est celui d'UN nombre, le 2e ou le 3e ; l'autre
+    // entre sans aucune retenue (64 + 52 + 31 : seul 52 fait passer la centaine).
+    cCentaine222: {l: fois(2, 3), ok: unSeulGeste(r => r.tiges === "1" && !r.cascade)},
+    cDouble222: {l: fois(2, 3), ok: unSeulGeste(r => r.tiges === "01" && !r.cascade)},
+    cCascade222: {l: fois(2, 3), ok: unSeulGeste(r => r.cascade)},
+    cEmpruntCentaine: {l: fois(2, 3), signes: [[1, 1, -1]], ok: a => a.tigesEmprunt.indexOf("1") >= 0 && !a.n.casc},
+    cEmpruntDizaine: {l: fois(2, 3), signes: [[1, -1, 1], [1, 1, -1]], ok: a => a.tigesEmprunt === "0" && !a.n.casc},
+    // L'emprunt en cascade (116 − 18, où la dizaine vide fait prendre sur la
+    // centaine) a son étape au 3e kyu (C18) : avant elle, C13 puis C15 et C16
+    // n'en posent pas. C'est la seule règle de ce tirage libre.
+    cLibre25: {l: fois(2, 5), moins: 2, ok: a => !a.n.casc, hasard: true},
+    // ---- Colonne : trois chiffres ----
+    cRetenues33: {l: [3, 3], ok: a => entre(a.retenues, 1, 2) && !a.n.CASC},
+    cEmprunts33: {l: [3, 3], signes: [[1, -1]], ok: a => entre(a.emprunts, 1, 2) && !a.n.casc},
+    cCascadeMoins33: {l: [3, 3], signes: [[1, -1]], ok: a => a.n.casc >= 1},
+    cLibre33: {l: fois(3, 3), signes: [[1, -1, 1], [1, 1, -1]], hasard: true},
+    cLibre35: {l: fois(3, 5), moins: 2, hasard: true},
+    cLibre37: {l: fois(3, 7), moins: 3, hasard: true},
+    // ---- les colonnes de la feuille japonaise ----
+    // Les formes du 暗算検定 (みとり暗算) : 5 nombres de 2 chiffres ; 5, 7 ou 10
+    // nombres de 3 chiffres ; et 10 nombres de 3 chiffres dont 4 enlevés,
+    // jamais le 1er, le 2e ni le dernier. Tirées comme tous les profils
+    // (relecture Codex du 22/11/2026 : l'ancien tirage de « s10 » retouchait
+    // certains nombres et pouvait rendre une colonne sans soustraction).
+    d5: {l: fois(2, 5), hasard: true},
+    t5: {l: fois(3, 5), hasard: true},
+    t7: {l: fois(3, 7), hasard: true},
+    t10: {l: fois(3, 10), hasard: true},
+    s10: {l: fois(3, 10), moins: 4, places: [2, 8], hasard: true}
+  });
+  Object.keys(PROFILS).forEach(nom => Object.freeze(PROFILS[nom]));
+  const P = PROFILS;
+  // Deux étapes qui portent le MÊME plan (le même objet) ont le même
+  // tirage : seul le temps change de l'une à l'autre.
+  const plansEntiers = new Map();
+  const tous = profil => {
+    if (!plansEntiers.has(profil)) plansEntiers.set(profil, [[profil, 10]]);
+    return plansEntiers.get(profil);
+  };
+  const sansCascade33 = Object.freeze({choix: [P.cRetenues33, P.cEmprunts33], l: [3, 3], moins: "libre"});
+  const LIBRES = {
+    u6: libre(fois(1, 6), 2, 3), u7: libre(fois(1, 7), 2, 4), u10: libre(fois(1, 10), 4, 5),
+    d3: libre(fois(2, 3), 1, 3), d4: libre(fois(2, 4), 2, 4), d5: libre(fois(2, 5), 3, 5), d6: libre(fois(2, 6), 4, 6),
+    d7: libre(fois(2, 7), 5, 7), d8: libre(fois(2, 8), 5, 9), d10: libre(fois(2, 10), 7, 11), d12: libre(fois(2, 12), 9, 13),
+    d15: libre(fois(2, 15), 12, 16),
+    t3: libre(fois(3, 3), 2, 4), t4: libre(fois(3, 4), 3, 6), t6: libre(fois(3, 6), 6, 9), t8: libre(fois(3, 8), 9, 12),
+    t10: libre(fois(3, 10), 11, 16), t12: libre(fois(3, 12), 14, 19), t15: libre(fois(3, 15), 18, 24)
+  };
+  const L = LIBRES;
+  const JAPONAIS = true;
+  const plan22 = [[P.aucune22, 2], [P.unites22, 2], [P.centaine22, 2], [P.double22, 2], [P.cascade22, 2]];
+  const plan33 = [[P.dizaines33, 2], [P.centaines33, 2], [P.millier33, 2], [P.double33, 2], [P.cascade33, 2]];
+  const planFeuille = [[P.t10, 6], [P.s10, 4]];
+  // Le Flash : [grade, plan (ou « dix »), temps de TOUTE la série en dixièmes
+  // de seconde, épreuve japonaise ?, exemple, ce que l'étape travaille,
+  // la 2e ligne de la fiche quand il n'y a pas d'exemple]. Du 10e kyu au
+  // 20e dan, la dernière étape de chaque grade est l'épreuve japonaise de
+  // ce grade (kentei.soroban-soft.com), au même format et au même temps.
+  const SANS = "sans complément ni retenue";
+  const LIGNES_FLASH = [
+    [1, tous(P.direct2), 40, false, "2 + 5", SANS],
+    [1, tous(P.direct3), 60, false, "1 + 2 + 5", SANS],
+    [2, "complements", 40, false, "4 + 3", "un complément à 5 : les dix calculs possibles"],
+    [2, [[P.complement2e, 5], [P.complement3e, 5]], 60, false, "1 + 3 + 2", "un complément à 5 par calcul"],
+    [3, tous(P.retenue2), 40, false, "8 + 4", "une retenue"],
+    [3, [[P.retenue2e, 5], [P.retenue3e, 5]], 60, false, "2 + 6 + 4", "une retenue par calcul"],
+    [4, "retenues", 40, false, "7 + 6", "une retenue avec complément à 5 : les dix calculs possibles"],
+    [4, [[P.uneRetenue3, 5], [P.uneRetenueComplement3, 5]], 60, false, "1 + 7 + 6", "une retenue par calcul, avec ou sans complément à 5"],
+    [5, tous(P.uneRetenue4), 80, false, null, "une seule retenue par calcul", ["1", "seule retenue par calcul"]],
+    [5, tous(P.deuxRetenues5), 100, false, null, "deux retenues par calcul", ["2", "retenues par calcul"]],
+    [6, tous(L.u6), 120], [6, tous(L.u7), 140],
+    [7, tous(L.u10), 200], [7, tous(L.u10), 150], [8, tous(L.u10), 120], [8, tous(L.u10), 100],
+    [9, tous(P.deuxUnSans), 40, false, "24 + 3", "sans retenue"],
+    [9, tous(P.deuxUnAvec), 40, false, "27 + 6", "une retenue vers les dizaines"],
+    [9, tous(P.deuxUnUn), 60, false, "27 + 6 + 8", "une ou deux retenues"],
+    [10, tous(P.aucune22), 40, false, "24 + 35", "sans retenue"],
+    [10, tous(P.unites22), 40, false, "27 + 35", "une retenue vers les dizaines"],
+    [11, tous(P.centaine22), 40, false, "64 + 52", "on dépasse 100, sans autre retenue"],
+    [11, tous(P.double22), 40, false, "57 + 68", "deux retenues : dizaines et centaines"],
+    [11, plan22, 40, JAPONAIS, "67 + 35", "tous les cas mêlés"],
+    [12, tous(L.d3), 60, JAPONAIS], [13, tous(L.d4), 70, JAPONAIS], [14, tous(L.d5), 80, JAPONAIS], [15, tous(L.d6), 90, JAPONAIS],
+    [16, tous(L.d7), 100, JAPONAIS], [17, tous(L.d8), 110, JAPONAIS], [18, tous(L.d10), 120, JAPONAIS],
+    [19, tous(L.d12), 140], [19, tous(L.d12), 120, JAPONAIS],
+    [20, tous(L.d15), 150], [20, tous(L.d15), 130, JAPONAIS],
+    [21, tous(L.d15), 115], [21, tous(L.d15), 100, JAPONAIS],
+    [22, tous(P.aucune33), 30, false, "312 + 245", "sans retenue"],
+    [22, plan33, 30, false, "196 + 207", "tous les cas de retenue mêlés"],
+    [22, tous(L.t3), 40], [22, tous(L.t4), 40, JAPONAIS],
+    [23, tous(L.t6), 50, JAPONAIS], [24, tous(L.t8), 60, JAPONAIS], [25, tous(L.t10), 70, JAPONAIS], [26, tous(L.t12), 80, JAPONAIS],
+    [27, tous(L.t15), 100], [27, tous(L.t15), 90], [27, tous(L.t15), 80, JAPONAIS],
+    [28, tous(L.t15), 70], [28, tous(L.t15), 60, JAPONAIS],
+    [29, tous(L.t15), 52], [29, tous(L.t15), 45, JAPONAIS],
+    [30, tous(L.t15), 40], [30, tous(L.t15), 35], [30, tous(L.t15), 30, JAPONAIS]
+  ].concat([28, 26, 24, 22, 20, 19, 18, 17, 16, 15].map((dixiemes, i) => [31 + i, tous(L.t15), dixiemes, JAPONAIS]));
+  // La Colonne : [grade, plan, chrono des 10 calculs en secondes (0 :
+  // libre), épreuve japonaise ?, exemple, ce que l'étape travaille, la 2e
+  // ligne de la fiche]. Chaque premier chrono reprend un tirage déjà réussi
+  // en temps libre. Les colonnes « de la feuille japonaise » sont celles du
+  // 暗算検定 (みとり暗算, shuzan.jp) déjà tirées par le lot « grades-colonne ».
+  const LIGNES_COLONNE = [
+    [41, tous(P.cDirect), 0, false, "2 + 6 − 3", SANS],
+    [41, [[P.cComplementPlus, 5], [P.cComplementMoins, 5]], 0, false, "4 + 3 − 2", "un complément à 5, en + ou en −"],
+    [42, tous(P.cSansRetenue5), 0, false, null, "avec des compléments à 5", ["2", "nombres à enlever, sans retenue"]],
+    [42, tous(P.uneRetenue3), 0, false, "2 + 6 + 4", "une retenue"],
+    [43, tous(P.cRetenuePuisEmprunt), 0, false, "8 + 5 − 4", "une retenue en +, puis une en −"],
+    [43, [[P.cRetenueComplement, 5], [P.cEmpruntComplement, 5]], 0, false, "7 + 6 − 2", "retenues avec complément à 5, en + ou en −"],
+    [44, tous(P.cMele5), 0, false, null, "des retenues en + et en −", ["2", "nombres à enlever, avec des retenues"]],
+    [44, tous(P.cMele7), 0, false, null, "des retenues en + et en −", ["3", "nombres à enlever, avec des retenues"]],
+    [44, tous(P.cMele7), 180, false, null, "des retenues en + et en −", ["3", "nombres à enlever, avec des retenues"]],
+    [45, [[P.aucune22, 5], [P.cSansEmprunt22, 5]], 0, false, "68 − 25", "sans retenue, en + ou en −"],
+    [45, [[P.unites22, 5], [P.cEmprunt22, 5]], 0, false, "31 − 14", "une retenue, en + ou en −"],
+    [46, [[P.cCentaine222, 4], [P.cDouble222, 3], [P.cCascade222, 3]], 0, false, "64 + 52 + 31", "on dépasse 100"],
+    [46, [[P.cEmpruntCentaine, 4], [P.cEmpruntDizaine, 6]], 0, false, "64 + 52 − 38", "une soustraction avec retenue"],
+    [47, tous(P.d5), 0, JAPONAIS],
+    [47, tous(P.cLibre25), 0, false, null, "2 nombres à enlever", ["2", "nombres à enlever, jamais le premier"]],
+    [47, tous(P.cLibre25), 180, false, null, "2 nombres à enlever", ["2", "nombres à enlever, jamais le premier"]],
+    [48, [[P.cRetenues33, 5], [P.cEmprunts33, 5]], 0, false, "512 − 237", "une ou deux retenues, en + ou en −"],
+    [48, [[P.cCascadeMoins33, 4], [P.cascade33, 3], [sansCascade33, 3]], 0, false, "302 − 108", "des retenues en cascade"],
+    [48, tous(P.cLibre33), 0, false, null, "1 nombre à enlever", ["1", "nombre à enlever, le 2e ou le 3e"]],
+    [48, tous(P.t5), 0, JAPONAIS],
+    [48, tous(P.cLibre35), 0, false, null, "2 nombres à enlever", ["2", "nombres à enlever, jamais le premier"]],
+    [49, tous(P.t7), 0, JAPONAIS],
+    [49, tous(P.cLibre37), 0, false, null, "3 nombres à enlever", ["3", "nombres à enlever, jamais le premier"]],
+    [50, tous(P.t10), 0],
+    [50, planFeuille, 0, JAPONAIS, null, "4 colonnes en + et −", ["4", "nombres à enlever dans 4 calculs sur 10"]],
+    [50, planFeuille, 240, false, null, "4 colonnes en + et −", ["4", "nombres à enlever dans 4 calculs sur 10"]]
+  ];
+  function construireEtapes(lignes, base, colonne) {
+    const parGrade = {};
+    lignes.forEach(ligne => { parGrade[ligne[0]] = (parGrade[ligne[0]] || 0) + 1; });
+    const rangs = {};
+    const plans = new Map();
+    const figer = plan => {
+      if (!plans.has(plan)) plans.set(plan, Object.freeze(plan.map(([profil, combien]) => Object.freeze([profil, combien]))));
+      return plans.get(plan);
+    };
+    return lignes.map((ligne, i) => {
+      const [grade, plan, duree, japonais, exemple, travail, repere] = ligne;
+      rangs[grade] = (rangs[grade] || 0) + 1;
+      const dix = typeof plan === "string" ? plan : null;
+      const profils = dix ? Object.freeze([]) : figer(plan);
+      const largeurs = dix ? [1, 1] : profils[0][0].l;
+      const toutesLargeurs = dix ? [1, 1] : profils.reduce((toutes, [profil]) => toutes.concat(profil.l), []);
+      const avecMoins = profils.some(([profil]) => Boolean(profil.moins || profil.signes));
+      return Object.freeze({
+        numero: base + i + 1,
+        code: `${colonne ? "C" : "F"}${String(i + 1).padStart(2, "0")}`,
+        colonne,
+        grade,
+        rang: rangs[grade],
+        sur: parGrade[grade],
+        nombres: profils.reduce((maxi, [profil]) => Math.max(maxi, profil.l.length), largeurs.length),
+        largeurs: Object.freeze(largeurs.slice()),
+        chiffresMin: Math.min(...toutesLargeurs),
+        chiffresMax: Math.max(...toutesLargeurs),
+        operations: avecMoins ? "plusmoins" : "plus",
+        dixiemes: colonne ? 0 : duree,
+        chrono: colonne ? duree : 0,
+        seuil: colonne ? SEUIL_COLONNE : GRADE_REUSSI,
+        dix,
+        plan: profils,
+        hasard: !dix && profils.every(([profil]) => Boolean(profil.hasard)),
+        japonais: Boolean(japonais),
+        exemple: exemple || null,
+        travail: travail || "",
+        repere: repere ? Object.freeze(repere.slice()) : null
+      });
+    });
+  }
+  const ETAPES_FLASH = Object.freeze(construireEtapes(LIGNES_FLASH, ETAPE_FLASH, false));
+  const ETAPES_COLONNE = Object.freeze(construireEtapes(LIGNES_COLONNE, ETAPE_COLONNE, true));
+  const ETAPES = Object.freeze(ETAPES_FLASH.concat(ETAPES_COLONNE));
+  const NB_ETAPES_FLASH = ETAPES_FLASH.length;
+  const NB_ETAPES_COLONNE = ETAPES_COLONNE.length;
+  // L'étape de ce numéro, ou null.
+  function etape(numero) {
+    if (!Number.isInteger(numero)) return null;
+    if (numero > ETAPE_COLONNE) return ETAPES_COLONNE[numero - ETAPE_COLONNE - 1] || null;
+    return numero > ETAPE_FLASH ? ETAPES_FLASH[numero - ETAPE_FLASH - 1] || null : null;
+  }
+  const etapeExiste = numero => Boolean(etape(numero));
+  // Les étapes d'un grade, dans l'ordre.
+  function etapesDuGrade(n) {
+    return (estGradeColonne(n) ? ETAPES_COLONNE : ETAPES_FLASH).filter(e => e.grade === n);
+  }
+  // Le RANG d'une étape dans sa liste (1 … 65 en Flash, 1 … 26 en Colonne) :
+  // c'est lui que le parcours garde (« etapeFlash », « etapeColonne »).
+  const rangEtape = numero => (etape(numero) ? numero - (numero > ETAPE_COLONNE ? ETAPE_COLONNE : ETAPE_FLASH) : 0);
+  const numeroEtape = (rang, colonne) => (colonne ? ETAPE_COLONNE : ETAPE_FLASH) + rang;
+  // Le nombre de bonnes réponses sur 10 pour réussir une étape du grade n.
+  function seuilGrade(n) {
+    return estGradeColonne(n) ? SEUIL_COLONNE : GRADE_REUSSI;
+  }
+
+  // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan » ; en Colonne, du
+  // 10e kyu (41) au 1er kyu (50).
+  const ordinal = k => `${k}${k === 1 ? "er" : "e"}`;
+  function nomGrade(n) {
+    if (estGradeColonne(n)) return `${ordinal(PREMIER_COLONNE + 10 - n)} kyu`;
+    if (!gradeValide(n)) return "";
+    return n <= 20 ? `${ordinal(21 - n)} kyu` : `${ordinal(n - 20)} dan`;
+  }
+
+  // Le vrai nom japonais d'un grade (lot « grades-estampe », 07/11/2026),
+  // écrit en petit à côté du nom français : « 二十級 » (20e kyu) … « 一級 »
+  // (1er kyu), « 初段 » (1er dan, « shodan »), « 二段 » … « 二十段 ».
+  const KANJI_CHIFFRES = ["", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+  function kanjiNombre(k) {
+    if (k <= 10) return KANJI_CHIFFRES[k];
+    if (k < 20) return `十${KANJI_CHIFFRES[k - 10]}`;
+    return "二十";
+  }
+  function nomJaponais(n) {
+    if (estGradeColonne(n)) return `${kanjiNombre(PREMIER_COLONNE + 10 - n)}級`;
+    if (!gradeValide(n)) return "";
+    if (n <= 20) return `${kanjiNombre(21 - n)}級`;
+    const d = n - 20;
+    return d === 1 ? "初段" : `${kanjiNombre(d)}段`;
+  }
+
+  // Les réglages d'une étape, au format d'une séance : `etape` est son
+  // numéro, `grade` celui de son grade. En Flash, le temps par nombre est en
+  // millisecondes (pas forcément un nombre rond : 11,5 s pour 15 nombres) et
+  // `son` est celui des réglages du Flash. En Colonne, `chrono` est le temps
+  // des 10 calculs ensemble, en secondes (0 : libre) — jamais un temps par
+  // calcul. `calculs` : 5 pour « 🎯 M'entraîner » ; tout autre nombre donne
+  // 10, ceux d'un passage.
+  function reglagesEtape(numero, son, calculs) {
+    const e = etape(numero);
+    if (!e) return null;
+    const r = {
+      operations: e.operations,
+      chiffresMin: e.chiffresMin,
+      chiffresMax: e.chiffresMax,
+      nombres: e.nombres,
+      calculs: ENTRAINEMENT_CALCULS.includes(calculs) ? calculs : GRADE_CALCULS,
+      grade: e.grade,
+      etape: e.numero
+    };
+    if (e.colonne) return Object.assign(r, {colonne: true, limite: 0, chrono: e.chrono});
+    return Object.assign(r, {tempsMs: e.dixiemes * 100 / e.nombres, son: SONS.includes(son) ? son : "bip"});
+  }
+
+  // Le verdict d'un passage : « reussi » (le seuil ou plus), « presque » (à
+  // deux réponses du seuil), « pasencore » ; « arrete » s'il manque des
+  // calculs. `n` (facultatif) : le grade, pour son seuil (7 en Flash, 8 en
+  // Colonne).
+  function verdictGrade(faits, score, n) {
+    const seuil = n === undefined ? GRADE_REUSSI : seuilGrade(n);
+    if (faits < GRADE_CALCULS) return "arrete";
+    if (score >= seuil) return "reussi";
+    if (score >= seuil - (GRADE_REUSSI - GRADE_PRESQUE)) return "presque";
+    return "pasencore";
+  }
+
+  // ---- Le tirage d'une étape ----
+  function melanger(liste, rng) {
+    for (let i = liste.length - 1; i > 0; i -= 1) {
       const j = Math.floor(rng() * (i + 1));
-      [places[i], places[j]] = [places[j], places[i]];
+      [liste[i], liste[j]] = [liste[j], liste[i]];
     }
-    return places.slice(0, 4);
+    return liste;
   }
-  function tirerCalculColonne(forme, rng) {
-    const valeurs = [];
-    const signes = [];
-    if (forme[0] === "u") {
-      for (let i = 0; i < Number(forme.slice(1)); i += 1) valeurs.push(chiffreNeuf(rng, valeurs));
-    } else if (forme[0] === "m") {
-      // 6 chiffres en tout : un nombre de 2 chiffres ; 8 : trois.
-      const deux = forme === "m6" ? 1 : 3;
-      const places = [0, 1, 2, 3, 4];
-      for (let i = places.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rng() * (i + 1));
-        [places[i], places[j]] = [places[j], places[i]];
-      }
-      const aDeux = places.slice(0, deux);
-      for (let i = 0; i < 5; i += 1) valeurs.push(nombrePasPareil(rng, aDeux.indexOf(i) >= 0 ? 2 : 1, valeurs[i - 1]));
-    } else {
-      const chiffres = forme[0] === "d" ? 2 : 3;
-      const k = Number(forme.slice(1));
-      for (let i = 0; i < k; i += 1) valeurs.push(nombrePasPareil(rng, chiffres, valeurs[i - 1]));
+  // Les signes d'un calcul du profil ; false : tirage à refaire (aucun
+  // nombre enlevé alors qu'il en faut un).
+  function signesDuProfil(profil, rng) {
+    if (profil.signes) return profil.signes[Math.floor(rng() * profil.signes.length)];
+    if (profil.moins === "libre" || profil.moins === "possible") {
+      const signes = profil.l.map((_, i) => (i > 0 && rng() < 0.5 ? -1 : 1));
+      // « libre » : au moins un nombre enlevé ; « possible » : rien d'imposé.
+      return profil.moins === "libre" && signes.indexOf(-1) < 0 ? false : signes;
     }
-    valeurs.forEach(() => signes.push(1));
-    if (forme === "s10") {
-      // Quatre nombres enlevés ; le total reste au-dessus de zéro après
-      // chacun. Une suite impossible (un enlevé plus grand que le total)
-      // est retirée en entier : on recommence avec un nouveau tirage.
-      for (let essai = 0; essai < 1000; essai += 1) {
-        const enleves = placesEnleves(rng);
-        const v = [];
-        let total = 0;
-        let bon = true;
-        for (let i = 0; i < 10 && bon; i += 1) {
-          if (enleves.indexOf(i) >= 0) {
-            const maxi = Math.min(999, total - 1);
-            if (maxi < 100) { bon = false; break; }
-            let x = 100 + Math.floor(rng() * (maxi - 99));
-            if (x === v[i - 1]) x = x > 100 ? x - 1 : (x < maxi ? x + 1 : x);
-            if (x === v[i - 1]) { bon = false; break; }
-            v.push(x);
-            total -= x;
-          } else {
-            const x = nombrePasPareil(rng, 3, v[i - 1]);
-            v.push(x);
-            total += x;
-          }
-        }
-        if (!bon) continue;
-        const termes = v.map((valeur, i) => ({signe: enleves.indexOf(i) >= 0 ? -1 : 1, valeur}));
-        return {termes, total};
-      }
+    if (profil.moins) {
+      const [debut, fin] = profil.places || [1, profil.l.length - 1];
+      const places = melanger(profil.l.map((_, i) => i).filter(i => i >= debut && i <= fin), rng).slice(0, profil.moins);
+      return profil.l.map((_, i) => (places.indexOf(i) >= 0 ? -1 : 1));
     }
-    const termes = valeurs.map((valeur, i) => ({signe: signes[i], valeur}));
-    return {termes, total: valeurs.reduce((a, x) => a + x, 0)};
+    return profil.l.map(() => 1);
   }
-  // Les 10 calculs d'un grade en Colonne : le plan de la feuille, les
-  // calculs « s10 » mêlés aux autres calculs de 10 nombres à des places
-  // tirées au hasard. `calculs` = 5 (« 🎯 M'entraîner » en 5 calculs) : une
-  // forme sur deux du plan (la 2e, la 4e … la 10e), pour garder le mélange
-  // de la feuille — 10e kyu : 3, 4, 4, 5, 5 nombres ; pré-1er kyu : deux
-  // calculs de 7 nombres, deux de 10, un avec des nombres enlevés.
-  function planColonne(n, calculs) {
-    const c = ligneColonne(n);
-    return calculs === 5 ? c.plan.filter((_, i) => i % 2 === 1) : c.plan.slice();
-  }
-  function tirerSeanceColonne(n, rng, calculs) {
-    const plan = planColonne(n, calculs);
-    const debut = plan.findIndex(f => f === "t10" || f === "s10");
-    if (debut >= 0) {
-      const fin = plan.slice(debut);
-      for (let i = fin.length - 1; i > 0; i -= 1) {
-        const j = Math.floor(rng() * (i + 1));
-        [fin[i], fin[j]] = [fin[j], fin[i]];
+  // Un calcul du profil : des nombres tirés au hasard parmi TOUS ceux de
+  // leur largeur, jusqu'au premier calcul qui convient — chaque calcul
+  // possible a donc la même chance de sortir. Les tests mesurent, profil
+  // par profil, qu'au moins un tirage sur deux cents convient : la borne
+  // ESSAIS_MAX n'est jamais approchée.
+  const ESSAIS_MAX = 100000;
+  function tirerProfil(profil, rng) {
+    if (profil.choix) return tirerProfil(profil.choix[Math.floor(rng() * profil.choix.length)], rng);
+    for (let essai = 0; essai < ESSAIS_MAX; essai += 1) {
+      const signes = signesDuProfil(profil, rng);
+      if (!signes) continue;
+      const termes = [];
+      for (let i = 0; i < profil.l.length; i += 1) {
+        const valeur = nombreDeChiffres(rng, profil.l[i]);
+        if (i > 0 && valeur === termes[i - 1].valeur) break; // jamais deux fois le même nombre de suite
+        termes.push({signe: signes[i], valeur});
       }
-      plan.splice(debut, fin.length, ...fin);
+      if (termes.length < profil.l.length) continue;
+      // Trois nombres : jamais « 9 + 8 − 9 », où le dernier efface le premier
+      // (la réponse se lit sans calculer ; un calcul sur cinq à certaines
+      // étapes de la Colonne avant cette règle, mesuré le 22/11/2026).
+      if (termes.length === 3 && termes[2].valeur === termes[0].valeur && termes[2].signe !== termes[0].signe) continue;
+      // Le boulier ne reste jamais vide en cours de calcul : chaque
+      // sous-total vaut au moins 1 (le barème ; relecture Codex du 22/11/2026).
+      let sousTotal = 0;
+      if (termes.some(t => { sousTotal += t.signe * t.valeur; return sousTotal < 1; })) continue;
+      const a = analyser(termes);
+      if (!a || a.total < 1) continue;
+      if (profil.ok && !profil.ok(a)) continue;
+      return {termes, total: a.total};
     }
-    return plan.map(forme => tirerCalculColonne(forme, rng));
+    throw new Error("Anzan : tirage impossible");
+  }
+  // Les deux étapes « les dix » : les dix compléments à 5 et les dix
+  // retenues avec complément à 5 entre deux nombres d'un chiffre — trouvés
+  // par le modèle, pas recopiés.
+  const DIX = (() => {
+    const complements = [];
+    const retenues = [];
+    for (let x = 1; x <= 9; x += 1) {
+      for (let y = 1; y <= 9; y += 1) {
+        const a = analyser([{signe: 1, valeur: x}, {signe: 1, valeur: y}]);
+        if (a.n.P === 1 && !a.retenues) complements.push(Object.freeze([x, y]));
+        if (a.n.RC === 1) retenues.push(Object.freeze([x, y]));
+      }
+    }
+    return Object.freeze({complements: Object.freeze(complements), retenues: Object.freeze(retenues)});
+  })();
+  // Les profils des calculs d'un passage, dans le désordre : les 10 du plan,
+  // ou la MOITIÉ du plan pour « 🎯 M'entraîner » en 5 calculs (la moitié de
+  // chaque profil ; quand un profil compte un nombre impair de calculs, les
+  // demis qui restent sont tirés au hasard : 5 + 5 donne 3 + 2 ou 2 + 3).
+  function profilsDuPassage(e, calculs, rng) {
+    const liste = [];
+    if (calculs !== 5) e.plan.forEach(([profil, combien]) => { for (let i = 0; i < combien; i += 1) liste.push(profil); });
+    else {
+      const restes = [];
+      e.plan.forEach(([profil, combien]) => {
+        for (let i = 0; i < Math.floor(combien / 2); i += 1) liste.push(profil);
+        if (combien % 2) restes.push(profil);
+      });
+      melanger(restes, rng);
+      while (liste.length < 5 && restes.length) liste.push(restes.pop());
+    }
+    return melanger(liste, rng);
+  }
+  const REDITES_MAX = 200;
+  const cleDuCalcul = calcul => calcul.termes.map(t => (t.signe < 0 ? "-" : "+") + t.valeur).join("");
+  // Les calculs d'un passage (10) ou d'un entraînement (5) à une étape.
+  function tirerEtape(numero, rng, calculs) {
+    const e = etape(numero);
+    if (!e) return [];
+    const combien = calculs === 5 ? 5 : GRADE_CALCULS;
+    if (e.dix) {
+      return melanger(DIX[e.dix].slice(), rng).slice(0, combien)
+        .map(([x, y]) => ({termes: [{signe: 1, valeur: x}, {signe: 1, valeur: y}], total: x + y}));
+    }
+    // Jamais deux fois le même calcul dans un passage. Aux premières étapes
+    // il n'existe que 23 à 32 calculs possibles : sans cette règle, neuf
+    // passages sur dix reposaient un calcul déjà fait (mesuré le 22/11/2026).
+    // Chaque profil a toujours assez de calculs différents pour ses tirages
+    // (le test les compte) ; la borne n'est qu'un filet : passée, le calcul
+    // est gardé même déjà vu (un élève ne reste jamais bloqué). Avec un vrai
+    // hasard elle est hors d'atteinte (au pire 9 chances sur 23 de retomber
+    // sur un calcul déjà posé, deux cents fois de suite).
+    const vus = new Set();
+    return profilsDuPassage(e, combien, rng).map(profil => {
+      let calcul = tirerProfil(profil, rng);
+      for (let essai = 0; essai < REDITES_MAX && vus.has(cleDuCalcul(calcul)); essai += 1) calcul = tirerProfil(profil, rng);
+      vus.add(cleDuCalcul(calcul));
+      return calcul;
+    });
   }
 
   function tirerSeance(reglages, rng) {
-    if (reglages && reglages.colonne && estGradeColonne(reglages.grade)) return tirerSeanceColonne(reglages.grade, rng, reglages.calculs);
+    if (reglages && etape(reglages.etape)) return tirerEtape(reglages.etape, rng, reglages.calculs);
     return Array.from({length: reglages.calculs}, () => tirerCalcul(reglages, rng));
   }
 
@@ -779,6 +966,7 @@
     return {index, visible: dansLaCase < tempsMs - coupure(tempsMs), fini: false};
   }
 
+
   // ---------------------------------------------------------------------
   // Les textes
   // ---------------------------------------------------------------------
@@ -801,13 +989,134 @@
   // Le résumé d'une séance (décompte, écran de fin, historique).
   // ⚡ Flash · + et − · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout
   // (le temps total d'un calcul à côté du temps par nombre : choix du
+
+  // ---- Les mots des grades et des étapes ----
+  // (mots de maths, choix du 22/11/2026 : « complément à 5 », « retenue »,
+  // « retenue avec complément à 5 », toujours avec un exemple de calcul)
+  const insecable = texte => texte.replace(/ /g, " ");
+  const texteLargeur = k => (k === 1 ? "d’un chiffre" : `de ${k} chiffres`);
+  // « 3 min », « 2 min 40 s » : le chrono des 10 calculs en Colonne.
+  function texteChrono(s) {
+    const min = Math.floor(s / 60);
+    const reste = s % 60;
+    return insecable(`${min ? `${min} min` : ""}${min && reste ? " " : ""}${reste || !min ? `${reste} s` : ""}`);
+  }
+  // « 3:00 », « 1:52 », « 0:07 » : le temps qui reste, dans la pastille.
+  function texteReste(ms) {
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  }
+  // « 10 nombres d'un chiffre », « 2 chiffres + 1 chiffre ».
+  function texteFormat(e) {
+    if (e.largeurs.every(l => l === e.largeurs[0])) return `${e.nombres} nombres ${texteLargeur(e.largeurs[0])}`;
+    return e.largeurs.map(l => insecable(`${l} chiffre${l > 1 ? "s" : ""}`)).join(" + ");
+  }
+  // Ce qu'un grade travaille, sur sa ligne de la liste. Les grades dont les
+  // étapes changent de geste ou de format ont leur phrase ; les autres
+  // (même format, seul le temps change) l'écrivent d'après leurs étapes :
+  // « 10 nombres d'un chiffre · en 20 s, puis en 15 s ».
+  const UN_CHIFFRE = "2 puis 3 nombres d’un chiffre";
+  const THEMES = Object.freeze({
+    1: `${UN_CHIFFRE}${POINT}${SANS}`,
+    2: `${UN_CHIFFRE}${POINT}avec un complément à 5`,
+    3: `${UN_CHIFFRE}${POINT}avec une retenue`,
+    4: `${UN_CHIFFRE}${POINT}retenue avec complément à 5`,
+    5: `4 puis 5 nombres d’un chiffre${POINT}1 puis 2 retenues`,
+    6: `6 puis 7 nombres d’un chiffre${POINT}2 s par nombre`,
+    9: `2 chiffres + 1 chiffre${POINT}sans retenue, puis avec`,
+    10: `2 nombres de 2 chiffres${POINT}sans retenue, puis avec`,
+    11: `2 nombres de 2 chiffres${POINT}on dépasse 100`,
+    22: "2, 3 puis 4 nombres de 3 chiffres",
+    41: `3 nombres d’un chiffre${POINT}+ et −, sans retenue`,
+    42: `Nombres d’un chiffre${POINT}sans retenue, puis avec`,
+    43: `3 nombres d’un chiffre${POINT}+ et −, avec retenues`,
+    44: "5 puis 7 nombres d’un chiffre, + et −",
+    45: `2 nombres de 2 chiffres${POINT}+ ou −, sans retenue puis avec`,
+    46: `3 nombres de 2 chiffres${POINT}on dépasse 100`,
+    47: `5 nombres de 2 chiffres${POINT}+, puis + et −`,
+    48: "2, 3 puis 5 nombres de 3 chiffres",
+    49: `7 nombres de 3 chiffres${POINT}+, puis + et −`,
+    50: `10 nombres de 3 chiffres${POINT}+, puis + et −`
+  });
+  function texteGrade(n) {
+    if (!gradeExiste(n)) return "";
+    if (THEMES[n]) return THEMES[n];
+    const etapes = etapesDuGrade(n);
+    const temps = etapes.map(e => secondes(e.dixiemes / 10));
+    if (temps.length === 1) return `${texteFormat(etapes[0])}${POINT}${temps[0]} en tout`;
+    const dernier = temps.pop();
+    return `${texteFormat(etapes[0])}${POINT}en ${temps.join(", ")}, puis${temps.length > 1 ? "" : " en"} ${dernier}`;
+  }
+  // Ce qu'une étape travaille, en une ligne (la ligne du grade en cours, le
+  // résumé d'une séance) : « une retenue vers les dizaines, comme 27 + 6 »,
+  // « 10 nombres en 15 s », « 3 nombres à enlever · 10 calculs en 3 min ».
+  // `sansChrono` : à l'entraînement (5 calculs, pas de chrono), le temps des
+  // dix calculs ne se dit pas.
+  function texteEtape(numero, sansChrono) {
+    const e = etape(numero);
+    if (!e) return "";
+    let texte;
+    if (e.exemple) texte = `${e.travail}, comme ${insecable(e.exemple)}`;
+    else if (e.travail) texte = e.travail;
+    else if (e.colonne) texte = texteFormat(e);
+    else texte = `${e.nombres} nombres en ${secondes(e.dixiemes / 10)}`;
+    return e.chrono && !sansChrono ? `${texte}${POINT}10 calculs en ${texteChrono(e.chrono)}` : texte;
+  }
+  // La même chose en plus court, pour la ligne du grade en cours dans la
+  // liste (après « Étape 2 sur 3 · », elle doit tenir sur deux lignes au
+  // téléphone) : « comme 27 + 6 », « 10 calculs en 3 min », « 10 nombres
+  // en 15 s ».
+  function texteEtapeCourt(numero) {
+    const e = etape(numero);
+    if (!e) return "";
+    if (e.exemple) return `comme ${insecable(e.exemple)}`;
+    if (e.chrono) return `10 calculs en\u00a0${texteChrono(e.chrono)}`;
+    return texteEtape(numero);
+  }
+  // « Étape 2 sur 3 » ; rien pour un grade à une seule étape.
+  function texteRangEtape(numero) {
+    const e = etape(numero);
+    return e && e.sur > 1 ? `Étape ${e.rang} sur ${e.sur}` : "";
+  }
+  // Les quatre lignes de la fiche d'une étape : [en gras, la phrase].
+  function reglesEtape(numero) {
+    const e = etape(numero);
+    if (!e) return [];
+    const faire = e.operations === "plusmoins" ? "à ajouter ou à enlever" : "à additionner";
+    const quoi = e.largeurs.every(l => l === e.largeurs[0])
+      ? `nombres ${texteLargeur(e.largeurs[0])} ${faire}`
+      : `nombres ${faire} : ${texteFormat(e)}`;
+    let repere;
+    if (e.repere) repere = [insecable(e.repere[0]), e.repere[1]];
+    else if (e.exemple) repere = [insecable(e.exemple), `par exemple : ${e.travail}`];
+    else {
+      const k = e.largeurs[0];
+      repere = [insecable(`${10 ** (k - 1)} à ${10 ** k - 1}`), "des nombres tirés au hasard"];
+    }
+    let temps;
+    if (!e.colonne) temps = [secondes(e.dixiemes / 10), "pour voir les nombres d’un calcul"];
+    else if (e.chrono) temps = [texteChrono(e.chrono), "pour les 10 calculs"];
+    else temps = ["Libre", "pas de chrono à cette étape"];
+    return [
+      [String(e.nombres), quoi],
+      repere,
+      temps,
+      [`${e.seuil}/${GRADE_CALCULS}`, "bonnes réponses sur 10 calculs pour réussir l’étape"]
+    ];
+  }
+
+  // Le résumé d'une séance (décompte, écran de fin, historique).
+  // ⚡ Flash · + et − · 2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout
+  // (le temps total d'un calcul à côté du temps par nombre : choix du
   // 07/11/2026, « 0,8 s » seul se lisait comme le temps de tout le calcul).
   function resume(mode, r, {avecMode = true} = {}) {
-    // Un grade : « 🥋 13e kyu · 20 nombres d'un chiffre · 15 s en tout » (le
-    // passage) ou « 🎯 … » (l'entraînement au grade).
-    if ((mode === "grade" || mode === "entrainement") && r && gradeExiste(r.grade)) {
-      const tete = avecMode ? [`${mode === "grade" ? "🥋" : "🎯"} ${nomGrade(r.grade)}${estGradeColonne(r.grade) ? " · Colonne" : ""}`] : [];
-      return tete.concat([texteGrade(r.grade)]).join(POINT);
+    // Une étape d'un grade : « 🥋 12e kyu · étape 2 · une retenue vers les
+    // dizaines, comme 27 + 6 » (le passage) ou « 🎯 … » (l'entraînement).
+    if ((mode === "grade" || mode === "entrainement") && r && etape(r.etape)) {
+      const e = etape(r.etape);
+      const tete = avecMode ? [`${mode === "grade" ? "🥋" : "🎯"} ${nomGrade(e.grade)}${e.colonne ? `${POINT}Colonne` : ""}`] : [];
+      if (e.sur > 1) tete.push(`étape\u00a0${e.rang}`);
+      return tete.concat([texteEtape(e.numero, mode === "entrainement")]).join(POINT);
     }
     const morceaux = [];
     if (avecMode) morceaux.push(mode === "flash" ? "⚡ Flash" : "📝 Colonne");
@@ -858,14 +1167,39 @@
     resume,
     largeurMax,
     tempsParNombreMs,
-    GRADES,
+    gestes,
+    analyser,
+    CODES_GESTES,
+    PROFILS,
+    DIX,
+    ETAPES,
+    ETAPES_FLASH,
+    ETAPES_COLONNE,
+    NB_ETAPES_FLASH,
+    NB_ETAPES_COLONNE,
+    ETAPE_FLASH,
+    ETAPE_COLONNE,
+    etape,
+    etapeExiste,
+    etapesDuGrade,
+    rangEtape,
+    numeroEtape,
+    reglagesEtape,
+    tirerEtape,
+    tirerProfil,
+    texteEtape,
+    texteEtapeCourt,
+    texteRangEtape,
+    texteChrono,
+    texteReste,
+    reglesEtape,
     NB_GRADES,
     GRADE_CALCULS,
     ENTRAINEMENT_CALCULS,
     GRADE_REUSSI,
     GRADE_PRESQUE,
+    SEUIL_COLONNE,
     GROUPES_GRADES,
-    GRADES_COLONNE,
     NB_GRADES_COLONNE,
     PREMIER_COLONNE,
     DERNIER_GRADE,
@@ -873,13 +1207,8 @@
     gradeExiste,
     dernierDeSaListe,
     seuilGrade,
-    tirerSeanceColonne,
-    planColonne,
     nomGrade,
     nomJaponais,
-    reglagesGrade,
-    SANS_RETENUE,
-    texteNombresGrade,
     verdictGrade,
     texteGrade,
     CARTES_KYU,

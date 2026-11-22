@@ -227,7 +227,7 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {

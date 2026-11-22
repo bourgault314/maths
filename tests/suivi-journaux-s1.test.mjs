@@ -673,17 +673,24 @@ test("resumeSuivi, Coffres : un trésor ouvert = un jour de travail ; à aider :
   assert.equal(r.dernier, MERCREDI);
 });
 
-test("resumeSuivi, Anzan : une séance avec un calcul fait = un jour de travail ; à féliciter : un grade réussi cette semaine", () => {
+test("resumeSuivi, Anzan : une séance avec un calcul fait = un jour de travail ; à féliciter : un grade GAGNÉ cette semaine (sa dernière étape réussie)", () => {
   let p = A.creer();
   const flash = {operations: "plus", chiffresMin: 1, chiffresMax: 1, nombres: 5, temps: 10, calculs: 10, son: "bip"};
+  // Une étape telle que la page la note : les réglages de la grille, son numéro.
+  const etape = numero => { const e = A.etape(numero); return {operations: e.operations, chiffresMin: e.chiffresMin, chiffresMax: e.chiffresMax, nombres: e.nombres, etape: numero, grade: e.grade, calculs: 10}; };
   p = A.noterSeance(p, {id: 11, mode: "flash", reglages: flash, faits: 10, score: 8}, "2026-11-02").parcours;
   p = A.noterSeance(p, {id: 12, mode: "flash", reglages: flash, faits: 4, score: 4}, LUNDI).parcours;
-  const grade = A.etatGrades(p)[0];
-  p = A.noterSeance(p, {id: 13, mode: "grade", reglages: {operations: "plus", chiffresMin: grade.chiffres, chiffresMax: grade.chiffres, nombres: grade.nombres, grade: 1, calculs: 10}, faits: 10, score: 9}, MERCREDI).parcours;
-  const r = A.resumeSuivi(p, {aujourdhui: MERCREDI});
-  assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", LUNDI, MERCREDI]);
-  assert.deepEqual(r.jours[1].lignes, [{mode: "flash", calculs: 4, justes: 4, prevus: 10, grade: 0, reussi: null}]);
+  p = A.noterSeance(p, {id: 13, mode: "grade", reglages: etape(101), faits: 10, score: 9}, LUNDI).parcours;
+  let r = A.resumeSuivi(p, {aujourdhui: MERCREDI});
+  assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", LUNDI]);
+  assert.deepEqual(r.jours[1].lignes, [{mode: "flash", calculs: 4, justes: 4, prevus: 10, grade: 0, reussi: null},
+    {mode: "grade", calculs: 10, justes: 9, prevus: 10, grade: 1, reussi: 1, etape: 1, sur: 2}]);
   assert.deepEqual(r.aider, []);
+  assert.equal(A.gradeReussi(p), 0, "une étape sur deux : le grade n'est pas gagné");
+  assert.deepEqual(r.feliciter, [], "une étape réussie ne se félicite pas : seul un grade gagné");
+  p = A.noterSeance(p, {id: 14, mode: "grade", reglages: etape(102), faits: 10, score: 7}, MERCREDI).parcours;
+  r = A.resumeSuivi(p, {aujourdhui: MERCREDI});
+  assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-02", LUNDI, MERCREDI]);
   assert.equal(A.gradeReussi(p), 1);
   assert.deepEqual(r.feliciter, [{type: "grade", grade: 1}]);
   assert.deepEqual(A.resumeSuivi(p, plus(MERCREDI, 7)).feliciter, [], "la semaine d'après : plus rien");
@@ -780,7 +787,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   }
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
-  assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
+  assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261122-1"/);
   assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261122-1"/);
 });
 
