@@ -1922,7 +1922,9 @@
       for (let h = Math.ceil(debut / 60) * 60; h < pts[pts.length - 1]; h += 60) hs.push(h);
       [...new Set([hs[0], hs[hs.length - 1]])].filter(h => h !== undefined && instants.every(i => Math.abs(X(i.t) - X(h)) > 40)).forEach(h => {
         s.appendChild(svg("line", {x1: X(h), y1: yA - 6, x2: X(h), y2: yA + 6, stroke: "#8ea1af", "stroke-width": 2.2}));
-        s.appendChild(svg("text", {x: X(h), y: yA + 24, "text-anchor": "middle", "font-size": 15, "font-weight": 800, fill: "#6c8494"}, heureT(h)));
+        // (Lot B4-2c : 15 → 16, comme les autres heures : 13,5 px dans la
+        // zone de Q6 à 360 × 640.)
+        s.appendChild(svg("text", {x: X(h), y: yA + 24, "text-anchor": "middle", "font-size": 16, "font-weight": 800, fill: "#6c8494"}, heureT(h)));
       });
     }
     arcs.forEach(({de, a, texte, vert}) => {
@@ -1982,6 +1984,8 @@
   // "correction" (les dixièmes jusqu'à la graduation, elle en vert),
   // "montre" (chaque toucher écrit un dixième de plus, jusqu'à elle).
   function droiteHeures(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    // (Lot B4-2, D5 : la droite en quarts, choix de Gwenaël du 22/11.)
+    if (aide.quarts) return droiteQuartsD5(zone, aide, {mode, fini});
     const c = Number(aide.c);
     const haut = aide.haut || "h";
     const bas = aide.bas || "min";
@@ -1993,7 +1997,7 @@
     const xc = x0 + ((x1 - x0) * c) / 100;
     const dec = k => (k === 10 ? "1" : k === 0 ? "0" : `0,${k}`);
     const boite = el("div", "dessin-boite droite2-boite");
-    const dessin = svg("svg", {viewBox: "0 0 340 118", class: `dessin droite2 droite-h${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+    const dessin = svg("svg", {viewBox: "0 0 340 118", class: `dessin droite2 droite-h${aide.grand ? " grand" : ""}${mode === "montre" ? " a-toucher" : ""}`, role: "img",
       "aria-label": "La double droite des heures"});
     boite.appendChild(dessin);
     zone.appendChild(boite);
@@ -2006,8 +2010,9 @@
         dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x1 + 14, y2: y, stroke: ENCRE, "stroke-width": 2.4}));
         dessin.appendChild(svg("path", {d: `M${x1 + 16} ${y} l-8 -5 v10 Z`, fill: ENCRE}));
       });
-      dessin.appendChild(svg("text", {x: x1 + 22, y: yH + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, haut));
-      dessin.appendChild(svg("text", {x: x1 + 22, y: yB + 5, "font-size": 15, "font-weight": 900, fill: ENCRE}, bas));
+      const fu = aide.grand ? 17 : 15;
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yH + 5, "font-size": fu, "font-weight": 900, fill: ENCRE}, haut));
+      dessin.appendChild(svg("text", {x: x1 + 22, y: yB + 5, "font-size": fu, "font-weight": 900, fill: ENCRE}, bas));
       const trouve = mode === "correction" || (mode === "montre" && vus >= fin);
       const ici = trouve ? VERT : BLEU;
       for (let k = 0; k <= 10; k += 1) {
@@ -2022,7 +2027,7 @@
         const couleur = mode === "montre" && k && k <= vus && k !== 10 ? BLEU : pale ? "#6c8494" : ENCRE;
         // (Les dixièmes du milieu un peu plus petits : « 0,1 » et « 0,2 » ne
         // se touchent pas à côté de la graduation cherchée.)
-        const taille = [0, 10].includes(k) ? 13 : 11.5;
+        const taille = aide.grand ? 17 : [0, 10].includes(k) ? 13 : 11.5;
         dessin.appendChild(svg("text", {x, y: yH - 16, "text-anchor": "middle", "font-size": taille, "font-weight": 900, fill: couleur}, dec(k)));
         dessin.appendChild(svg("text", {x, y: yB + 24, "text-anchor": "middle", "font-size": taille, "font-weight": 900, fill: couleur}, String(k * 6)));
       }
@@ -2035,8 +2040,9 @@
       const tHaut = cache("min>h", true) || !Number.isInteger(c) ? ["?", trouve && !Number.isInteger(c) ? ici : ROUGE] : [hautT, ici];
       const tBas = cache("h>min", true) ? ["?", ROUGE] : [String(minutes), ici];
       if (!Number.isInteger(c) && trouve) tHaut[0] = aide.hautTexte || "";
-      dessin.appendChild(svg("text", {x: xc, y: yH - 16, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: tHaut[1]}, tHaut[0]));
-      dessin.appendChild(svg("text", {x: xc, y: yB + 25, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: tBas[1]}, tBas[0]));
+      const fc = aide.grand ? 17.5 : 16;
+      dessin.appendChild(svg("text", {x: xc, y: yH - 16, "text-anchor": "middle", "font-size": fc, "font-weight": 900, fill: tHaut[1]}, tHaut[0]));
+      dessin.appendChild(svg("text", {x: xc, y: yB + 25, "text-anchor": "middle", "font-size": fc, "font-weight": 900, fill: tBas[1]}, tBas[0]));
       dessin.appendChild(svg("line", {x1: xc, y1: yH + 9, x2: xc, y2: yB - 9, stroke: ici, "stroke-width": 2, "stroke-dasharray": "4 3"}));
     }
     dessiner();
@@ -2339,6 +2345,8 @@
   // L'horaire du Car Jaune, les marées de Saint-Gilles (choix de Gwenaël du
   // 21/11) : un tableau de deux lignes, comme une vraie fiche à lire.
   function supportQ10(sup) {
+    // (Lot B4-2, Q6 : le tableau du covoiturage.)
+    if (sup.type === "covoit") return covoitQ6(sup);
     const t = el("table", `horaire${sup.type === "maree" ? " maree" : ""}`);
     const l1 = el("tr");
     const l2 = el("tr");
@@ -3417,7 +3425,7 @@
   // Le cadran à trois aiguilles : la petite (encre), la grande (bleue), la
   // trotteuse (orange, fine, avec sa queue). `balaye` : les secondes
   // parcourues depuis le 12, en bleu pâle, « 15 s », « 30 s »… dehors.
-  function cadranSec(parent, cx, cy, R, {h = 10, m = 14, s = 0, balaye = 0, etiquettes = true, taille = 15, ticks = true} = {}) {
+  function cadranSec(parent, cx, cy, R, {h = 10, m = 14, s = 0, balaye = 0, etiquettes = true, taille = 15, ticks = true, trotteuse = true} = {}) {
     const pt = (a, r) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
     parent.appendChild(svg("circle", {cx, cy, r: R, fill: "#fff", stroke: ENCRE, "stroke-width": 3.5}));
     if (balaye) {
@@ -3452,12 +3460,15 @@
     parent.appendChild(svg("line", {x1: cx, y1: cy, x2: hx.toFixed(2), y2: hy.toFixed(2), stroke: ENCRE, "stroke-width": 6.5, "stroke-linecap": "round"}));
     const [mx, my] = pt((2 * Math.PI * (m + s / 60)) / 60, R * 0.8);
     parent.appendChild(svg("line", {x1: cx, y1: cy, x2: mx.toFixed(2), y2: my.toFixed(2), stroke: BLEU, "stroke-width": 4.2, "stroke-linecap": "round"}));
-    const as = (2 * Math.PI * s) / 60;
-    const [sx, sy] = pt(as, R * 0.9);
-    const [qx, qy] = pt(as + Math.PI, R * 0.2);
-    parent.appendChild(svg("line", {x1: qx.toFixed(2), y1: qy.toFixed(2), x2: sx.toFixed(2), y2: sy.toFixed(2), stroke: TROTTEUSE, "stroke-width": 2.2, "stroke-linecap": "round"}));
+    // (Lot B4-2c : sans trotteuse, l'horloge du bus de Q6.)
+    if (trotteuse) {
+      const as = (2 * Math.PI * s) / 60;
+      const [sx, sy] = pt(as, R * 0.9);
+      const [qx, qy] = pt(as + Math.PI, R * 0.2);
+      parent.appendChild(svg("line", {x1: qx.toFixed(2), y1: qy.toFixed(2), x2: sx.toFixed(2), y2: sy.toFixed(2), stroke: TROTTEUSE, "stroke-width": 2.2, "stroke-linecap": "round"}));
+    }
     parent.appendChild(svg("circle", {cx, cy, r: 5.5, fill: ENCRE}));
-    parent.appendChild(svg("circle", {cx, cy, r: 2.6, fill: TROTTEUSE}));
+    if (trotteuse) parent.appendChild(svg("circle", {cx, cy, r: 2.6, fill: TROTTEUSE}));
   }
   // La trotteuse de On te montre (chaque toucher : 15 s de plus ; au bout
   // du tour, la grande aiguille a avancé d'une minute). (Correctif B3-3 :
@@ -3497,6 +3508,15 @@
     const d = svg("svg", {viewBox: "0 0 160 160", class: "dessin d3-lire", role: "img", "aria-label": titre});
     // (Les chiffres à 22 dans le dessin : 14 px au moins au petit téléphone.)
     cadranSec(d, 80, 80, 76, {h, m, s, etiquettes: false, taille: 23});
+    return d;
+  }
+  // (Lot B4-2c) L'horloge du bus de Q6 : le cadran de D3 (les minutes
+  // graduées, les chiffres à 23 : 14 px au petit téléphone), deux aiguilles.
+  // L'horloge de Q10 (sans minutes, chiffres à 6,8 px dans la question) ne
+  // se lisait pas à la minute (« 9 h 57 »).
+  function horlogeQ6(h, m, titre = "L'horloge") {
+    const d = svg("svg", {viewBox: "0 0 160 160", class: "dessin d3-lire q6-horloge", role: "img", "aria-label": titre});
+    cadranSec(d, 80, 80, 76, {h, m, s: 0, etiquettes: false, taille: 23, trotteuse: false});
     return d;
   }
   // L'outil de « Quelle heure est-il ? » : les trois aiguilles et leur rôle
@@ -3923,6 +3943,11 @@
     else if (c && c.type === "cubes-v1") cubesV1(zone, c.a, {mode: "correction"});
     else if (c && c.type === "deux-v1") deuxV1(zone, [c.A, c.B], {mode: "correction", volumes: [c.vA, c.vB]});
     else if (c && c.type === "rect-q5") rectQ5(zone, c, {mode: "correction"});
+    // Lot B4-2 (D5, Q6) : la droite en vert, l'axe à arcs par l'heure pile,
+    // la frise avec ses durées.
+    else if (c && c.type === "droite-h") droiteHeures(zone, c, {mode: "correction"});
+    else if (c && c.type === "arcs") axeArcs(zone, c);
+    else if (c && c.type === "frise-q6") friseQ6(zone, c, {mode: "correction"});
     question.lignesB33.forEach((l, i) => {
       const d = el("div", "calcul-pb b33");
       if (Array.isArray(l)) {
@@ -4255,6 +4280,345 @@
     if (question.noteOutil) zone.appendChild(note);
   }
 
+  // ======================================================= lot B4-2 (palier 4)
+  // D4 « Jours, semaines, années, siècles », D5 « Les heures décimales
+  // usuelles », Q6 « Problèmes : horaires et durées ». Choix de Gwenaël du
+  // 22/11 (lot B4-2a) : la chaîne des paquets (D4), la double droite en
+  // quarts (D5), la frise des trajets (Q6). Décidé par Claude : le
+  // calendrier de On te montre (D4). Aucun dessin ne donne la réponse :
+  // l'outil de D4 n'a pas de nombres, la droite cache la graduation
+  // cherchée, la frise n'écrit pas les durées.
+  const FOND_B42 = "#d8f3f1";
+  const TOUCHE_B42 = "#8fdcd6";
+  const FOND_V_B42 = "#e5f7eb";
+  const TOUCHE_V_B42 = "#9fd9b4";
+  const GRIS_T = "#6c8494";
+  const txtB42 = (x, y, t, a = {}) => svg("text", Object.assign({x, y, "text-anchor": "middle", "font-size": 15.5, "font-weight": 900, fill: N}, a), t);
+
+  // D4 · la chaîne des paquets : les unités dans des cases, de la plus
+  // grande à la plus petite (chaque case à la largeur de son mot) ; entre
+  // deux cases, la taille du paquet (« 7 jours », « 24 h ») et une flèche
+  // vers la plus grande unité. aide : {unites, tailles, total}. "outil" :
+  // les unités et les paquets ; "montre" : sous les cases, le total, puis à
+  // chaque toucher un paquet fait (« 609 » → « 25 » et « 9 » → « 3 », « 4 »,
+  // « 9 »).
+  function chaineD4(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const unites = aide.unites;
+    const tailles = aide.tailles;
+    const n = unites.length;
+    const W = 330;
+    const avecValeurs = mode === "montre";
+    const H = avecValeurs ? 104 : 74;
+    const nb = t => gen().ecrire(BigInt(t) * 1000n);
+    // (Les textes à 16,5 : 14 px au moins dans une zone de 300 px.)
+    const T = 16.5;
+    const bws = unites.map(u => Math.max(58, u.length * 10.4 + 20));
+    const gap = (W - 8 - bws.reduce((a, b) => a + b, 0)) / Math.max(1, n - 1);
+    const boite = el("div", "dessin-boite");
+    zone.appendChild(boite);
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin d4-chaine${avecValeurs ? " avec-valeurs a-toucher" : ""}`, role: "img",
+      "aria-label": "La chaîne des paquets"});
+    boite.appendChild(dessin);
+    // Les états de On te montre : les valeurs sous les cases.
+    const etats = [];
+    if (avecValeurs) {
+      let vals = Array(n).fill(null);
+      vals[n - 1] = Number(aide.total);
+      etats.push(vals.slice());
+      for (let k = n - 2; k >= 0; k -= 1) {
+        const v = vals[k + 1];
+        vals[k] = Math.floor(v / tailles[k]);
+        vals[k + 1] = v % tailles[k];
+        etats.push(vals.slice());
+      }
+    }
+    let vus = 0;
+    function dessiner() {
+      dessin.textContent = "";
+      if (avecValeurs) dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      const fin = avecValeurs && vus >= etats.length - 1;
+      let x = 4;
+      unites.forEach((u, k) => {
+        const bw = bws[k];
+        dessin.appendChild(svg("rect", {x, y: 28, width: bw, height: 40, rx: 10, fill: fin ? FOND_V_B42 : FOND_B42, stroke: fin ? VERT : N, "stroke-width": 2.2}));
+        dessin.appendChild(txtB42(x + bw / 2, 54, carte().typo(u), {"font-size": T, fill: fin ? VERT : N}));
+        if (avecValeurs) {
+          const v = etats[vus][k];
+          if (v !== null) {
+            const neuf = vus > 0 && etats[vus - 1][k] !== v;
+            dessin.appendChild(txtB42(x + bw / 2, 94, nb(v), {"font-size": 19, fill: fin ? VERT : neuf ? BLEU : N}));
+          }
+        }
+        if (k < n - 1) {
+          const xa = x + bw + 3;
+          const xb = x + bw + gap - 3;
+          const ym = 48;
+          dessin.appendChild(svg("line", {x1: xb, y1: ym, x2: xa + 8, y2: ym, stroke: BLEU, "stroke-width": 2.4}));
+          dessin.appendChild(svg("path", {d: `M${xa} ${ym} l9 -5.5 v11 Z`, fill: BLEU}));
+          const unite = unites[k + 1];
+          dessin.appendChild(txtB42((xa + xb) / 2, 18, carte().typo(`${nb(tailles[k])} ${unite}`), {"font-size": T, fill: BLEU}));
+        }
+        x += bw + gap;
+      });
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const somme = el("div", "somme");
+    somme.appendChild(el("span", "touche", "touche la chaîne"));
+    boite.appendChild(somme);
+    dessin.setAttribute("tabindex", "0");
+    dessin.setAttribute("role", "button");
+    const toucher = () => {
+      if (vus >= etats.length - 1) return;
+      vus += 1;
+      dessiner();
+      if (vus >= etats.length - 1) { dessin.classList.remove("a-toucher"); somme.remove(); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < etats.length - 1, 600);
+  }
+
+  // D4 · On te montre : le calendrier (`jours` cases rangées par
+  // semaines) ; chaque toucher entoure une semaine (« 1 semaine » à
+  // droite) ; le dernier met le reste en orange (« 4 jours »).
+  function calendrierD4(zone, aide, fini = () => {}) {
+    const jours = Number(aide.jours);
+    // (Lot B4-2c : des cases de 33, pour des numéros à 16,5.)
+    const c = 33;
+    const x0 = 6;
+    const y0 = 22;
+    const lignesN = Math.ceil(jours / 7);
+    // (Lot B4-2c : les textes 14 → 16,5, la marge de droite 92 → 100 : à
+    // 360 × 640, les numéros tombaient à 12,9 px.)
+    const W = x0 * 2 + 7 * c + 100;
+    const H = y0 + lignesN * c + 4;
+    const pleines = Math.floor(jours / 7);
+    const reste = jours % 7;
+    const boite = el("div", "dessin-boite");
+    zone.appendChild(boite);
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: "dessin d4-cal a-toucher", role: "button", tabindex: "0", "aria-label": `Le calendrier de ${jours} jours`});
+    boite.appendChild(dessin);
+    let k = 0;
+    function dessiner() {
+      dessin.textContent = "";
+      dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      "LMMJVSD".split("").forEach((l, i) => dessin.appendChild(txtB42(x0 + i * c + c / 2, 16, l, {"font-size": 16.5, fill: GRIS_T})));
+      const fin = k >= pleines;
+      for (let j = 0; j < jours; j += 1) {
+        const r = Math.floor(j / 7);
+        const i = j % 7;
+        const fond = r < k ? TOUCHE_B42 : fin && r >= pleines ? "#ffe2c2" : "#fff";
+        dessin.appendChild(svg("rect", {x: x0 + i * c, y: y0 + r * c, width: c, height: c, fill: fond, stroke: "#9bb3c4", "stroke-width": 1}));
+        dessin.appendChild(txtB42(x0 + i * c + c / 2, y0 + r * c + c / 2 + 5.5, String(j + 1), {"font-size": 16.5, "font-weight": 800}));
+      }
+      for (let r = 0; r < Math.min(k, pleines); r += 1) {
+        dessin.appendChild(svg("rect", {x: x0, y: y0 + r * c, width: 7 * c, height: c, fill: "none", stroke: N, "stroke-width": 2.4, rx: 3}));
+        dessin.appendChild(svg("text", {x: x0 + 7 * c + 6, y: y0 + r * c + c / 2 + 5.5, "font-size": 16.5, "font-weight": 900, fill: N}, `1${NB}semaine`));
+      }
+      if (fin && reste) {
+        dessin.appendChild(svg("text", {x: x0 + reste * c + 6, y: y0 + pleines * c + c / 2 + 5.5, "font-size": 16.5, "font-weight": 900, fill: OR2},
+          `${reste}${NB}jour${reste > 1 ? "s" : ""}`));
+      }
+    }
+    dessiner();
+    const somme = el("div", "somme");
+    somme.appendChild(el("span", "touche", "touche le calendrier"));
+    boite.appendChild(somme);
+    const toucher = () => {
+      if (k >= pleines) return;
+      k += 1;
+      dessiner();
+      if (k >= pleines) { dessin.classList.remove("a-toucher"); somme.remove(); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => k < pleines, 450);
+  }
+
+  // D5 · la double droite des heures en quarts (choix de Gwenaël du 22/11) :
+  // en haut 0 · 0,25 · 0,5 · 0,75 · 1 avec ¼ · ½ · ¾ au-dessus, en bas
+  // 0 · 15 · 30 · 45 · 60. `c` : la graduation cherchée (25, 50, 75) ;
+  // `sansFraction` : la fraction cachée à la graduation cherchée (quand elle
+  // serait la réponse). "outil" : tout, sauf « ? » à la graduation cherchée ;
+  // "correction" : tout, la graduation en vert ; "montre" : chaque toucher
+  // écrit un quart de plus, jusqu'à elle.
+  // (Un viewBox de 300 : les décimaux à 15,5 restent à 14 px au moins au
+  // petit iPhone ; dans un viewBox de 340, ils tombaient à 13,7 px.)
+  function droiteQuartsD5(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const c = Number(aide.c);
+    const k0 = Math.round(c / 25);
+    // (Lot B4-2c : la droite plus serrée en hauteur (124 → 114) et ses
+    // nombres plus grands (15,5 → 20) : dans la correction, limitée en
+    // hauteur, ils tombaient à 12,3 px, et à 10,5 px dans Je valide.)
+    const x0 = 18;
+    const x1 = 238;
+    const yF = 20;
+    const yH = 53;
+    const yB = 83;
+    const W = 300;
+    const H = 114;
+    const X = k => x0 + ((x1 - x0) * k) / 4;
+    const fr = ["0", "¼", "½", "¾", "1"];
+    const de = ["0", "0,25", "0,5", "0,75", "1"];
+    const mi = ["0", "15", "30", "45", "60"];
+    const boite = el("div", "dessin-boite droite2-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin droite2 droite-h d5-quarts${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": "La double droite des heures en quarts"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let vus = mode === "montre" ? 0 : k0;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      [yH, yB].forEach(y => {
+        dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x1 + 12, y2: y, stroke: ENCRE, "stroke-width": 2.4}));
+        dessin.appendChild(svg("path", {d: `M${x1 + 14} ${y} l-8 -5 v10 Z`, fill: ENCRE}));
+      });
+      dessin.appendChild(svg("text", {x: x1 + 20, y: yH + 7, "font-size": 20, "font-weight": 900, fill: ENCRE}, aide.haut || "h"));
+      dessin.appendChild(svg("text", {x: x1 + 20, y: yB + 7, "font-size": 20, "font-weight": 900, fill: ENCRE}, aide.bas || "min"));
+      const trouve = mode === "correction" || (mode === "montre" && vus >= k0);
+      for (let k = 0; k <= 4; k += 1) {
+        const x = X(k);
+        [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: x, y1: y - 8, x2: x, y2: y + 8, stroke: ENCRE, "stroke-width": 2.4})));
+        const ici = k === k0;
+        // (On te montre : les quarts écrits jusqu'à la graduation touchée.)
+        if (mode === "montre" && k > vus && k !== 4 && k !== 0) continue;
+        const coul = ici ? (trouve ? VERT : BLEU) : mode === "montre" && k && k < 4 ? BLEU : ENCRE;
+        const cacheH = ici && !trouve && aide.sens === "min>h";
+        const cacheB = ici && !trouve && aide.sens !== "min>h";
+        const cacheF = ici && !trouve && (aide.sansFraction || cacheH);
+        if (k > 0 && k < 4 && !cacheF) dessin.appendChild(txtB42(x, yF, fr[k], {"font-size": 20, fill: ici ? coul : GRIS_T}));
+        dessin.appendChild(txtB42(x, yH - 12, cacheH ? "?" : de[k], {"font-size": ici ? 21 : 20, fill: cacheH ? ROUGE : coul}));
+        dessin.appendChild(txtB42(x, yB + 24, cacheB ? "?" : mi[k], {"font-size": ici ? 21 : 20, fill: cacheB ? ROUGE : coul}));
+        if (ici && (mode !== "montre" || trouve)) {
+          [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: x, y1: y - 9, x2: x, y2: y + 9, stroke: coul, "stroke-width": 2.8})));
+          dessin.appendChild(svg("line", {x1: x, y1: yH + 9, x2: x, y2: yB - 9, stroke: coul, "stroke-width": 2, "stroke-dasharray": "4 3"}));
+        }
+      }
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche la droite");
+    boite.appendChild(note);
+    const toucher = () => {
+      if (vus >= k0) return;
+      vus += 1;
+      dessiner();
+      if (vus >= k0) { note.remove(); dessin.classList.remove("a-toucher"); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < k0, 450);
+  }
+
+  // Q6 · la frise des trajets (choix de Gwenaël du 22/11) : une barre par
+  // trajet sur le même axe des heures, les heures piles en pointillé, le
+  // nom à gauche. aide : {trajets: [[nom, départ, arrivée]], limite}.
+  // "outil" : les barres seules (les durées proches : la frise ne donne pas
+  // la réponse) ; "correction" : la durée en vert dans chaque barre (ou à
+  // côté, si elle n'y tient pas) ; `sansDurees` et `bon` : le bon trajet en
+  // vert ; "montre" : chaque toucher écrit une durée.
+  function friseQ6(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const trajets = aide.trajets;
+    const W = 330;
+    const x0 = 70;
+    const x1 = 322;
+    // (Des rangées de 22 : l'outil tient sous la question du tableau au
+    // petit iPhone.)
+    const hL = 22;
+    // (Lot B4-2c : l'heure limite écrite 2 plus bas : son haut sortait du
+    // dessin.)
+    const y0 = aide.limite ? 20 : 1;
+    const H = y0 + trajets.length * hL + 21;
+    const de = Math.min(...trajets.map(t => t[1])) - 8;
+    const a = Math.max(...trajets.map(t => t[2])) + 8;
+    const X = t => x0 + ((t - de) / (a - de)) * (x1 - x0);
+    const boite = el("div", "dessin-boite");
+    zone.appendChild(boite);
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin q6-frise${mode === "montre" ? " a-toucher" : ""}`, role: "img", "aria-label": "La frise des trajets"});
+    boite.appendChild(dessin);
+    const dt = t => {
+      const h = Math.floor(t / 60);
+      const m = t % 60;
+      return h ? (m ? `${h}${NB}h${NB}${m}${NB}min` : `${h}${NB}h`) : `${m}${NB}min`;
+    };
+    const ht = t => heureT(t);
+    let vus = mode === "montre" ? 0 : trajets.length;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      for (let h = Math.ceil(de / 60) * 60; h <= a; h += 60) {
+        dessin.appendChild(svg("line", {x1: X(h), y1: y0, x2: X(h), y2: H - 20, stroke: "#b9c8d3", "stroke-width": 1.6, "stroke-dasharray": "3 3"}));
+        dessin.appendChild(txtB42(X(h), H - 5, `${h / 60}${NB}h`, {"font-size": 16.5, fill: GRIS_T}));
+      }
+      if (aide.limite) {
+        const xl = X(aide.limite);
+        dessin.appendChild(svg("line", {x1: xl, y1: 18, x2: xl, y2: H - 20, stroke: ROUGE, "stroke-width": 2, "stroke-dasharray": "5 3"}));
+        dessin.appendChild(txtB42(Math.min(W - 38, Math.max(38, xl)), 16, ht(aide.limite), {"font-size": 16.5, fill: ROUGE}));
+      }
+      trajets.forEach(([nom, d, f], k) => {
+        const y = y0 + k * hL;
+        const vert = mode === "correction" && (aide.sansDurees ? k === aide.bon : true);
+        dessin.appendChild(svg("text", {x: x0 - 6, y: y + 16, "text-anchor": "end", "font-size": 16.5, "font-weight": 900, fill: N}, nom));
+        dessin.appendChild(svg("rect", {x: X(d), y: y + 2, width: X(f) - X(d), height: 18, rx: 4,
+          fill: vert ? FOND_V_B42 : mode === "correction" ? "#eef3f7" : TOUCHE_B42, stroke: vert ? VERT : N, "stroke-width": vert ? 2 : 1.4}));
+        const ecrit = (mode === "correction" && !aide.sansDurees) || (mode === "montre" && k < vus);
+        if (!ecrit) return;
+        const t = dt(f - d);
+        const besoin = t.length * 9.4 + 6;
+        const larg = X(f) - X(d);
+        const attrs = {"font-size": 16.5, fill: mode === "montre" ? BLEU : VERT};
+        if (besoin <= larg) dessin.appendChild(txtB42((X(d) + X(f)) / 2, y + 16, t, attrs));
+        else if (X(f) + 4 + besoin <= W) dessin.appendChild(txtB42(X(f) + 4, y + 16, t, Object.assign({"text-anchor": "start"}, attrs)));
+        else dessin.appendChild(txtB42(X(d) - 4, y + 16, t, Object.assign({"text-anchor": "end"}, attrs)));
+      });
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const somme = el("div", "somme");
+    somme.appendChild(el("span", "touche", "touche la frise"));
+    boite.appendChild(somme);
+    dessin.setAttribute("tabindex", "0");
+    dessin.setAttribute("role", "button");
+    const toucher = () => {
+      if (vus >= trajets.length) return;
+      vus += 1;
+      dessiner();
+      if (vus >= trajets.length) { dessin.classList.remove("a-toucher"); somme.remove(); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < trajets.length, 500);
+  }
+
+  // Q6 · le tableau du covoiturage (S004 p. 17) : Conducteur · Départ ·
+  // Arrivée · Prix, les prénoms centrés.
+  function covoitQ6(sup) {
+    const t = el("table", "horaire covoit");
+    const corps = el("tbody");
+    const tete = el("tr");
+    ["", "Départ", "Arrivée", "Prix"].forEach(h => tete.appendChild(el("th", "", h)));
+    corps.appendChild(tete);
+    sup.lignes.forEach(([nom, d, a, p]) => {
+      const r = el("tr");
+      r.append(el("th", "nom", nom), el("td", "", heureT(d)), el("td", "", heureT(a)), el("td", "", carte().typo(`${p} €`)));
+      corps.appendChild(r);
+    });
+    t.appendChild(corps);
+    t.setAttribute("aria-label", "Le tableau du covoiturage");
+    return t;
+  }
+
+  // L'outil des étapes du lot B4-2 : la chaîne (D4), la frise (Q6), la note
+  // dessous.
+  function outilB42(zone, question) {
+    if (question.outil === "chaine-d4") chaineD4(zone, question.chaineD4);
+    else if (question.outil === "frise-q6") friseQ6(zone, question.friseQ6);
+    if (question.noteOutil) zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -4343,6 +4707,10 @@
     if (aide.type === "calcul-a3") return calculA3(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "cubes-v1") return cubesV1(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "rect-q5") return rectQ5(zone, aide, {mode: "montre", fini: f});
+    // Lot B4-2 (D4, Q6) : la chaîne, le calendrier, la frise.
+    if (aide.type === "chaine-d4") return chaineD4(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "calendrier-d4") return calendrierD4(zone, aide, f);
+    if (aide.type === "frise-q6") return friseQ6(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
     return null;
   }
@@ -4518,6 +4886,8 @@
     }
     // Lot B3-2 (A1, A2, C9).
     if (["carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(question.outil)) { outilB32(zone, question); return; }
+    // Lot B4-2 (D4, Q6).
+    if (["chaine-d4", "frise-q6"].includes(question.outil)) { outilB42(zone, question); return; }
     // Lot B4-1 (A3, V1, Q5).
     if (["regroupe-a3", "calcul-a3", "cubes-v1", "deux-v1", "rect-q5"].includes(question.outil)) { outilB41(zone, question); return; }
     // Lot B3-3 (D3, Q3, Q4).
@@ -4754,7 +5124,7 @@
     return s;
   }
 
-  return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({chaineD4, calendrierD4, friseQ6, droiteQuartsD5, horlogeQ6, tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9,
     trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33,
     regroupeA3, calculA3, cubesV1, cubesQuestion, deuxV1, rectQ5});
