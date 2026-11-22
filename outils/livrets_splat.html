@@ -137,7 +137,12 @@ html.js .panneau[hidden]{display:none}
 /* les livrets « tablette » du monde 4 : la couverture est en largeur */
 .liv .couv.paysage{max-width:280px}
 .liv .corps{padding:12px 15px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
-.liv .titre{display:flex;align-items:center;justify-content:space-between;gap:6px 10px;flex-wrap:wrap}
+/* (22/11/2026) la pastille des fiches TOUJOURS sous le titre, dans toutes les cartes, sur ordinateur
+   et sur téléphone. Avant, elle était à droite et passait dessous seulement quand le titre était long
+   (« Échauffement », « Deuxième tour 1 », « Le schéma en barres » au téléphone) : les boutons de cette
+   carte tombaient plus bas que ceux des voisines, et un même monde mélangeait les deux. Les boutons ne
+   sont pas calés en bas de la carte : ouvrir « Le corrigé » ferait descendre ceux des voisines. */
+.liv .titre{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:6px}
 .liv h3{margin:0;font-size:20px;line-height:1.15;color:#063b7a}
 .liv .plage{display:inline-block;font-size:13px;font-weight:800;color:var(--c-fonce);white-space:nowrap;
   background:var(--c-clair);border:1px solid var(--c-bord);border-radius:999px;padding:3px 11px}
