@@ -615,8 +615,8 @@ test("conflit de classe (point 1) — un autre onglet a changé la 405 : « avan
   const modifier = api.slice(api.indexOf("case 'classes.modifier':"), api.indexOf("case 'classes.supprimer':"));
   assert.match(modifier, /avant_de_classe_recu\(\$corps\['avant'\]\)/);
   assert.match(modifier, /'SELECT \* FROM classes WHERE id = \?' \. pour_mise_a_jour\(\$pdo\)/, "la ligne verrouillée");
-  assert.match(modifier, /if \(\$avant !== null && !meme_etat_de_classe\(\$avant, \$ligne, \$enPlus\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['conflit' => true/); // (lot B3 : la liste du jour se compare avec les portes de quelques élèves)
-  assert.match(modifier, /\], 409\);/);
+  assert.match(modifier, /if \(\$avant !== null && !meme_etat_de_classe\(\$avant, \$ligne, \$ajoutsEleves\)\) \{\s*transaction_annuler\(\$pdo\);\s*return \['conflit' => true/); // (lot B3 : la liste du jour se compare avec ce que quelques élèves ont en plus)
+  assert.match(modifier, /\](?: \+ portes_pour_la_page\(\$resultat\['ligne'\], \$resultat\['ajouts'\]\))?, 409\);/); // (lot B3, correctif : avec les portes du jour)
   assert.doesNotMatch(modifier, /CREATE TRIGGER/);
 });
 
@@ -746,7 +746,9 @@ test("relecture bornée (point 4) — le tableau qui ne répond pas après l'éc
   assert.ok(tableau[0].signal instanceof AbortSignal && tableau[0].signal.aborted, "le tableau a reçu le signal, et il a été coupé");
   assert.equal(v.f.etat().reglageEnCours, false);
   assert.deepEqual(message(v), ["Enregistré : Lucas D. La vérification n’a pas pu se faire : recharge la page pour voir l’état.", "message erreur", false]);
-  assert.deepEqual(v.f.etat().eleves.find(e => e.id === 16).ajouts, {splat: {mondes: [3]}}, "la page garde l'ancien état (rien de relu) — son prochain « avant » est périmé, le serveur tranchera");
+  // Lot B3, correctif Codex (point 6) : la réponse de l'écriture n'est plus jetée — la page tient ce qui
+  // est écrit même si la relecture échoue, et son prochain « avant » est juste.
+  assert.deepEqual(v.f.etat().eleves.find(e => e.id === 16).ajouts, {}, "la page tient ce que le serveur a répondu (rien de relu)");
   // Le moteur qui ne finit pas de se charger est coupé aussi.
   const m = reel({delai: 60, appli: "coffres"});
   m.serveur.moteurLent(true);
@@ -926,7 +928,8 @@ test("nettoyage (point 7) — « Ouvrir à toute la 405 » et « Régler SPLAT! 
   r.f.poser({appli: "splat"});
   r.f.poserQuiVoit();
   assert.equal(r.$("regler-appli-mot").textContent, "Régler SPLAT!");
-  const outils = new Function("$", "quitterImpressions", `${constantes}\n${fonction("viderZones")}\n${fonction("viderLaClasse")}\nreturn {viderZones, viderLaClasse, ZONES_TEXTE, ZONES_DE_LA_CLASSE};`)(r.$, () => {});
+  // (Lot B3, correctif Codex point 13 : la carte « Aujourd'hui » a son propre ménage, viderCarteJour, joué par tests/suivi-b3-aujourdhui.)
+  const outils = new Function("$", "quitterImpressions", "viderCarteJour", `${constantes}\n${fonction("viderZones")}\n${fonction("viderLaClasse")}\nreturn {viderZones, viderLaClasse, ZONES_TEXTE, ZONES_DE_LA_CLASSE};`)(r.$, () => {}, () => {});
   for (const id of ["af-toute", "regler-appli-mot"]) {
     assert.ok(outils.ZONES_TEXTE.includes(id), `${id} dans ZONES_TEXTE`);
     assert.ok(outils.ZONES_DE_LA_CLASSE.includes(id), `${id} vidé aussi quand la classe part`);

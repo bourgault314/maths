@@ -305,7 +305,10 @@ const FONCTIONS = ["el", "messager", "raisonDe", "nomAffiche", "ordreDeLaFeuille
   "ouvrirRegler", "fermerRegler", "caseACocher", "grilleDesEleves", "dessinerRegler", "casesDeLaClasse", "lignePlus",
   "direQuiVoit", "changementsDeLaClasse", "avantDeLaClasse", "poserEtatDeClasse", "poserAccesDeLEleve", "ajoutsCanoniques",
   "memesAjouts", "classeConforme", "gestesDe", "occuperRegler", "appelBorne", "relireBornee", "enregistrerRegler",
-  "ouvrirATouteLaClasse", "rafraichirApresVerrou"];
+  "ouvrirATouteLaClasse", "rafraichirApresVerrou",
+  // Lot B3, correctif Codex (point 6) : les réponses de classes.modifier et de
+  // eleves.acces portent les portes du jour ; elles sont posées sur la page.
+  "clesLues", "poserPortesDeClasse", "reporterAccesDeLaListe"];
 
 // options : classe, eleves, droit ("proprietaire" | "ecriture" | "lecture"),
 // appli (l'onglet regardé), reponses (ce que « demander » répond, dans

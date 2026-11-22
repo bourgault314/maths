@@ -411,9 +411,15 @@ try {
     grid-column: 2; grid-row: 1; width: auto; text-align: right; font-size: 14px; line-height: 20px; white-space: nowrap;
     color: rgba(255, 255, 255, .82); }
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte strong { display: inline; font-size: 16px; color: #fff; }
-  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 1 / -1; grid-row: 2; justify-content: center; --ecart: 8px; }
-  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 46px; gap: 9px; }
-  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 38px; height: 38px; background: transparent; border-color: rgba(255, 255, 255, .5); }
+  /* Correctif après la relecture Codex (point 14) : la largeur d'un jour
+     (--jour) et celle d'un rond (--rond) sont fixées, et les jours ne
+     rétrécissent pas (flex: none) — le trait (--ecart = --jour - --rond) va
+     donc toujours exactement d'un rond au suivant. Avant, à 320 px, les jours
+     rétrécissaient dans la rangée et le trait de 6 px mordait sur les ronds. */
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 1 / -1; grid-row: 2; justify-content: center;
+    --jour: 46px; --rond: 38px; --ecart: calc(var(--jour) - var(--rond)); }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { flex: none; width: var(--jour); gap: 9px; }
+  #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: var(--rond); height: var(--rond); background: transparent; border-color: rgba(255, 255, 255, .5); }
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .avenir .case-jour { border-color: rgba(255, 255, 255, .32); }
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .fait .case-jour { background: #08aaa5; border-color: #08aaa5; }
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .aujourdhui .case-jour { box-shadow: 0 0 0 2px var(--blue-dark), 0 0 0 4px var(--orange); }
@@ -421,26 +427,22 @@ try {
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .lettre { font-size: 13px; color: rgba(255, 255, 255, .78); }
   #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .aujourdhui .lettre { color: #fff; }
   @media (max-width: 359px) {
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --ecart: 6px; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 38px; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 32px; height: 32px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --jour: 36px; --rond: 30px; }
   }
   @media (min-width: 900px) {
     #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine {
       grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;
       column-gap: 28px; padding: 22px 30px; }
     #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine h2 { font-size: 22px; line-height: 1.2; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 2; grid-row: 1; --ecart: 26px; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 76px; gap: 10px; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .case-jour { width: 50px; height: 50px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { grid-column: 2; grid-row: 1; --jour: 76px; --rond: 50px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { gap: 10px; }
     #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours .lettre { font-size: 15px; }
     #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte { grid-column: 3; font-size: 16px; line-height: 1.2; }
     #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-compte strong { display: block; font-size: 30px; }
   }
   /* Entre 900 et 1099 px, les jours se resserrent : le titre garde sa place. */
   @media (min-width: 900px) and (max-width: 1099px) {
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --ecart: 14px; }
-    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours li { width: 64px; }
+    #ecran-espace > .jour-zone:not(:has(> .jour-carte:not([hidden]))) + .semaine .semaine-jours { --jour: 64px; }
   }
 
   /* --- Les portes ------------------------------------------------------ */
@@ -753,6 +755,16 @@ try {
   }
   function ecrireCopie(copie) {
     try { stockage()?.setItem(CLE_COPIE, JSON.stringify(copie)); } catch (_) {}
+  }
+  // Correctif B3 (relecture Codex, point 10) : la liste du jour d'une réponse
+  // du serveur telle que la copie la garderait (lireCopie la relit ainsi) —
+  // pour savoir, au retour dans l'onglet, si la réponse change ce que la copie
+  // vient de dessiner. « Aucun » se garde tel quel.
+  function jourPourLaCopie(donnees) {
+    const portes = (donnees.applis || []).filter(appli => appli.disponible && appli.url).map(appli => appli.cle);
+    const jour = Array.isArray(donnees.jour) ? donnees.jour : [];
+    if (jour.length === 1 && jour[0] === "@aucun") return ["@aucun"];
+    return jour.filter(cle => typeof cle === "string" && portes.includes(cle)).slice(0, 3);
   }
   function garderCopie(code, donnees, jauges) {
     if (lireCode() !== code) return;
@@ -2568,6 +2580,16 @@ try {
       // garde l'instant de l'onglet.
       if (!silencieux) noterGeste(Date.now());
       const lecture = lireJauges(donnees, code).catch(() => ({}));
+      // Correctif B3 (relecture Codex, point 10) : au retour dans l'onglet, une
+      // réponse qui CHANGE la liste du jour de la copie (« Aucun » reçu, une
+      // autre liste) s'applique et se garde tout de suite, avec les jauges de
+      // la copie — avant, le bouton de la copie restait affiché tant qu'une
+      // jauge lente n'était pas lue. Les jauges fraîches complètent ensuite.
+      // Une réponse qui ne change pas la liste : un seul redessin, comme avant.
+      if (copie && JSON.stringify(jourPourLaCopie(donnees)) !== JSON.stringify(copie.jour || [])) {
+        afficherEspace(donnees, code, copie.jauges);
+        garderCopie(code, donnees, copie.jauges);
+      }
       // Première entrée : les tuiles du haut (séance en direct, évaluation)
       // sont lues en même temps, pour arriver dans le même dessin.
       const pret = copie ? lecture

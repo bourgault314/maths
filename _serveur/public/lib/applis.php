@@ -795,10 +795,13 @@ function reglage_canonique(array $reglage): array
 // La page croit-elle encore ce que la ligne contient ? Comparé sous le
 // verrou de la ligne (classes.modifier), seulement sur ce que « avant »
 // nomme : la liste des applis si elle est donnée, et, appli par appli, les
-// réglages donnés — ceux des autres applis ne comptent pas. $enPlus : les
-// portes que quelques élèves ont en plus (portes_en_plus, lot B3) — la liste
-// du jour se compare telle que la classe la voit.
-function meme_etat_de_classe(array $avant, array $ligne, array $enPlus): bool
+// réglages donnés — ceux des autres applis ne comptent pas. $ajouts : les
+// colonnes eleves.ajouts des élèves de la classe (ajouts_de_la_classe, lot
+// B3) — la liste du jour se compare telle que la classe la voit. null : la
+// règle du B2 (correctif B3, point 2 de Codex : pendant le dépôt FTP, un
+// api/prof.php encore en B2 appelle cette fonction avec deux arguments — il
+// doit marcher, pas répondre 500).
+function meme_etat_de_classe(array $avant, array $ligne, ?array $ajouts = null): bool
 {
     if (array_key_exists('applis', $avant)) {
         if ($avant['applis'] !== applis_canoniques(explode(',', (string)($ligne['applis'] ?? '')))) return false;
@@ -810,7 +813,7 @@ function meme_etat_de_classe(array $avant, array $ligne, array $enPlus): bool
         }
     }
     if (array_key_exists('jour', $avant)) {
-        if ($avant['jour'] !== jour_de_classe($ligne, $enPlus)) return false;
+        if ($avant['jour'] !== jour_de_classe($ligne, $ajouts)) return false;
     }
     return true;
 }
@@ -872,77 +875,143 @@ function jour_sans_bloc(array $jour): bool
     return $jour === [JOUR_AUCUN];
 }
 
+// Correctif B3 (relecture Codex, point 4) : « Mes cours » n'est une porte que
+// si au moins un chapitre est VRAIMENT affichable — ouvert, avec une fiche
+// ou son Entraînement brevet ouverts (cours_ouverts_a_l_eleve, la règle même
+// de ce que l'élève voit). Avant, un chapitre ouvert dont toutes les fiches
+// étaient fermées comptait : la liste proposait Mes cours, l'élève n'y
+// trouvait rien et sautait l'étape. $reglage : un réglage « cours »
+// ({chapitres, sans, avec}).
+function cours_affichable(array $reglage): bool
+{
+    return ($reglage['chapitres'] ?? []) !== [] && cours_ouverts_a_l_eleve($reglage) !== [];
+}
+
 // Les portes possibles d'une classe pour la liste du jour, dans l'ordre du
 // catalogue. $applis : les clés des applis de la classe ; $reglages : ses
-// réglages (reglages_lus) ; $enPlus : les clés que des élèves ont en plus.
+// réglages (reglages_lus) ; $enPlus : les clés que des élèves ont en plus
+// (portes_des_ajouts).
 function portes_du_jour(array $applis, array $reglages, array $enPlus): array
 {
     $applis = array_map('trim', $applis);
-    $chapitres = $reglages['cours']['chapitres'] ?? [];
     $portes = [];
     foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
         if (!appli_ouverte($cle)) continue;
-        $parClasse = in_array($cle, $applis, true) && ($cle !== 'cours' || $chapitres !== []);
+        $parClasse = in_array($cle, $applis, true) && ($cle !== 'cours' || cours_affichable($reglages['cours'] ?? []));
         if ($parClasse || in_array($cle, $enPlus, true)) $portes[] = $cle;
     }
     return $portes;
 }
 
-// Les mêmes, par la ligne de la classe (SELECT * : la colonne peut manquer).
-function portes_de_classe(array $classe, array $enPlus): array
+// Les portes d'une classe par sa ligne (SELECT * : la colonne peut manquer).
+// $ajouts : les colonnes eleves.ajouts de ses élèves (ajouts_de_la_classe) ;
+// [] = les portes de la classe seule, sans celles de quelques élèves.
+function portes_de_classe(array $classe, array $ajouts): array
 {
-    return portes_du_jour(explode(',', (string)($classe['applis'] ?? '')), reglages_de_classe($classe), $enPlus);
+    return portes_du_jour(explode(',', (string)($classe['applis'] ?? '')), reglages_de_classe($classe),
+        portes_des_ajouts($ajouts, $classe));
 }
 
 // Les clés que les élèves d'une classe ont EN PLUS, à partir de leurs colonnes
 // eleves.ajouts (lues par ajouts_lus : une appli fermée, un ajout abîmé ne
-// comptent pas ; un ajout « cours » a toujours au moins un chapitre).
-function portes_des_ajouts(array $colonnes): array
+// comptent pas). Un ajout « cours » ne compte que si l'un de ses chapitres est
+// affichable avec les fiches fermées et ouvertes de la CLASSE ($classe : sa
+// ligne, ou la ligne qu'elle aura après l'écriture), comme pour l'élève
+// (cours_de_classe_et_ajout).
+function portes_des_ajouts(array $colonnes, array $classe): array
 {
+    $coursClasse = reglages_de_classe($classe)['cours'] ?? [];
     $cles = [];
     foreach ($colonnes as $json) {
         if ($json === null || $json === '') continue;
-        foreach (array_keys(ajouts_lus((string)$json)) as $cle) $cles[$cle] = true;
+        foreach (ajouts_lus((string)$json) as $cle => $ajout) {
+            if ($cle === 'cours' && !cours_affichable(['chapitres' => $ajout['chapitres'] ?? []]
+                + array_intersect_key($coursClasse, ['sans' => true, 'avec' => true]))) continue;
+            $cles[$cle] = true;
+        }
     }
     return array_keys($cles);
 }
 
-// Lues en base. Une lecture simple, SANS verrou sur les lignes des élèves :
-// dans classes.modifier elle se fait sous le verrou de la classe, et
-// eleves.acces ne verrouille que l'élève — aucun ordre de verrous à tenir.
-function portes_en_plus(PDO $pdo, int $classeId): array
+// Lues en base : les colonnes eleves.ajouts des élèves de la classe. Une
+// lecture simple, SANS verrou sur les lignes des élèves : dans classes.modifier
+// elle se fait sous le verrou de la classe, et eleves.acces ne verrouille que
+// l'élève — aucun ordre de verrous à tenir. Sur MySQL, c'est la première
+// lecture cohérente de la transaction (ajouts_disponibles est demandé AVANT
+// la transaction) : l'instantané part d'après le verrou.
+function ajouts_de_la_classe(PDO $pdo, int $classeId): array
 {
     if (!ajouts_disponibles($pdo)) return [];
     $requete = $pdo->prepare('SELECT ajouts FROM eleves WHERE classe_id = ? AND ajouts IS NOT NULL');
     $requete->execute([$classeId]);
     $colonnes = $requete->fetchAll(PDO::FETCH_COLUMN);
     $requete->closeCursor();
-    return portes_des_ajouts($colonnes);
+    return $colonnes;
 }
 
 // Les portes d'UN élève, à partir de ce qu'il voit (acces_de_l_eleve) : ses
-// applis ; Mes cours seulement s'il a un chapitre.
+// applis ; Mes cours seulement s'il a un chapitre affichable.
 function portes_de_l_eleve(array $acces): array
 {
-    $chapitres = $acces['reglages']['cours']['chapitres'] ?? [];
-    return array_values(array_filter($acces['applis'] ?? [], fn($cle) => $cle !== 'cours' || $chapitres !== []));
+    return array_values(array_filter($acces['applis'] ?? [],
+        fn($cle) => $cle !== 'cours' || cours_affichable($acces['reglages']['cours'] ?? [])));
 }
 
-// Lecture INDULGENTE (ce qui sort de la base) : des clés d'applis ouvertes au
-// catalogue ET parmi $portes, sans doublon, trois au plus ; Mes cours seulement
-// en dernier. Une porte que plus personne n'a sort de la liste ici. « Aucun »
-// (exactement ["@aucun"]) passe tel quel.
-function jour_lu(?string $json, array $portes): array
+// Correctif B3 (Codex, points 1, 4 et 6) : ce que la carte « Aujourd'hui » du
+// professeur reçoit, calculé ICI (la page ne recopie pas la règle) : les
+// portes possibles (« portes » : la classe et quelques élèves) et celles de
+// la classe seule (« portes_classe » : sans compte, et le mode automatique).
+function portes_pour_la_page(array $classe, array $ajouts): array
 {
-    if ($json === null || $json === '') return [];
-    $brut = json_decode($json, true);
-    if (!is_array($brut) || !isset($brut['jour']) || !is_array($brut['jour']) || !array_is_list($brut['jour'])) return [];
-    if (jour_sans_bloc($brut['jour'])) return [JOUR_AUCUN];
-    $portes = array_map('trim', $portes);
+    return ['portes' => portes_de_classe($classe, $ajouts), 'portes_classe' => portes_de_classe($classe, [])];
+}
+
+// La même chose relue en base dans UN instantané (la ligne de la classe et
+// les ajouts de ses élèves, qui ont coexisté) : pour eleves.acces, APRÈS son
+// écriture — une lecture, sans verrou, hors de la transaction de l'élève (pas
+// de réécriture croisée, pas de second verrou). null : classe disparue.
+function portes_pour_la_page_en_base(PDO $pdo, int $classeId): ?array
+{
+    instantane_ouvrir($pdo);
+    try {
+        $requete = $pdo->prepare('SELECT * FROM classes WHERE id = ?');
+        $requete->execute([$classeId]);
+        $ligne = $requete->fetch();
+        $requete->closeCursor();
+        $portes = $ligne === false ? null : portes_pour_la_page($ligne, ajouts_de_la_classe($pdo, $classeId));
+    } finally {
+        instantane_fermer($pdo);
+    }
+    return $portes;
+}
+
+// La valeur rangée sous « jour », TELLE QUELLE : le JSON est lu en gardant ses
+// objets comme objets (correctif B3, Codex point 9 — json_decode(…, true)
+// faisait de {"0": "@aucun"} une liste, qui éteignait le bloc). null : pas de
+// clé « jour » (ou une colonne illisible).
+function jour_json(?string $json): mixed
+{
+    if ($json === null || $json === '') return null;
+    $brut = json_decode($json, false);
+    return $brut instanceof stdClass && property_exists($brut, 'jour') ? $brut->jour : null;
+}
+
+// La liste CANONIQUE d'une classe (correctif B3, Codex point 8) : la même pour
+// tous ceux qui la lisent, AVANT toute réduction aux portes — des clés
+// d'applis ouvertes au catalogue, sans doublon, les trois premières, Mes cours
+// seulement en dernier. Chacun (la classe, chaque élève) n'en garde ensuite
+// que ses portes, dans le même ordre : la liste d'un élève est toujours une
+// partie de celle que voit le professeur, et une quatrième étape ne remonte
+// jamais. « Aucun » (exactement ["@aucun"]) passe tel quel.
+function jour_canonique(?string $json): array
+{
+    $jour = jour_json($json);
+    if (!is_array($jour)) return [];   // un objet JSON n'est pas une liste
+    if (jour_sans_bloc($jour)) return [JOUR_AUCUN];
     $liste = [];
-    foreach ($brut['jour'] as $cle) {
+    foreach ($jour as $cle) {
         if (count($liste) >= JOUR_MAX) break;
-        if (!is_string($cle) || !appli_ouverte($cle) || !in_array($cle, $portes, true) || in_array($cle, $liste, true)) continue;
+        if (!is_string($cle) || !appli_ouverte($cle) || in_array($cle, $liste, true)) continue;
         $liste[] = $cle;
     }
     $place = array_search('cours', $liste, true);
@@ -953,21 +1022,48 @@ function jour_lu(?string $json, array $portes): array
     return $liste;
 }
 
-// La liste du jour d'une classe par sa ligne de la base (SELECT * : la colonne
-// peut manquer tant que migrer.php n'a pas été ouvert). $enPlus : les portes
-// que quelques élèves ont en plus (portes_en_plus ou portes_des_ajouts) —
-// demandé à chaque appel : l'oublier ferait sortir leurs étapes en silence.
-function jour_de_classe(array $classe, array $enPlus): array
+// Lecture INDULGENTE (ce qui sort de la base) : la liste canonique, réduite
+// aux portes données, dans son ordre. Une porte que plus personne n'a sort de
+// la liste ici. « Aucun » passe tel quel.
+function jour_lu(?string $json, array $portes): array
 {
-    return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null, portes_de_classe($classe, $enPlus));
+    $liste = jour_canonique($json);
+    if (jour_sans_bloc($liste)) return $liste;
+    $portes = array_map('trim', $portes);
+    return array_values(array_filter($liste, fn($cle) => in_array($cle, $portes, true)));
 }
 
-// Ce que reçoit UN élève : la liste de sa classe réduite à SES portes
-// ($acces : acces_de_l_eleve). Il n'apprend rien des portes des autres : une
-// étape qu'il n'a pas n'est pas dans sa réponse. « Aucun » passe tel quel.
+// La liste du jour d'une classe par sa ligne de la base (SELECT * : la colonne
+// peut manquer tant que migrer.php n'a pas été ouvert). $ajouts : les colonnes
+// eleves.ajouts de ses élèves (ajouts_de_la_classe) — les étapes que seuls
+// quelques élèves ont restent. null : la règle du B2 (les applis de la classe
+// seulement) — pour un api/*.php encore en B2 pendant le dépôt FTP (correctif
+// B3, Codex point 2) ; tout le code du lot passe ses ajouts (un test le garde).
+function jour_de_classe(array $classe, ?array $ajouts = null): array
+{
+    $json = isset($classe['reglages']) ? (string)$classe['reglages'] : null;
+    if ($ajouts === null) return jour_lu($json, explode(',', (string)($classe['applis'] ?? '')));
+    return jour_lu($json, portes_de_classe($classe, $ajouts));
+}
+
+// Ce que reçoit UN élève : la liste canonique de sa classe réduite à SES
+// portes ($acces : acces_de_l_eleve). Il n'apprend rien des portes des autres :
+// une étape qu'il n'a pas n'est pas dans sa réponse. « Aucun » passe tel quel.
 function jour_de_l_eleve(array $classe, array $acces): array
 {
     return jour_lu(isset($classe['reglages']) ? (string)$classe['reglages'] : null, portes_de_l_eleve($acces));
+}
+
+// Correctif B3 (Codex, point 3) : une page professeur d'AVANT ce lot (pas de
+// « avant.portes ») ne sait montrer ni « Aucun » ni une étape que seuls
+// quelques élèves ont : elle les retire de son brouillon sans le dire, et
+// enregistrer remplacerait la liste par ce qu'elle a cru voir. Vrai quand la
+// liste que la classe voit ($vue) est de celles-là : le serveur demande alors
+// de recharger la page. Les listes ordinaires (des portes de la classe)
+// restent permises à une page du B2.
+function jour_hors_d_une_page_b2(array $vue, array $portesClasse): bool
+{
+    return jour_sans_bloc($vue) || array_diff($vue, $portesClasse) !== [];
 }
 
 // Ce que le professeur envoie (classes.modifier) : lecture STRICTE, rien n'est
@@ -1003,23 +1099,30 @@ function jour_taille(array $jour, array $portes): array
 
 // La page était-elle en retard sur les portes ? Les étapes de la liste reçue
 // que la carte croyait possibles (« avant.portes ») et qui ne le sont plus
-// sous le verrou : une porte retirée ailleurs au dernier élève qui l'avait,
-// le dernier chapitre fermé… Non vide = 409 avec l'état vrai, au lieu d'un 400
-// qui se répéterait (comme le point 1 du correctif B2 pour les applis de la
-// classe). Sans « avant.portes » (une page d'avant ce lot), rien n'est périmé.
-function portes_perimees(array $jour, ?array $avant, array $portes): array
+// sous le verrou ($portes) : une porte retirée ailleurs au dernier élève qui
+// l'avait, le dernier chapitre fermé… Non vide = 409 avec l'état vrai, au lieu
+// d'un 400 qui se répéterait (comme le point 1 du correctif B2 pour les applis
+// de la classe). Sans « avant.portes » (une page d'avant ce lot), rien n'est
+// périmé. Correctif B3 (suggestion 16 de Codex) : $apres, les portes APRÈS
+// l'écriture — une étape qui le redevient (le même appel rouvre l'appli à la
+// classe et la choisit) n'est pas périmée : la demande est valable.
+function portes_perimees(array $jour, ?array $avant, array $portes, array $apres = []): array
 {
     if ($avant === null || !array_key_exists('portes', $avant) || jour_sans_bloc($jour)) return [];
-    return array_values(array_diff(array_intersect(array_filter($jour, 'is_string'), $avant['portes']), $portes));
+    return array_values(array_diff(array_intersect(array_filter($jour, 'is_string'), $avant['portes']), $portes, $apres));
 }
 
 // La liste telle qu'elle est RANGÉE (sans rien filtrer) : sert seulement à
 // savoir si la colonne doit être réécrite pour dire la liste effective.
-function jour_brut(?string $json): array
+// Correctif B3 (Codex, point 9) : rendue TELLE QUELLE, objet ou valeur fausse
+// compris — une clé « jour » de forme invalide ({"0": …}, null, un texte) ne
+// vaut jamais une liste, et la prochaine écriture de la classe la nettoie,
+// même quand sa valeur effective est vide. [] : pas de clé « jour ».
+function jour_brut(?string $json): mixed
 {
     if ($json === null || $json === '') return [];
-    $brut = json_decode($json, true);
-    return is_array($brut) && isset($brut['jour']) && is_array($brut['jour']) ? $brut['jour'] : [];
+    $brut = json_decode($json, false);
+    return $brut instanceof stdClass && property_exists($brut, 'jour') ? $brut->jour : [];
 }
 
 // La valeur de la colonne : les réglages des applis, et la liste du jour
@@ -1097,14 +1200,25 @@ function appli_ouverte(string $cle): bool
 // pour « non nommées », donc toutes ouvertes ; une restriction abîmée devenait
 // « tout ouvert ». Un réglage absent, lui, reste « non nommé » (T3). Rend
 // [cle => []] pour une appli entière, [cle => [nom => [numéros]]] sinon.
+//
+// Correctif B3 (relecture Codex, point 9) : le JSON est lu en gardant ses
+// objets comme objets. Une liste de numéros ou de chapitres doit être une
+// vraie LISTE JSON ; un objet à clés numériques ({"0": "4e-REL"}) à sa place
+// est abîmé et fait ignorer l'ajout (avant, il ouvrait le chapitre — et Mes
+// cours). Ce que ajouts_pour_la_base écrit n'a jamais cette forme. Gardé du lot
+// « Qui voit quoi » (testé) : « [] » vaut « {} », l'appli entière — json_encode
+// d'un tableau vide l'écrit ainsi ; l'élève la voit, et la porte se compte de
+// la même façon.
 function ajouts_lus(?string $json): array
 {
     if ($json === null || $json === '') return [];
-    $brut = json_decode($json, true);
-    if (!is_array($brut)) return [];
+    $brut = json_decode($json, false);
+    if (!$brut instanceof stdClass) return [];
     $sortie = [];
-    foreach ($brut as $cle => $ajoutBrut) {
-        if (!is_string($cle) || !appli_ouverte($cle) || !is_array($ajoutBrut)) continue;
+    foreach (get_object_vars($brut) as $cle => $ajoutObjet) {
+        if (!is_string($cle) || !appli_ouverte($cle) || !($ajoutObjet instanceof stdClass || $ajoutObjet === [])) continue;
+        // Ses champs : une liste JSON reste un tableau PHP, un objet reste un objet.
+        $ajoutBrut = $ajoutObjet === [] ? [] : get_object_vars($ajoutObjet);
         // L'appli Cours (lot « cours-appli-3 ») : seulement {"chapitres": [...]}
         // — jamais « {} » (l'appli entière, sans chapitre, n'ouvrirait rien de
         // lisible). Correctif après la relecture Codex (point 1) : la FORME est
@@ -1121,7 +1235,6 @@ function ajouts_lus(?string $json): array
             continue;
         }
         if ($ajoutBrut === []) { $sortie[$cle] = []; continue; }
-        if (array_is_list($ajoutBrut)) continue;
         $ajout = [];
         foreach (listes_declarees($cle) as $nom => $nombre) {
             if (!array_key_exists($nom, $ajoutBrut)) continue;
@@ -1325,9 +1438,12 @@ function cours_de_classe_et_ajout(array $classe, bool $parClasse, ?array $ajout)
 
 // Ce que le professeur reçoit pour chaque élève (tableau, eleves.acces) : les
 // clés et les réglages calculés — ni code ni donnée d'élève.
+// Correctif B3 (relecture Codex, point 4) : et ses portes pour la liste du
+// jour (portes_de_l_eleve) — la carte « Aujourd'hui » compte avec elles, sans
+// recopier en JavaScript la règle de Mes cours (un chapitre affichable).
 function acces_json(array $acces): array
 {
-    return ['applis' => $acces['applis'], 'reglages' => reglages_json($acces['reglages'])];
+    return ['applis' => $acces['applis'], 'reglages' => reglages_json($acces['reglages']), 'portes' => portes_de_l_eleve($acces)];
 }
 
 // ------------------------------------------- réglages d'un élève (lot 1 « la séance »)

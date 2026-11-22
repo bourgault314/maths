@@ -329,6 +329,33 @@ function eleve_pour_action(PDO $pdo, int $profId, mixed $eleveIdBrut, string $ac
     return $eleve;
 }
 
+// Correctif B3 (relecture Codex, point 6) : avec la réponse de eleves.acces,
+// les portes du jour de SA classe telles qu'elles sont après l'écriture —
+// relues dans un instantané (portes_pour_la_page_en_base), hors de la
+// transaction de l'élève : ni verrou de plus, ni réécriture de la classe. La
+// carte « Aujourd'hui » se met à jour même si la relecture du tableau échoue ;
+// « classe_id » dit à quelle classe elles appartiennent.
+function portes_de_la_classe_pour_reponse(PDO $pdo, array $eleve): array
+{
+    $classeId = (int)$eleve['classe_id'];
+    $portes = portes_pour_la_page_en_base($pdo, $classeId);
+    return $portes === null ? [] : ['classe_portes' => ['classe_id' => $classeId] + $portes];
+}
+
+// Correctif B3 (relecture Codex, point 12) : « @aucun » (et toute clé en
+// « @ ») n'est pas une activité de classe — refusée, pas filtrée en silence.
+const MESSAGE_CLE_RESERVEE = "« Aucun » n'est pas une activité : choisis les activités de la classe.";
+function applis_avec_cle_reservee(mixed $applis): bool
+{
+    foreach (is_array($applis) ? $applis : [$applis] as $cle) {
+        if (is_string($cle) && str_starts_with($cle, '@')) return true;
+    }
+    return false;
+}
+
+// Correctif B3 (relecture Codex, point 3) : le refus d'une page d'avant ce lot.
+const MESSAGE_PAGE_B2 = "Cette page date d'avant une mise à jour de Ma classe : recharge-la, puis refais ton choix.";
+
 // La restauration écrit dans la même ligne que l'appli de l'élève, avec le
 // même verrou qu'elle (lib/bd.php, lot 6) : la ligne est verrouillée le temps
 // de lire la version précédente et de l'écrire, et l'UPDATE ne passe que si
@@ -665,6 +692,7 @@ try {
             if ($possedees >= MAX_CLASSES_PAR_PROF) {
                 erreur("Tu as déjà " . MAX_CLASSES_PAR_PROF . " classes : supprime celles dont tu n'as plus besoin.", 409);
             }
+            if (applis_avec_cle_reservee($corps['applis'] ?? null)) erreur(MESSAGE_CLE_RESERVEE, 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($corps['applis'] ?? ['defi-tables'])));
             if ($applis === []) $applis = ['defi-tables'];
             $pdo->prepare('INSERT INTO classes (prof_id, libelle, applis, cree_le) VALUES (?, ?, ?, ?)')
@@ -686,6 +714,11 @@ try {
             $applisRecues = isset($corps['applis']);
             $libelle = texte($libelleRecu ? $corps['libelle'] : $classe['libelle'], 40);
             if ($libelleRecu && $libelle === '') erreur("Donne un nom à la classe.", 400);
+            // Correctif B3 (relecture Codex, point 12) : la clé réservée de
+            // « Aucun » n'est pas une activité. Refusée AVANT le filtre et le
+            // repli sur Défi tables : envoyer ["@aucun"] remplaçait SPLAT! par
+            // Défi tables.
+            if ($applisRecues && applis_avec_cle_reservee($corps['applis'])) erreur(MESSAGE_CLE_RESERVEE, 400);
             $applis = array_values(array_intersect(APPLIS_PROPOSABLES, (array)($applisRecues ? $corps['applis'] : explode(',', $classe['applis']))));
             if ($applis === []) $applis = ['defi-tables'];
             // Lot « splat-suivi-5 » : les réglages de la classe (aujourd'hui les
@@ -768,6 +801,11 @@ try {
                 $jour = $corps['jour'];
             }
             $avecReglages = reglages_disponibles($pdo);
+            // Correctif B3 (relecture Codex, fin de sa relecture) : la sonde de
+            // la colonne eleves.ajouts se fait AVANT la transaction — sur MySQL,
+            // la première lecture cohérente fixe l'instantané ; ce doit être
+            // celle des ajouts, APRÈS le verrou de la classe.
+            ajouts_disponibles($pdo);
             $classeId = (int)$classe['id'];
             $resultat = avec_reprise($pdo, function () use ($pdo, $classeId, $libelle, $applis, $reglages, $avant, $jour, $libelleRecu, $applisRecues, $avecReglages): array {
                 transaction_ouvrir($pdo);
@@ -779,15 +817,27 @@ try {
                     transaction_annuler($pdo);
                     return ['disparue' => true];
                 }
-                // Lot B3 : les portes que des élèves ont en plus. Lecture simple,
-                // sous le verrou de la CLASSE seulement (eleves.acces ne
-                // verrouille que l'élève : aucun ordre de verrous, aucun
-                // interblocage). Un ajout retiré juste après cette lecture ne
-                // réécrit pas la classe : l'étape disparaît à la lecture.
-                $enPlus = portes_en_plus($pdo, $classeId);
-                if ($avant !== null && !meme_etat_de_classe($avant, $ligne, $enPlus)) {
+                // Lot B3 : ce que des élèves ont en plus (leurs colonnes
+                // ajouts). Lecture simple, sous le verrou de la CLASSE seulement
+                // (eleves.acces ne verrouille que l'élève : aucun ordre de
+                // verrous, aucun interblocage). Un ajout retiré juste après
+                // cette lecture ne réécrit pas la classe : l'étape disparaît à la
+                // lecture.
+                $ajoutsEleves = ajouts_de_la_classe($pdo, $classeId);
+                if ($avant !== null && !meme_etat_de_classe($avant, $ligne, $ajoutsEleves)) {
                     transaction_annuler($pdo);
-                    return ['conflit' => true, 'ligne' => $ligne, 'en_plus' => $enPlus];
+                    return ['conflit' => true, 'ligne' => $ligne, 'ajouts' => $ajoutsEleves];
+                }
+                // Correctif B3 (Codex, point 3) : une page d'avant ce lot (pas
+                // de « avant.portes ») qui enregistre une liste alors que la
+                // classe est sur « Aucun », ou a une étape que seuls quelques
+                // élèves ont : elle ne savait pas les montrer — sa liste
+                // remplacerait ce qu'elle n'a pas vu. Rien d'écrit, elle doit
+                // être rechargée.
+                if ($jour !== null && !array_key_exists('portes', $avant)
+                    && jour_hors_d_une_page_b2(jour_de_classe($ligne, $ajoutsEleves), portes_de_classe($ligne, []))) {
+                    transaction_annuler($pdo);
+                    return ['ancienne_page' => true];
                 }
                 // Ce qui n'est pas envoyé est repris TEL QUEL de la ligne relue
                 // sous le verrou (lot B2 et son correctif, point 3) : enregistrer
@@ -801,8 +851,11 @@ try {
                 $nouveaux = $reglages === null ? null : reglages_recus($reglages, reglages_de_classe($ligne));
                 // Les portes possibles APRÈS l'écriture (lot B3) : les applis et
                 // les chapitres que la classe aura, plus ce que des élèves ont en
-                // plus.
-                $portesApres = portes_du_jour($applisFinales, $nouveaux ?? reglages_de_classe($ligne), $enPlus);
+                // plus. Correctif B3 (Codex, point 4) : calculées sur la ligne
+                // que la classe AURA — ses fiches fermées et ouvertes comptent
+                // aussi pour les chapitres donnés à un élève.
+                $ligneApres = ['applis' => $applisEcrites, 'reglages' => reglages_pour_la_base($nouveaux ?? reglages_de_classe($ligne), [])];
+                $portesApres = portes_de_classe($ligneApres, $ajoutsEleves);
                 // La liste du jour : la reçue, vérifiée contre ces portes
                 // (« avant » vient de dire que la page voyait juste : un refus ici
                 // est une vraie demande invalide, 400) ; sinon celle que voyait la
@@ -815,9 +868,12 @@ try {
                     // Lot B3 : une étape que la carte croyait possible
                     // (« avant.portes ») et qui ne l'est plus — retirée ailleurs
                     // au dernier élève qui l'avait : 409 avec l'état vrai.
-                    if (portes_perimees($jour, $avant, portes_de_classe($ligne, $enPlus)) !== []) {
+                    // Correctif (suggestion 16) : sauf si elle le redevient par
+                    // ce même appel (l'appli rouverte à la classe) — il passe.
+                    // Une porte fermée PAR cet appel reste un 400 (jour_recu).
+                    if (portes_perimees($jour, $avant, portes_de_classe($ligne, $ajoutsEleves), $portesApres) !== []) {
                         transaction_annuler($pdo);
-                        return ['conflit' => true, 'ligne' => $ligne, 'en_plus' => $enPlus];
+                        return ['conflit' => true, 'ligne' => $ligne, 'ajouts' => $ajoutsEleves];
                     }
                     try {
                         $nouveauJour = jour_recu($jour, $portesApres);
@@ -826,7 +882,7 @@ try {
                         return ['invalide' => $e->getMessage()];
                     }
                 } else {
-                    $nouveauJour = jour_taille(jour_de_classe($ligne, $enPlus), $portesApres);
+                    $nouveauJour = jour_taille(jour_de_classe($ligne, $ajoutsEleves), $portesApres);
                 }
                 // La colonne est réécrite quand les réglages ou la liste changent,
                 // et aussi quand la liste rangée ne dit plus la liste effective
@@ -845,9 +901,11 @@ try {
                             reglages_pour_la_base($nouveaux ?? reglages_de_classe($ligne), $nouveauJour), $classeId]);
                 }
                 transaction_valider($pdo);
-                return ['ecrit' => true, 'reglages' => $nouveaux, 'jour' => $nouveauJour];
+                return ['ecrit' => true, 'reglages' => $nouveaux, 'jour' => $nouveauJour,
+                    'portes' => portes_pour_la_page($ligneApres, $ajoutsEleves)];
             });
             if (isset($resultat['disparue'])) erreur("Introuvable.", 404);
+            if (isset($resultat['ancienne_page'])) erreur(MESSAGE_PAGE_B2, 400);
             if (isset($resultat['invalide'])) erreur($resultat['invalide'], 400);
             if (isset($resultat['conflit'])) {
                 // Rien n'est écrit. L'état actuel part avec le refus : la
@@ -858,15 +916,16 @@ try {
                     'erreur' => "La {$resultat['ligne']['libelle']} a été changée ailleurs : la fenêtre montre l'état actuel, refais ton réglage.",
                     'applis' => explode(',', (string)$resultat['ligne']['applis']),
                     'reglages' => reglages_json(reglages_de_classe($resultat['ligne'])),
-                    'jour' => jour_de_classe($resultat['ligne'], $resultat['en_plus']),
+                    'jour' => jour_de_classe($resultat['ligne'], $resultat['ajouts']),
                     // Lot B3 : les portes possibles vraies (des clés d'applis,
-                    // aucun élève nommé) — la carte retire celles qui n'y sont plus.
-                    'portes' => portes_de_classe($resultat['ligne'], $resultat['en_plus']),
-                ], 409);
+                    // aucun élève nommé) — la carte les prend telles quelles.
+                ] + portes_pour_la_page($resultat['ligne'], $resultat['ajouts']), 409);
             }
             journaliser($pdo, $profId, 'classes.modifier', 'classe', $classeId);
+            // Correctif B3 (Codex, point 7) : les portes après l'écriture partent
+            // aussi — la carte tient l'état vrai même si sa relecture échoue.
             repondre(['ok' => true] + ($resultat['reglages'] === null ? [] : ['reglages' => reglages_json($resultat['reglages'])])
-                + ['jour' => $resultat['jour']]);
+                + ['jour' => $resultat['jour']] + $resultat['portes']);
 
         case 'classes.supprimer':
             // Supprimer une classe efface des progressions : réservé au
@@ -1204,14 +1263,14 @@ try {
                     'erreur' => "Ce que voit $qui a changé ailleurs : la fenêtre est à jour, refais ton clic.",
                     'ajouts' => ajouts_json(ajouts_lus($resultat['en_base'])),
                     'acces' => acces_json(acces_de_l_eleve($eleve['classe'], $resultat['en_base'], reglages_eleve_de($pdo, (int)$eleve['id']))),
-                ], 409);
+                ] + portes_de_la_classe_pour_reponse($pdo, $eleve), 409);
             }
             journaliser($pdo, $profId, 'eleves.acces', 'eleve', $eleveId);
             repondre([
                 'ok' => true,
                 'ajouts' => ajouts_json($ajouts),
                 'acces' => acces_json(acces_de_l_eleve($eleve['classe'], ajouts_pour_la_base($ajouts), reglages_eleve_de($pdo, $eleveId))),
-            ]);
+            ] + portes_de_la_classe_pour_reponse($pdo, $eleve));
 
         case 'eleves.reglages':
             // Lot 1 « la séance » de Défi calcul (12/11/2026, planche 7) :
@@ -1294,19 +1353,37 @@ try {
             $avecAjouts = ajouts_disponibles($pdo);
             // Lot 1 « la séance » : de même pour eleves.reglages_eleve.
             $avecReglagesEleve = reglages_eleve_disponibles($pdo);
-            $requete = $pdo->prepare(
-                'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le, p.revision,
-                        (p.donnees_avant IS NOT NULL) AS restaurable' . ($avecAjouts ? ', e.ajouts' : '') . ($avecReglagesEleve ? ', e.reglages_eleve' : '') . '
-                 FROM eleves e
-                 LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
-                 WHERE e.classe_id = ?
-                 ORDER BY e.prenom = \'\', e.prenom, e.code'
-            );
-            $requete->execute([$appli, (int)$classe['id']]);
+            // Correctif B3 (relecture Codex, point 11) : la ligne de la classe
+            // et les élèves (leurs ajouts) sont lus dans UN instantané court —
+            // sinon la réponse pouvait réunir l'ancienne ouverture de SPLAT!
+            // (classe lue d'abord) et un Anzan donné ensuite (élèves lus
+            // après), deux états qui n'ont jamais coexisté. Une lecture, sans
+            // verrou : eleves.acces n'écrit toujours que sa propre ligne.
+            instantane_ouvrir($pdo);
+            try {
+                $relue = $pdo->prepare('SELECT * FROM classes WHERE id = ?');
+                $relue->execute([(int)$classe['id']]);
+                $ligneClasse = $relue->fetch();
+                $relue->closeCursor();
+                $requete = $pdo->prepare(
+                    'SELECT e.id, e.code, e.prenom, e.initiale, p.donnees, p.maj_le, p.revision,
+                            (p.donnees_avant IS NOT NULL) AS restaurable' . ($avecAjouts ? ', e.ajouts' : '') . ($avecReglagesEleve ? ', e.reglages_eleve' : '') . '
+                     FROM eleves e
+                     LEFT JOIN progressions p ON p.eleve_id = e.id AND p.appli = ?
+                     WHERE e.classe_id = ?
+                     ORDER BY e.prenom = \'\', e.prenom, e.code'
+                );
+                $requete->execute([$appli, (int)$classe['id']]);
+                $brutes = $requete->fetchAll();
+                $requete->closeCursor();
+            } finally {
+                instantane_fermer($pdo);
+            }
+            if ($ligneClasse === false) erreur("Introuvable.", 404);
+            $classe = ['droit' => $classe['droit']] + $ligneClasse;
             // Un code ouvre l'appli comme l'élève et permet de modifier sa
             // progression : un collègue en lecture seule ne le reçoit pas.
             $avecCodes = $classe['droit'] !== 'lecture';
-            $brutes = $requete->fetchAll();
             // Les journées gardées, pour le menu « Revenir à… » : le JOUR et le
             // NOMBRE de calculs, jamais les données (sept progressions par
             // élève, trente élèves, c'est plusieurs mégaoctets à chaque
@@ -1370,6 +1447,7 @@ try {
                     $lignes[count($lignes) - 1]['ouvertes'] = $ouvertes === [] ? new stdClass() : $ouvertes;
                 }
             }
+            $ajoutsEleves = $avecAjouts ? array_values(array_filter(array_column($brutes, 'ajouts'), fn($j) => $j !== null)) : [];
             repondre([
                 'ok' => true,
                 'classe' => [
@@ -1380,7 +1458,11 @@ try {
                     // Lot B2 : la liste du jour de Mon espace (vide = automatique).
                     // Lot B3 : telle que la classe la voit, avec les portes
                     // que quelques élèves ont en plus (déjà lues plus haut).
-                    'jour' => jour_de_classe($classe, portes_des_ajouts($avecAjouts ? array_column($brutes, 'ajouts') : [])),
+                    'jour' => jour_de_classe($classe, $ajoutsEleves),
+                    // Correctif B3 (Codex, points 1 et 4) : les portes de la
+                    // liste du jour, calculées ici (la classe et quelques
+                    // élèves ; la classe seule) — du même instantané.
+                ] + portes_pour_la_page($classe, $ajoutsEleves) + [
                     'droit' => $classe['droit'],
                     // 17/10/2026 : « ● Reprendre la séance en direct » quand
                     // une séance de la classe est restée ouverte.

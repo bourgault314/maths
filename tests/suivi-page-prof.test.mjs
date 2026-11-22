@@ -435,8 +435,11 @@ test("viderZones() vide toutes les zones annoncées, referme les boîtes", () =>
     noeud.close = () => { noeud.open = false; };
   });
   let impressionsQuittees = 0;
-  new Function("$", "ZONES_TEXTE", "ZONES_MESSAGE", "CHAMPS_A_VIDER", "BLOCS_A_CACHER", "quitterImpressions",
-    `${fonction("viderZones")}\nviderZones();`)(faux.$, ZONES_TEXTE, ZONES_MESSAGE, CHAMPS_A_VIDER, BLOCS_A_CACHER, () => { impressionsQuittees += 1; });
+  // (Lot B3, correctif Codex point 13 : la carte « Aujourd'hui » a son ménage à elle, viderCarteJour, joué par tests/suivi-b3-aujourdhui.)
+  let carteJourRangee = 0;
+  new Function("$", "ZONES_TEXTE", "ZONES_MESSAGE", "CHAMPS_A_VIDER", "BLOCS_A_CACHER", "quitterImpressions", "viderCarteJour",
+    `${fonction("viderZones")}\nviderZones();`)(faux.$, ZONES_TEXTE, ZONES_MESSAGE, CHAMPS_A_VIDER, BLOCS_A_CACHER, () => { impressionsQuittees += 1; }, () => { carteJourRangee += 1; });
+  assert.equal(carteJourRangee, 1, "la carte « Aujourd'hui » est rangée aussi");
   assert.equal(impressionsQuittees, 1, "lot 4b-bis : plus aucune feuille prête à sortir à l'imprimante après la déconnexion");
   ZONES_TEXTE.forEach(id => assert.equal(faux.$(id).textContent, "", `${id} vidé`));
   ZONES_MESSAGE.forEach(id => {

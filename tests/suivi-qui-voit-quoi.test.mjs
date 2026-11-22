@@ -74,5 +74,6 @@ test("l'écriture est stricte : appli ouverte du catalogue, réglages « liste �
     "seuls les réglages « liste de numéros » se donnent par élève — jamais un booléen (records)");
   const lus = applis.slice(applis.indexOf("function ajouts_lus("), applis.indexOf("function ajouts_recus("));
   assert.doesNotMatch(lus, /throw /, "la lecture de la base ne lève jamais");
-  assert.match(lus, /if \(!is_string\(\$cle\) \|\| !appli_ouverte\(\$cle\) \|\| !is_array\(\$ajoutBrut\)\) continue;/);
+  // Lot B3, correctif Codex (point 9) : le JSON lu en gardant ses objets ; un ajout est un objet (« [] » vaut « {} », gardé).
+  assert.match(lus, /if \(!is_string\(\$cle\) \|\| !appli_ouverte\(\$cle\) \|\| !\(\$ajoutObjet instanceof stdClass \|\| \$ajoutObjet === \[\]\)\) continue;/);
 });

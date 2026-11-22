@@ -5076,7 +5076,8 @@ verifier("qui-voit-quoi — par défaut rien en plus : le tableau rend « ajouts
     egal(3, count($t['json']['eleves']));
     foreach ($t['json']['eleves'] as $ligne) {
         egal([], $ligne['ajouts'], 'tableau : aucun ajout');
-        egal(['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]]]], $ligne['acces'], 'tableau : il voit ce que voit sa classe');
+        // (Correctif B3 : avec ses portes de la liste du jour.)
+        egal(['applis' => ['defi-tables', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2]]], 'portes' => ['defi-tables', 'splat']], $ligne['acces'], 'tableau : il voit ce que voit sa classe');
     }
     vrai(substr_count($t['texte'], '"ajouts":{}') === 3, 'un objet JSON « {} » par élève, pas une liste « [] »');
     $e = identite($qvq['lea']['code']);
@@ -5095,7 +5096,7 @@ verifier("qui-voit-quoi — eleves.acces range les ajouts, répond le rangé et 
     egal(200, $r['code'], $r['texte']);
     egal(['coffres' => [], 'splat' => ['mondes' => [2, 3]]], $r['json']['ajouts'], 'le rangé : trié, sans doublon');
     vrai(str_contains($r['texte'], '"ajouts":{"coffres":{},"splat":{"mondes":[2,3]}}'), 'Coffres entière s’écrit « {} »');
-    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], $r['json']['acces'], 'le calculé : classe + ajouts');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]], 'portes' => ['defi-tables', 'coffres', 'splat']], $r['json']['acces'], 'le calculé : classe + ajouts');
     vrai(!str_contains($r['texte'], $qvq['lea']['code']), 'jamais le code');
     egal('{"coffres":{},"splat":{"mondes":[2,3]}}', ajouts_en_base($lea), 'en base');
     egal(null, ajouts_en_base((int)$qvq['lucas']['id']), 'Lucas n’a rien');
@@ -5118,7 +5119,7 @@ verifier("qui-voit-quoi — eleves.acces range les ajouts, répond le rangé et 
     $parId = [];
     foreach ($t['json']['eleves'] as $ligne) $parId[(int)$ligne['id']] = $ligne;
     egal(['coffres' => [], 'splat' => ['mondes' => [2, 3]]], $parId[$lea]['ajouts']);
-    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]]], $parId[$lea]['acces']);
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['splat' => ['mondes' => [1, 2, 3]]], 'portes' => ['defi-tables', 'coffres', 'splat']], $parId[$lea]['acces']);
     egal([], $parId[(int)$qvq['lucas']['id']]['ajouts']);
     // L'onglet Coffres de la classe s'ouvre, même si la classe n'a pas Coffres : Léa y est.
     $tc = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $qvq['id'], 'appli' => 'coffres'], ['jeton' => $jetonS1]);
@@ -5203,8 +5204,8 @@ verifier("qui-voit-quoi 3c — « avant » égal : écrit ; égal dans un autre 
     egal(false, $r['json']['ok']);
     egal("Ce que voit Léa a changé ailleurs : la fenêtre est à jour, refais ton clic.", $r['json']['erreur'] ?? null, 'le message, avec le prénom');
     egal(['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [4]]], $r['json']['ajouts'], 'l’état rangé part avec le refus');
-    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2, 4]]]],
-        $r['json']['acces'], 'et le calculé');
+    egal(['applis' => ['defi-tables', 'coffres', 'splat'], 'reglages' => ['coffres' => ['niveaux' => [2], 'operations' => [1]], 'splat' => ['mondes' => [1, 2, 4]]],
+        'portes' => ['defi-tables', 'coffres', 'splat']], $r['json']['acces'], 'et le calculé');
     vrai(!str_contains($r['texte'], $qvq['lea']['code']), 'jamais le code');
     egal('{"coffres":{"niveaux":[2],"operations":[1]},"splat":{"mondes":[4]}}', ajouts_en_base($lea), 'rien n’est écrit');
     egal(0, (int)bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'eleves.acces'")->fetchColumn(), 'un 409 n’écrit pas au journal : rien n’a été fait');
@@ -7282,7 +7283,7 @@ verifier("anzan-suivi — Anzan s'enregistre et se relit par l'API élève, à s
     $r = donner((int)$eleves[0]['id'], ['flash-anzan' => new stdClass()], $jetonS1);
     egal(200, $r['code'], 'eleves.acces accepte « flash-anzan » : ' . $r['texte']);
     egal(['flash-anzan' => []], $r['json']['ajouts'], 'le rangé');
-    egal(['applis' => ['defi-tables', 'coffres', 'flash-anzan', 'splat'], 'reglages' => []], $r['json']['acces'], 'le calculé : la classe + Anzan');
+    egal(['applis' => ['defi-tables', 'coffres', 'flash-anzan', 'splat'], 'reglages' => [], 'portes' => ['defi-tables', 'coffres', 'flash-anzan', 'splat']], $r['json']['acces'], 'le calculé : la classe + Anzan');
     egal(['defi-tables', 'coffres', 'flash-anzan', 'splat'], array_column(identite($code)['json']['applis'], 'cle'), 'Rania voit Anzan, à sa place du catalogue');
     egal(['defi-tables', 'coffres', 'splat'], array_column(identite($eleves[1]['code'])['json']['applis'], 'cle'), 'sa camarade ne voit rien de plus');
     // Un réglage « liste » pour Anzan n'existe pas : refusé.
@@ -8947,22 +8948,26 @@ verifier("cours-ouvertures, correctif Codex 2 — l'écriture reprend l'élève 
 $classeB2 = null;
 // Correctif (relecture Codex, point 12) : « jour » part toujours avec
 // « avant.jour » — la liste rangée telle que la page la connaît.
-// Lot B3 : la liste se lit avec les portes que quelques élèves ont en plus.
-function en_plus_en_base(int $classeId): array
+// Lot B3 : la liste se lit avec ce que quelques élèves ont en plus (leurs
+// colonnes ajouts, comme ajouts_de_la_classe).
+function ajouts_classe_en_base(int $classeId): array
 {
     $lecture = bd_test()->prepare('SELECT ajouts FROM eleves WHERE classe_id = ?');
     $lecture->execute([$classeId]);
     $colonnes = $lecture->fetchAll(PDO::FETCH_COLUMN);
     $lecture->closeCursor();
-    return portes_des_ajouts($colonnes);
+    return $colonnes;
 }
 function jour_vu(int $id): array
 {
-    return jour_de_classe(classe_en_base($id), en_plus_en_base($id));
+    return jour_de_classe(classe_en_base($id), ajouts_classe_en_base($id));
 }
+// Comme la carte du lot B3 : « avant » dit aussi les portes qu'elle propose
+// (sans elles, le serveur reconnaît une page d'avant le lot — correctif B3,
+// point 3 de Codex).
 function ecrire_jour(int $id, array $changement, string $jeton): array
 {
-    return modifier_classe($id, $changement, $jeton, ['jour' => jour_vu($id)]);
+    return modifier_classe($id, $changement, $jeton, ['jour' => jour_vu($id), 'portes' => portes_de_classe(classe_en_base($id), ajouts_classe_en_base($id))]);
 }
 function jour_en_base(int $id): ?array
 {
@@ -9237,7 +9242,8 @@ verifier("aujourdhui-B3 — « Aucun » : [\"@aucun\"] seule est acceptée, mêl
     egal(null, classe_en_base($id)['reglages'], 'rien d’écrit');
     egal(400, modifier_classe($id, ['jour' => ['@aucun']], $jetonS1)['code'], 'sans « avant.jour » : refusé, comme toute liste');
     // La clé réservée n'ouvre rien : ni appli de classe, ni appli en plus.
-    egal(200, modifier_classe($id, ['applis' => ['@aucun', 'defi-tables', 'splat']], $jetonS1)['code']);
+    // Correctif (Codex, point 12) : refusée, pas filtrée en silence.
+    egal(400, modifier_classe($id, ['applis' => ['@aucun', 'defi-tables', 'splat']], $jetonS1)['code']);
     egal('defi-tables,splat', classe_en_base($id)['applis'], 'pas une appli de classe');
     $r = donner((int)$eleves[0]['id'], ['@aucun' => new stdClass()], $jetonS1);
     egal([400, "Application inconnue."], [$r['code'], $r['json']['erreur'] ?? null], 'pas une appli qu’on donne à un élève');
@@ -9270,7 +9276,7 @@ verifier("aujourdhui-B3 — « Aucun » : [\"@aucun\"] seule est acceptée, mêl
     egal(['@aucun'], jour_taille(['@aucun'], []), 'jamais taillée');
     egal([], portes_perimees(['@aucun'], ['portes' => ['@aucun', 'splat']], ['splat']), '« Aucun » n’est jamais une porte périmée');
     // Retour à l'automatique, puis à une liste.
-    egal(200, modifier_classe($id, ['jour' => []], $jetonS1, ['jour' => ['@aucun']])['code'], 'avec le bon « avant » : automatique');
+    egal(200, modifier_classe($id, ['jour' => []], $jetonS1, ['jour' => ['@aucun'], 'portes' => ['defi-tables', 'splat']])['code'], 'avec le bon « avant » : automatique');
     egal(200, modifier_classe($id, ['reglages' => ['splat' => ['mondes' => [1, 2, 3, 4, 5, 6]]]], $jetonS1)['code']);
     egal(null, classe_en_base($id)['reglages'], 'plus rien d’écrit');
 });
@@ -9289,7 +9295,7 @@ verifier("aujourdhui-B3 — les portes de quelques élèves : acceptées dans la
     egal(200, donner((int)$e1['id'], ['flash-anzan' => new stdClass()], $jetonS1)['code']);
     egal(200, donner((int)$e2['id'], ['cours' => ['chapitres' => ['4e-TRI', '4e-FRA']]], $jetonS1)['code']);
     egal(200, donner((int)$e3['id'], ['cours' => ['chapitres' => ['3e-PYT']]], $jetonS1)['code']);
-    egal(['defi-tables', 'flash-anzan', 'splat', 'cours'], portes_de_classe(classe_en_base($id), en_plus_en_base($id)), 'les portes possibles, dans l’ordre du catalogue');
+    egal(['defi-tables', 'flash-anzan', 'splat', 'cours'], portes_de_classe(classe_en_base($id), ajouts_classe_en_base($id)), 'les portes possibles, dans l’ordre du catalogue');
     $r = ecrire_jour($id, ['jour' => ['flash-anzan', 'defi-tables', 'cours']], $jetonS1);
     egal(200, $r['code'], 'la liste avec deux portes de quelques élèves — ' . $r['texte']);
     egal(['flash-anzan', 'defi-tables', 'cours'], $r['json']['jour']);
@@ -9323,7 +9329,7 @@ verifier("aujourdhui-B3 — les portes de quelques élèves : acceptées dans la
     // Les règles, sans passer par l'API.
     egal(['defi-tables', 'cours'], portes_de_l_eleve(['applis' => ['defi-tables', 'cours'], 'reglages' => ['cours' => ['chapitres' => ['4e-TRI']]]]));
     egal(['defi-tables'], portes_de_l_eleve(['applis' => ['defi-tables', 'cours'], 'reglages' => ['cours' => ['sans' => ['x']]]]), 'Cours sans chapitre : pas une porte');
-    egal(['flash-anzan', 'cours'], portes_des_ajouts(['{"flash-anzan":{}}', null, '', 'abîmé', '{"cours":{"chapitres":["4e-TRI"]}}', '{"soley":{}}', '{"cours":{"chapitres":[]}}', '{"cours":{}}']),
+    egal(['flash-anzan', 'cours'], portes_des_ajouts(['{"flash-anzan":{}}', null, '', 'abîmé', '{"cours":{"chapitres":["4e-TRI"]}}', '{"soley":{}}', '{"cours":{"chapitres":[]}}', '{"cours":{}}'], ['applis' => 'defi-tables']),
         'une appli fermée, un ajout abîmé, des chapitres vides ne font pas une porte');
     egal(['defi-tables', 'splat'], portes_du_jour(['splat', ' defi-tables', 'cours', 'soley', 'inconnue'], [], []), 'ordre du catalogue ; Cours sans chapitre, appli fermée ou inconnue : non');
     egal(['defi-tables', 'cours'], portes_du_jour(['defi-tables', 'cours'], ['cours' => ['chapitres' => ['4e-TRI']]], []));
@@ -9431,23 +9437,296 @@ verifier("aujourdhui-B3 — pas de réécriture croisée : eleves.acces ne touch
     vider_compteurs();
 });
 
-verifier("aujourdhui-B3 — les portes en plus se lisent sous le verrou de la classe, sans verrouiller les élèves ; l'élève passe par jour_de_l_eleve", function () {
+verifier("aujourdhui-B3 — les ajouts des élèves se lisent sous le verrou de la classe, sans verrouiller les élèves ; l'élève passe par jour_de_l_eleve", function () {
     $prof = file_get_contents(dirname(__DIR__) . '/public/api/prof.php');
     $modifier = substr($prof, strpos($prof, "case 'classes.modifier':"), strpos($prof, "case 'classes.supprimer':") - strpos($prof, "case 'classes.modifier':"));
-    $verrou = strpos($modifier, "'SELECT * FROM classes WHERE id = ?' . pour_mise_a_jour(\$pdo)");
-    $lecture = strpos($modifier, '$enPlus = portes_en_plus($pdo, $classeId);');
-    $avant = strpos($modifier, 'meme_etat_de_classe($avant, $ligne, $enPlus)');
-    vrai($verrou !== false && $lecture !== false && $avant !== false && $verrou < $lecture && $lecture < $avant, 'verrou de la classe, puis lecture des ajouts, puis « avant »');
-    vrai(strpos($modifier, 'transaction_ouvrir($pdo)') < $verrou, 'dans la transaction');
+    // Correctif (Codex, point 15) : chaque repère doit être TROUVÉ avant d'être
+    // comparé — false < 12 est vrai en PHP.
+    $reperes = [
+        'la sonde de la colonne, hors transaction' => strpos($modifier, "\n            ajouts_disponibles(\$pdo);"),
+        'la transaction' => strpos($modifier, 'transaction_ouvrir($pdo);'),
+        'le verrou de la classe' => strpos($modifier, "'SELECT * FROM classes WHERE id = ?' . pour_mise_a_jour(\$pdo)"),
+        'la lecture des ajouts' => strpos($modifier, '$ajoutsEleves = ajouts_de_la_classe($pdo, $classeId);'),
+        '« avant »' => strpos($modifier, 'meme_etat_de_classe($avant, $ligne, $ajoutsEleves)'),
+    ];
+    foreach ($reperes as $quoi => $position) vrai($position !== false, "trouvé : $quoi");
+    $positions = array_values($reperes);
+    egal($positions, array_values(array_unique($positions)), 'des repères distincts');
+    $triees = $positions; sort($triees);
+    egal($positions, $triees, 'dans cet ordre : ' . implode(', puis ', array_keys($reperes)));
     $applis = file_get_contents(dirname(__DIR__) . '/public/lib/applis.php');
-    $fonction = substr($applis, strpos($applis, 'function portes_en_plus('), 500);
+    $debut = strpos($applis, 'function ajouts_de_la_classe(');
+    vrai($debut !== false, 'ajouts_de_la_classe existe');
+    $fonction = substr($applis, $debut, strpos($applis, "\n}\n", $debut) - $debut);
     vrai(str_contains($fonction, "'SELECT ajouts FROM eleves WHERE classe_id = ? AND ajouts IS NOT NULL'"), 'une lecture simple');
     vrai(!str_contains($fonction, 'pour_mise_a_jour') && !str_contains($fonction, 'FOR UPDATE'), 'sans verrou sur les lignes des élèves : pas de second verrou, pas d’interblocage');
     $acces = substr($prof, strpos($prof, "case 'eleves.acces':"), strpos($prof, "case 'eleves.reglages':") - strpos($prof, "case 'eleves.acces':"));
     vrai(!str_contains($acces, 'UPDATE classes') && !str_contains($acces, 'FROM classes'), 'eleves.acces ne lit ni n’écrit la ligne de la classe sous son verrou');
+    $apresEcriture = strpos($acces, 'portes_de_la_classe_pour_reponse');
+    vrai($apresEcriture !== false && $apresEcriture > strpos($acces, 'transaction_valider($pdo);'), 'les portes de la classe : relues APRÈS l’écriture de l’élève, hors de sa transaction');
     $eleve = file_get_contents(dirname(__DIR__) . '/public/api/eleve.php');
     vrai(str_contains($eleve, "\$reponse['jour'] = jour_de_l_eleve(\$eleve, \$acces);"), 'la liste de l’élève : réduite à ses portes');
-    vrai(!str_contains($eleve, 'jour_de_classe') && !str_contains($eleve, 'portes_en_plus'), 'la page de l’élève ne lit jamais les ajouts des autres');
+    vrai(!str_contains($eleve, 'jour_de_classe') && !str_contains($eleve, 'ajouts_de_la_classe'), 'la page de l’élève ne lit jamais les ajouts des autres');
+});
+
+// Correctif B3 après la relecture Codex (22/11/2026) : un test par défaut.
+$b3c = null;
+function b3c_classe(string $libelle, array $applis, int $nombre, string $jeton): array
+{
+    $id = (int)appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => $libelle, 'applis' => $applis], ['jeton' => $jeton])['json']['id'];
+    $eleves = $nombre ? appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => $nombre], ['jeton' => $jeton])['json']['eleves'] : [];
+    return ['id' => $id, 'eleves' => $eleves];
+}
+
+verifier("aujourdhui-B3, correctif (Codex 15) — deux connexions : une écriture de la classe qui attendait son verrou voit l'Anzan donné pendant l'attente", function () use (&$jetonS1) {
+    vider_compteurs();
+    $c = b3c_classe('B3c-verrou', ['defi-tables', 'splat'], 2, $jetonS1);
+    $id = $c['id'];
+    $noa = (int)$c['eleves'][0]['id'];
+    $bd = bd_test();
+    // Une autre écriture de la classe tient son verrou (un autre onglet qui
+    // enregistre) ; pendant ce temps, le professeur enregistre une liste avec
+    // Anzan, que Noa reçoit à cet instant — validé AVANT que le verrou soit rendu.
+    if (pilote_test() === 'mysql') {
+        $bd->beginTransaction();
+        $bd->query('SELECT id FROM classes WHERE id = ' . $id . ' FOR UPDATE')->fetchAll();
+    } else {
+        $bd->exec('BEGIN IMMEDIATE');
+    }
+    $vol = lancer_appel_en_vol('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'jour' => ['flash-anzan', 'defi-tables'],
+        'avant' => ['jour' => [], 'applis' => ['defi-tables', 'splat'], 'portes' => ['defi-tables', 'flash-anzan', 'splat']]], $jetonS1);
+    $repondu = avancer_appel_en_vol($vol, 700);
+    $bd->prepare('UPDATE eleves SET ajouts = ? WHERE id = ?')->execute(['{"flash-anzan":{}}', $noa]);
+    if (pilote_test() === 'mysql') $bd->commit(); else $bd->exec('COMMIT');
+    $r = terminer_appel_en_vol($vol);
+    vrai(!$repondu, 'l’écriture attendait le verrou de la classe');
+    egal(200, $r['code'], 'les ajouts sont lus APRÈS le verrou : Anzan est une porte — ' . json_encode($r['json']));
+    egal(['flash-anzan', 'defi-tables'], jour_vu($id));
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+});
+
+verifier("aujourdhui-B3, correctif (Codex 2) — pendant le dépôt FTP, un api/*.php encore en B2 appelle les fonctions de la liste avec un argument de moins : elles répondent, à la règle du B2", function () {
+    $ligne = ['applis' => 'defi-tables,splat', 'reglages' => '{"jour":["flash-anzan","splat"]}'];
+    egal(['splat'], jour_de_classe($ligne), 'jour_de_classe($classe) : les applis de la classe seulement, comme au B2');
+    egal(['flash-anzan', 'splat'], jour_de_classe($ligne, ['{"flash-anzan":{}}']), 'avec les ajouts : l’étape d’un élève reste');
+    vrai(meme_etat_de_classe(['jour' => ['splat']], $ligne), 'meme_etat_de_classe($avant, $ligne) : comme au B2');
+    vrai(!meme_etat_de_classe(['jour' => ['splat']], $ligne, ['{"flash-anzan":{}}']), 'avec les ajouts : la liste vue compte l’étape d’un élève');
+    foreach (['jour_de_classe' => 1, 'meme_etat_de_classe' => 2] as $nom => $obligatoires) {
+        egal($obligatoires, (new ReflectionFunction($nom))->getNumberOfRequiredParameters(), "$nom : l’ancien appel reste permis");
+    }
+    // Le code du lot, lui, passe TOUJOURS les ajouts : sans eux, les étapes de quelques élèves sortiraient en silence.
+    foreach (['api/prof.php', 'api/eleve.php', 'api/cours.php', 'api/parcours.php', 'index.php', 'prof/index.php'] as $fichier) {
+        $source = (string)@file_get_contents(dirname(__DIR__) . '/public/' . $fichier);
+        preg_match_all('/\b(jour_de_classe|meme_etat_de_classe)\(([^;]*?)\)[;\s,]/', $source, $appels, PREG_SET_ORDER);
+        foreach ($appels as [, $nom, $arguments]) {
+            $voulus = $nom === 'jour_de_classe' ? 2 : 3;
+            egal($voulus, count(explode(',', $arguments)), "$fichier : $nom($arguments) passe les ajouts");
+        }
+    }
+});
+
+verifier("aujourdhui-B3, correctif (Codex 3) — une page d'avant le lot ne remplace ni « Aucun » ni une étape de quelques élèves ; ses listes ordinaires passent", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $b3c = b3c_classe('B3c-groupe', ['defi-tables', 'splat'], 4, $jetonS1);
+    $id = $b3c['id'];
+    [$e1] = $b3c['eleves'];
+    egal(200, ecrire_jour($id, ['jour' => ['@aucun']], $jetonS1)['code']);
+    // L'ancienne carte : « avant » sans « portes », la liste vide qu'elle croit voir.
+    $r = modifier_classe($id, ['jour' => []], $jetonS1, ['jour' => ['@aucun'], 'applis' => ['defi-tables', 'splat']]);
+    egal([400, "Cette page date d'avant une mise à jour de Ma classe : recharge-la, puis refais ton choix."], [$r['code'], $r['json']['erreur'] ?? null], 'sur « Aucun »');
+    egal(['@aucun'], jour_en_base($id), 'rien d’écrit');
+    $r = modifier_classe($id, ['jour' => ['splat']], $jetonS1, ['jour' => ['@aucun']]);
+    egal(400, $r['code'], 'ni une autre liste par-dessus « Aucun »');
+    // Une étape que seul un élève a.
+    egal(200, donner((int)$e1['id'], ['flash-anzan' => new stdClass()], $jetonS1)['code']);
+    egal(200, ecrire_jour($id, ['jour' => ['flash-anzan', 'defi-tables']], $jetonS1)['code']);
+    $r = modifier_classe($id, ['jour' => ['defi-tables']], $jetonS1, ['jour' => ['flash-anzan', 'defi-tables']]);
+    egal(400, $r['code'], 'une étape de quelques élèves : la page d’avant ne la voyait pas');
+    egal(['flash-anzan', 'defi-tables'], jour_en_base($id));
+    // Une liste ordinaire : la page du B2 enregistre comme avant.
+    egal(200, ecrire_jour($id, ['jour' => ['defi-tables']], $jetonS1)['code']);
+    $r = modifier_classe($id, ['jour' => ['splat', 'defi-tables']], $jetonS1, ['jour' => ['defi-tables'], 'applis' => ['defi-tables', 'splat']]);
+    egal(200, $r['code'], 'une liste de la classe, par une page du B2 — ' . $r['texte']);
+    egal(['splat', 'defi-tables'], jour_en_base($id));
+    // Les autres réglages d'une page du B2 (renommer, les applis) ne touchent pas à « Aucun ».
+    egal(200, ecrire_jour($id, ['jour' => ['@aucun']], $jetonS1)['code']);
+    egal(200, modifier_classe($id, ['libelle' => 'B3c-groupe'], $jetonS1, ['applis' => ['defi-tables', 'splat']])['code']);
+    egal(['@aucun'], jour_en_base($id));
+    egal(200, ecrire_jour($id, ['jour' => []], $jetonS1)['code']);
+    egal(200, donner((int)$e1['id'], new stdClass(), $jetonS1)['code']);
+});
+
+verifier("aujourdhui-B3, correctif (Codex 4) — Mes cours n'est une porte que si un chapitre est vraiment affichable, pour la classe comme pour un élève, avant et après l'écriture", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $id = $b3c['id'];
+    [$e1, $e2] = $b3c['eleves'];
+    $fermees = [];
+    foreach (cours_catalogue() as $c) {
+        if ($c['id'] !== '4e-REL') continue;
+        foreach ($c['fiches'] as $f) $fermees[] = $f['id'];
+        $fermees[] = $c['brevet']['id'];
+    }
+    vrai(count($fermees) > 2, 'les fiches du chapitre');
+    // Le chapitre 4e-REL en plus pour un élève ; toutes ses fiches et son brevet fermés à la classe.
+    egal(200, modifier_classe($id, ['reglages' => ['cours' => ['chapitres' => [], 'sans' => $fermees]]], $jetonS1)['code']);
+    egal(200, donner((int)$e1['id'], ['cours' => ['chapitres' => ['4e-REL']]], $jetonS1)['code']);
+    egal([], cours_de_l_eleve(acces_de_l_eleve(classe_en_base($id), ajouts_en_base((int)$e1['id']))['reglages']['cours'] ?? []), 'l’élève ne voit aucun chapitre');
+    $t = tableau_b3($id, $jetonS1);
+    egal(['defi-tables', 'splat'], $t['classe']['portes'], 'tableau : Mes cours n’est pas une porte');
+    $ligne = array_values(array_filter($t['eleves'], fn($e) => (int)$e['id'] === (int)$e1['id']))[0];
+    egal(['defi-tables', 'splat'], $ligne['acces']['portes'], 'ni pour cet élève');
+    vrai(in_array('cours', $ligne['acces']['applis'], true), 'même si l’appli Cours est dans ses applis');
+    $r = ecrire_jour($id, ['jour' => ['defi-tables', 'cours']], $jetonS1);
+    egal([400, "Activité pas ouverte à la classe."], [$r['code'], $r['json']['erreur'] ?? null], 'une liste avec Mes cours : refusée');
+    // Une fiche rouverte DANS LE MÊME APPEL que la liste : Mes cours devient une porte après l'écriture.
+    $r = modifier_classe($id, ['reglages' => ['cours' => ['chapitres' => [], 'sans' => array_slice($fermees, 1)]], 'jour' => ['defi-tables', 'cours']], $jetonS1,
+        ['jour' => jour_vu($id), 'portes' => ['defi-tables', 'splat']]);
+    egal(200, $r['code'], 'la fiche rouverte et la liste ensemble — ' . $r['texte']);
+    egal(['defi-tables', 'splat', 'cours'], $r['json']['portes'] ?? null, 'la réponse dit les portes d’après');
+    egal(['defi-tables', 'splat'], $r['json']['portes_classe'] ?? null, 'et celles de la classe seule');
+    egal(['defi-tables', 'cours'], identite($e1['code'])['json']['jour'], 'l’élève a Mes cours');
+    egal(['defi-tables'], identite($e2['code'])['json']['jour'], 'pas l’autre');
+    // Et dans l'autre sens : la dernière fiche refermée avec la liste, dans le même appel → taillée.
+    $r = modifier_classe($id, ['reglages' => ['cours' => ['chapitres' => [], 'sans' => $fermees]]], $jetonS1);
+    egal(['defi-tables'], $r['json']['jour'], 'plus rien d’affichable : Mes cours sort dans la même écriture');
+    // Les règles, sans l'API.
+    vrai(!cours_affichable(['chapitres' => ['4e-REL'], 'sans' => $fermees]), 'chapitre ouvert, tout fermé : pas affichable');
+    vrai(cours_affichable(['chapitres' => ['4e-REL'], 'sans' => array_slice($fermees, 1)]), 'une fiche ouverte : affichable');
+    vrai(!cours_affichable(['sans' => []]), 'sans chapitre : non');
+    egal(['defi-tables'], portes_de_l_eleve(['applis' => ['defi-tables', 'cours'], 'reglages' => ['cours' => ['chapitres' => ['4e-REL'], 'sans' => $fermees]]]));
+    egal([], portes_des_ajouts(['{"cours":{"chapitres":["4e-REL"]}}'], ['applis' => 'defi-tables', 'reglages' => json_encode(['cours' => ['sans' => $fermees]])]), 'les fiches fermées de la classe valent pour les chapitres d’un élève');
+    egal(['cours'], portes_des_ajouts(['{"cours":{"chapitres":["4e-REL"]}}'], ['applis' => 'defi-tables']));
+    egal(200, modifier_classe($id, ['reglages' => ['cours' => ['chapitres' => [], 'sans' => []]]], $jetonS1)['code']);
+    egal(200, donner((int)$e1['id'], new stdClass(), $jetonS1)['code']);
+});
+
+verifier("aujourdhui-B3, correctif (Codex 8) — une liste abîmée : la liste de l'élève est toujours une partie de celle du professeur, dans le même ordre ; une quatrième étape ne remonte pas", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $id = $b3c['id'];
+    [$e1, $e2] = $b3c['eleves'];
+    egal(200, donner((int)$e1['id'], ['flash-anzan' => new stdClass()], $jetonS1)['code']);
+    // L'autre élève a un chapitre : Mes cours est SA porte (le cas relevé par Codex).
+    egal(200, donner((int)$e2['id'], ['cours' => ['chapitres' => ['4e-REL']]], $jetonS1)['code']);
+    $ecrire = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    foreach ([
+        // [la ligne restaurée, ce que voit la classe, Noa (Anzan), un élève sans Anzan mais avec Mes cours]
+        // Mes cours avant une autre étape : hors de la liste pour TOUS — avant, l'élève sans Anzan recevait [cours].
+        ['{"jour":["cours","flash-anzan"]}', ['flash-anzan'], ['flash-anzan'], []],
+        ['{"jour":["flash-anzan","cours"]}', ['flash-anzan', 'cours'], ['flash-anzan'], ['cours']],
+        ['{"jour":["splat","coffres","defi-tables","flash-anzan"]}', ['splat', 'defi-tables'], ['splat', 'defi-tables'], ['splat', 'defi-tables']],
+        ['{"jour":["flash-anzan","flash-anzan","soley","splat","defi-tables","coffres"]}', ['flash-anzan', 'splat', 'defi-tables'], ['flash-anzan', 'splat', 'defi-tables'], ['splat', 'defi-tables']],
+    ] as [$brut, $classe, $noa, $autre]) {
+        $ecrire->execute([$brut, $id]);
+        egal($classe, tableau_b3($id, $jetonS1)['classe']['jour'], "$brut : le professeur");
+        egal($noa, identite($e1['code'])['json']['jour'], "$brut : Noa");
+        egal($autre, identite($e2['code'])['json']['jour'], "$brut : un élève sans Anzan");
+    }
+    egal(['cours'], jour_canonique('{"jour":["cours"]}'), 'Mes cours seule reste');
+    egal(['defi-tables', 'splat', 'coffres'], jour_canonique('{"jour":["defi-tables","splat","coffres","cours"]}'), 'les trois premières ; Mes cours en quatrième ne compte pas');
+    egal(['flash-anzan'], jour_canonique('{"jour":["cours","flash-anzan"]}'), 'Mes cours ailleurs qu’au bout : retirée avant toute réduction');
+    $ecrire->execute([null, $id]);
+    egal(200, donner((int)$e1['id'], new stdClass(), $jetonS1)['code']);
+    egal(200, donner((int)$e2['id'], new stdClass(), $jetonS1)['code']);
+});
+
+verifier("aujourdhui-B3, correctif (Codex 9) — les données rangées : un objet n'est pas une liste ; la prochaine écriture de la classe nettoie un « jour » de forme fausse", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $id = $b3c['id'];
+    [$e1] = $b3c['eleves'];
+    $ecrire = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    foreach (['{"jour":{"0":"@aucun"}}', '{"jour":{"0":"splat"}}', '{"jour":null}', '{"jour":"@aucun"}', '{"jour":{}}'] as $brut) {
+        egal([], jour_lu($brut, ['splat']), "$brut : pas une liste");
+        $ecrire->execute([$brut, $id]);
+        egal([], tableau_b3($id, $jetonS1)['classe']['jour'], "$brut : automatique, pas « Aucun »");
+        egal([], identite($e1['code'])['json']['jour'], "$brut : l’élève aussi");
+        egal(200, modifier_classe($id, ['libelle' => 'B3c-groupe'], $jetonS1)['code'], "$brut : une écriture de la classe");
+        egal(null, classe_en_base($id)['reglages'], "$brut : nettoyé, même si la liste effective est vide");
+    }
+    $ecrire->execute(['{"jour":{"0":"@aucun"},"splat":{"mondes":[1,2]}}', $id]);
+    egal(200, modifier_classe($id, ['libelle' => 'B3c-groupe'], $jetonS1)['code']);
+    egal('{"splat":{"mondes":[1,2]}}', classe_en_base($id)['reglages'], 'les réglages des applis restent');
+    // Les ajouts : une liste à la place d'une liste, jamais un objet.
+    egal([], ajouts_lus('{"cours":{"chapitres":{"0":"4e-REL"}}}'), 'des chapitres en objet : abîmé');
+    egal([], ajouts_lus('{"splat":{"mondes":{"0":3}}}'), 'des mondes en objet : abîmé');
+    egal(['cours' => ['chapitres' => ['4e-REL']]], ajouts_lus('{"cours":{"chapitres":["4e-REL"]}}'));
+    egal(['flash-anzan' => []], ajouts_lus('{"flash-anzan":[]}'), '« [] » vaut « {} » (lot Qui voit quoi, gardé) : l’élève a l’appli, la porte compte');
+    egal([], ajouts_lus('{"flash-anzan":["x"]}'));
+    egal([], portes_des_ajouts(['{"cours":{"chapitres":{"0":"4e-REL"}}}'], ['applis' => 'defi-tables']), 'un objet de chapitres ne fait pas Mes cours');
+    $ecrire->execute([null, $id]);
+});
+
+verifier("aujourdhui-B3, correctif (Codex 12) — la clé réservée n'est pas une activité : refusée à la création et à la modification, sans toucher aux applis", function () use (&$jetonS1) {
+    vider_compteurs();
+    $c = b3c_classe('B3c-splat', ['splat'], 0, $jetonS1);
+    $id = $c['id'];
+    egal('splat', classe_en_base($id)['applis']);
+    foreach ([['@aucun'], ['@aucun', 'splat'], '@aucun', ['@x']] as $applis) {
+        $r = modifier_classe($id, ['applis' => $applis], $jetonS1);
+        egal([400, "« Aucun » n'est pas une activité : choisis les activités de la classe."], [$r['code'], $r['json']['erreur'] ?? null], json_encode($applis));
+        egal('splat', classe_en_base($id)['applis'], 'SPLAT! reste, Défi tables n’arrive pas');
+    }
+    $r = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'B3c-x', 'applis' => ['@aucun']], ['jeton' => $jetonS1]);
+    egal(400, $r['code'], 'à la création non plus');
+    egal(200, modifier_classe($id, ['applis' => ['splat', 'inconnue']], $jetonS1)['code'], 'une clé inconnue : filtrée comme avant');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+});
+
+verifier("aujourdhui-B3, correctif (suggestion 16) — un appel qui rouvre Anzan à la classe ET le choisit passe, même si l'ajout que la carte avait vu a disparu", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $id = $b3c['id'];
+    [$e1] = $b3c['eleves'];
+    $r = modifier_classe($id, ['applis' => ['defi-tables', 'splat', 'flash-anzan'], 'jour' => ['flash-anzan', 'defi-tables']], $jetonS1,
+        ['jour' => jour_vu($id), 'applis' => ['defi-tables', 'splat'], 'portes' => ['defi-tables', 'flash-anzan', 'splat']]);
+    egal(200, $r['code'], 'Anzan ouvert explicitement et choisi : écrit — ' . $r['texte']);
+    egal(['flash-anzan', 'defi-tables'], jour_en_base($id));
+    egal('defi-tables,flash-anzan,splat', classe_en_base($id)['applis']);
+    // Sans la rouvrir : 409, comme avant.
+    egal(200, modifier_classe($id, ['applis' => ['defi-tables', 'splat']], $jetonS1)['code']);
+    egal(['defi-tables'], jour_en_base($id), 'Anzan fermé, personne ne l’a : taillé');
+    $r = modifier_classe($id, ['jour' => ['flash-anzan']], $jetonS1, ['jour' => ['defi-tables'], 'portes' => ['defi-tables', 'flash-anzan', 'splat']]);
+    egal(409, $r['code'], 'choisi sans être rouvert : la carte était en retard');
+});
+
+verifier("aujourdhui-B3, correctif (Codex 1, 6, 7, 11) — les portes partent avec chaque réponse : tableau (classe et élèves, un seul instantané), classes.modifier (200 et 409), eleves.acces (200 et 409)", function () use (&$jetonS1, &$b3c) {
+    vider_compteurs();
+    $id = $b3c['id'];
+    [$e1, $e2] = $b3c['eleves'];
+    $t = tableau_b3($id, $jetonS1);
+    egal(['defi-tables', 'splat'], $t['classe']['portes']);
+    egal(['defi-tables', 'splat'], $t['classe']['portes_classe']);
+    foreach ($t['eleves'] as $e) egal(['defi-tables', 'splat'], $e['acces']['portes'], 'chaque élève');
+    // eleves.acces : les portes de SA classe après l'écriture.
+    $r = donner((int)$e1['id'], ['flash-anzan' => new stdClass()], $jetonS1);
+    egal(['classe_id' => $id, 'portes' => ['defi-tables', 'flash-anzan', 'splat'], 'portes_classe' => ['defi-tables', 'splat']], $r['json']['classe_portes'] ?? null, 'eleves.acces (200)');
+    egal(['defi-tables', 'flash-anzan', 'splat'], $r['json']['acces']['portes']);
+    $r = donner((int)$e1['id'], new stdClass(), $jetonS1, new stdClass());
+    egal(409, $r['code'], 'un « avant » en retard');
+    egal(['defi-tables', 'flash-anzan', 'splat'], $r['json']['classe_portes']['portes'] ?? null, 'eleves.acces (409)');
+    // classes.modifier : 200 et 409.
+    $r = ecrire_jour($id, ['jour' => ['flash-anzan', 'defi-tables']], $jetonS1);
+    egal([['defi-tables', 'flash-anzan', 'splat'], ['defi-tables', 'splat']], [$r['json']['portes'] ?? null, $r['json']['portes_classe'] ?? null], 'classes.modifier (200)');
+    $r = modifier_classe($id, ['jour' => []], $jetonS1, ['jour' => ['splat']]);
+    egal(409, $r['code']);
+    egal([['defi-tables', 'flash-anzan', 'splat'], ['defi-tables', 'splat']], [$r['json']['portes'] ?? null, $r['json']['portes_classe'] ?? null], 'classes.modifier (409)');
+    vrai(!str_contains(json_encode($r['json']), 'prenom'), 'aucun élève nommé');
+    // Le tableau lit la classe et ses élèves dans UN instantané, sans verrou.
+    $prof = file_get_contents(dirname(__DIR__) . '/public/api/prof.php');
+    $tableau = substr($prof, strpos($prof, "case 'tableau':"), 6000);
+    $reperes = [
+        'l’instantané' => strpos($tableau, 'instantane_ouvrir($pdo);'),
+        'la ligne de la classe' => strpos($tableau, "\$pdo->prepare('SELECT * FROM classes WHERE id = ?');"),
+        'les élèves' => strpos($tableau, 'FROM eleves e'),
+        'la fin de l’instantané' => strpos($tableau, 'instantane_fermer($pdo);'),
+        'la classe relue sert la réponse' => strpos($tableau, "\$classe = ['droit' => \$classe['droit']] + \$ligneClasse;"),
+    ];
+    foreach ($reperes as $quoi => $position) vrai($position !== false, "trouvé : $quoi");
+    $positions = array_values($reperes); $triees = $positions; sort($triees);
+    egal($positions, $triees, 'dans cet ordre');
+    vrai(!str_contains(substr($tableau, $reperes['l’instantané'], $reperes['la fin de l’instantané'] - $reperes['l’instantané']), 'FOR UPDATE'), 'sans verrou');
+    egal(200, ecrire_jour($id, ['jour' => []], $jetonS1)['code']);
+    egal(200, donner((int)$e1['id'], new stdClass(), $jetonS1)['code']);
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
 });
 
 // ---------------------------------------------------------------------- résultat

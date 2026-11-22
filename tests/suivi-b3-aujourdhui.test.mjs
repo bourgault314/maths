@@ -200,8 +200,11 @@ test("sans carte à montrer, la zone du bloc ne prend aucune place ; « Ma semai
   for (const mot of ["position: static;", "clip: auto;", "color: #f9bf3b;", "font: 900 16px/20px var(--sans);", "white-space: nowrap;"]) assert.ok(titre.includes(mot), mot);
   assert.ok(regle(" .semaine-compte").includes("text-align: right;"), "le compte à droite");
   assert.ok(regle(" .semaine-jours").includes("justify-content: center;"), "les jours centrés");
-  assert.ok(regle(" .semaine-jours .case-jour").includes("width: 38px; height: 38px;"), "ronds de 38 px au téléphone");
-  assert.ok(regle(" .semaine-jours li").includes("width: 46px;"));
+  // Correctif Codex (point 14) : un jour (--jour) et un rond (--rond) de taille fixe, qui ne rétrécissent
+  // pas ; le trait vaut exactement leur différence (mesuré au navigateur de 320 à 1366 px : 0 px d'écart).
+  assert.ok(regle(" .semaine-jours").includes("--jour: 46px; --rond: 38px; --ecart: calc(var(--jour) - var(--rond));"), "ronds de 38 px dans des jours de 46 px au téléphone");
+  assert.ok(regle(" .semaine-jours .case-jour").includes("width: var(--rond); height: var(--rond);"));
+  assert.ok(regle(" .semaine-jours li").includes("flex: none; width: var(--jour);"), "les jours ne rétrécissent pas dans la rangée");
   assert.ok(regle(" .semaine-jours .aujourdhui .case-jour").includes("0 0 0 4px var(--orange)"), "le jour entouré d'orange");
   // Une « Ma semaine » cachée (l'élève n'a rien fait) le reste : suivi.css l'impose à tout élément hidden.
   assert.match(lire("_serveur/public/suivi.css"), /\n\[hidden\] \{ display: none !important; \}\n/);
@@ -215,19 +218,23 @@ test("« Ma semaine » seule : petit téléphone, ordinateur (toute la largeur, 
     assert.ok(d > 0, cond);
     return blocDepuis(b3, d).replace(/\s+/g, " ");
   };
+  // Correctif Codex (point 14) : au petit téléphone, sept jours de 36 px (252 px) tiennent à 320 px.
   const petit = media("(max-width: 359px)");
-  assert.ok(petit.includes(`${SEULE} .semaine-jours .case-jour { width: 32px; height: 32px; }`) && petit.includes(`${SEULE} .semaine-jours li { width: 38px; }`));
+  assert.ok(petit.includes(`${SEULE} .semaine-jours { --jour: 36px; --rond: 30px; }`), "ronds de 30 px dans des jours de 36 px");
   const grand = media("(min-width: 900px)");
   assert.ok(grand.includes(`${SEULE} { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center;`), "sur toute la largeur, le titre, les jours, le compte");
-  assert.ok(grand.includes(`${SEULE} .semaine-jours .case-jour { width: 50px; height: 50px; }`), "ronds de 50 px");
-  assert.ok(grand.includes(`${SEULE} .semaine-jours li { width: 76px; gap: 10px; }`));
-  assert.ok(grand.includes(`${SEULE} .semaine-jours { grid-column: 2; grid-row: 1; --ecart: 26px; }`), "les jours au milieu");
+  assert.ok(grand.includes(`${SEULE} .semaine-jours { grid-column: 2; grid-row: 1; --jour: 76px; --rond: 50px; }`), "les jours au milieu, ronds de 50 px");
+  assert.ok(grand.includes(`${SEULE} .semaine-jours li { gap: 10px; }`));
   const moyen = media("(min-width: 900px) and (max-width: 1099px)");
-  assert.ok(moyen.includes(`${SEULE} .semaine-jours li { width: 64px; }`) && moyen.includes("--ecart: 14px;"), "le titre garde sa place");
+  assert.ok(moyen.includes(`${SEULE} .semaine-jours { --jour: 64px; }`), "le titre garde sa place");
   // Toutes les règles du lot partent du même sélecteur : dès qu'une carte se voit dans la zone
   // (la séance en direct, l'évaluation, le bloc), « Ma semaine » reprend sa petite taille.
-  const selecteurs = [...b3.matchAll(/\n\s*(#ecran-espace[^{]*)\{/g)].map(m => m[1]);
-  assert.ok(selecteurs.length >= 25 && selecteurs.every(s => s.startsWith(SEULE)), "aucune règle du lot ne touche « Ma semaine » quand le bloc est là");
+  // Correctif Codex (point 15) : TOUTES les règles du bloc sont lues, pas seulement celles qui
+  // commencent par #ecran-espace — une règle devenue globale ferait rougir ce test.
+  const sansCommentaires = b3.replace(/\/\*[\s\S]*?\*\//g, "");
+  const selecteurs = [...sansCommentaires.matchAll(/([^{};]+)\{/g)].map(m => m[1].trim()).filter(x => !x.startsWith("@media"));
+  assert.ok(selecteurs.length >= 20, `les règles du lot sont lues (${selecteurs.length})`);
+  assert.deepEqual(selecteurs.filter(x => !x.startsWith(SEULE)), [], "aucune règle du lot ne touche « Ma semaine » quand le bloc est là");
   assert.match(style, /\.jour-carte \{ min-height: 182px; \}\n\s*@media \(max-width: 359px\) \{ \.jour-carte \{ min-height: 204px; \} \}/, "le bloc, lui, ne change pas");
   assert.doesNotMatch(page, /matchMedia/, "rien ne saute au redimensionnement");
 });
@@ -241,7 +248,21 @@ const SECTION_CARTE = prof.slice(debutCarte, finCarte);
 const APPLIS_PROF = prof.slice(prof.indexOf("  const APPLIS = ["), prof.indexOf("];", prof.indexOf("  const APPLIS = [")) + 2);
 
 // Ce que le serveur envoie pour chaque élève (tableau : « acces », classe + ajouts).
-const acces = (applis, chapitres = []) => ({acces: {applis, reglages: chapitres.length ? {cours: {chapitres}} : {}}});
+// Correctif après la relecture Codex (points 1, 4, 6) : avec ses portes de la
+// liste du jour (« portes »), calculées par le serveur — ici, Mes cours quand
+// l'élève a un chapitre (le serveur exige un chapitre affichable : gardé par
+// _serveur/tests/lancer.php).
+const acces = (applis, chapitres = []) => ({acces: {applis, reglages: chapitres.length ? {cours: {chapitres}} : {},
+  portes: applis.filter(cle => cle !== "cours" || chapitres.length)}});
+// Et pour la classe (tableau : classe.portes_classe, classe.portes) : ses portes à
+// elle, puis l'union avec celles de ses élèves, dans l'ordre du catalogue.
+const ORDRE = ["defi-tables", "flash-anzan", "defi-calcul", "splat", "coffres", "cours"];
+function portesDuServeur(classe, eleves) {
+  const chapitres = classe.reglages && classe.reglages.cours && classe.reglages.cours.chapitres;
+  const propres = ORDRE.filter(cle => (classe.applis || []).includes(cle) && (cle !== "cours" || (chapitres && chapitres.length)));
+  const toutes = ORDRE.filter(cle => propres.includes(cle) || eleves.some(e => e.acces.portes.includes(cle)));
+  return {portes_classe: propres, portes: toutes};
+}
 const GROUPE = ["defi-tables", "defi-calcul", "splat"];
 function groupeMixte() {
   return {
@@ -255,21 +276,23 @@ function groupeMixte() {
   };
 }
 function laCarte({classe, eleves}, appels = []) {
+  if (classe.portes === undefined) Object.assign(classe, portesDuServeur(classe, eleves));
   const elements = {};
   const $ = id => { if (!elements[id]) elements[id] = new Noeud(id); return elements[id]; };
   const messages = {};
   const etat = {classe, eleves, relues: 0, relire: null};
-  const outils = new Function("document", "$", "messager", "etat", "appelBorne",
-    `let classe = etat.classe; let eleves = etat.eleves; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages";
+  const outils = new Function("document", "$", "messager", "etat", "appelBorne", "portesDuServeur",
+    `let classe = etat.classe; let eleves = etat.eleves; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages"; let demandeAppli = 0;
      const SANS_VERIFICATION = "…"; function surErreur() {} function poserQuiVoit() {}
-     async function relireBornee() { etat.relues += 1; if (etat.relire) { const lu = etat.relire(); classe = lu.classe; eleves = lu.eleves; return true; } return false; }
+     async function relireBornee() { etat.relues += 1; if (etat.relire) { const lu = etat.relire(); if (lu.classe.portes === undefined) Object.assign(lu.classe, portesDuServeur(lu.classe, lu.eleves)); classe = lu.classe; eleves = lu.eleves; return true; } return false; }
      ${APPLIS_PROF}
      function nomDeLAppli(cle) { return (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom; }
      ${fonctionDe(prof, "poserEtatDeClasse")}
      ${SECTION_CARTE}
-     return {poserJourClasse, choisirEtapeDuJour, choisirModeDuJour, enregistrerJour, portesDuJour, classe: () => classe, poserEleves: liste => { eleves = liste; }};`)(
+     return {poserJourClasse, choisirEtapeDuJour, choisirModeDuJour, enregistrerJour, portesDuJour, viderCarteJour, classe: () => classe, poserEleves: liste => { eleves = liste; },
+       naviguer: () => { demandeAppli += 1; }};`)(
     documentFaux, $, (id, texte, type) => { messages[id] = [texte, type]; }, etat,
-    typeof appels === "function" ? appels : async (action, corps) => { appels.push([action, corps]); return {ok: true, jour: corps.jour}; });
+    typeof appels === "function" ? appels : async (action, corps) => { appels.push([action, corps]); return {ok: true, jour: corps.jour}; }, portesDuServeur);
   const lu = () => ({
     mode: ["auto", "liste", "aucun"].filter(m => $(`jour-${m}`).checked), autoTexte: $("jour-auto-texte").textContent,
     etapesCachees: $("jour-etapes").hidden, choix: [1, 2, 3].map(n => $(`jour-${n}`).value),
@@ -368,14 +391,15 @@ test("le troisième choix, « Aucun » : ses mots, ce qui part au serveur ([\"@a
   assert.ok(!deja.lu().options.some(o => o.includes("@")));
 });
 
-test("une porte retirée ailleurs au dernier élève qui l'avait : 409, la carte ne propose plus que les portes vraies et relit la classe", async () => {
+test("une porte retirée ailleurs au dernier élève qui l'avait : 409, la carte prend les portes vraies du refus et relit la classe", async () => {
   const groupe = groupeMixte();
   let reponse = null;
   const {outils, lu, messages, etat} = laCarte(groupe, async () => { throw reponse; });
   outils.poserJourClasse(true);
   outils.choisirModeDuJour("liste");
   outils.choisirEtapeDuJour(0, "flash-anzan");
-  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: GROUPE, jour: [], portes: ["defi-tables", "defi-calcul", "splat", "cours"]}});
+  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: GROUPE, jour: [],
+    portes: ["defi-tables", "defi-calcul", "splat", "cours"], portes_classe: GROUPE}});
   // La relecture échoue (serveur muet) : la carte tient quand même les portes du refus.
   await outils.enregistrerJour();
   assert.equal(etat.relues, 1, "la classe est relue : ce que voit chaque élève a pu changer");
@@ -390,7 +414,149 @@ test("une porte retirée ailleurs au dernier élève qui l'avait : 409, la carte
   outils.choisirModeDuJour("liste");
   await outils.enregistrerJour();
   assert.deepEqual(lu().options, ["Défi tables", "Défi calcul", "SPLAT!", `Mes cours · ${part(3)}`]);
-  assert.equal(outils.classe().portesJour, undefined, "une classe relue ne garde pas les portes d'un refus");
+  assert.equal(outils.classe().effectifsPerimes, undefined, "une classe relue : les comptes sont sûrs");
+});
+
+test("correctif Codex 1 — dans l'autre sens : Anzan donné ailleurs, « Aucun » refusé (409), la relecture échoue — la liste rendue est gardée ENTIÈRE, un second clic n'efface rien", async () => {
+  const groupe = groupeMixte();
+  groupe.eleves[1] = acces([...GROUPE, "cours"], ["4e-REL"]);   // la page croit que personne n'a Anzan
+  delete groupe.classe.portes;
+  const appels = [];
+  let reponse = null;
+  const {outils, lu, messages, etat} = laCarte(groupe, async (action, corps) => { appels.push(corps); if (reponse) throw reponse; return {ok: true, jour: corps.jour}; });
+  outils.poserJourClasse(true);
+  assert.ok(!lu().options.some(o => o.startsWith("Anzan")), "au départ, Anzan n'est la porte de personne");
+  outils.choisirModeDuJour("aucun");
+  // Ailleurs : Anzan donné à Noa, et la liste [Anzan] enregistrée.
+  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: GROUPE, jour: ["flash-anzan"],
+    portes: ["defi-tables", "flash-anzan", "defi-calcul", "splat", "cours"], portes_classe: GROUPE}});
+  await outils.enregistrerJour();
+  assert.equal(etat.relues, 1);
+  let vu = lu();
+  assert.deepEqual([vu.mode, vu.choix], [["liste"], ["flash-anzan", "", ""]], "la liste du refus, telle quelle — jamais « Liste vide, donc automatique »");
+  assert.equal(vu.options[1], "Anzan · quelques élèves", "Anzan proposé : la porte vient du serveur ; le compte n'est pas sûr, il ne s'invente pas");
+  assert.ok(!vu.apercu.includes("Liste vide"));
+  assert.ok(vu.sauts.includes(`Le nombre d’élèves n’a pas pu être relu${NBSP}: recharge la page pour le voir.`), "et la carte le dit");
+  assert.ok(!vu.sauts.some(t => t.includes("aucune de ces étapes")), "pas de compte des élèves sans étape, faux lui aussi");
+  // Un second clic sur Enregistrer, sans rien retoucher : rien ne part.
+  reponse = null;
+  await outils.enregistrerJour();
+  assert.equal(appels.length, 1, "rien n'est envoyé : la liste vraie est déjà en place");
+  assert.deepEqual(messages["message-jour"], ["Aucune modification dans cet onglet.", "info"]);
+});
+
+test("correctif Codex 5 — une autre classe demandée pendant l'envoi : le 409 de la première ne la relit pas par-dessus (la navigation garde la priorité)", async () => {
+  let lacher = null;
+  const reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: GROUPE, jour: [], portes: GROUPE, portes_classe: GROUPE}});
+  const {outils, etat, lu} = laCarte(groupeMixte(), () => new Promise((_, refuser) => { lacher = () => refuser(reponse); }));
+  outils.poserJourClasse(true);
+  outils.choisirModeDuJour("aucun");
+  const fin = outils.enregistrerJour();
+  await new Promise(r => setImmediate(r));
+  outils.naviguer();   // le professeur choisit la seconde classe : ouvrirClasse avance demandeAppli
+  lacher();
+  await fin;
+  assert.equal(etat.relues, 0, "pas de relecture de la première classe : elle annulerait l'ouverture de la seconde");
+  assert.equal(outils.classe().effectifsPerimes, true, "la carte (si on la revoit) sait que ses comptes sont à relire");
+  assert.deepEqual(lu().mode, ["auto"], "l'état du refus est quand même posé");
+  const enregistrer = fonctionDe(prof, "enregistrerJour");
+  assert.match(enregistrer, /const navigation = demandeAppli;/);
+  assert.match(enregistrer, /const relu = demandeAppli === navigation && await relireBornee\(classeId\);/);
+  assert.equal((enregistrer.match(/relireBornee\(/g) || []).length, 1, "une seule relecture, toujours gardée");
+  assert.match(fonctionDe(prof, "ouvrirClasse"), /demandeAppli \+= 1;\s*const numero = demandeAppli;/, "c'est bien ce compteur que la navigation avance");
+});
+
+test("correctif Codex 7 — enregistré : la confirmation dit le choix, la classe est relue avant de montrer les comptes", async () => {
+  const appels = [];
+  const {outils, messages, etat, lu} = laCarte(groupeMixte(), appels);
+  // Pendant l'envoi, un autre onglet a donné Anzan à Lina aussi : la relecture le dit.
+  const frais = groupeMixte();
+  frais.eleves[0] = acces(["defi-tables", "flash-anzan", "defi-calcul", "splat", "cours"], ["3e-ARI"]);
+  frais.classe.jour = ["flash-anzan"];
+  etat.relire = () => frais;
+  outils.poserJourClasse(true);
+  outils.choisirModeDuJour("liste");
+  outils.choisirEtapeDuJour(0, "flash-anzan");
+  outils.choisirEtapeDuJour(1, "");
+  await outils.enregistrerJour();
+  assert.equal(etat.relues, 1, "relue après l'envoi réussi");
+  assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: la liste de la 405.`, "ok"], "pas « les élèves de la 405 voient Anzan » : seuls certains l'ont");
+  assert.deepEqual(lu().sauts[0], `Anzan${NBSP}: pour ${part(2)} seulement. Les autres sautent cette étape.`, "le compte relu, pas celui d'avant l'envoi");
+  outils.choisirModeDuJour("auto");
+  await outils.enregistrerJour();
+  assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: la 405 est en automatique.`, "ok"]);
+  // La relecture échoue : la carte garde les portes de la réponse, et ne présente pas ses comptes comme actuels.
+  const panne = laCarte(groupeMixte(), async (action, corps) => ({ok: true, jour: corps.jour, portes: ["defi-tables", "flash-anzan", "defi-calcul", "splat", "cours"], portes_classe: GROUPE}));
+  panne.outils.poserJourClasse(true);
+  panne.outils.choisirModeDuJour("liste");
+  panne.outils.choisirEtapeDuJour(0, "flash-anzan");
+  await panne.outils.enregistrerJour();
+  assert.equal(panne.outils.classe().effectifsPerimes, true);
+  assert.equal(panne.lu().options[1], `Anzan · ${part(1)}`, "le dernier compte connu…");
+  assert.ok(panne.lu().sauts.includes(`Le nombre d’élèves n’a pas pu être relu${NBSP}: recharge la page pour le voir.`), "… dit comme tel");
+});
+
+test("correctif Codex 13 — quitter la classe range toute la carte : les ronds, les listes, leur bloc", () => {
+  const {outils, $, lu} = laCarte(groupeMixte());
+  outils.poserJourClasse(true);
+  outils.choisirModeDuJour("liste");
+  assert.deepEqual([lu().mode, lu().etapesCachees], [["liste"], false]);
+  outils.viderCarteJour();
+  assert.deepEqual([lu().mode, lu().etapesCachees, lu().choix, lu().options, lu().apercu], [[], true, ["", "", ""], [], ""]);
+  outils.poserJourClasse(true);
+  outils.choisirModeDuJour("aucun");
+  outils.viderCarteJour();
+  assert.equal($("jour-aucun").checked, false, "le troisième rond aussi");
+  assert.match(fonctionDe(prof, "viderLaClasse"), /viderCarteJour\(\);/);
+  assert.match(fonctionDe(prof, "viderZones"), /viderCarteJour\(\);/, "et à la déconnexion");
+});
+
+test("correctif Codex 4 et 6 — la page ne refait pas la règle des portes ; les réponses de l'écriture et d'un tableau frais sont appliquées à la classe concernée", () => {
+  // Les portes : celles du serveur, jamais recalculées depuis les applis ou les chapitres.
+  for (const nom of ["porteDeLaClasse", "eleveALaPorte", "portesDuJour"]) {
+    assert.doesNotMatch(fonctionDe(prof, nom), /chapitres|\.applis|reglages/, `${nom} : pas de règle recopiée`);
+  }
+  assert.match(fonctionDe(prof, "eleveALaPorte"), /clesLues\(eleve\.acces\.portes\)/);
+  assert.match(fonctionDe(prof, "portesDuJour"), /clesLues\(classe\.portes\)/);
+  // poserAccesDeLEleve : la réponse d'un envoi réussi, et les portes de SA classe seulement.
+  const eleve = {id: 3, ajouts: {}, acces: {applis: ["defi-tables"], portes: ["defi-tables"]}};
+  const reportes = [];
+  const jouer = (classe, donnees) => new Function("classe", "reporterAccesDeLaListe",
+    `${fonctionDe(prof, "clesLues")}\n${fonctionDe(prof, "poserPortesDeClasse")}\n${fonctionDe(prof, "poserAccesDeLEleve")}\nposerAccesDeLEleve(arguments[2], arguments[3]); return classe;`)(classe, l => reportes.push(l), eleve, donnees);
+  const autre = jouer({id: 8, portes: ["defi-tables"]}, {ajouts: {"flash-anzan": {}}, acces: {applis: ["defi-tables", "flash-anzan"], portes: ["defi-tables", "flash-anzan"]},
+    classe_portes: {classe_id: 9, portes: ["defi-tables", "flash-anzan"], portes_classe: ["defi-tables"]}});
+  assert.deepEqual(eleve.acces.portes, ["defi-tables", "flash-anzan"], "ce que voit l'élève : la réponse");
+  assert.deepEqual(reportes, [[eleve]], "reporté sur les listes des autres onglets");
+  assert.deepEqual(autre.portes, ["defi-tables"], "les portes d'une AUTRE classe ne touchent pas la classe ouverte");
+  const meme = jouer({id: 9, portes: ["defi-tables"]}, {classe_portes: {classe_id: 9, portes: ["defi-tables", "flash-anzan"], portes_classe: ["defi-tables"]}});
+  assert.deepEqual([meme.portes, meme.portes_classe], [["defi-tables", "flash-anzan"], ["defi-tables"]]);
+  const regler = fonctionDe(prof, "enregistrerRegler");
+  assert.match(regler, /const reponse = await appelBorne\("eleves\.acces"[^;]*;\s*reussis\.push\(eleve\);[\s\S]{0,400}if \(encoreLa\(\) && memeClasse\(\)\) poserAccesDeLEleve\(eleve, reponse\);/, "la réponse d'un envoi réussi, après vérification de la classe");
+  assert.match(regler, /erreur\.statut === 409 && encoreLa\(\) && memeClasse\(\)\) poserAccesDeLEleve\(eleve, erreur\.donnees\);/, "un 409 tardif : seulement si c'est encore la même classe");
+  assert.match(regler, /const reponse = await appelBorne\("classes\.modifier"[^;]*;\s*classeEcrite = true;[\s\S]{0,200}poserPortesDeClasse\(reponse\);/);
+  // Un tableau frais (changement d'onglet) : la classe ET ses élèves, ensemble, si c'est encore la classe ouverte.
+  const afficher = fonctionDe(prof, "afficherAppli");
+  assert.match(afficher, /if \(!classe \|\| classe\.id !== classeId\) return;\s*if \(donnees && donnees\.classe && donnees\.classe\.id === classeId\) reprendreLaClasse\(donnees\.classe\);/);
+  const reprise = new Function("classe", `${fonctionDe(prof, "reprendreLaClasse")}\nreprendreLaClasse(arguments[1]); return classe;`)(
+    {id: 9, libelle: "405", applis: ["splat"], jour: [], portes: ["splat"], droit: "proprietaire", effectifsPerimes: true},
+    {id: 9, libelle: "405", applis: ["defi-tables"], reglages: {}, jour: ["@aucun"], portes: ["defi-tables", "flash-anzan"], portes_classe: ["defi-tables"], droit: "lecture"});
+  assert.deepEqual(reprise, {id: 9, libelle: "405", applis: ["defi-tables"], reglages: {}, jour: ["@aucun"], portes: ["defi-tables", "flash-anzan"], portes_classe: ["defi-tables"], droit: "proprietaire"},
+    "activités, liste et portes reprises ; le droit reste celui de l'ouverture ; les comptes redeviennent sûrs");
+});
+
+test("correctif Codex 10 — au retour dans l'onglet, « Aucun » reçu du serveur s'applique et se garde DÈS la réponse, avant les jauges", () => {
+  const {jourPourLaCopie} = new Function("stockage", "lireCode", "hautCourant",
+    `${page.slice(page.indexOf('  const CLE_COPIE = "mathsgo-suivi-espace";'), page.indexOf("  // Les tuiles du haut, notées à chaque lecture"))}\nreturn {jourPourLaCopie};`)(() => null, () => "", null);
+  const applis = NOA.map(APPLI);
+  assert.deepEqual(jourPourLaCopie({applis, jour: ["@aucun"]}), ["@aucun"]);
+  assert.deepEqual(jourPourLaCopie({applis, jour: ["flash-anzan", "x", 3, "splat", "defi-tables", "cours"]}), ["flash-anzan", "splat", "defi-tables"], "comme lireCopie la relirait");
+  assert.deepEqual(jourPourLaCopie({applis}), []);
+  const ouvrir = fonctionDe(page, "ouvrir");
+  const lecture = ouvrir.indexOf("const lecture = lireJauges(donnees, code)");
+  const tout = ouvrir.indexOf("if (copie && JSON.stringify(jourPourLaCopie(donnees)) !== JSON.stringify(copie.jour || [])) {");
+  const attente = ouvrir.indexOf("const jauges = copie ? await lecture");
+  assert.ok(lecture > 0 && tout > lecture && attente > tout, "la lecture des jauges part, la liste du jour s'applique, PUIS on attend les jauges");
+  assert.match(ouvrir.slice(tout, attente), /afficherEspace\(donnees, code, copie\.jauges\);\s*garderCopie\(code, donnees, copie\.jauges\);/, "dessinée et gardée avec les jauges de la copie");
 });
 
 test("la carte, côté page : trois choix dans UN groupe, dans l'ordre des planches ; « avant » dit les portes proposées ; rien en innerHTML", () => {
@@ -406,10 +572,9 @@ test("la carte, côté page : trois choix dans UN groupe, dans l'ordre des planc
   assert.doesNotMatch(SECTION_CARTE, /innerHTML/);
   const enregistrer = fonctionDe(prof, "enregistrerJour");
   assert.match(enregistrer, /const portesProposees = portesDuJour\(\);/);
-  assert.match(enregistrer, /erreur\.statut === 409\) \{\s*poserEtatDeClasse\(erreur\.donnees\);[\s\S]{0,400}await relireBornee\(classeId\);\s*if \(!encoreLa\(\) \|\| !memeClasse\(\)\) return;\s*reglageEnCours = false;\s*poserJourClasse\(true\);/);
-  assert.match(fonctionDe(prof, "poserEtatDeClasse"), /if \(Array\.isArray\(donnees\.portes\)\) classe\.portesJour = donnees\.portes\.filter\(cle => typeof cle === "string"\);/);
-  assert.match(fonctionDe(prof, "poserAccesDeLEleve"), /if \(classe\) delete classe\.portesJour;/, "un accès changé dans la page : les portes d'un ancien refus ne masquent plus rien");
-  // La page compte à partir de ce que le serveur envoie déjà pour chaque élève (« acces ») : elle ne refait pas la règle « classe + ajouts ».
+  assert.match(enregistrer, /erreur\.statut === 409\) \{\s*poserEtatDeClasse\(erreur\.donnees\);[\s\S]{0,600}await relireSiPermis\(\);\s*if \(!encoreLa\(\) \|\| !memeClasse\(\)\) return;\s*reglageEnCours = false;\s*poserJourClasse\(true\);/);
+  assert.match(fonctionDe(prof, "poserEtatDeClasse"), /poserPortesDeClasse\(donnees\);/, "les portes vraies du refus (correctif : prises telles quelles)");
+  assert.match(fonctionDe(prof, "poserAccesDeLEleve"), /portes\.classe_id === classe\.id\) poserPortesDeClasse\(portes\);/, "les portes d'une réponse d'élève : seulement pour SA classe");
+  // La page compte à partir de ce que le serveur envoie (« acces.portes ») : elle ne refait pas la règle « classe + ajouts ».
   assert.doesNotMatch(SECTION_CARTE, /\.ajouts\b/);
-  assert.match(fonctionDe(prof, "eleveALaPorte"), /const acces = eleve && eleve\.acces;/);
 });

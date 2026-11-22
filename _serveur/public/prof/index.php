@@ -2583,6 +2583,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     "qui-voit", "appli-fermee"];
 
   function viderZones() {
+    // Correctif B3 (Codex, point 13) : la carte « Aujourd'hui » aussi.
+    viderCarteJour();
     ZONES_TEXTE.forEach(id => { const noeud = $(id); if (noeud) noeud.textContent = ""; });
     ZONES_MESSAGE.forEach(id => { const noeud = $(id); if (noeud) { noeud.textContent = ""; noeud.hidden = true; } });
     CHAMPS_A_VIDER.forEach(id => { const noeud = $(id); if (noeud) noeud.value = ""; });
@@ -2617,9 +2619,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     "regler-message", "fe-message", "lc-message", "message-jour"];
 
   function viderLaClasse() {
-    // Lot B2 : le brouillon de la carte « Aujourd'hui, dans Mon espace » (ses
-    // listes, son aperçu et son message sont dans les zones vidées plus bas).
-    jourBrouillon = null;
+    // Lot B2 : le brouillon de la carte « Aujourd'hui, dans Mon espace » —
+    // correctif B3 (Codex, point 13) : avec ses ronds et ses listes.
+    viderCarteJour();
     ["eval-modele", "eval-ouvrir", "regler", "fenetre-eleve"].forEach(id => {
       const boite = $(id);
       if (boite && boite.open) { try { boite.close(); } catch (_) {} }
@@ -3353,45 +3355,58 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // Lot B3 (21/11/2026, décision de Gwenaël après son groupe mixte 4e/3e, où
   // chaque élève a SES chapitres) : aussi les portes que seuls quelques élèves
   // ont — une appli « en plus », et Mes cours dès qu'un élève a au moins un
-  // chapitre (de la classe ou en plus). Ce que voit chaque élève vient du
-  // serveur (eleve.acces : classe + ajouts) ; la page compte, elle ne refait
-  // pas la règle. Un élève qui n'a pas une porte de la liste la saute.
+  // chapitre (de la classe ou en plus). Un élève qui n'a pas une porte de la
+  // liste la saute.
+  //
+  // Correctif après la relecture Codex (points 1, 4 et 6) : les portes
+  // viennent TOUTES du serveur, qui seul tient la règle (Mes cours : un
+  // chapitre vraiment affichable). classe.portes : les portes possibles (la
+  // classe et quelques élèves) ; classe.portes_classe : celles de la classe
+  // seule ; eleve.acces.portes : celles de chaque élève. Elles arrivent avec
+  // le tableau, avec chaque réponse de classes.modifier (200 et 409) et de
+  // eleves.acces (« classe_portes ») ; la page les prend telles quelles et ne
+  // fait que compter. Après un refus dont la relecture a échoué, les élèves de
+  // la page peuvent être en retard : classe.effectifsPerimes, et la carte dit
+  // « quelques élèves » au lieu d'un compte faux.
   const JOUR_AUCUN = "@aucun";
   function jourSansBloc(liste) {
     return Array.isArray(liste) && liste.length === 1 && liste[0] === JOUR_AUCUN;
   }
+  function clesLues(liste) {
+    return Array.isArray(liste) ? liste.filter(cle => typeof cle === "string") : [];
+  }
   function porteDeLaClasse(cle) {
-    const ouvertes = (classe && Array.isArray(classe.applis)) ? classe.applis : [];
-    if (!ouvertes.includes(cle)) return false;
-    if (cle !== "cours") return true;
-    const reglagesCours = classe && classe.reglages && classe.reglages.cours;
-    return Boolean(reglagesCours && Array.isArray(reglagesCours.chapitres) && reglagesCours.chapitres.length);
+    return Boolean(classe) && clesLues(classe.portes_classe).includes(cle);
   }
   function eleveALaPorte(eleve, cle) {
-    const acces = eleve && eleve.acces;
-    if (!acces || !Array.isArray(acces.applis) || !acces.applis.includes(cle)) return false;
-    if (cle !== "cours") return true;
-    const reglagesCours = acces.reglages && acces.reglages.cours;
-    return Boolean(reglagesCours && Array.isArray(reglagesCours.chapitres) && reglagesCours.chapitres.length);
+    return Boolean(eleve && eleve.acces) && clesLues(eleve.acces.portes).includes(cle);
   }
-  // null = toute la classe ; sinon {avec, total} : la porte de quelques élèves.
+  // null = toute la classe ; {avec, total} : la porte de quelques élèves ;
+  // {inconnu: true} : une porte que le serveur dit possible alors qu'aucun
+  // élève de la page ne l'a — ses élèves sont en retard (relecture ratée) :
+  // « quelques élèves », jamais un « 0 élève » faux.
   function partDeLaPorte(cle) {
     const liste = eleves || [];
     if (porteDeLaClasse(cle) || !liste.length) return null;
     const avec = liste.filter(eleve => eleveALaPorte(eleve, cle)).length;
+    if (!avec) return {inconnu: true};
     return avec >= liste.length ? null : {avec, total: liste.length};
   }
   function texteDeLaPart(part) {
+    if (part.inconnu) return "quelques élèves";
     // Un nombre et son nom ne se séparent pas en fin de ligne (espaces insécables).
     return `${part.avec} élève${part.avec > 1 ? "s" : ""} sur ${part.total}`;
   }
-  // Après un refus (409), le serveur a dit les portes vraies (portesJour,
-  // posées par poserEtatDeClasse) : seules celles-là sont proposées, jusqu'à la
-  // prochaine lecture de la classe (qui remplace « classe » tout entier).
   function portesDuJour() {
-    const vraies = classe && Array.isArray(classe.portesJour) ? classe.portesJour : null;
-    return APPLIS.filter(appli => porteDeLaClasse(appli.cle) || (eleves || []).some(eleve => eleveALaPorte(eleve, appli.cle)))
-      .map(appli => appli.cle).filter(cle => !vraies || vraies.includes(cle));
+    const portes = classe ? clesLues(classe.portes) : [];
+    return APPLIS.filter(appli => portes.includes(appli.cle)).map(appli => appli.cle);
+  }
+  // Les portes d'une réponse du serveur (tableau, classes.modifier, le
+  // « classe_portes » de eleves.acces), posées sur la classe de la page.
+  function poserPortesDeClasse(donnees) {
+    if (!classe || !donnees) return;
+    if (Array.isArray(donnees.portes)) classe.portes = clesLues(donnees.portes);
+    if (Array.isArray(donnees.portes_classe)) classe.portes_classe = clesLues(donnees.portes_classe);
   }
   // Le mode automatique, comme Mon espace le calcule (etapesDuJour, lot B1).
   function jourAutomatique(portes) {
@@ -3436,9 +3451,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
 
   // Correctif (Codex, point 5) : rien de la carte d'une classe ne reste dans
   // une autre, ni après la déconnexion — brouillon, listes, aperçu, message.
+  // Correctif après la relecture Codex (point 13) : aussi les trois ronds, la
+  // valeur des listes et leur bloc — l'ancien choix ne reste pas lisible dans
+  // le document (une fin de session sans rechargement). Appelée par
+  // viderLaClasse et viderZones.
   function viderCarteJour() {
     jourBrouillon = null;
     ["jour-1", "jour-2", "jour-3", "jour-apercu", "jour-auto-texte"].forEach(id => { $(id).textContent = ""; });
+    ["jour-1", "jour-2", "jour-3"].forEach(id => { $(id).value = ""; });
+    ["jour-auto", "jour-liste", "jour-aucun"].forEach(id => { $(id).checked = false; });
+    $("jour-etapes").hidden = true;
     messager("message-jour", "", "");
   }
 
@@ -3510,7 +3532,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         saut.textContent = `${partielles.map(([cle, part]) => `${nomPourLEleve(cle)} : pour ${texteDeLaPart(part)} seulement`).join(" ; ")}. `
           + (partielles.length > 1 ? "Les autres sautent ces étapes." : "Les autres sautent cette étape.");
         apercu.append(saut);
-        if (b.mode === "liste") {
+        if (b.mode === "liste" && !classe.effectifsPerimes) {
           const sans = (eleves || []).filter(eleve => !voulue.some(cle => eleveALaPorte(eleve, cle))).length;
           if (sans) {
             const reste = document.createElement("span");
@@ -3518,6 +3540,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
             reste.textContent = `${sans} élève${sans > 1 ? "s n’ont" : " n’a"} aucune de ces étapes : le mode automatique à la place.`;
             apercu.append(reste);
           }
+        }
+        // Correctif (Codex, point 1) : les élèves n'ont pas pu être relus.
+        if (classe.effectifsPerimes) {
+          const relire = document.createElement("span");
+          relire.className = "jour-saut";
+          relire.textContent = "Le nombre d’élèves n’a pas pu être relu : recharge la page pour le voir.";
+          apercu.append(relire);
         }
       }
     }
@@ -3549,14 +3578,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     dessinerJourClasse();
   }
 
+  // Correctif après la relecture Codex (point 7) : la confirmation dit le
+  // CHOIX enregistré, sans promettre une étape à toute la classe (Anzan pour
+  // Noa seul) ; l'aperçu, juste au-dessus, dit qui voit quoi — relu après
+  // l'envoi.
   function texteJourEnregistre(libelle, liste) {
     if (jourSansBloc(liste)) return `Enregistré : pas de grand bouton pour les élèves de la ${libelle}.`;
-    if (!liste.length) {
-      const auto = jourAutomatique(portesDuJour());
-      return `Enregistré : la ${libelle} est en automatique${auto.length ? ` (${auto.map(nomPourLEleve).join(", puis ")})` : ""}.`;
-    }
-    const noms = liste.map(nomPourLEleve).join(", puis ");
-    return `Enregistré : les élèves de la ${libelle} voient ${noms}${/[.!?]$/.test(noms) ? "" : "."}`;
+    if (!liste.length) return `Enregistré : la ${libelle} est en automatique.`;
+    return `Enregistré : la liste de la ${libelle}.`;
   }
 
   async function enregistrerJour() {
@@ -3572,6 +3601,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const session = generation;
     const encoreLa = () => generation === session && Boolean(jeton);
     const memeClasse = () => Boolean(classe) && classe.id === classeId;
+    // Correctif (Codex, point 5) : la navigation au départ de l'écriture. Une
+    // autre classe (ou un autre onglet) demandée pendant l'envoi a la
+    // priorité : la carte ne relit pas sa classe par-dessus — ce serait annuler
+    // la navigation (ouvrirClasse avance demandeAppli).
+    const navigation = demandeAppli;
+    const relireSiPermis = async () => {
+      const relu = demandeAppli === navigation && await relireBornee(classeId);
+      if (!relu && memeClasse()) classe.effectifsPerimes = true;
+      return relu;
+    };
     reglageEnCours = true;
     dessinerJourClasse();
     messager("message-jour", "Enregistrement…", "info");
@@ -3592,18 +3631,28 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (erreur && erreur.statut === 401) { surErreur(erreur, "message-jour"); return; }
       if (!memeClasse()) return;
       if (!erreur) {
-        classe.jour = reponse && Array.isArray(reponse.jour) ? reponse.jour.filter(cle => typeof cle === "string") : voulue;
+        const ecrite = reponse && Array.isArray(reponse.jour) ? clesLues(reponse.jour) : voulue;
+        classe.jour = ecrite;
+        poserPortesDeClasse(reponse);
+        // Correctif (Codex, point 7) : un autre onglet a pu donner Anzan à un
+        // deuxième élève pendant l'envoi — les comptes sont relus avant d'être
+        // montrés comme actuels.
+        await relireSiPermis();
+        if (!encoreLa() || !memeClasse()) return;
+        if (!memeListe(jourDeLaClasse(), ecrite)) classe.jour = ecrite;
         reglageEnCours = false;
         poserJourClasse(true);
-        messager("message-jour", texteJourEnregistre(libelle, classe.jour), "ok");
+        messager("message-jour", texteJourEnregistre(libelle, ecrite), "ok");
         return;
       }
       if (erreur.statut === 409) {
         poserEtatDeClasse(erreur.donnees);
         // Lot B3 : ce que voit chaque élève a pu changer aussi (les comptes
-        // « 1 élève sur 4 » en viennent) — la classe est relue. Si la lecture
-        // échoue, la carte tient quand même l'état du refus (liste, portes).
-        await relireBornee(classeId);
+        // « 1 élève sur 4 » en viennent) — la classe est relue. Correctif
+        // (Codex, point 1) : si la lecture échoue, la carte tient l'état du
+        // refus TEL QUEL — sa liste et ses portes, jamais recoupées avec les
+        // élèves d'avant — et dit que les comptes sont à relire.
+        await relireSiPermis();
         if (!encoreLa() || !memeClasse()) return;
         reglageEnCours = false;
         poserJourClasse(true);
@@ -3618,7 +3667,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         return;
       }
       // Sans réponse lisible : on relit la classe pour savoir ce qui est en place.
-      const relu = await relireBornee(classeId);
+      const relu = await relireSiPermis();
       if (!encoreLa() || !memeClasse()) return;
       reglageEnCours = false;
       if (relu && memeListe(jourDeLaClasse(), voulue)) {
@@ -4831,20 +4880,25 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     // Lot B2 : la liste du jour vraie, qui part avec un 409.
     if (Array.isArray(donnees.jour)) classe.jour = donnees.jour.filter(cle => typeof cle === "string");
     // Lot B3 : les portes possibles vraies (celles de la classe et celles de
-    // quelques élèves) — voir portesDuJour.
-    if (Array.isArray(donnees.portes)) classe.portesJour = donnees.portes.filter(cle => typeof cle === "string");
+    // quelques élèves), et celles de la classe seule — voir portesDuJour.
+    poserPortesDeClasse(donnees);
   }
 
   // Un 409 d'un élève porte ses ajouts vrais (et ce qu'il voit) : posés sur
   // l'élève de la page (relecture Codex, point 5 : avant, le contenu du 409
   // n'était pas appliqué, et une relecture en panne laissait l'ancien).
+  //
+  // Correctif après la relecture Codex (point 6) : aussi la réponse d'un envoi
+  // RÉUSSI (avant, elle était jetée : une relecture ratée laissait l'ancien
+  // accès), sur toutes les listes déjà lues ; et les portes du jour de sa
+  // classe (« classe_portes »), seulement si c'est encore la classe ouverte.
   function poserAccesDeLEleve(eleve, donnees) {
     if (!eleve || !donnees) return;
     if (donnees.ajouts && typeof donnees.ajouts === "object" && !Array.isArray(donnees.ajouts)) eleve.ajouts = donnees.ajouts;
     if (donnees.acces && typeof donnees.acces === "object" && Array.isArray(donnees.acces.applis)) eleve.acces = donnees.acces;
-    // Lot B3 : ce que voit un élève vient de changer ici même — les portes
-    // d'un ancien refus (portesJour, carte « Aujourd'hui ») ne font plus foi.
-    if (classe) delete classe.portesJour;
+    reporterAccesDeLaListe([eleve]);
+    const portes = donnees.classe_portes;
+    if (classe && portes && typeof portes === "object" && portes.classe_id === classe.id) poserPortesDeClasse(portes);
   }
 
   // Deux états d'ajouts disent-ils la même chose ? Lus comme ajoutsApres
@@ -5022,8 +5076,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       const rates = [];          // {eleve, erreur} : refusés, ou sans réponse (statut 0)
       if (pourLaClasse) {
         try {
-          await appelBorne("classes.modifier", Object.assign({classe_id: classeId}, pourLaClasse));
+          const reponse = await appelBorne("classes.modifier", Object.assign({classe_id: classeId}, pourLaClasse));
           classeEcrite = true;
+          // Correctif B3 (Codex, point 6) : les portes du jour d'après l'écriture.
+          if (encoreLa() && memeClasse()) poserPortesDeClasse(reponse);
         } catch (erreur) {
           if (erreur.statut === 401) coupe = erreur;
           else {
@@ -5041,11 +5097,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
           let ajouts = eleve.ajouts || {};
           gestes.forEach(geste => { ajouts = ajoutsApres(ajouts, geste); });
           try {
-            await appelBorne("eleves.acces", {eleve_id: eleve.id, avant: eleve.ajouts || {}, ajouts});
+            const reponse = await appelBorne("eleves.acces", {eleve_id: eleve.id, avant: eleve.ajouts || {}, ajouts});
             reussis.push(eleve);
+            // Correctif B3 (Codex, point 6) : la réponse n'est plus jetée — ce
+            // que voit l'élève, et les portes du jour de sa classe, tiennent même
+            // si la relecture qui suit échoue. Vérifié APRÈS l'attente : la
+            // classe ouverte est-elle toujours la sienne ?
+            if (encoreLa() && memeClasse()) poserAccesDeLEleve(eleve, reponse);
           } catch (erreur) {
             if (erreur.statut === 401) { coupe = erreur; break; }
-            if (erreur.statut === 409 && encoreLa()) poserAccesDeLEleve(eleve, erreur.donnees);
+            if (erreur.statut === 409 && encoreLa() && memeClasse()) poserAccesDeLEleve(eleve, erreur.donnees);
             rates.push({eleve, erreur, ajouts});
           }
         }
@@ -8508,9 +8569,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       if (tableaux[cle] && tableaux[cle].some(eleve => eleve.parcours && eleve.lu && eleve.lu.lisible === false)) {
         tableaux[cle] = elevesLus(cle, tableaux[cle]);
       }
-      const liste = tableaux[cle]
-        || elevesLus(cle, (await api("tableau", {classe_id: classe.id, appli: cle})).eleves);
+      const classeId = classe.id;
+      const donnees = tableaux[cle] ? null : await api("tableau", {classe_id: classeId, appli: cle});
+      const liste = tableaux[cle] || elevesLus(cle, donnees.eleves);
       if (numero !== demandeAppli || !jeton) return;
+      // Correctif B3 (Codex, point 6) : un tableau frais dit la classe ET ses
+      // élèves du même instant — les deux sont repris ensemble, et seulement
+      // si c'est encore la classe ouverte.
+      if (!classe || classe.id !== classeId) return;
+      if (donnees && donnees.classe && donnees.classe.id === classeId) reprendreLaClasse(donnees.classe);
       // Lot 4b-bis (relecture Codex) : une liste fraîche dit ce que voit
       // chaque élève MAINTENANT (un autre onglet du navigateur a pu retirer
       // Anzan à Rania) — on le reporte sur les listes déjà lues.
@@ -8527,6 +8594,17 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     } catch (erreur) {
       if (numero === demandeAppli) surErreur(erreur, "message-appli");
     }
+  }
+
+  // Correctif B3 (relecture Codex, point 6) : la classe d'un tableau frais
+  // (changement d'onglet) remplace ce que la page en savait — ses activités,
+  // ses réglages, sa liste du jour et ses portes —, comme ouvrirClasse ; le
+  // droit et la séance en direct restent ceux de l'ouverture.
+  function reprendreLaClasse(fraiche) {
+    ["libelle", "applis", "reglages", "jour", "portes", "portes_classe"].forEach(nom => {
+      if (fraiche[nom] !== undefined) classe[nom] = fraiche[nom];
+    });
+    delete classe.effectifsPerimes;
   }
 
   // Lot 4b-bis : ce que voit chaque élève (acces, ajouts), lu dans une liste
