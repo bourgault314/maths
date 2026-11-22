@@ -936,7 +936,9 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"],
       R7: ["qcm"], R8: ["qcm", "associer", "phrase", "ranger"], R9: ["qcm"],
       C9: ["nombre", "phrase", "qcm", "deux-cases"], A1: ["nombre", "phrase", "qcm"], A2: ["nombre", "phrase", "qcm"],
-      D3: ["nombre", "phrase", "deux-cases", "qcm"], Q3: ["nombre", "vrai-faux"], Q4: ["nombre", "qcm"]}[code];
+      D3: ["nombre", "phrase", "deux-cases", "qcm"], Q3: ["nombre", "vrai-faux"], Q4: ["nombre", "qcm"],
+      // Lot B4-1
+      A3: ["nombre", "phrase", "qcm"], V1: ["nombre", "qcm"], Q5: ["nombre", "vrai-faux"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -2843,4 +2845,191 @@ test("lot B3-3, correctif de la relecture : les 28 défauts ne reviennent pas", 
   assert.ok(departs > 200, `des heures de départ : ${departs}`);
   // Défaut 5 : « 0,5 min » n'est plus dans les exemples à connaître de D3.
   assert.doesNotMatch(JSON.stringify(CARTE.etape("D3")), /0,5/);
+});
+
+test("lot B4-1 : A3, V1, Q5 — recalculés à part, l'outil sans la réponse, les places, les pourquoi, l'écriture", () => {
+  const sp = t => String(t).replace(/[  ‑]/g, x => (x === "‑" ? "-" : " "));
+  const echappe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const places = {};
+  const noter = (k, b) => { (places[k] = places[k] || new Set()).add(b); };
+  const sortes = {A3: {}, V1: {}, Q5: {}};
+  const reunion = new Set();
+  // Le volume d'un assemblage, recompté à part : la couche l d'un escalier a
+  // nx − l cubes de large.
+  const volume = a => {
+    let n = 0;
+    for (let l = 0; l < a.nz; l += 1) n += a.ny * (a.forme === "escalier" ? a.nx - l : a.nx);
+    return n;
+  };
+  const verdicts = {A: 0, B: 0, meme: 0};
+  for (let g = 1; g <= 400; g += 1) {
+    for (const code of ["A3", "V1", "Q5"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        const serie = G.serie(code, {usage, graine: g});
+        // Dans Je valide de Q5 : un même contexte une fois.
+        if (code === "Q5" && usage === "valide") {
+          const vus = serie.map(q => q.modeleQ5);
+          assert.equal(new Set(vus).size, vus.length, `Q5 valide ${g} : un contexte deux fois`);
+        }
+        serie.forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees;
+          const sorte = q.sorteA3 || q.sorteV1 || q.sorteQ5 || d.type;
+          sortes[code][sorte] = (sortes[code][sorte] || 0) + 1;
+          if (/case créole|varangue|letchi|goyave|jardin créole|eau de coco/.test(q.texte)) reunion.add(code);
+          const rep = sp(q.reponseTexte);
+          // La dernière ligne de la correction : la réponse, en vert.
+          const der = q.lignesB33[q.lignesB33.length - 1];
+          assert.ok(Array.isArray(der), `${ou} : la dernière ligne`);
+          if (q.forme !== "vrai-faux") assert.ok(rep === sp(der[1]) || rep.startsWith(`${sp(der[1])} `) || rep.endsWith(` ${sp(der[1])}`), `${ou} : la réponse en vert « ${der[1]} »`);
+          assert.equal(q.correction.join("|"), q.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l)).join("|"), `${ou} : la correction écrite`);
+          q.lignesB33.forEach(l => assert.ok(sp([].concat(l).join("")).length <= 44, `${ou} : une ligne de correction trop longue « ${[].concat(l).join("")} »`));
+          if (code === "A3" && d.type === "conv") {
+            // Seulement m² ↔ dm² et dm² ↔ cm² (S004 p. 11 : « les autres
+            // conversions d'aire ne figurent pas au programme »).
+            const paire = [d.de, d.vers].sort().join("-");
+            assert.ok(["cm²-dm²", "dm²-m²"].includes(paire), `${ou} : ${paire}`);
+            const vers = EXPOSANTS[d.vers] > EXPOSANTS[d.de];
+            if (q.sorteA3.includes("regroupe")) {
+              assert.equal(q.degre, 1, `${ou} : on regroupe au degré 1`);
+              const r = q.regroupeA3;
+              assert.ok(vers, `${ou} : on regroupe vers plus grand`);
+              assert.equal(BigInt(r.nb) * 10000n, lire(d.valeur), `${ou} : les colonnes`);
+              assert.ok(r.n + (r.d ? 1 : 0) <= 4, `${ou} : ${r.n} carrés et ${r.d} colonnes`);
+              assert.ok(!(r.n === 0 && r.d === 1), `${ou} : la note est la réponse`);
+            } else if (q.calculA3) {
+              assert.equal(q.calculA3.op, vers ? "÷" : "×", ou);
+              assert.ok(!sp(`${q.calculA3.gauche} = ${q.calculA3.nombre} ${q.calculA3.op} ${q.calculA3.facteur} ${q.calculA3.unite}`).includes(rep), `${ou} : le calcul donne la réponse`);
+            }
+            if (q.degre === 1 && q.forme !== "qcm" && vers) assert.ok(q.regroupeA3, `${ou} : le degré 1 sans regroupement`);
+          }
+          if (code === "V1" && d.a) {
+            // Le volume recompté à part ; jamais de dé à jouer.
+            assert.equal(lire(q.reponse), BigInt(volume(d.a)) * 1000n, `${ou} : le volume`);
+            assert.ok(volume(d.a) <= 200, ou);
+            if (d.a.forme === "escalier") assert.ok(d.a.nz <= d.a.nx, `${ou} : l'escalier`);
+          }
+          if (code === "V1" && d.sorte === "comparer") {
+            const [va, vb] = [volume(d.A), volume(d.B)];
+            const attendu = va === vb ? 2 : va > vb ? 0 : 1;
+            assert.equal(q.bon, attendu, `${ou} : A ${va}, B ${vb}`);
+            assert.deepEqual(q.choix.map(sp), ["A", "B", "Le même volume"]);
+            assert.notEqual(JSON.stringify(d.A), JSON.stringify(d.B), `${ou} : deux fois le même assemblage`);
+            verdicts[attendu === 2 ? "meme" : attendu === 0 ? "A" : "B"] += 1;
+            noter("V1 comparer", q.bon);
+          }
+          if (code === "Q5" && q.forme === "nombre") {
+            const L = n => lire(String(n));
+            let attendu;
+            const vers = d.vers;
+            const ex = {km: 3, m: 0, dm: -1, cm: -2, L: 0, cL: -2};
+            const conv = (m, de, ve) => { const k = ex[de] - ex[ve]; return k >= 0 ? m * 10n ** BigInt(k) : m / 10n ** BigInt(-k); };
+            if (d.sorte === "verres") attendu = conv(L(d.a), "L", "cL") / BigInt(d.n);
+            else if (d.sorte === "pleins") attendu = conv(L(d.a), "L", "cL") / L(d.part) * 1000n;
+            else if (d.sorte === "tours") attendu = conv(L(d.a) * BigInt(d.n), d.ua, "km");
+            else if (d.sorte === "carreaux") attendu = (conv(L(d.L), "m", "cm") / (BigInt(d.c) * 1000n)) * (conv(L(d.l), "m", "cm") / (BigInt(d.c) * 1000n)) * 1000n;
+            else if (d.mesure === "perimetre") attendu = 2n * (conv(L(d.L), d.uL, vers) + conv(L(d.l), d.ul, vers));
+            else {
+              const u = vers.replace("²", "");
+              attendu = conv(L(d.L), d.uL, u) * conv(L(d.l), d.ul, u) / 1000n;
+            }
+            assert.equal(lire(q.reponse), attendu, `${ou} : ${q.reponse}`);
+            // Des verres vrais (S004 : 1,5 L dans 8 verres) : de 15 cL à 25 cL.
+            if (d.sorte === "verres") assert.ok(attendu >= 15000n && attendu <= 25000n, `${ou} : un verre de ${q.reponse} cL`);
+            if (d.sorte === "pleins") assert.ok(conv(L(d.a), "L", "cL") % L(d.part) !== 0n, `${ou} : tombe juste`);
+            // Deux unités dans le rectangle de la question (la conversion jamais annoncée).
+            if (q.morceaux.figure && d.sorte !== "aire" && d.sorte !== "carreaux") assert.notEqual(q.morceaux.figure.longueur.split(" ")[1], q.morceaux.figure.largeur.split(" ")[1], `${ou} : une seule unité`);
+            if (q.morceaux.figure) assert.ok(q.morceaux.deuxLignes && q.morceaux.plancher === 14, `${ou} : l'énoncé`);
+          }
+          if (code === "Q5" && q.forme === "vrai-faux") {
+            const p = lire(d.propose);
+            const vrai = lire(d.L) * lire(d.l) / 1000n;
+            assert.equal(q.bon === 0, p === vrai, `${ou} : le verdict (${d.propose} pour ${vrai})`);
+            assert.equal(lire(sp(q.lignesB33[1][1]).replace(" dm²", "").replace(/ /g, "")), vrai, `${ou} : la vraie aire`);
+            assert.match(sp(q.lignesB33[0]), /^Environ \d+ × \d+ = \d+ dm²\.$/, `${ou} : le contrôle`);
+            noter("Q5 vrai-faux", q.bon);
+          }
+          // L'outil, l'image et la note ne donnent jamais la réponse.
+          const outilT = [q.noteOutil || "", ...(q.image || []),
+            q.calculA3 ? `${q.calculA3.gauche} = ${q.calculA3.nombre} ${q.calculA3.op} ${q.calculA3.facteur} ${q.calculA3.unite}` : "",
+            q.rectQ5 ? `${q.rectQ5.longueur} | ${q.rectQ5.largeur}` : "", q.barreQ3 ? [q.barreQ3.tout, ...q.barreQ3.parts, q.barreQ3.dessous].join(" | ") : "",
+            q.noteFinA3 || ""].map(sp).join(" | ");
+          if (q.forme !== "vrai-faux" && !/^(A|B|Le même volume)$/.test(rep)) assert.doesNotMatch(outilT, new RegExp(`(^|[^\\d,])${echappe(rep)}([^\\d,]|$)`), `${ou} : l'aide « ${outilT} » donne « ${rep} »`);
+          // Au choix : un pourquoi de 31 signes au plus, et aucun autre choix
+          // ne vaut la bonne réponse.
+          if (q.forme === "qcm" || q.forme === "vrai-faux") {
+            if (q.forme === "qcm") noter(`${code} ${sorte}`, q.bon);
+            q.choix.forEach((c, k) => {
+              if (k === q.bon) return;
+              const v = G.verifier(q, k);
+              assert.ok(v.retour, `${ou} : « ${c} » sans pourquoi`);
+              assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`);
+              if (d.type === "conv") assert.notEqual(lire(sp(c).replace(/ /g, "")), lire(q.reponse), `${ou} : « ${c} » vaut la bonne réponse`);
+            });
+          } else {
+            // Les erreurs : 31 signes au plus.
+            const v0 = lire(q.reponse);
+            [v0 * 10n, v0 / 10n, v0 * 100n, v0 + 1000n, v0 / 100n].forEach(y => {
+              const r = G.verifier(q, G.ecrire(y).replace(/ /g, ""));
+              if (r.retour) assert.ok(r.retour.length <= 31, `${ou} : retour trop long « ${r.retour} »`);
+            });
+          }
+          // Aucune espace normale devant « : ; ? ! » ; aucun tableau.
+          const m = q.morceaux || {};
+          const affiches = [q.texte, q.resume, q.noteOutil, m.phrase, m.avant, m.enonce, ...(q.correction || []), ...(q.image || []),
+            ...Object.values(q.pourquoi || {}), ...(q.choix || [])].filter(t => typeof t === "string");
+          affiches.forEach(t => assert.doesNotMatch(t, / [:;?!]/, `${ou} : une espace normale devant la ponctuation « ${t} »`));
+          affiches.forEach(t => assert.doesNotMatch(t, /tableau de conversion|dé à jouer/i, `${ou} : « ${t} »`));
+          if (m.enonce && q.forme === "nombre" && !m.figure) assert.ok(m.deuxLignes && m.plancher === 14, `${ou} : l'énoncé sur deux lignes, jamais sous 14 px`);
+          ecriture(q.texte, ou);
+        });
+      }
+    }
+  }
+  // Toutes les sortes tombent.
+  ["regroupe", "calcul", "inverse", "situation-regroupe", "situation-calcul", "centieme", "carre"].forEach(k => assert.ok(sortes.A3[k] > 50, `A3 : ${k} ${sortes.A3[k] || 0}`));
+  ["pave", "escalier", "structure", "comparer", "fait"].forEach(k => assert.ok(sortes.V1[k] > 50, `V1 : ${k} ${sortes.V1[k] || 0}`));
+  ["verres", "pleins", "tours", "perimetre", "aire", "sol", "carreaux"].forEach(k => assert.ok(sortes.Q5[k] > 50, `Q5 : ${k} ${sortes.Q5[k] || 0}`));
+  assert.ok(reunion.has("A3") && reunion.has("Q5"), "La Réunion");
+  // Comparer : A, B et « Le même volume » à peu près aussi souvent.
+  Object.entries(verdicts).forEach(([k, n]) => assert.ok(n > 300, `V1 comparer : ${k} ${n}`));
+  // La bonne réponse à toutes les places.
+  Object.entries(places).filter(([, v]) => v.size).forEach(([k, v]) => assert.deepEqual([...v].sort(), k.endsWith("vrai-faux") ? [0, 1] : [0, 1, 2], `${k} : la bonne réponse aux places ${[...v]}`));
+  // Les erreurs neuves.
+  const q20 = G.serie("A3", {usage: "entraine", graine: 7}).concat(...Array.from({length: 100}, (_, g) => G.serie("A3", {usage: "entraine", graine: g + 20})))
+    .find(q => q.donnees.type === "conv" && q.sorteA3 === "inverse" && q.forme === "nombre");
+  assert.equal(sp(G.verifier(q20, G.ecrire(lire(q20.donnees.valeur) * 10n).replace(/ /g, "")).retour), sp(`1 ${q20.donnees.de} : 10 rangées de 10.`), "20 cm² pour 2 dm² : les rangées");
+  const pave = G.serie("V1", {usage: "entraine", graine: 3}).concat(...Array.from({length: 100}, (_, g) => G.serie("V1", {usage: "entraine", graine: g + 10})))
+    .find(q => q.donnees.a && q.donnees.a.forme === "pave" && q.donnees.a.nz >= 2 && q.donnees.a.ny >= 2 && q.donnees.a.nx >= 2 && q.donnees.sorte === "pave");
+  const a = pave.donnees.a;
+  const vus = a.nx * a.ny * a.nz - (a.nx - 1) * (a.ny - 1) * (a.nz - 1);
+  assert.equal(sp(G.verifier(pave, String(vus)).retour), "Et les cubes cachés ?");
+  assert.equal(sp(G.verifier(pave, String(a.nx * a.ny)).retour), `Il y a ${a.nz} couches.`);
+  // Les exemples de On te montre ; les noms courts ; les repères.
+  assert.deepEqual([...G.clesExemples("A3")], ["A3:370cm²>dm²", "A3:2450cm²>dm²", "A3:40dm²>m²"]);
+  assert.equal(sp(CARTE.etape("A3").nomCourt), "Aires : vers plus grand");
+  assert.equal(CARTE.etape("Q5").nomCourt, "Périmètres et aires");
+  assert.deepEqual(CARTE.etape("V1").reperes, [], "V1 : pas le dé à jouer comme repère de 1 cm³");
+  ["A3", "V1", "Q5"].forEach(c => assert.doesNotMatch(JSON.stringify(CARTE.etape(c)), /tableau de conversion/i, `${c} : un tableau`));
+  // Le palier 4 reste caché : D4, D5, Q6 ne sont pas construites (B4-2).
+  assert.equal(CARTE.palierPret(4), false);
+  // (B4-1c) Les corrections et les phrases revues après les premiers passages.
+  const tous = [];
+  for (let g = 1; g <= 200; g += 1) for (const usage of ["entraine", "valide"]) for (const code of ["V1", "Q5"]) tous.push(...G.serie(code, {usage, graine: g}));
+  tous.forEach(q => {
+    const t = sp(q.texte);
+    assert.doesNotMatch(t, /\bde [aeiouéèh]/i, `« de » devant une voyelle : ${t}`);
+    if (q.code === "Q5" && (q.sorteQ5 === "verres" || q.sorteQ5 === "tours")) {
+      assert.equal(q.lignesB33.length, 1, `${t} : la correction tient en une ligne`);
+      assert.ok(!q.corrB33.dessous, `${t} : rien sous la barre corrigée`);
+    }
+    if (q.code === "Q5" && q.morceaux.figure) assert.ok(q.morceaux.figure.compact, `${t} : le rectangle compact`);
+    if (q.code === "Q5" && q.sorteQ5 === "carreaux") assert.equal(q.morceaux.apres, "", `${t} : la case seule`);
+    if (q.code === "V1" && q.sorteV1 === "comparer") {
+      assert.equal(q.lignesB33.length, 1, `${t} : une seule ligne verte`);
+      assert.ok(Number.isInteger(q.corrB33.vA) && Number.isInteger(q.corrB33.vB), "les volumes sous A et B");
+      Object.values(q.pourquoi).forEach(p => assert.ok(!/^A : .* ; B : /.test(sp(p)), `${p} : le pourquoi redit la correction`));
+    }
+    if (q.forme === "vrai-faux") Object.values(q.pourquoi).forEach(p => assert.notEqual(sp(p), sp(q.correction[0]), "le pourquoi redit la correction"));
+  });
 });

@@ -1449,3 +1449,52 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .zone .dessin.q4-barre { max-width: 30rem; max-height: min(10rem, 22vh); }
   .reponse-bonne .dessin.d3-axe, .reponse-bonne .dessin.q4-barre { max-height: min(9rem, 20vh); }
 }
+
+/* ================================= lot B4-1 (A3, V1, Q5)
+   A3 : le regroupement (les carrés de 1 dm² et le reste, la même largeur du
+   début à la fin) et le calcul (comme A2). V1 : l'assemblage dans la
+   question (comme l'aire en carreaux de A5), le pavé qui se démonte dans
+   l'outil (sa hauteur finale gardée dès le début), A et B pour comparer.
+   Q5 : le rectangle coté. Mesuré sur la maquette du B4-1a au petit iPhone :
+   texte des dessins à 14 px au moins. */
+.zone .dessin.a3-regroupe { display: block; width: auto; max-width: 100%; height: min(5.875rem, 17vh); max-height: none; }
+.dessin.a3-regroupe.a-toucher, .dessin.v1-cubes.a-toucher, .dessin.q5-rect.a-toucher { cursor: pointer; }
+.reponse-bonne .dessin.a3-regroupe { height: min(5.5rem, 16vh); }
+/* (B4-1c : le pavé démonté à 18,5vh, A et B à 14vh — l'outil de V1 tenait à 82 % au petit iPhone.) */
+.zone .dessin.v1-cubes { display: block; width: auto; max-width: 100%; height: min(7.5rem, 18.5vh); max-height: none; }
+.zone .dessin.v1-cubes.v1-seul { height: min(6.5rem, 18vh); }
+.reponse-bonne .dessin.v1-cubes { height: min(6rem, 17vh); }
+.zone .v1-deux { display: flex; justify-content: center; align-items: flex-end; gap: 1.25rem; width: 100%; }
+.v1-un { display: flex; flex-direction: column; align-items: center; gap: .125rem; min-width: 0; }
+.v1-nom { font-weight: 900; font-size: 1.125rem; line-height: 1.1; color: var(--ink); }
+.reponse-bonne .v1-nom.v1-vol { color: var(--green); font-size: 1rem; white-space: nowrap; }
+.zone .dessin.v1-cubes.v1-petit { height: min(5.25rem, 14vh); }
+.reponse-bonne .dessin.v1-cubes.v1-petit { height: min(4.5rem, 13vh); }
+.q .aire-q .dessin.v1-q { height: 4.5rem; }
+.q .v1-deux-q { align-items: flex-end; }
+.q .v1-deux-q .dessin.v1-q { height: 4rem; width: auto; max-width: 100%; display: block; }
+.q .v1-deux-q .v1-un { max-width: 46%; }
+#cadre.sans-outil .q .v1-deux-q .dessin.v1-q { height: clamp(4rem, 13vh, 5rem); }
+/* (B4-1c : À toi au petit téléphone, A et B de la question un peu plus bas : la
+   question de comparer fixe la hauteur de toute la série.) */
+@media (max-height: 600px) { #cadre.bas-court .q .v1-deux-q .dessin.v1-q { height: 3.25rem; } }
+/* (B4-1c : la hauteur fixée, la largeur suit la cote ; la correction plus basse.) */
+.zone .dessin.q5-rect { display: block; width: auto; max-width: 100%; height: min(5.75rem, 17vh); max-height: none; }
+.reponse-bonne .dessin.q5-rect { height: 3.875rem; }
+/* (B4-1c : la barre de Q5 dans l'outil, au petit téléphone : les cases et les
+   accolades un peu plus basses — la note tombait à 12,8 px.) */
+@media (max-height: 600px) {
+  .zone .q3-barre.serre .q3-part { padding-top: .25rem; padding-bottom: .25rem; }
+  .zone .q3-barre.serre .q3-acc-h::after, .zone .q3-barre.serre .q3-acc-b::before { height: .375rem; }
+}
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .zone .dessin.a3-regroupe { height: min(8rem, 19vh); }
+  .reponse-bonne .dessin.a3-regroupe { height: min(7rem, 16vh); }
+  .zone .dessin.v1-cubes { height: min(11rem, 24vh); }
+  .reponse-bonne .dessin.v1-cubes { height: min(8rem, 18vh); }
+  .zone .dessin.v1-cubes.v1-petit { height: min(8rem, 18vh); }
+  .q .aire-q .dessin.v1-q { height: 6rem; }
+  .q .v1-deux-q .dessin.v1-q { height: 5.5rem; }
+  .zone .dessin.q5-rect { height: min(8rem, 19vh); }
+  .reponse-bonne .dessin.q5-rect { height: min(5.5rem, 13vh); }
+}

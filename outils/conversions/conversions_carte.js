@@ -178,8 +178,8 @@
     {code: "Q3", rang: 29, palier: 3, famille: "problemes", classe: "CM2", nom: "Problèmes : plusieurs fois, partager", nomCourt: "Plusieurs fois, partager", exemple: ""},
     {code: "Q4", rang: 30, palier: 3, famille: "problemes", classe: "CM2", nom: "Problèmes : une fraction d'une quantité", nomCourt: "Une fraction d'une quantité", exemple: ""},
     // Palier 4 · La 6e
-    {code: "A3", rang: 31, palier: 4, famille: "aires", classe: "6e", nom: "Convertir des aires (vers plus grand)", exemple: "370 cm² = 3,7 dm²"},
-    {code: "V1", rang: 32, palier: 4, famille: "volumes", classe: "6e", nom: "Le centimètre cube", exemple: ""},
+    {code: "A3", rang: 31, palier: 4, famille: "aires", classe: "6e", nom: "Convertir des aires (vers plus grand)", nomCourt: "Aires : vers plus grand", exemple: "370 cm² = 3,7 dm²"},
+    {code: "V1", rang: 32, palier: 4, famille: "volumes", classe: "6e", nom: "Le centimètre cube", exemple: "1 cm³"},
     {code: "D4", rang: 33, palier: 4, famille: "durees", classe: "6e", nom: "Jours, semaines, années, siècles", exemple: "1 jour = 24 h"},
     {code: "D5", rang: 34, palier: 4, famille: "durees", classe: "6e", nom: "Les heures décimales usuelles", exemple: "0,25 h = 15 min"},
     {code: "Q5", rang: 35, palier: 4, famille: "problemes", classe: "6e", nom: "Problèmes : périmètres et aires", nomCourt: "Périmètres et aires", exemple: ""},
@@ -916,6 +916,90 @@
           apres: ["200 cL ÷ 4 = 50 cL", "3 × 50 cL = 150 cL"]}
       ],
       retenir: "Pour prendre 2⁄5 de 60 kg, je partage 60 kg en 5 parts égales :\n60 kg ÷ 5 = 12 kg.\nPuis je prends 2 parts : 2\u00a0×\u00a012 kg = 24 kg.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 4 (lot B4-1)
+    // A3 « Convertir des aires (vers plus grand) » (S004 p. 11 : m² ↔ dm²,
+    // dm² ↔ cm², dans les deux sens ; « la mesure en dm² est 100 fois plus
+    // petite » ; « 1 cm² est le centième de 1 dm² » ; le tableau de
+    // conversion est déconseillé). Choix de Gwenaël du 22/11 (B4-1a) : on
+    // regroupe au degré 1, puis le calcul « (2 450 ÷ 100) dm² ».
+    A3: {
+      pret: true,
+      aide: {outil: "regroupe-a3", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "370 cm² =", reponse: "3,7", apres: "dm²"},
+          consigne: "Touche : 100 carreaux font 1 dm².\nUn carré de plus à chaque fois.",
+          aide: {type: "regroupe-a3", nb: 37, petite: "cm²", grande: "dm²"},
+          apres: ["3 dm² + 70 cm²", "= 3,7 dm²"],
+          legende: "Une colonne : 0,1 dm²."},
+        {etiquette: "Je calcule", question: {avant: "2 450 cm² =", reponse: "24,5", apres: "dm²"},
+          consigne: "En dm², un nombre 100 fois plus petit.\nTouche le calcul.",
+          aide: {type: "calcul-a3", gauche: "2 450 cm²", nombre: "2 450", op: "÷", facteur: "100", unite: "dm²"},
+          apres: ["2 450 ÷ 100 = 24,5", "2 450 cm² = 24,5 dm²"]},
+        {etiquette: "Je vérifie", question: {avant: "40 dm² =", reponse: "0,4", apres: "m²"},
+          consigne: "Moins de 100 dm² : pas de carré entier.\nTouche les colonnes.",
+          aide: {type: "regroupe-a3", nb: 4, petite: "dm²", grande: "m²"},
+          apres: ["4 colonnes de 0,1 m²", "= 0,4 m²"],
+          legende: "Pas 4 m² : 100 dm² font 1 m²."}
+      ],
+      retenir: "Vers une unité plus grande, je regroupe : 100 cm² font 1 dm², 100 dm² font 1 m². 1 cm² est le centième de 1 dm².\nEn dm², le nombre est 100 fois plus petit : 2 450 cm² = (2 450 ÷ 100) dm² = 24,5 dm².",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["370 cm² = 3,7 dm²", "2 450 cm² = 24,5 dm²", "40 dm² = 0,4 m²", "3,7 m² = 370 dm²", "1 cm² = 0,01 dm²"],
+      reperes: []
+    },
+    // V1 « Le centimètre cube » (S004 p. 11 et 17 : 1 cm³, le volume d'un
+    // cube d'arête 1 cm ; dénombrer, comparer des assemblages). Choix de
+    // Gwenaël du 22/11 (B4-1a) : le pavé se démonte, une couche par toucher.
+    // (Pas le dé à jouer : il fait environ 4 cm³.)
+    V1: {
+      pret: true,
+      aide: {outil: "cubes-v1", image: "cubes-v1"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Des cubes de 1 cm³.", avant: "Volume :", reponse: "24", apres: "cm³"},
+          consigne: "Touche : une couche se soulève.\nUne couche, puis les couches.",
+          aide: {type: "cubes-v1", forme: "pave", nx: 4, ny: 3, nz: 2},
+          apres: ["Une couche : 4 × 3 = 12 cubes", "= 2 × 12 cm³ = 24 cm³"],
+          legende: "Les cubes cachés comptent aussi."},
+        {etiquette: "Je compte", question: {enonce: "Un escalier de cubes de 1 cm³.", avant: "Volume :", reponse: "12", apres: "cm³"},
+          consigne: "Touche : les couches se soulèvent.\nChaque couche se voit par-dessus.",
+          aide: {type: "cubes-v1", forme: "escalier", nx: 3, ny: 2, nz: 3},
+          apres: ["6 + 4 + 2", "= 12 cm³"]},
+        {etiquette: "Je retiens", question: {avant: "Un cube de 1 cm de côté :", reponse: "1", apres: "cm³"},
+          consigne: "1 cm³ : le volume d'un cube\nde 1 cm de côté.",
+          aide: {type: "cubes-v1", forme: "pave", nx: 1, ny: 1, nz: 1, cote: true},
+          apres: ["1 cm × 1 cm × 1 cm", "= 1 cm³"],
+          legende: "Pas un dé à jouer : il est plus gros."}
+      ],
+      retenir: "1 cm³, c'est le volume d'un cube de 1 cm de côté.\nPour trouver un volume, je compte les cubes de 1 cm³, sans oublier les cubes cachés : une couche, puis les couches. 2 couches de 3 rangées de 4 cubes : 2 × 12 = 24 cm³.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Q5 « Problèmes : périmètres et aires » (S004 p. 4-5 : 1,5 L dans 8
+    // verres, la conversion jamais annoncée ; 3,7 dm × 2,9 dm contrôlé par
+    // 4 × 3 = 12 ; la carte v4 : le rectangle de 3,5 m sur 40 cm). B4-1a :
+    // pas la piste homologuée (le périmètre du disque, π).
+    Q5: {
+      pret: true,
+      aide: {outil: "rect-q5", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Léa partage 1,5 L de jus de goyave entre 8 verres.", avant: "Un verre :", reponse: "18,75", apres: "cL"},
+          consigne: "Touche la barre : tout en cL.",
+          aide: {type: "barre-q3", tout: "1,5 L", toutApres: "1,5 L = 150 cL", parts: ["? cL", "", "", "…", "", ""], dessous: "8 verres", touche: true},
+          apres: ["150 cL ÷ 8", "= 18,75 cL"]},
+        {etiquette: "Je calcule", question: {enonce: "Une plaque de liège de 3,7 dm sur 2,9 dm.", avant: "Aire :", reponse: "1 073", apres: "cm²"},
+          consigne: "Touche : les côtés en cm.\nAire : longueur × largeur.",
+          aide: {type: "rect-q5", longueur: "3,7 dm", largeur: "2,9 dm", apres: {longueur: "3,7 dm = 37 cm", largeur: "2,9 dm = 29 cm"}},
+          apres: ["37 cm × 29 cm", "= 1 073 cm²"],
+          legende: "Je contrôle : environ 4 × 3 = 12 dm²."},
+        {etiquette: "Je vérifie", question: {enonce: "Noa fait 25 tours d'une piste de 400 m.", avant: "En tout :", reponse: "10", apres: "km"},
+          consigne: "Une case par tour ; puis en km.",
+          aide: {type: "barre-q3", tout: "? km", parts: ["400 m", "400 m", "…", "400 m"], dessous: "25 tours"},
+          apres: ["25 × 400 m = 10 000 m", "= 10 km"]}
+      ],
+      retenir: "J'écris toutes les mesures dans la même unité avant de calculer.\nPérimètre : je fais le tour. Aire d'un rectangle : longueur × largeur.\nJe contrôle avec un ordre de grandeur : 3,7 dm × 2,9 dm, environ 4 × 3 = 12 dm².",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },
