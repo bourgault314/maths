@@ -165,7 +165,7 @@ function jouerOuvrir({copie = null, copieCassee = false, reponse, jauges = Promi
   const zones = {code: {value: ""}, erreur: {}};
   const html = classes();
   let codeGarde = code;
-  const source = `${constante("ATTENTE_JAUGES").replace("1000", "40")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("ouvrir")}\nreturn ouvrir;`;
+  const source = `${constante("ATTENTE_JAUGES").replace("1000", "40")}\nlet ouverture = 0;\n${fonction("attendre")}\n${fonction("jourPourLaCopie")}\n${fonction("ouvrir")}\nreturn ouvrir;`;
   const ouvrir = new Function("window", "document", "fetch", "$", "lireCopie", "afficherEspace", "garderCopie", "ecrireCode", "lireCode",
     "lireJauges", "surveillerDirect", "revenirAuCode", "afficherErreur", "dessinerCases", "oublierCopie",
     // Lot « code en cases » : l'élève est actif (pas de question), et le code tapé note un geste.
@@ -199,6 +199,24 @@ test("ouvrir — retour avec copie : la copie est dessinée AVANT toute réponse
   assert.deepEqual(r.journal, [["dessin", "Rania (copie)", "defi-tables", JSON.stringify(COPIE.haut)]], "tout de suite, sans attendre le serveur");
   await r.fini;
   assert.deepEqual(r.journal.slice(1), [["code", "ABC234"], ["dessin", "Rania", "defi-tables", "-"], ["copie", "defi-tables"]]);
+});
+
+// Lot B3, correctif après la relecture Codex (point 10) : une réponse qui CHANGE la liste du jour de la
+// copie (« Aucun » reçu) s'applique et se garde tout de suite, avant les jauges ; sinon, un seul dessin.
+test("ouvrir — retour avec copie, « Aucun » reçu : dessiné et gardé dès la réponse, sans attendre une jauge lente (lot B3, correctif Codex 10)", async () => {
+  let rendre;
+  const copie = {...COPIE, jour: []};
+  const r = jouerOuvrir({copie, reponse: {status: 200, corps: {ok: true, prenom: "Rania", applis: [], jour: ["@aucun"]}}, jauges: new Promise(ok => { rendre = ok; })});
+  await new Promise(ok => setTimeout(ok, 80));
+  assert.deepEqual(r.journal.slice(1), [["code", "ABC234"], ["dessin", "Rania", "defi-tables", "-"], ["copie", "defi-tables"]],
+    "la réponse dessinée et gardée avec les jauges de la copie, alors que les jauges fraîches ne sont pas arrivées");
+  rendre({"splat": {compte: "2"}});
+  await r.fini;
+  assert.deepEqual(r.journal.slice(4), [["dessin", "Rania", "splat", "-"], ["copie", "splat"]], "puis complétée par les jauges fraîches");
+  // La même liste : un seul dessin, comme avant.
+  const meme = jouerOuvrir({copie: {...COPIE, jour: ["@aucun"]}, reponse: {status: 200, corps: {ok: true, prenom: "Rania", applis: [], jour: ["@aucun"]}}});
+  await meme.fini;
+  assert.deepEqual(meme.journal.slice(1), [["code", "ABC234"], ["dessin", "Rania", "defi-tables", "-"], ["copie", "defi-tables"]]);
 });
 
 test("ouvrir — première entrée : un seul dessin, jauges posées ; les tuiles du haut lues en même temps", async () => {

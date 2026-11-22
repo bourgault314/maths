@@ -208,6 +208,7 @@ function purge() {
      function fermerFenetreEleve() { $("fenetre-eleve").close(); fenetreEleveId = null; }
      function oublierRecherche() { recherche = ""; }
      function arreterVeilleEvaluation() {}
+     function viderCarteJour() {}   // (lot B3, correctif Codex point 13 : joué par tests/suivi-b3-aujourdhui)
      ${["viderLaClasse", "quitterLaClasse"].map(fonction).join("\n")}
      return {quitterLaClasse, ZONES_DE_LA_CLASSE, etat: () => ({classe, eleves, tableaux, vue, idsAffiches, evaluation, ligueRecords, demandeAppli})};`)(
     z.$, () => { z.$("bandelettes").textContent = ""; });

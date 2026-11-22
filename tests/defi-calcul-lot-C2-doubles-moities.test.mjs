@@ -233,7 +233,7 @@ test("le serveur : version_min 11 ; les copies pour la page prof identiques ; le
   assert.match(bloc, /'version_min' => 11,/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), "la copie du moteur");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C2-doubles-moities$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C2-doubles-moities$|^lot aujourdhui-B3$/m);
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261121-2/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261121-2/);

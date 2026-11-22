@@ -251,16 +251,28 @@ const SECTION_CARTE = prof.slice(debutCarte, finCarte);
 const APPLIS_PROF = prof.slice(prof.indexOf("  const APPLIS = ["), prof.indexOf("];", prof.indexOf("  const APPLIS = [")) + 2);
 
 const CHAPITRES = {cours: {chapitres: ["4e-PYT"]}};
+// Depuis le correctif du lot B3 (relecture Codex, points 1, 4 et 6), les portes
+// de la carte viennent du serveur (tableau : classe.portes, classe.portes_classe).
+// Ici, ce qu'il enverrait pour une classe sans élève « en plus » : ses applis,
+// dans l'ordre du catalogue, Mes cours seulement avec un chapitre (la règle
+// elle-même est gardée par _serveur/tests/lancer.php).
+const ORDRE = ["defi-tables", "flash-anzan", "defi-calcul", "splat", "coffres", "cours"];
+function portesDuServeur(classe) {
+  const chapitres = classe.reglages && classe.reglages.cours && classe.reglages.cours.chapitres;
+  return ORDRE.filter(cle => (classe.applis || []).includes(cle) && (cle !== "cours" || (chapitres && chapitres.length)));
+}
 function laCarte(classe, appels = []) {
   if (classe.reglages === undefined) classe.reglages = CHAPITRES;
+  if (classe.portes === undefined) classe.portes = portesDuServeur(classe);
+  if (classe.portes_classe === undefined) classe.portes_classe = classe.portes.slice();
   const elements = {};
   const $ = id => { if (!elements[id]) elements[id] = new Noeud(id); return elements[id]; };
   const messages = {};
   const etat = {classe, reglageEnCours: false};
   const outils = new Function("document", "$", "messager", "etat", "appelBorne",
-    `let classe = etat.classe; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages";
+    `let classe = etat.classe; let eleves = etat.eleves || []; let reglageEnCours = false; let droitClasse = "proprietaire"; let generation = 1; let jeton = "j"; let vue = "reglages"; let demandeAppli = 0;
      const SANS_VERIFICATION = "…"; function surErreur() {} function poserQuiVoit() {} async function relireBornee() { return false; }
-     function poserEtatDeClasse(donnees) { if (donnees && Array.isArray(donnees.jour)) classe.jour = donnees.jour; if (donnees && Array.isArray(donnees.applis)) classe.applis = donnees.applis; }
+     function poserEtatDeClasse(donnees) { if (donnees && Array.isArray(donnees.jour)) classe.jour = donnees.jour; if (donnees && Array.isArray(donnees.applis)) classe.applis = donnees.applis; poserPortesDeClasse(donnees); }
      ${APPLIS_PROF}
      function nomDeLAppli(cle) { return (APPLIS.find(appli => appli.cle === cle) || {nom: cle}).nom; }
      ${SECTION_CARTE}
@@ -328,11 +340,11 @@ test("Enregistrer : rien n'est envoyé avant ; puis classes.modifier avec la lis
   assert.equal(appels.length, 0, "rien n'est envoyé avant « Enregistrer »");
   await outils.enregistrerJour();
   assert.deepEqual(appels, [["classes.modifier", {classe_id: 2, jour: ["defi-tables", "splat"],
-    avant: {jour: [], applis: ["defi-tables", "coffres", "splat", "cours"]}}]], "« avant » dit aussi les portes connues (correctif Codex, point 1)");
-  assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: les élèves de la 405 voient Défi tables, puis SPLAT!`, "ok"]);
+    avant: {jour: [], applis: ["defi-tables", "coffres", "splat", "cours"], portes: ["defi-tables", "coffres", "splat", "cours"]}}]], "« avant » dit aussi les portes connues (correctif Codex, point 1) et, depuis le lot B3, celles que la carte propose");
+  assert.deepEqual(messages["message-jour"], [`Enregistré${NBSP}: la liste de la 405.`, "ok"], "le choix enregistré (lot B3, correctif Codex, point 7)");
   outils.choisirModeDuJour("auto");
   await outils.enregistrerJour();
-  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"], applis: ["defi-tables", "coffres", "splat", "cours"]}}]);
+  assert.deepEqual(appels[1], ["classes.modifier", {classe_id: 2, jour: [], avant: {jour: ["defi-tables", "splat"], applis: ["defi-tables", "coffres", "splat", "cours"], portes: ["defi-tables", "coffres", "splat", "cours"]}}]);
   await outils.enregistrerJour();
   assert.equal(appels.length, 2, "rien n'a changé : rien n'est envoyé");
   assert.deepEqual(messages["message-jour"], ["Aucune modification dans cet onglet.", "info"], "sans affirmer ce que voient les élèves (point 8)");
@@ -345,7 +357,8 @@ test("Enregistrer : 409 → la carte se remet sur l'état vrai ; réponse illisi
   outils.poserJourClasse(true);
   outils.choisirModeDuJour("liste");
   outils.choisirEtapeDuJour(1, "splat");
-  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: ["defi-tables", "coffres", "cours"], jour: []}});
+  reponse = Object.assign(new Error("changée"), {statut: 409, donnees: {ok: false, applis: ["defi-tables", "coffres", "cours"], jour: [],
+    portes: ["defi-tables", "coffres", "cours"], portes_classe: ["defi-tables", "coffres", "cours"]}});
   await outils.enregistrerJour();
   assert.deepEqual([lu().auto, lu().options[0]], [true, ["Défi tables", "Coffres magiques", "Mes cours"]], "SPLAT!, fermé ailleurs, n'est plus proposé");
   assert.equal(messages["message-jour"][1], "erreur");
@@ -378,13 +391,15 @@ test("la carte, côté page : en tête des Réglages, les mots des planches, pro
   const enregistrer = fonctionDe(prof, "enregistrerJour");
   assert.match(enregistrer, /droitClasse !== "proprietaire"/);
   assert.match(enregistrer, /reglageEnCours = true;/, "le même verrou que « Régler … »");
-  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\), applis: applisConnues\}\}\)/);
+  assert.match(enregistrer, /appelBorne\("classes\.modifier", \{classe_id: classeId, jour: voulue, avant: \{jour: b\.depart\.slice\(\), applis: applisConnues, portes: portesProposees\}\}\)/); // (lot B3 : et les portes proposées)
   assert.match(enregistrer, /erreur\.statut === 409[\s\S]*poserEtatDeClasse\(erreur\.donnees\)/, "un 409 : l'état relu");
   assert.match(fonctionDe(prof, "poserEtatDeClasse"), /classe\.jour = donnees\.jour\.filter/);
   assert.match(fonctionDe(prof, "ouvrirReglages"), /poserJourClasse\(false\);/, "un second clic garde le brouillon (point 6)");
   assert.match(fonctionDe(prof, "poserVue"), /if \(vue === "reglages" && classe\) poserJourClasse\(false\);/);
   assert.match(fonctionDe(prof, "oublierEtat"), /jourBrouillon = null;/);
-  assert.match(fonctionDe(prof, "viderLaClasse"), /jourBrouillon = null;/);
+  // Lot B3, correctif Codex (point 13) : par viderCarteJour, qui range aussi les ronds et les listes.
+  assert.match(fonctionDe(prof, "viderLaClasse"), /viderCarteJour\(\);/);
+  assert.match(fonctionDe(prof, "viderCarteJour"), /jourBrouillon = null;/);
   for (const id of ["jour-1", "jour-2", "jour-3", "jour-apercu", "jour-auto-texte"]) {
     assert.match(prof, new RegExp(`const ZONES_TEXTE = \\[[\\s\\S]*?"${id}"`), `${id} vidé à la déconnexion et quand la classe part (point 5)`);
   }
