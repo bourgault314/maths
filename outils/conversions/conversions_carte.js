@@ -169,8 +169,8 @@
     {code: "R7", rang: 23, palier: 3, famille: "reperes", classe: "CM2", nom: "J'estime avec un repère", exemple: ""},
     {code: "R8", rang: 24, palier: 3, famille: "reperes", classe: "CM2", nom: "Mes repères d'aire", exemple: "affiche A0 : 1 m²"},
     {code: "R9", rang: 25, palier: 3, famille: "reperes", classe: "CM2", nom: "Qu'est-ce qu'on mesure ?", exemple: ""},
-    {code: "A1", rang: 26, palier: 3, famille: "aires", classe: "CM2", nom: "1 m² = 100 dm², 1 dm² = 100 cm²", exemple: "1 m² = 100 dm²"},
-    {code: "A2", rang: 27, palier: 3, famille: "aires", classe: "CM2", nom: "Convertir des aires (vers plus petit)", exemple: "3,7 dm² = 370 cm²"},
+    {code: "A1", rang: 26, palier: 3, famille: "aires", classe: "CM2", nom: "1 m² = 100 dm², 1 dm² = 100 cm²", nomCourt: "m², dm² et cm²", exemple: "1 m² = 100 dm²"},
+    {code: "A2", rang: 27, palier: 3, famille: "aires", classe: "CM2", nom: "Convertir des aires (vers plus petit)", nomCourt: "Convertir des aires", exemple: "3,7 dm² = 370 cm²"},
     {code: "D3", rang: 28, palier: 3, famille: "durees", classe: "CM2", nom: "Minutes et secondes", exemple: "1 min = 60 s"},
     {code: "Q3", rang: 29, palier: 3, famille: "problemes", classe: "CM2", nom: "Problèmes : plusieurs fois, partager", nomCourt: "Plusieurs fois, partager", exemple: ""},
     {code: "Q4", rang: 30, palier: 3, famille: "problemes", classe: "CM2", nom: "Problèmes : une fraction d'une quantité", nomCourt: "Une fraction d'une quantité", exemple: ""},
@@ -742,6 +742,94 @@
       ],
       retenir: "Le périmètre, c'est le tour : une longueur. L'aire, c'est la surface, en carreaux.\nPlus gros ne veut pas dire plus lourd ; plus haut ne veut pas dire contenir plus.",
       cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 3 (lot B3-2)
+    // C9 « Avec des millièmes » (S433 : 6 m 65 mm = 6,065 m ; 18 mm =
+    // 0,018 m ; S003 p. 10 : 2 070 g = 2,07 kg, « l'arrondi à l'entier de
+    // 5,78 est 6, de 3,5 est 4 »). Choix de Gwenaël du 21/11 (lot B3-2a) :
+    // l'arrondi sur la droite graduée de 3 m à 4 m, le milieu en orange.
+    C9: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "2,375 kg =", reponse: "2 375", apres: "g"},
+          relation: ["1 kg = 1 000 g", "donc 2,375 kg = 2,375 × 1 000 g"],
+          aide: {type: "glisse-unite", grandeur: "masse", nombre: "2,375", de: "kg", vers: "g", pale: false, colonnes: ["kg", "hg", "dag", "g", "dg", "cg", "mg"]},
+          apres: ["Le 5 glisse aux unités :", "un millième de kg devient 1 g."]},
+        {etiquette: "Je représente", question: {avant: "18 mm =", reponse: "0,018", apres: "m"},
+          consigne: "La virgule repère le chiffre des unités.\nLes zéros remplissent les colonnes vides.",
+          aide: {type: "glisse-unite", grandeur: "longueur", nombre: "18", de: "mm", vers: "m", pale: false},
+          apres: ["Sous m, le 0 : le chiffre des unités.", "18 mm = 0,018 m."],
+          legende: "Pas 0,18 m : ce serait 180 mm."},
+        {etiquette: "J'arrondis", question: {avant: "3,584 m ≈", reponse: "4", apres: "m"},
+          consigne: "Le nombre entier le plus proche.\nTouche la droite.",
+          aide: {type: "droite-c9", a: 3, x: "3,584", u: "m"},
+          apres: ["Plus près de 4 m que de 3 m :", "3,584 m ≈ 4 m"],
+          legende: "Au milieu, au-dessus : 3,5 m ≈ 4 m."}
+      ],
+      retenir: "Avec des millièmes, je convertis de la même façon : 2,375 kg = 2 375 g ; 18 mm = 0,018 m.\nArrondir au mètre, c'est prendre le nombre entier de mètres le plus proche : 3,584 m ≈ 4 m.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["2,375 kg = 2 375 g", "18 mm = 0,018 m", "2 070 g = 2,07 kg", "0,005 kg = 5 g", "3,584 m ≈ 4 m", "3,5 m ≈ 4 m"],
+      reperes: []
+    },
+    // A1 « 1 m² = 100 dm², 1 dm² = 100 cm² » (S003 p. 17 : l'égalité se
+    // justifie par un découpage avant de servir ; S023 p. 7 : « 1 dm² =
+    // 1 dm × 1 dm = 10 cm × 10 cm = 100 cm² »). Choix de Gwenaël du 21/11 :
+    // on touche le carré, une rangée de plus à chaque fois.
+    A1: {
+      pret: true,
+      aide: {outil: "carre-a1", image: "carre-a1"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 dm² =", reponse: "100", apres: "cm²"},
+          consigne: "Un carré de 1 dm de côté.\nTouche-le : une rangée de plus.",
+          aide: {type: "carre-a1", cote: "10 cm", petite: "cm²", grande: "dm²"},
+          apres: ["10 rangées de 10 carreaux", "= 100 carreaux de 1 cm²"],
+          legende: "1 dm = 10 cm : 10 carreaux sur chaque côté."},
+        {etiquette: "Je vois", question: {avant: "1 m² =", reponse: "100", apres: "dm²"},
+          consigne: "Un carré de 1 m de côté.\nTouche-le : une rangée de plus.",
+          aide: {type: "carre-a1", cote: "10 dm", petite: "dm²", grande: "m²"},
+          apres: ["10 rangées de 10 carreaux", "= 100 carreaux de 1 dm²"],
+          legende: "1 m = 10 dm : 10 carreaux sur chaque côté."},
+        {etiquette: "J'écris", question: {avant: "10 cm × 10 cm =", reponse: "100", apres: "cm²"},
+          consigne: "J'écris les unités dans le calcul.",
+          aide: {type: "phrase", lignes: ["1 dm = 10 cm", "1 dm² = 1 dm × 1 dm"]},
+          apres: ["1 dm² = 10 cm × 10 cm", "= 100 cm²"]}
+      ],
+      retenir: "Un carré de 1 dm de côté se découpe en 10 rangées de 10 carreaux de 1 cm² : 1 dm² = 10 cm × 10 cm = 100 cm².\nDe même, 1 m² = 10 dm × 10 dm = 100 dm².",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 m² = 100 dm²", "1 dm² = 100 cm²", "1 m = 10 dm", "1 dm = 10 cm"],
+      reperes: []
+    },
+    // A2 « Convertir des aires (vers plus petit) » (S003 p. 17 : « convertir
+    // 3,7 dm² en cm² en s'appuyant sur 1 dm² = 100 cm² »). Choix de Gwenaël
+    // du 21/11 : le découpage au degré 1, puis le calcul. Pas de tableau
+    // (S001 : « au cours moyen, les élèves n'utilisent pas de tableaux pour
+    // effectuer des conversions »).
+    A2: {
+      pret: true,
+      aide: {outil: "decoupe-a2", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "3,7 dm² =", reponse: "370", apres: "cm²"},
+          consigne: "Touche les carrés de 1 dm² :\nchacun s'ouvre en 100 cm².",
+          aide: {type: "decoupe-a2", n: 3, d: 7, grande: "dm²", petite: "cm²"},
+          apres: ["300 cm² + 70 cm²", "= 370 cm²"],
+          legende: "0,7 dm² : 7 rangées de 10 cm²."},
+        {etiquette: "Je calcule", question: {avant: "2,45 m² =", reponse: "245", apres: "dm²"},
+          consigne: "Chaque m², c'est 100 dm².\nTouche le calcul.",
+          aide: {type: "calcul-a2", nombre: "2,45", grande: "m²", petite: "dm²", facteur: "100"},
+          apres: ["2,45 × 100 dm² = 245 dm²", "2,45 m² = 245 dm²"]},
+        {etiquette: "Je vérifie", question: {avant: "0,6 dm² =", reponse: "60", apres: "cm²"},
+          consigne: "Moins de 1 dm² : des rangées seulement.\nTouche le carré.",
+          aide: {type: "decoupe-a2", n: 0, d: 6, grande: "dm²", petite: "cm²"},
+          apres: ["6 rangées de 10 cm²", "= 60 cm²"],
+          legende: "Pas 6 cm² : 1 dm² = 100 cm²."}
+      ],
+      retenir: "Pour convertir une aire, je m'appuie sur 1 m² = 100 dm² et 1 dm² = 100 cm².\n3,7 dm² = 3,7 × 100 cm² = 370 cm².",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["3,7 dm² = 370 cm²", "2,45 m² = 245 dm²", "0,6 dm² = 60 cm²", "1,5 m² = 150 dm²", "4 dm² = 400 cm²", "1 m² = 10 000 cm²"],
       reperes: []
     },
     // ============================================ palier 2 (lot B1-2)

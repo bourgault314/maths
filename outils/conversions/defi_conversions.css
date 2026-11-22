@@ -1301,3 +1301,45 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .perim-aire .pa-fig.non { animation: pa-non .3s; }
   @keyframes pa-non { 25% { transform: translateX(-.25rem); } 75% { transform: translateX(.25rem); } }
 }
+
+/* ================================= lot B3-2 (A1, A2, C9)
+   A1 : le carré de 1 dm² quadrillé, le compteur à droite (sa place est
+   gardée, rien ne bouge au premier toucher). A2 : le découpage (des carrés
+   de même taille, quel que soit leur nombre), le calcul, le « 100 cm² » en
+   bleu. C9 : la droite graduée. Mesuré sur la maquette du B3-2a au petit
+   iPhone : texte des dessins à 14 px au moins. */
+.zone .a1-ligne { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; }
+.zone .dessin.a1-carre { display: block; width: auto; height: min(7.5rem, 22vh); max-height: none; max-width: 68%; }
+.dessin.a1-carre.a-toucher { cursor: pointer; }
+.zone .compteur-a1 { font-weight: 900; font-size: 1rem; line-height: 1.2; color: var(--teal); white-space: nowrap; min-width: 6.5em; }
+.reponse-bonne .dessin.a1-carre { height: min(6.75rem, 18.5vh); }
+.zone .dessin.a2-decoupe { display: block; width: auto; max-width: 100%; height: min(5.875rem, 17vh); max-height: none; }
+.dessin.a2-decoupe.a-toucher, .calcul-a2.a-toucher, .dessin.c9-droite.a-toucher { cursor: pointer; }
+.reponse-bonne .dessin.a2-decoupe { height: min(5.5rem, 16vh); }
+.zone .calcul-a2 { font-size: 1.125rem; font-weight: 900; text-align: center; line-height: 1.35; color: var(--ink); }
+.zone .calcul-a2 .g { color: var(--blue); }
+.zone .calcul-a2 .c-a, .zone .calcul-a2 .c-b { white-space: nowrap; }
+/* (Lot B3-2c) La partie entière de C9 : un exemple sur un autre nombre. */
+.zone .exemple-c9 { font-size: 1.125rem; font-weight: 900; text-align: center; line-height: 1.35; color: var(--ink); }
+.zone .exemple-c9 .g { color: var(--blue); }
+.zone .exemple-c9 .e-a, .zone .exemple-c9 .e-b { white-space: nowrap; }
+.q.etroite .l1 .case:not(.petite) { width: 6.25rem; }
+.zone .calcul-a2.a-toucher { border: .1875rem dashed #9bc0e6; border-radius: .5rem; padding: .25rem .625rem; }
+/* (Lot B3-2c, relecture : le calcul de On te montre se touche aussi au
+   clavier ; le robot l'a mesuré alors : 38 px de haut, sous les 40 px du
+   doigt. La zone s'agrandit sans changer le dessin.) */
+.zone .calcul-a2.a-toucher { position: relative; }
+.zone .calcul-a2.a-toucher::after { content: ""; position: absolute; inset: -.625rem -.5rem; }
+.zone .dessin.c9-droite { display: block; width: 100%; max-width: 20rem; height: auto; max-height: none; }
+.reponse-bonne .dessin.c9-droite { max-width: 18rem; }
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .zone .dessin.a1-carre { height: min(11rem, 26vh); }
+  .zone .compteur-a1 { font-size: 1.25rem; }
+  .reponse-bonne .dessin.a1-carre { height: min(9rem, 20vh); }
+  .zone .dessin.a2-decoupe { height: min(8rem, 19vh); }
+  .reponse-bonne .dessin.a2-decoupe { height: min(7rem, 16vh); }
+  .zone .dessin.c9-droite { max-width: 28rem; }
+  .reponse-bonne .dessin.c9-droite { max-width: 24rem; }
+  .zone .calcul-a2 { font-size: 1.375rem; }
+  .zone .exemple-c9 { font-size: 1.375rem; }
+}

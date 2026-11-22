@@ -3118,6 +3118,283 @@
     return () => choisirFig(bonne === "aire" ? fb : fa);
   }
 
+  // ======================================================= lot B3-2 (A1, A2, C9)
+  // Choix de Gwenaël du 21/11 (lot B3-2a, sur la maquette) : A1, le carré
+  // quadrillé qu'on touche, une rangée de plus à chaque fois ; A2, le
+  // découpage en carrés de 1 dm² au degré 1, le calcul ensuite ; C9, la
+  // droite graduée de 3 m à 4 m pour l'arrondi. Aucun ne donne la réponse :
+  // le compteur s'arrête quand l'élève s'arrête, la ligne du calcul ne dit
+  // jamais le résultat, la droite n'écrit rien en vert avant la correction.
+  const B32C = {grille: "#c4d6e2", fond: "#d8f3f1", touche: "#8fdcd6", fondV: "#e5f7eb", toucheV: "#9fd9b4", milieu: "#b45d00"};
+  // Une cote : un trait, deux petits traits au bout, le texte au milieu.
+  function coteB32(s, x1, y1, x2, y2, t) {
+    if (y1 === y2) {
+      s.appendChild(svg("path", {d: `M${x1} ${y1 - 4}v8M${x2} ${y1 - 4}v8M${x1} ${y1}H${x2}`, stroke: N, "stroke-width": 1.6, fill: "none"}));
+      s.appendChild(svg("text", {x: (x1 + x2) / 2, y: y1 - 8, "text-anchor": "middle", "font-size": 24, "font-weight": 900, fill: N}, t));
+    } else {
+      s.appendChild(svg("path", {d: `M${x1 - 4} ${y1}h8M${x1 - 4} ${y2}h8M${x1} ${y1}V${y2}`, stroke: N, "stroke-width": 1.6, fill: "none"}));
+      s.appendChild(svg("text", {x: x1 - 7, y: (y1 + y2) / 2 + 8, "text-anchor": "end", "font-size": 24, "font-weight": 900, fill: N}, t));
+    }
+  }
+
+  // A1 · le carré de 1 dm² (ou de 1 m²) quadrillé 10 × 10, cotes « 10 cm »
+  // en haut et à gauche. `mode` : "outil" et "montre" (on touche le carré
+  // ENTIER, une rangée de plus : au petit iPhone une rangée fait 9 px, ce
+  // n'est jamais une zone à toucher seule ; le compteur à droite dit « 30
+  // carreaux »), "image" (le quadrillage seul), "correction" (en vert).
+  // `n` : les rangées déjà coloriées (la correction des rangées).
+  function carreA1(zone, aide, {mode = "outil", fini = () => {}, n: n0 = 0} = {}) {
+    const touche = mode === "outil" || mode === "montre";
+    const vert = mode === "correction";
+    // (Lot B3-2c : les cotes à 24, 14 px au moins dans la correction au
+    // petit iPhone, et « 10 cm » à gauche reste dans le dessin avec une
+    // police large : vu en gros plan, « 1 » coupé à x0 = 92.)
+    const c = 12;
+    const x0 = 106;
+    const y0 = 41;
+    const L = 10 * c;
+    const W = x0 + L + 14;
+    const H = y0 + L + 8;
+    const ligne = el("div", "a1-ligne");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin a1-carre${touche ? " a-toucher" : ""}`, role: "img",
+      "aria-label": carte().typo(`Un carré de 1 ${aide.grande || "dm²"} quadrillé en carreaux de 1 ${aide.petite}`)});
+    const compteur = touche ? el("span", "compteur-a1", "") : null;
+    if (compteur) compteur.setAttribute("aria-live", "polite");
+    ligne.appendChild(dessin);
+    if (compteur) ligne.appendChild(compteur);
+    zone.appendChild(ligne);
+    // (Lot B3-2c, relecture : la correction de « je colorie 3 rangées »
+    // montrait le carré entier en vert ; seulement les n rangées.)
+    let n = vert ? (n0 || 10) : n0;
+    function dessiner() {
+      dessin.textContent = "";
+      coteB32(dessin, x0, y0 - 10, x0 + L, y0 - 10, carte().typo(aide.cote));
+      coteB32(dessin, x0 - 10, y0, x0 - 10, y0 + L, carte().typo(aide.cote));
+      for (let j = 0; j < 10; j += 1) {
+        for (let i = 0; i < 10; i += 1) {
+          const plein = j < n;
+          dessin.appendChild(svg("rect", {x: x0 + i * c, y: y0 + j * c, width: c, height: c,
+            fill: plein ? (vert ? B32C.toucheV : B32C.touche) : (vert ? B32C.fondV : B32C.fond), stroke: B32C.grille, "stroke-width": 1.1}));
+        }
+      }
+      dessin.appendChild(svg("rect", {x: x0, y: y0, width: L, height: L, fill: "none", stroke: vert ? VERT : N, "stroke-width": 2.6}));
+      // la dernière rangée venue, soulignée en orange
+      if (!vert && n > 0 && n < 10) dessin.appendChild(svg("path", {d: `M${x0} ${y0 + n * c}H${x0 + L}`, stroke: OR2, "stroke-width": 2.6}));
+      if (compteur) compteur.textContent = n ? carte().typo(`${n * 10} carreaux`) : "";
+    }
+    dessiner();
+    if (!touche) return null;
+    const toucher = () => {
+      if (n >= 10) return;
+      n += 1;
+      dessiner();
+      if (n >= 10) { dessin.classList.remove("a-toucher"); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => n < 10, 260);
+  }
+
+  // A2 · le découpage : n carrés de 1 dm² entiers (« 100 cm² » sous
+  // chacun) et d rangées d'un carré de plus (en pointillé). Quatre carrés
+  // dessinés au plus. "montre" : chaque toucher ouvre le carré suivant.
+  // (Lot B3-2c : le nom du dessin accordé, sans « et 0 rangées ».)
+  function decoupeTexteA2(n, d, aide) {
+    const carres = n ? `${n} carré${n > 1 ? "s" : ""} de 1 ${aide.grande}` : "";
+    const rangees = d ? `${d} rangée${d > 1 ? "s" : ""} de 10 ${aide.petite}` : "";
+    return [carres, rangees].filter(Boolean).join(" et ");
+  }
+  function decoupeA2(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const n = Number(aide.n);
+    const d = Number(aide.d);
+    const vert = mode === "correction";
+    const c = 6.2;
+    const L = 10 * c;
+    // (Lot B3-2c : « 100 cm² » à 15,5, 14 px au moins dans la correction ;
+    // 16 entre deux carrés, les deux étiquettes ne se touchent pas.)
+    const gap = 16;
+    const x0 = 6;
+    const y0 = 6;
+    const nb = n + (d ? 1 : 0);
+    const W = x0 * 2 + nb * L + (nb - 1) * gap;
+    const H = y0 + L + 27;
+    const boite = el("div", "dessin-boite a2-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin a2-decoupe${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": carte().typo(decoupeTexteA2(n, d, aide))});
+    dessin.style.setProperty("--a2-n", String(nb));
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let vus = mode === "montre" ? 0 : nb;
+    function unCarre(k, rangees, ouvert) {
+      const x = x0 + k * (L + gap);
+      const plein = ouvert ? rangees : 0;
+      for (let j = 0; j < 10; j += 1) {
+        dessin.appendChild(svg("rect", {x, y: y0 + j * c, width: L, height: c, fill: j < plein ? (vert ? B32C.toucheV : B32C.touche) : "#ffffff", stroke: "none"}));
+      }
+      if (ouvert) {
+        const g = svg("g", {stroke: B32C.grille, "stroke-width": 0.7});
+        for (let i = 1; i < 10; i += 1) {
+          g.appendChild(svg("line", {x1: x + i * c, y1: y0, x2: x + i * c, y2: y0 + L}));
+          g.appendChild(svg("line", {x1: x, y1: y0 + i * c, x2: x + L, y2: y0 + i * c}));
+        }
+        dessin.appendChild(g);
+      }
+      dessin.appendChild(svg("rect", {x, y: y0, width: L, height: L, fill: "none", stroke: vert ? VERT : N, "stroke-width": 2.2, "stroke-dasharray": rangees < 10 ? "4 3" : "none"}));
+      if (ouvert && rangees < 10) dessin.appendChild(svg("path", {d: `M${x} ${y0 + rangees * c}H${x + L}`, stroke: vert ? VERT : N, "stroke-width": 2.2}));
+      if (ouvert && rangees === 10) dessin.appendChild(svg("text", {x: x + L / 2, y: y0 + L + 19, "text-anchor": "middle", "font-size": 15.5, "font-weight": 900, fill: vert ? VERT : N}, carte().typo(`100 ${aide.petite}`)));
+    }
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      for (let k = 0; k < n; k += 1) unCarre(k, 10, k < vus);
+      if (d) unCarre(n, d, n < vus);
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const toucher = () => {
+      if (vus >= nb) return;
+      vus += 1;
+      dessiner();
+      if (vus >= nb) { dessin.classList.remove("a-toucher"); fini(); }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => vus < nb, 380);
+  }
+
+  // A2 · le calcul (degrés 2 et 3) : « 3,7 dm² = 3,7 × 100 cm² », le
+  // « 100 cm² » en bleu ; jamais le résultat. "montre" : on touche la ligne.
+  function calculA2(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    // (Lot B3-2c : deux morceaux qui ne se coupent jamais ; si la ligne ne
+    // tient pas, elle passe à la ligne après « = » : « 27,07 dm² = » puis
+    // « 27,07 × 100 cm² ».)
+    const l = el("div", `calcul-a2${mode === "montre" ? " a-toucher" : ""}`);
+    const droite = el("span", "c-b");
+    droite.append(texteNoeudA(carte().typo(`${aide.nombre} × `)), el("span", "g", carte().typo(`${aide.facteur} ${aide.petite}`)));
+    l.append(el("span", "c-a", carte().typo(`${aide.nombre} ${aide.grande} =`)), texteNoeudA(" "), droite);
+    zone.appendChild(l);
+    if (mode !== "montre") return null;
+    let fait = false;
+    // (Lot B3-2c : au clavier aussi, comme les autres dessins à toucher ;
+    // touché, il n'est plus un bouton.)
+    const toucher = () => {
+      if (fait) return;
+      fait = true;
+      l.classList.remove("a-toucher");
+      l.removeAttribute("role");
+      l.removeAttribute("tabindex");
+      fini();
+    };
+    l.addEventListener("click", toucher);
+    l.setAttribute("tabindex", "0");
+    l.setAttribute("role", "button");
+    l.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
+  }
+
+  // C9 · la droite graduée de a à a + 1 en dixièmes : les deux bouts en
+  // grand, le milieu en orange (pas pour la partie entière), la croix rouge
+  // sur la mesure, son nombre au-dessus. "correction" : tout en vert, une
+  // flèche de la croix vers l'entier le plus proche (la partie entière :
+  // le bout de gauche en vert, sans flèche) ; "montre" : on touche la
+  // droite, la flèche vient.
+  function droiteC9(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const a = Number(aide.a);
+    const x = Number(String(aide.x).replace(/[\s ]/g, "").replace(",", "."));
+    const entiere = Boolean(aide.entiere);
+    const rep = entiere ? a : (x - a >= 0.5 - 1e-9 ? a + 1 : a);
+    // (Lot B3-2c, vu en gros plan : « 43 km », « 311 kg » touchaient le bord
+    // du dessin → les bouts à 42 et 278 ; les nombres sous la droite plus
+    // bas, la flèche passe au-dessus du milieu.)
+    const W = 320;
+    const x0 = 42;
+    const x1 = 278;
+    const y = 52;
+    const X = v => x0 + (x1 - x0) * (v - a);
+    const boite = el("div", "dessin-boite c9-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} 96`, class: `dessin c9-droite${mode === "montre" ? " a-toucher" : ""}`, role: "img",
+      "aria-label": carte().typo(`Une droite graduée de ${a} ${aide.u} à ${a + 1} ${aide.u}`)});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let corrige = mode === "correction";
+    const nombre = v => `${String(v).replace(".", ",")}${NB}${aide.u}`;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: 96, fill: "transparent"}));
+      dessin.appendChild(svg("line", {x1: x0 - 14, y1: y, x2: x1 + 16, y2: y, stroke: N, "stroke-width": 2.4, "stroke-linecap": "round"}));
+      for (let k = 0; k <= 10; k += 1) {
+        const gros = k === 0 || k === 10;
+        const mil = k === 5 && aide.milieu !== false;
+        dessin.appendChild(svg("line", {x1: X(a + k / 10), y1: y - (gros ? 10 : mil ? 9 : 5), x2: X(a + k / 10), y2: y + (gros ? 10 : mil ? 9 : 5),
+          stroke: mil ? OR2 : N, "stroke-width": gros || mil ? 2.6 : 1.6}));
+      }
+      const borne = v => (corrige && v === rep ? VERT : N);
+      dessin.appendChild(svg("text", {x: X(a), y: y + 36, "text-anchor": "middle", "font-size": 20, "font-weight": 900, fill: borne(a)}, carte().typo(nombre(a))));
+      dessin.appendChild(svg("text", {x: X(a + 1), y: y + 36, "text-anchor": "middle", "font-size": 20, "font-weight": 900, fill: borne(a + 1)}, carte().typo(nombre(a + 1))));
+      if (aide.milieu !== false) {
+        dessin.appendChild(svg("text", {x: X(a + 0.5), y: y + 36, "text-anchor": "middle", "font-size": 16.5, "font-weight": 900, fill: B32C.milieu}, carte().typo(nombre(a + 0.5))));
+      }
+      const cx = X(x);
+      const col = corrige ? VERT : ROUGE;
+      dessin.appendChild(svg("path", {d: `M${cx - 6} ${y - 6}l12 12M${cx + 6} ${y - 6}l-12 12`, stroke: col, "stroke-width": 3, "stroke-linecap": "round"}));
+      // (Le nombre de la croix reste dans le dessin, même près d'un bout.)
+      const tx = Math.min(W - 58, Math.max(58, cx));
+      dessin.appendChild(svg("text", {x: tx, y: y - 16, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: col}, carte().typo(`${aide.x} ${aide.u}`)));
+      // (Tout près du bout, pas de flèche : sa pointe tombait sur « 3 km ».)
+      if (corrige && !entiere && Math.abs(X(rep) - cx) > 40) {
+        const vers = X(rep) + (rep > x ? -8 : 8);
+        const dep = cx + (rep > x ? 10 : -10);
+        // (La flèche reste au-dessus du nombre du bout : creux à 15 sous la droite.)
+        dessin.appendChild(svg("path", {d: `M${dep} ${y + 9}Q${(dep + vers) / 2} ${y + 22} ${vers} ${y + 9}`, stroke: VERT, "stroke-width": 2.2, fill: "none"}));
+        dessin.appendChild(svg("path", {d: rep > x ? `M${vers} ${y + 9}l-7.5 -0.5l2.6 6.2z` : `M${vers} ${y + 9}l7.5 -0.5l-2.6 6.2z`, fill: VERT}));
+      }
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const toucher = () => {
+      if (corrige) return;
+      corrige = true;
+      dessin.classList.remove("a-toucher");
+      dessiner();
+      fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
+  }
+  // C9 · la partie entière : l'outil est un exemple sur un autre nombre,
+  // dans une autre unité (« Dans 5,75 L : 5 L entiers. »), le nombre
+  // entier en bleu. (Lot B3-2c, relecture : la droite commençait par la
+  // réponse, « 3 m » ; un outil ne donne jamais la réponse.)
+  function exempleC9(zone, e) {
+    const l = el("div", "exemple-c9");
+    const a = el("span", "e-a");
+    a.append(texteNoeudA("Dans "), el("span", "g", e.entier), texteNoeudA(carte().typo(`${e.nombre.slice(e.entier.length)} ${e.u} :`)));
+    const b = el("span", "e-b");
+    b.append(el("span", "g", carte().typo(`${e.entier} ${e.u}`)), texteNoeudA(" entiers."));
+    l.append(a, texteNoeudA(" "), b);
+    zone.appendChild(l);
+  }
+  // L'outil de A1, A2, C9 (la relation à côté de l'étiquette, le dessin,
+  // la phrase dessous).
+  function outilB32(zone, question) {
+    if (question.outil === "carre-a1") {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.carreA1.rel)));
+      carreA1(zone, question.carreA1);
+    } else if (question.outil === "decoupe-a2") {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      decoupeA2(zone, question.decoupeA2);
+    } else if (question.outil === "calcul-a2") {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      calculA2(zone, question.calculA2);
+    } else if (question.exempleC9) exempleC9(zone, question.exempleC9);
+    else droiteC9(zone, question.droiteC9);
+    zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -3188,6 +3465,11 @@
     if (aide.type === "reporte") return reporte(zone, Object.assign({eau: aide.nom === "Le bassin"}, aide), {mode: "montre", fini: f});
     if (aide.type === "arrondis") return arrondis(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "perim-aire") return perimAire(zone, {bonne: aide.bonne, mode: "montre", fini: f});
+    // Lot B3-2 (A1, A2, C9) : le carré à toucher, le découpage, le calcul, la droite.
+    if (aide.type === "carre-a1") return carreA1(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "decoupe-a2") return decoupeA2(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "calcul-a2") return calculA2(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "droite-c9") return droiteC9(zone, Object.assign({milieu: true}, aide), {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
     return null;
   }
@@ -3361,6 +3643,8 @@
       zone.appendChild(el("div", "note", carte().typo(question.noteOutil || "Je mets tout dans la même unité.")));
       return;
     }
+    // Lot B3-2 (A1, A2, C9).
+    if (["carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(question.outil)) { outilB32(zone, question); return; }
     // Lot B3-1 (R7) : le repère reporté ; le repère compté ; les arrondis.
     if (question.outil === "reporte" && question.reporte) {
       reporte(zone, Object.assign({note: question.noteOutil, eau: question.reporte.nom === "Le bassin"}, question.reporte));
@@ -3471,6 +3755,13 @@
       return;
     }
     if (question.donnees && question.donnees.type === "piege") { zone.appendChild(lignes("rel", question.image.join("\n"))); return; }
+    // Lot B3-2 (A1) : le carré quadrillé, fixe, et « Un carreau : 1 cm². »
+    if (question.outil === "carre-a1" && question.carreA1 && question.image.length === 1) {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.carreA1.rel)));
+      carreA1(zone, question.carreA1, {mode: "image"});
+      zone.appendChild(el("div", "note", carte().typo(question.image[0])));
+      return;
+    }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot R1-refonte
     if (question.outil === "carte-repere" || question.outil === "nom-unite") { imageDessinRepere(zone, question); return; }
@@ -3580,5 +3871,5 @@
   }
 
   return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
-    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire});
+    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9});
 });

@@ -192,7 +192,9 @@
     mg: "milligrammes", hL: "hectolitres", daL: "décalitres",
     // Lot B6-2 : de nano à giga.
     Go: "gigaoctets", Mo: "mégaoctets", ko: "kilooctets", o: "octets", "µm": "micromètres", nm: "nanomètres", Mm: "mégamètres",
-    "µg": "microgrammes", ng: "nanogrammes", "µL": "microlitres", W: "watts", kW: "kilowatts", MW: "mégawatts", GW: "gigawatts"
+    "µg": "microgrammes", ng: "nanogrammes", "µL": "microlitres", W: "watts", kW: "kilowatts", MW: "mégawatts", GW: "gigawatts",
+    // Lot B3-2 : les aires du CM2.
+    "cm²": "centimètres carrés", "dm²": "décimètres carrés", "m²": "mètres carrés"
   };
 
   function grandeurDe(unite) {
@@ -4009,6 +4011,16 @@
   // prévois » suit), la virgule effacée, le zéro mal placé, le nombre
   // gardé, un zéro de trop ou de moins. Une ligne au petit téléphone.
   // `saisie` : le texte tapé (« 3,500 » : des zéros après la virgule).
+  // (Lot B3-2c, relecture : avec des millièmes, « 30,27 » au lieu de
+  // « 3,027 » n'a pas de zéro de trop, la virgule est mal placée : pour
+  // C9, quand l'une des deux a une virgule, « Dix fois trop grand. ».
+  // C3, C4, C5 gardent leur phrase.)
+  function zeroDeTrop(question, lu, attendu) {
+    if (question.code === "C9" && (lu === attendu * 10n || lu * 10n === attendu) && (decimales(lu) || decimales(attendu))) {
+      return lu > attendu ? "Dix fois trop grand." : "Dix fois trop petit.";
+    }
+    return lu > attendu ? "Un zéro de trop." : "Un zéro de moins.";
+  }
   function erreursDec(question, lu, cases, saisie) {
     const d = question.donnees;
     if (!d || d.type !== "conv") return null;
@@ -4034,7 +4046,7 @@
     if (lu === attendu * 10n || lu * 10n === attendu) {
       if (bas && reste) return {erreur: 2, retour: `${mes(reste, d.de)}, c'est ${mes(convertir(reste, d.de, d.vers), d.vers)}.`};
       if (!bas && attendu < MILLE && lu >= MILLE) return {erreur: 2, retour: `${mes(v, d.de)}, c'est moins de 1${NB}${d.vers}.`};
-      return {erreur: 2, retour: lu > attendu ? "Un zéro de trop." : "Un zéro de moins."};
+      return {erreur: 2, retour: zeroDeTrop(question, lu, attendu)};
     }
     return null;
   }
@@ -4044,11 +4056,12 @@
   // placé, un zéro de trop, le nombre gardé, divisé ; vers la grande : un
   // zéro de moins (« 3,5 m » pour 35 cm), multiplié, le nombre gardé.
   // Le pourquoi : une ligne (« 0,5 m, ce n'est pas 5 cm. »).
-  function choixPropres(faux, rep) {
+  // (Lot B3-2 : `dmax`, trois chiffres après la virgule pour C9.)
+  function choixPropres(faux, rep, dmax = 2) {
     const borne = 100000n * MILLE;
     const propres = [];
     faux.forEach(y => {
-      if (y !== null && y !== rep && y >= 10n && y <= borne && decimales(y) <= 2 && !propres.includes(y)) propres.push(y);
+      if (y !== null && y !== rep && y >= 1n && y <= borne && decimales(y) <= dmax && (dmax > 2 || y >= 10n) && !propres.includes(y)) propres.push(y);
     });
     return propres;
   }
@@ -4075,12 +4088,12 @@
     const malPlace = reste && decimales(v) < String(f).length - 1 ? (v - reste) * f + BigInt(brut(v).split(",")[1]) * MILLE : null;
     const faux = bas ? [reste ? sansVirgule(v) : null, malPlace, rep * 10n, v, v % f === 0n ? v / f : null]
       : [rep * 10n, v * f, v, rep % 10n === 0n ? rep / 10n : null];
-    const propres = choixPropres(faux, rep);
+    const propres = choixPropres(faux, rep, x.code === "C9" ? 3 : 2);
     if (propres.length < 2) return null;
     return enQcm(x, rep, [propres[0], choisir(rng, propres.slice(1))], y => {
       const e = erreursDec(x, y);
       if (e && (e.erreur === 1 || e.erreur === 3)) return `1${NB}${d.de} est plus ${e.erreur === 1 ? "grand" : "petit"} que 1${NB}${d.vers}.`;
-      return e ? e.retour : y > rep ? "Un zéro de trop." : "Un zéro de moins.";
+      return e ? e.retour : zeroDeTrop(x, y, rep);
     }, rng);
   }
   // Au choix, C4 (S434, « 75 L = … cL » : 750, 7,5, 0,75) : la même mesure
@@ -8723,6 +8736,857 @@
     erreurs(question, lu) { return erreursQ9(question, lu); }
   };
 
+  // ======================================================== palier 3 (lot B3-2)
+  // C9 « Avec des millièmes », A1 « 1 m² = 100 dm², 1 dm² = 100 cm² », A2
+  // « Convertir des aires (vers plus petit) ». Choix de Gwenaël du 21/11
+  // (lot B3-2a, les trois recommandés) : C9, l'arrondi à l'entier sur la
+  // droite graduée ; A1, on touche le carré, une rangée de plus à chaque
+  // fois ; A2, le découpage au degré 1, puis le calcul. Les unités restent
+  // écrites dans les calculs (S023 p. 7). Le tableau des unités d'aire est
+  // écarté (S001 : « au cours moyen, les élèves n'utilisent pas de tableaux
+  // pour effectuer des conversions »).
+  // Un outil ne donne jamais la réponse : la ligne « 3,7 dm² = 3,7 ×
+  // 100 cm² » ne dit jamais 370 ; la droite n'écrit rien en vert avant la
+  // correction ; le compteur du carré s'arrête quand l'élève s'arrête.
+  // Un pourquoi : 31 signes au plus (une ligne au petit téléphone).
+
+  // --------------------------------------------- C9 · Avec des millièmes
+  // S433 (attendus de CM2) : 6 m 65 mm = 6,065 m ; 18 mm = 0,018 m. S003
+  // p. 10 : 2 070 g = 2,07 kg ; « l'arrondi à l'entier de 5,78 est 6, de
+  // 3,5 est 4 » ; la partie entière (« de 105,78 »). L'exerciseur (niveau
+  // 3) : les zéros pièges au millième, 0,005 kg = 5 g. Des millièmes
+  // seulement entre deux unités qui font × 1 000 : la grande unité porte les
+  // millièmes, la petite est un nombre entier (jamais « 2,5 g » ni
+  // « 0,6 mm »). L'arrondi au dixième, au centième : en 6e (palier 4).
+  const PAIRES_C9 = [["km", "m"], ["m", "mm"], ["kg", "g"], ["L", "mL"], ["t", "kg"], ["m", "mm"], ["kg", "g"], ["km", "m"]];
+  // La grande unité : pas plus de… (une course de 60 km, un camion de 40 t).
+  const BORNES_C9 = {km: 60, m: 50, kg: 50, L: 20, t: 40};
+  function vraieC9(vg, g, vp) {
+    return vg > 0n && vg <= BigInt(BORNES_C9[g]) * MILLE && decimales(vg) <= 3 && vp % MILLE === 0n && vp >= MILLE;
+  }
+  // Le nombre dans la grande unité. d1 : trois chiffres non nuls après la
+  // virgule (2,375) ; d2 : les zéros au milieu (2,07 ; 1,005 ; 4,075 ;
+  // 3,405 ; 12,005) ; d3 : moins de 1 (0,018 ; 0,005 ; 0,375 ; 0,05).
+  const MODELES_C9 = {1: ["a,bcd", "a,bcd", "ab,bcd"], 2: ["a,0b", "a,00b", "a,0bc", "a,b0c", "ab,00c"], 3: ["0,0ab", "0,00a", "0,abc", "0,0a", "a,00b"]};
+  function nombreC9(rng, modele) {
+    const c = () => entre(rng, 1, 9);
+    const ab = () => entre(rng, 10, 39);
+    const t = {
+      "a,bcd": () => `${c()},${c()}${c()}${c()}`, "ab,bcd": () => `${ab()},${c()}${c()}${c()}`,
+      "a,0b": () => `${c()},0${c()}`, "a,00b": () => `${c()},00${c()}`, "a,0bc": () => `${c()},0${c()}${c()}`,
+      "a,b0c": () => `${c()},${c()}0${c()}`, "ab,00c": () => `${ab()},00${c()}`,
+      "0,0ab": () => `0,0${c()}${c()}`, "0,00a": () => `0,00${c()}`, "0,abc": () => `0,${c()}${c()}${c()}`, "0,0a": () => `0,0${c()}`
+    }[modele];
+    return milli(t());
+  }
+  function conversionC9(degre, v, de, vers) {
+    const rep = convertir(v, de, vers);
+    if (rep === null) return null;
+    const bas = exposant(de) > exposant(vers);
+    const [g, p, vg, vp] = bas ? [de, vers, v, rep] : [vers, de, rep, v];
+    if (!vraieC9(vg, g, vp)) return null;
+    const f = facteur(g, p);
+    const relation = relationTexte(g, p);
+    const pas = bas ? `${ecrire(v)} × ${mes(f * MILLE, vers)}` : `${ecrire(v)} ÷ ${ecrire(f * MILLE)}${NB}${vers}`;
+    return questionConversion("C9", degre, "nombre", v, de, vers, {
+      relation, outil: "glisse-unite", glisse: glisse(v, de, vers, {cm1: true, decimaux: true}),
+      image: [relation, `donc ${mes(v, de)} = ${pas}`],
+      correction: [relation, `donc ${mes(v, de)} = ${pas} = ${mes(rep, vers)}`],
+      grandeur: grandeurDe(g), relationCle: `${g}-${p}`, sorteC9: "conv"
+    });
+  }
+  function tirerConvC9(rng, degre) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      const [g, p] = choisir(rng, PAIRES_C9);
+      const vg = nombreC9(rng, choisir(rng, MODELES_C9[degre]));
+      const vp = convertir(vg, g, p);
+      const x = rng() < 0.55 ? conversionC9(degre, vg, g, p) : conversionC9(degre, vp, p, g);
+      if (x) return x;
+    }
+    return null;
+  }
+  // La même conversion, en phrase : « Combien de mètres dans 18 mm ? ».
+  function enPhrase(x) {
+    if (!x) return null;
+    const d = x.donnees;
+    const e = ecrireConversion("phrase", milli(d.valeur), d.de, d.vers);
+    return Object.assign(x, {forme: "phrase", texte: e.texte, morceaux: e.morceaux});
+  }
+  // Des mesures vraies, de La Réunion et de tous les jours : [l'énoncé, la
+  // mesure, son unité, l'unité demandée, le degré].
+  const SITUATIONS_C9 = [
+    ["Le Piton des Neiges culmine à 3 069 m.", "3069", "m", "km", 2],
+    ["Le Piton de la Fournaise culmine à 2 632 m.", "2632", "m", "km", 1],
+    ["Le Grand Bénare culmine à 2 898 m.", "2898", "m", "km", 1],
+    ["Le Maïdo culmine à 2 205 m.", "2205", "m", "km", 2],
+    ["Un marathon mesure 42,195 km.", "42,195", "km", "m", 1],
+    ["Une fourmi mesure 4 mm.", "4", "mm", "m", 3],
+    ["Un grain de riz mesure 6 mm.", "6", "mm", "m", 3],
+    ["Un crayon mesure 175 mm.", "175", "mm", "m", 3],
+    ["Un ananas pèse 0,85 kg.", "0,85", "kg", "g", 2],
+    ["Un camion de cannes porte 12,45 t.", "12,45", "t", "kg", 2],
+    ["Un téléphone pèse 185 g.", "185", "g", "kg", 3],
+    ["Un colis pèse 3 060 g.", "3060", "g", "kg", 2],
+    ["Une bouteille de sirop contient 0,75 L.", "0,75", "L", "mL", 2],
+    ["Une canette contient 330 mL.", "330", "mL", "L", 3],
+    ["Le sentier jusqu'à la cascade mesure 1 250 m.", "1250", "m", "km", 2],
+    ["Un bébé pèse 3 450 g à la naissance.", "3450", "g", "kg", 1],
+    ["Une gourde contient 0,6 L.", "0,6", "L", "mL", 3],
+    ["Un sac de letchis pèse 1,875 kg.", "1,875", "kg", "g", 1],
+    ["La piste cyclable mesure 4 075 m.", "4075", "m", "km", 2],
+    ["Un jacquier pèse 8,05 kg.", "8,05", "kg", "g", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function situationC9(degre, rng) {
+    const vivier = SITUATIONS_C9.map((s, k) => [s, k]).filter(([s]) => s[4] <= degre);
+    const [[enonce, n, de, vers], k] = choisir(rng, vivier);
+    const x = conversionC9(degre, milli(n), de, vers);
+    if (!x) return null;
+    const avant = `${mes(milli(n), de)} =`;
+    return Object.assign(x, {
+      forme: "nombre", texte: `${enonce} ${avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant, apres: vers},
+      sorteC9: "situation", situationC9: k, cleBase: x.cle, cle: `C9:s:${k}`
+    });
+  }
+
+  // Deux unités vers une seule (S433 : 6 m 65 mm = … m) : le glisse-unité
+  // porte la petite mesure, « Puis j'ajoute 6 m. » (comme C5). d2 : deux
+  // chiffres ou un seul (6 m 5 mm) ; d3 : aussi trois chiffres avec un zéro
+  // (6 m 305 mm), et le marathon (42 km 195 m).
+  const DEUX_C9 = [["m", "mm"], ["km", "m"], ["kg", "g"], ["L", "mL"]];
+  function deuxUnitesC9(degre, rng) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, DEUX_C9);
+      let a = entre(rng, 1, 9);
+      const deux = () => { let k; do { k = entre(rng, 11, 99); } while (k % 10 === 0); return k; };
+      let b = degre <= 2 ? (rng() < 0.6 ? deux() : entre(rng, 1, 9)) : choisir(rng, [entre(rng, 1, 9), entre(rng, 1, 9) * 100 + entre(rng, 1, 9), deux()]);
+      if (degre === 3 && g === "km" && rng() < 0.2) [a, b] = [42, 195];
+      const A = milli(a);
+      const B = milli(b);
+      const f = facteur(g, p);
+      const Bg = convertir(B, p, g);
+      const rep = A + Bg;
+      if (!vraieC9(rep, g, A * f + B)) continue;
+      const gauche = `${mes(A, g)} ${mes(B, p)}`;
+      const relation = relationTexte(g, p);
+      return q({
+        code: "C9", degre, forme: "phrase", texte: `${gauche} = ${CASE}${NB}${g}`,
+        morceaux: {phrase: `${gauche} =`, apres: g},
+        reponse: brut(rep), reponseTexte: mes(rep, g), unite: g, resume: `${gauche} = ${mes(rep, g)}`,
+        relation, outil: "glisse-unite", glisse: glisse(B, p, g, {cm1: true, decimaux: true}), plus: mes(A, g),
+        image: [relation, `donc ${gauche} = ${mes(A, g)} + ${ecrire(B)} ÷ ${ecrire(f * MILLE)}${NB}${g}`],
+        correction: [`${mes(B, p)} = ${mes(Bg, g)}`, `${gauche} = ${mes(A, g)} + ${mes(Bg, g)} = ${mes(rep, g)}`],
+        grandeur: grandeurDe(g), relationCle: `${g}-${p}`, somme: true, sorteC9: "deux-unites",
+        donnees: {type: "somme", a: String(a), ua: g, b: String(b), ub: p, vers: g},
+        cle: `C9:${a}${g}${b}${p}>${g}`
+      });
+    }
+    return null;
+  }
+  // Deux cases : « 6,065 m = … m … mm » (d2 : 6,065 ; 3,405 ; d3 : 2,005 ;
+  // 4,07).
+  function deuxCasesC9(degre, rng) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, DEUX_C9);
+      const a = entre(rng, 1, 9);
+      const b = degre <= 2 ? choisir(rng, [entre(rng, 11, 99), entre(rng, 1, 9) * 100 + entre(rng, 1, 9), entre(rng, 101, 999)]) : choisir(rng, [entre(rng, 1, 9), entre(rng, 1, 9) * 10]);
+      if (degre <= 2 && b % 10 === 0) continue;
+      const f = facteur(g, p);
+      const X = milli(a) * f + milli(b);
+      const v = convertir(X, p, g);
+      if (!vraieC9(v, g, X)) continue;
+      const reste = v - milli(a);
+      const gauche = mes(v, g);
+      const relation = relationTexte(g, p);
+      return q({
+        code: "C9", degre, forme: "deux-cases", texte: `${gauche} = ${CASE}${NB}${g} ${CASE}${NB}${p}`,
+        morceaux: {avant: `${gauche} =`, cases: [g, p]},
+        reponse: [String(a), String(b)], reponseTexte: `${mes(milli(a), g)} ${mes(milli(b), p)}`, unite: p,
+        resume: `${gauche} = ${mes(milli(a), g)} ${mes(milli(b), p)}`,
+        relation, outil: "glisse-unite", glisse: glisse(v, g, p, {cm1: true, decimaux: true}),
+        image: [relation, `${gauche} = ${mes(milli(a), g)} + ${mes(reste, g)}`],
+        correction: [`${mes(reste, g)} = ${mes(milli(b), p)}`, `${gauche} = ${mes(milli(a), g)} ${mes(milli(b), p)}`],
+        grandeur: grandeurDe(g), relationCle: `${g}-${p}`, deux: true, sorteC9: "deux-cases",
+        donnees: {type: "deux", valeur: brut(v), de: g, grande: g, petite: p},
+        cle: `C9:${brut(v)}${g}>${g}+${p}`
+      });
+    }
+    return null;
+  }
+  // « Trouve l'intrus » au millième : trois écritures de la même mesure
+  // (2,07 kg ; 2 070 g ; 2 kg 70 g) et une vraie erreur, le zéro oublié
+  // (2,7 kg) ou mis au mauvais rang (2 kg 700 g, 2 700 g).
+  function intrusC9(degre, rng) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, DEUX_C9);
+      const a = entre(rng, 1, 9);
+      const b = choisir(rng, degre === 3 ? [entre(rng, 1, 9), entre(rng, 1, 9) * 10] : [entre(rng, 11, 99), entre(rng, 1, 9) * 10, entre(rng, 1, 9)]);
+      const f = facteur(g, p);
+      const A = milli(a);
+      const B = milli(b);
+      const X = A * f + B;
+      const vg = convertir(X, p, g);
+      if (!vraieC9(vg, g, X)) continue;
+      const egales = [[[vg, g]], [[X, p]], [[A, g], [B, p]]];
+      const oublie = lireMilli(`${a},${b}`);
+      const fausses = [[[oublie, g]], [[oublie, g]]];
+      if (b * 10 < 1000) fausses.push([[A, g], [B * 10n, p]], [[A * f + B * 10n, p]]);
+      const intrus = choisir(rng, fausses);
+      const cartes = melanger(rng, egales.concat([intrus]));
+      const textes = cartes.map(texteEcriture);
+      const bon = cartes.indexOf(intrus);
+      const vi = valeurC5(intrus);
+      const autre = intrus.length === 1 && intrus[0][1] === p ? mes(convertir(intrus[0][0], p, g), g) : mes(convertir(vi, BASE_C5[grandeurDe(g)], p), p);
+      const pourquoi = {};
+      cartes.forEach((e, i) => {
+        if (i === bon) return;
+        const meme = egales.find(x => x !== e && x.length === 1 && x[0][1] !== (e.length === 1 ? e[0][1] : null)) || egales.find(x => x !== e);
+        pourquoi[i] = `${textes[i]} = ${texteEcriture(meme)}.`;
+      });
+      const egalesT = egales.map(texteEcriture);
+      const phrase = "Trouve l'intrus : la mesure qui n'est pas égale aux autres.";
+      const fin = `${textes[bon]} = ${autre} : c'est l'intrus.`;
+      return q({
+        code: "C9", degre, forme: "qcm", texte: `${phrase} ${textes.join(" ; ")}`,
+        morceaux: {phrase},
+        choix: textes, bon, pourquoi, reponse: String(bon), reponseTexte: textes[bon], unite: p,
+        resume: fin, correction: [egalesT.join(" = "), fin],
+        relation: relationTexte(g, p), outil: "glisse-unite",
+        glisseOutil: glisse(vg, g, p, {cm1: true, decimaux: true}),
+        image: [relationTexte(g, p), "J'écris tout dans la même unité."],
+        grandeur: grandeurDe(g), relationCle: `${g}-${p}`, sorteC9: "intrus",
+        donnees: {type: "intrus", cartes: cartes.map(e => e.map(([m, u]) => [brut(m), u]))},
+        cle: `C9:i:${brut(X)}${p}`
+      });
+    }
+    return null;
+  }
+
+  // L'arrondi à l'entier (S003 p. 10) et la partie entière. La droite
+  // graduée de a à a + 1 en dixièmes, le milieu en orange, la croix sur la
+  // mesure (choix de Gwenaël du 21/11). Au degré 1, trois réponses au
+  // choix : l'arrondi, la troncature (ou l'arrondi de l'autre côté),
+  // l'arrondi au dixième ; ensuite, tapé (« 3,584 m ≈ … m »). d3 : le
+  // milieu (3,5 m ≈ 4 m), le passage à la dizaine (9,7 kg ≈ 10 kg), moins
+  // de 1 (0,8 L ≈ 1 L), le piège du dixième 4 (4,49 m ≈ 4 m, pas 5 m).
+  const AU_C9 = {m: "au mètre", km: "au kilomètre", kg: "au kilogramme", L: "au litre"};
+  // [la phrase (sa mesure dedans), la mesure, l'unité, le degré]
+  const ARRONDIS_C9 = [
+    ["Un marathon mesure 42,195 km.", "42,195", "km", 2],
+    ["Le Piton des Neiges culmine à 3,069 km.", "3,069", "km", 1],
+    ["Le Piton de la Fournaise culmine à 2,632 km.", "2,632", "km", 1],
+    ["Le Grand Bénare culmine à 2,898 km.", "2,898", "km", 2],
+    ["Un régime de bananes pèse 12,75 kg.", "12,75", "kg", 1],
+    ["Un sac de letchis pèse 2,375 kg.", "2,375", "kg", 1],
+    ["Au lancer de poids, Kenzo lance à 8,46 m.", "8,46", "m", 2],
+    ["Au saut en longueur, Naïma saute 3,25 m.", "3,25", "m", 1],
+    ["Une bouteille d'eau contient 1,5 L.", "1,5", "L", 3],
+    // (Lot B3-2c : un CM2 court le cross de l'école, comme au B3-1.)
+    ["Le cross de l'école mesure 1,5 km.", "1,5", "km", 3],
+    ["Une valise pèse 18,65 kg.", "18,65", "kg", 2],
+    ["Un bébé pèse 3,45 kg à la naissance.", "3,45", "kg", 3],
+    ["Le sentier jusqu'à la cascade mesure 1,975 km.", "1,975", "km", 3],
+    ["Un aquarium contient 54,6 L.", "54,6", "L", 2],
+    // (Lot B3-2c : un seul chiffre après la virgule, au degré 2, tapé.)
+    ["Un giraumon pèse 4,8 kg.", "4,8", "kg", 2],
+    ["La piste de l'aéroport de Gillot mesure 3,2 km.", "3,2", "km", 2],
+    ["Un jacquier pèse 9,7 kg.", "9,7", "kg", 3],
+    ["Un arrosoir contient 7,35 L.", "7,35", "L", 2]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  const U_ARRONDI = ["m", "kg", "L", "km", "m", "kg"];
+  function valeurArrondi(rng, degre) {
+    const d = () => entre(rng, 1, 9);
+    if (degre === 1) {
+      const a = entre(rng, 1, 19);
+      const t = choisir(rng, [1, 2, 3, 6, 7, 8]);
+      return choisir(rng, [`${a},${t}${d()}${d()}`, `${a},${t}${d()}`, `${a},${t}${d()}${d()}`]);
+    }
+    if (degre === 2) {
+      const a = entre(rng, 1, 49);
+      const t = choisir(rng, [0, 1, 2, 3, 4, 6, 7, 8, 9]);
+      return choisir(rng, [`${a},${t}${d()}${d()}`, `${a},${t}${d()}`, `${a},5${d()}${d()}`]);
+    }
+    const sorte = choisir(rng, ["milieu", "dix", "zero", "quatre"]);
+    if (sorte === "milieu") return `${entre(rng, 1, 29)},5`;
+    if (sorte === "dix") return `${choisir(rng, [9, 19, 29, 39])},${entre(rng, 6, 9)}${rng() < 0.5 ? d() : ""}`;
+    if (sorte === "zero") return `0,${entre(rng, 6, 9)}${rng() < 0.5 ? d() : ""}`;
+    return `${entre(rng, 1, 29)},4${entre(rng, 5, 9)}${rng() < 0.5 ? d() : ""}`;
+  }
+  // L'arrondi au dixième (le mauvais choix « 3,6 m » pour 3,584 m).
+  function auDixieme(x) {
+    return ((x + 50n) / 100n) * 100n;
+  }
+  function questionArrondi(degre, rng, {saisie, valeur, u, situation = null}) {
+    const x = milli(valeur);
+    const a = x / MILLE;
+    const reste = x % MILLE;
+    if (!reste) return null;
+    const milieu = reste === 500n;
+    const rep = reste >= 500n ? a + 1n : a;
+    const X = mes(x, u);
+    const R = mes(rep * MILLE, u);
+    const M = k => mes(k * MILLE, u);
+    const au = AU_C9[u];
+    const extra = {};
+    let forme;
+    let texte;
+    let morceaux;
+    if (!saisie) {
+      const dix = auDixieme(x);
+      // (Lot B3-2c, relecture : « 3,2 km » arrondi au kilomètre proposait
+      // 3,2 km lui-même, « Ça, c'est arrondi au dixième. » : une mesure à
+      // un seul chiffre après la virgule n'est pas au choix.)
+      if (a < 1n || dix % MILLE === 0n || dix === x) return null;
+      const trois = melanger(rng, [a * MILLE, (a + 1n) * MILLE, dix]);
+      const choix = trois.map(y => mes(y, u));
+      const bon = trois.indexOf(rep * MILLE);
+      const pourquoi = {};
+      trois.forEach((y, k) => {
+        if (k === bon) return;
+        if (y === dix) pourquoi[k] = "Ça, c'est arrondi au dixième.";
+        else pourquoi[k] = milieu ? "Au milieu : au-dessus." : `Plus près de ${R}.`;
+      });
+      forme = "qcm";
+      texte = situation ? `${situation} Arrondi ${au} :` : `${X} arrondi ${au} :`;
+      morceaux = situation ? {enonce: situation, phrase: `Arrondi ${au} :`, apres: "", sorte: "mesure"} : {phrase: texte, apres: "", sorte: "mesure"};
+      Object.assign(extra, {choix, bon, pourquoi});
+    } else {
+      forme = "nombre";
+      const enonce = situation ? `${situation} J'arrondis ${au}.` : `J'arrondis ${au}.`;
+      texte = `${enonce} ${X} ≈ ${CASE}${NB}${u}`;
+      morceaux = {enonce, avant: `${X} ≈`, apres: u};
+    }
+    return q(Object.assign({
+      code: "C9", degre, forme, texte, morceaux,
+      reponse: forme === "qcm" ? extra.choix[extra.bon] : brut(rep * MILLE), reponseTexte: R, unite: u, grandeur: grandeurDe(u),
+      resume: `${X} ≈ ${R}`,
+      outil: "droite-c9", droiteC9: {a: Number(a), x: ecrire(x), u, milieu: true},
+      noteOutil: milieu ? "Pile au milieu : au-dessus." : `Le plus proche : ${M(a)} ou ${M(a + 1n)} ?`,
+      image: [`${M(a)} < ${X} < ${M(a + 1n)}`, `Le milieu : ${mes(a * MILLE + 500n, u)}.`],
+      correction: [`${X} ≈ ${R}`], ligneB32: [`${X} ≈ `, R, ""],
+      sorteC9: "arrondi", sorteArrondi: situation ? "situation" : "nombre",
+      donnees: {type: "arrondi", valeur: brut(x), unite: u},
+      cleBase: `C9:a:${brut(x)}${u}`, cle: `C9:a:${brut(x)}${u}${forme === "qcm" ? ":q" : ""}`
+    }, extra));
+  }
+  function tirerArrondiC9(degre, rng) {
+    const saisie = degre >= 2;
+    if (rng() < 0.35) {
+      const vivier = ARRONDIS_C9.filter(s => s[3] <= degre);
+      const [phrase, n, u] = choisir(rng, vivier);
+      return questionArrondi(degre, rng, {saisie, valeur: n, u, situation: phrase});
+    }
+    for (let essai = 0; essai < 20; essai += 1) {
+      const x = questionArrondi(degre, rng, {saisie, valeur: valeurArrondi(rng, degre), u: choisir(rng, U_ARRONDI)});
+      if (x) return x;
+    }
+    return null;
+  }
+  // Les erreurs de l'arrondi tapé.
+  function erreursArrondi(question, lu, saisie) {
+    const d = question.donnees;
+    const x = milli(d.valeur);
+    const a = x / MILLE;
+    const rep = milli(question.reponse);
+    if (lu === x) return {erreur: 21, retour: "Sans virgule : un nombre entier."};
+    if (lu % MILLE) return lu === auDixieme(x) ? {erreur: 22, retour: "Ça, c'est arrondi au dixième."} : null;
+    if (lu === a * MILLE || lu === (a + 1n) * MILLE) {
+      return {erreur: 23, retour: x % MILLE === 500n ? "Au milieu : au-dessus." : `Plus près de ${mes(rep, d.unite)}.`};
+    }
+    return null;
+  }
+  // La partie entière (S003 p. 10 : « la partie entière de 105,78 ») :
+  // « Dans 3,584 m, combien de mètres entiers ? ».
+  // (Lot B3-2c, relecture : la droite de l'outil commençait par « 3 m » et
+  // l'image par « 3 m < 3,584 m < 4 m » : la réponse. Règle de Gwenaël : un
+  // outil ne donne jamais la réponse. L'outil est un exemple sur un autre
+  // nombre, dans une autre unité, jamais le même nombre entier ; l'image,
+  // la méthode seule. La correction garde la droite, en vert.)
+  const EXEMPLES_ENTIERE = [["7,25", "m"], ["12,6", "kg"], ["8,4", "km"], ["25,5", "L"], ["3,75", "kg"], ["16,8", "m"], ["5,75", "L"], ["2,5", "km"]];
+  function exempleEntiere(a, u) {
+    const bons = EXEMPLES_ENTIERE.filter(([n, v]) => v !== u && BigInt(n.split(",")[0]) !== a);
+    const [n, v] = bons[Number(a % BigInt(bons.length))];
+    return {nombre: n, entier: n.split(",")[0], u: v};
+  }
+  function questionEntiere(degre, rng) {
+    const u = choisir(rng, U_ARRONDI);
+    const d = () => entre(rng, 1, 9);
+    let x;
+    if (degre === 1) x = milli(`${entre(rng, 1, 19)},${d()}${d()}${d()}`);
+    else if (degre === 2) x = milli(choisir(rng, [`${entre(rng, 2, 49)},0${d()}`, `${entre(rng, 2, 49)},${entre(rng, 5, 9)}${d()}`, `${entre(rng, 2, 49)},00${d()}`]));
+    else x = milli(`${entre(rng, 101, 499)},${d()}${d()}`);
+    const a = x / MILLE;
+    const reste = x % MILLE;
+    if (!reste || a < 1n) return null;
+    const X = mes(x, u);
+    const R = mes(a * MILLE, u);
+    const phrase = `Dans ${X}, combien de ${MOTS[u]} entiers${NB}?`;
+    return q({
+      code: "C9", degre, forme: "phrase", texte: `${phrase} ${CASE}${NB}${u}`, morceaux: {phrase, apres: u},
+      reponse: brut(a * MILLE), reponseTexte: R, unite: u, grandeur: grandeurDe(u),
+      resume: `Dans ${X}, les ${MOTS[u]} entiers : ${R}`,
+      outil: "droite-c9", droiteC9: {a: Number(a), x: ecrire(x), u, milieu: false, entiere: true},
+      exempleC9: exempleEntiere(a, u),
+      noteOutil: `Avant la virgule : les ${MOTS[u]} entiers.`,
+      image: [`Avant la virgule : les ${MOTS[u]} entiers.`, `Après la virgule : moins d'un ${MOTS[u].replace(/s$/, "")}.`],
+      correction: [`${X} = ${R} + ${mes(reste, u)}`], ligneB32: [`${X} = `, R, ` + ${mes(reste, u)}`],
+      sorteC9: "entiere",
+      donnees: {type: "entiere", valeur: brut(x), unite: u},
+      cle: `C9:e:${brut(x)}${u}`
+    });
+  }
+  function erreursEntiere(question, lu) {
+    const x = milli(question.donnees.valeur);
+    const a = x / MILLE;
+    const apres = BigInt(brut(x).split(",")[1]) * MILLE;
+    if (lu === x) return {erreur: 31, retour: "Seulement avant la virgule."};
+    if (lu === (a + 1n) * MILLE) return {erreur: 32, retour: "Je n'arrondis pas ici."};
+    if (lu === apres) return {erreur: 33, retour: "Ça, c'est après la virgule."};
+    return null;
+  }
+
+  // Les places de C9 : Je valide, une conversion et l'arrondi d'abord, puis
+  // deux unités, la partie entière, au choix, l'arrondi tapé, l'intrus,
+  // deux cases, les zéros ; À toi, toutes les sortes en alternance.
+  const PLACES_C9 = {
+    valide: ["conv", "arrondi", "conv-phrase", "deux-unites", "entiere", "choix", "arrondi", "intrus", "deux-cases", "conv"],
+    entraine: ["conv", "arrondi", "conv", "entiere", "conv-phrase", "arrondi",
+      "deux-unites", "conv", "choix", "arrondi", "intrus", "deux-cases", "entiere", "conv-phrase", "arrondi",
+      "conv", "intrus", "arrondi", "deux-unites", "choix", "conv", "deux-cases", "arrondi", "entiere", "conv"],
+    test: ["conv", "arrondi", "intrus", "deux-unites"],
+    aide: ["conv", "arrondi", "conv"],
+    retour: ["conv", "arrondi"],
+    echauffement: ["conv"]
+  };
+  function sorteAuHasard(rng, poids) {
+    let r = rng() * poids.reduce((s, [, p]) => s + p, 0);
+    for (const [s, p] of poids) { r -= p; if (r < 0) return s; }
+    return poids[0][0];
+  }
+  // Au choix, les pourquoi de C3 sur une ligne (31 signes) : avec des
+  // millièmes, « 17 009 kg, ce n'est pas 17 009 t. » en prenait deux.
+  function pourquoiCourts(x) {
+    if (!x) return null;
+    const v = milli(x.donnees.valeur);
+    Object.keys(x.pourquoi).forEach(k => {
+      const t = x.pourquoi[k];
+      if (t.length <= 31) return;
+      const y = milli(x.choix[k].replace(new RegExp(FINE, "g"), ""));
+      x.pourquoi[k] = y === v ? "Le nombre change aussi." : /virgule/.test(t) ? "La virgule ne s'efface pas." : zeroDeTrop(x, y, milli(x.reponse));
+    });
+    return x;
+  }
+  ETAPES.C9 = {
+    clesExemples: ["C9:2,375kg>g", "C9:18mm>m", "C9:a:3,584m"],
+    formes(usage) {
+      const p = PLACES_C9[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = s; });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || sorteAuHasard(rng, [["conv", 4], ["arrondi", 3], ["entiere", 1], ["choix", 1], ["intrus", 1], ["deux-unites", 1], ["deux-cases", 1]]);
+      if (sorte === "arrondi") return tirerArrondiC9(degre, rng);
+      if (sorte === "entiere") return questionEntiere(degre, rng);
+      if (sorte === "intrus") return intrusC9(degre, rng);
+      if (sorte === "deux-unites") {
+        // (Au degré 1 — l'exerciseur —, les nombres du degré 2.)
+        const x = deuxUnitesC9(Math.max(2, degre), rng);
+        return x && Object.assign(x, {degre});
+      }
+      if (sorte === "deux-cases") return deuxCasesC9(degre, rng);
+      if (sorte === "conv" && degre >= 2 && rng() < 0.3) return situationC9(degre, rng);
+      const x = tirerConvC9(rng, degre);
+      if (sorte === "choix") return pourquoiCourts(enChoixDec(x, rng));
+      return sorte === "conv-phrase" ? enPhrase(x) : x;
+    },
+    // (Dans Je valide : une même relation deux fois au plus.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" || !question.relationCle) return true;
+      return serie.filter(x => x.relationCle === question.relationCle).length < 2;
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const n = gr => serie.filter(x => x.grandeur === gr).length;
+      return n("longueur") >= 2 && n("masse") >= 2;
+    },
+    erreurs(question, lu, cases, saisie) {
+      const d = question.donnees;
+      if (d.type === "arrondi") return typeof lu === "bigint" ? erreursArrondi(question, lu, saisie) : null;
+      if (d.type === "entiere") return typeof lu === "bigint" ? erreursEntiere(question, lu) : null;
+      return erreursC5(question, lu, cases, saisie);
+    }
+  };
+
+  // ----------------------------- A1 · 1 m² = 100 dm², 1 dm² = 100 cm²
+  // S003 p. 17 : « justifier les égalités 1 m² = 100 dm² et 1 dm² =
+  // 100 cm² par un découpage » ; S023 p. 7 : « 1 dm² = 1 dm × 1 dm =
+  // 10 cm × 10 cm = 100 cm² ». L'outil : le carré de 1 dm² (ou de 1 m²)
+  // quadrillé 10 × 10 ; chaque toucher colore une rangée de plus et le
+  // compteur dit combien de carreaux. Les sortes : les deux égalités (au
+  // pavé, en phrase, au choix 10 · 100 · 1 000), l'inverse (100 cm² =
+  // … dm²), les rangées coloriées (3 rangées : 30 cm²), les multiples
+  // (4 dm² = … cm², 400 cm² = … dm²), et au degré 3, 1 m² = 10 000 cm².
+  // Seulement cm², dm², m² au CM2.
+  const CARRE_A1 = {"dm²": {cote: `10${NB}cm`, petite: "cm²", rel: `1${NB}dm = 10${NB}cm`}, "m²": {cote: `10${NB}dm`, petite: "dm²", rel: `1${NB}m = 10${NB}dm`}};
+  const SOUS_A1 = {"dm²": "cm²", "m²": "dm²"};
+  const COTE_A1 = {"dm²": ["dm", "cm"], "m²": ["m", "dm"]};
+  // Une conversion d'aire (A1, A2) : la question, sa relation, sa
+  // correction écrite avec les unités ; `extra` : l'outil.
+  function conversionAire(code, degre, v, de, vers, extra = {}) {
+    const rep = convertir(v, de, vers);
+    if (rep === null || rep <= 0n || rep > 100000n * MILLE || decimales(rep) > 2) return null;
+    const bas = exposant(de) > exposant(vers);
+    const [g, p] = bas ? [de, vers] : [vers, de];
+    const F = facteur(g, p);
+    const relation = relationTexte(g, p);
+    const X = mes(v, de);
+    const R = mes(rep, vers);
+    const fois = bas ? `${ecrire(v)} × ${mes(F * MILLE, p)}` : `${ecrire(rep)} × ${mes(F * MILLE, p)}`;
+    const ligne = bas ? [`${X} = ${fois} = `, R, ""] : [`${X} = ${fois} = `, R, ""];
+    return questionConversion(code, degre, "nombre", v, de, vers, Object.assign({
+      relation, grandeur: "aire", relationCle: `${g}-${p}`,
+      correction: [relation, `${X} = ${fois} = ${R}`], ligneB32: ligne
+    }, extra));
+  }
+  function outilCarreA1(g, extra = {}) {
+    const c = CARRE_A1[g];
+    return Object.assign({outil: "carre-a1", carreA1: {cote: c.cote, petite: c.petite, rel: c.rel, grande: g},
+      noteOutil: "Touche le carré : une rangée de plus.", carreCorr: true}, extra);
+  }
+  function faitA1(degre, g, rng, inverse = false) {
+    const p = SOUS_A1[g];
+    const [lg, lp] = COTE_A1[g];
+    const x = inverse ? conversionAire("A1", degre, 100n * MILLE, p, g, outilCarreA1(g)) : conversionAire("A1", degre, MILLE, g, p, outilCarreA1(g));
+    if (!x) return null;
+    // La correction, avec les unités : « 1 dm² = 10 cm × 10 cm = 100 cm² »
+    // (au petit téléphone, la page la fait tenir sur une ligne).
+    const dix = `10${NB}${lp} × 10${NB}${lp}`;
+    if (inverse) {
+      // (Lot B3-2c, relecture : « … = 1 dm × 1 dm = 1 dm² » essayé, mesuré :
+      // au petit iPhone, la ligne rapetissait à 13,6 px, et passait sur deux
+      // lignes à 11,9 px avec une police large. Gardé.)
+      x.ligneB32 = [`${mes(100n * MILLE, p)} = ${dix} = `, mes(MILLE, g), ""];
+      x.correction = [x.ligneB32.join("")];
+    } else {
+      x.ligneB32 = [`1${NB}${g} = ${dix} = `, mes(100n * MILLE, p), ""];
+      x.correction = [`1${NB}${g} = ${dix} = ${mes(100n * MILLE, p)}`];
+    }
+    x.image = [`Un carreau : 1${NB}${p}.`];
+    x.sorteA1 = inverse ? "inverse" : "fait";
+    // (Au choix : 10, 100, 1 000 ; les deux erreurs connues, la rangée
+    // seule et le cube.)
+    if (rng && !inverse) {
+      const trois = melanger(rng, [10n, 100n, 1000n]);
+      const choix = trois.map(k => ecrire(k * MILLE));
+      const bon = trois.indexOf(100n);
+      const pourquoi = {};
+      trois.forEach((k, i) => { if (k === 10n) pourquoi[i] = `10 rangées de 10${NB}carreaux.`; else if (k === 1000n) pourquoi[i] = `10 × 10 = 100, pas 1${FINE}000.`; });
+      const phrase = `1${NB}${g} = ${CASE}${NB}${p}`;
+      Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: p, sorte: "valeur"}, choix, bon, pourquoi, cleBase: x.cle, cle: `${x.cle}:q`});
+    }
+    return x;
+  }
+  // « Je colorie 3 rangées du carré de 1 dm² : … cm² ».
+  function rangeesA1(degre, rng) {
+    const g = choisir(rng, ["dm²", "m²"]);
+    const p = SOUS_A1[g];
+    const n = entre(rng, 2, 9);
+    const enonce = `Dans le carré de 1${NB}${g}, je colorie ${n} rangées.`;
+    // (Lot B3-2 : « Aire coloriée : » ne tenait pas avec la case au petit iPhone.)
+    const avant = "Aire :";
+    const R = mes(BigInt(n * 10) * MILLE, p);
+    return q(Object.assign({
+      code: "A1", degre, forme: "nombre", texte: `${enonce} ${avant} ${CASE}${NB}${p}`, morceaux: {enonce, avant, apres: p},
+      reponse: String(n * 10), reponseTexte: R, unite: p, grandeur: "aire",
+      resume: `${n} rangées de 10${NB}${p} : ${R}`,
+      image: [`Une rangée : 10${NB}carreaux de 1${NB}${p}.`],
+      correction: [`${n} × 10${NB}${p} = ${R}`], ligneB32: [`${n} × 10${NB}${p} = `, R, ""], rangeesA1: n,
+      sorteA1: "rangees", relationCle: `${g}-${p}`,
+      donnees: {type: "rangees", n, unite: p},
+      cle: `A1:r:${n}${g}`
+    }, outilCarreA1(g)));
+  }
+  // Les multiples : « 4 dm² = … cm² », « 400 cm² = … dm² » (d2) ;
+  // « 30 dm² = 3 000 cm² », « 2 000 cm² = 20 dm² » (d3).
+  function multipleA1(degre, rng, inverse) {
+    const g = choisir(rng, ["dm²", "m²"]);
+    const p = SOUS_A1[g];
+    const n = degre === 3 ? entre(rng, 1, 9) * 10 + (rng() < 0.4 ? entre(rng, 1, 9) : 0) : entre(rng, 2, 15);
+    const v = inverse ? BigInt(n * 100) * MILLE : BigInt(n) * MILLE;
+    const x = inverse ? conversionAire("A1", degre, v, p, g, outilCarreA1(g)) : conversionAire("A1", degre, v, g, p, outilCarreA1(g));
+    if (!x) return null;
+    // (Vers l'unité plus grande : « 400 cm² = 4 × 100 cm² = 4 dm² ».)
+    if (inverse) {
+      x.ligneB32 = [`${mes(v, p)} = ${n} × ${mes(100n * MILLE, p)} = `, mes(BigInt(n) * MILLE, g), ""];
+      x.correction = [`${mes(v, p)} = ${n} × ${mes(100n * MILLE, p)} = ${mes(BigInt(n) * MILLE, g)}`];
+    }
+    x.image = [`Un carreau : 1${NB}${p}.`];
+    x.sorteA1 = inverse ? "multiple-inverse" : "multiple";
+    return x;
+  }
+  // 1 m² = 10 000 cm² (d3) : le carré de 1 m², puis chaque dm² en cm².
+  // (Lot B3-2c : `choix` force les réponses au choix ; elles se mélangent
+  // avec le vrai tirage — la bonne était toujours en premier.)
+  function metreCmA1(degre, rng, inverse, choix = null) {
+    const x = inverse ? conversionAire("A1", degre, 10000n * MILLE, "cm²", "m²", outilCarreA1("m²")) : conversionAire("A1", degre, MILLE, "m²", "cm²", outilCarreA1("m²"));
+    if (!x) return null;
+    x.noteOutil = `Puis chaque dm², c'est 100${NB}cm².`;
+    // (Lot B3-2c, relecture : « 1 m² = 100 dm² = 100 × 100 cm² = … »
+    // essayé, mesuré : au petit iPhone, la ligne rapetissait à 13,6 px, et
+    // 11,9 px avec une police large, sur deux lignes au petit Android. Gardé.)
+    x.ligneB32 = inverse ? [`10${FINE}000${NB}cm² = 100 × 100${NB}cm² = `, `1${NB}m²`, ""] : [`1${NB}m² = 100 × 100${NB}cm² = `, mes(10000n * MILLE, "cm²"), ""];
+    x.correction = [x.ligneB32.join("")];
+    // (Pas « 1 m² = 100 dm² » : pour « 10 000 cm² = … m² », la ligne
+    // commencerait par la réponse.)
+    x.image = [`Un carré de 1${NB}m de côté : 100${NB}dm².`, `1${NB}dm² = 100${NB}cm²`];
+    x.sorteA1 = inverse ? "metre-cm-inverse" : "metre-cm";
+    if (!inverse && rng && (choix === null ? rng() < 0.4 : choix)) {
+      const trois = melanger(rng, [1000n, 10000n, 100n]);
+      const choix = trois.map(k => ecrire(k * MILLE));
+      const bon = trois.indexOf(10000n);
+      const pourquoi = {};
+      trois.forEach((k, i) => { if (k === 100n) pourquoi[i] = "Ça, c'est en dm²."; else if (k === 1000n) pourquoi[i] = `100 × 100 = 10${FINE}000.`; });
+      const phrase = `1${NB}m² = ${CASE}${NB}cm²`;
+      Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: "cm²", sorte: "valeur"}, choix, bon, pourquoi, cleBase: x.cle, cle: `${x.cle}:q`});
+    }
+    return x;
+  }
+  // Les erreurs d'une conversion d'aire (A1, A2). Une ligne (31 signes).
+  function erreursAire(question, lu) {
+    const d = question.donnees;
+    if (typeof lu !== "bigint") return null;
+    if (d.type === "rangees") return lu === BigInt(d.n) * MILLE ? {erreur: 4, retour: `Une rangée : 10${NB}carreaux.`} : null;
+    if (d.type !== "conv") return null;
+    const v = milli(d.valeur);
+    const rep = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const [g, p] = bas ? [d.de, d.vers] : [d.vers, d.de];
+    const F = facteur(g, p);
+    if (bas && v % F === 0n && lu === v / F) return {erreur: 1, retour: "Vers plus petit : je multiplie."};
+    if (!bas && lu === v * F) return {erreur: 3, retour: "Vers plus grand : je divise."};
+    if (v === MILLE && bas && lu === 1000n * MILLE && F === 100n) return {erreur: 2, retour: `10 × 10 = 100, pas 1${FINE}000.`};
+    if (bas && lu === v * 10n) return {erreur: 2, retour: `1${NB}${g} = ${mes(F * MILLE, p)}, pas 10.`};
+    if (bas && F === 10000n && lu === v * 100n) return {erreur: 2, retour: `Et chaque dm², c'est 100${NB}cm².`};
+    if (!bas && lu * 10n === v) return {erreur: 2, retour: `${mes(F * MILLE, p)} font 1${NB}${g}, pas 10.`};
+    // (Le zéro mal placé : 3,5 dm² → 305 cm².)
+    const reste = v % MILLE;
+    if (bas && reste && decimales(v) < String(F).length - 1) {
+      const chiffres = BigInt(brut(v).split(",")[1]) * MILLE;
+      if (lu === (v - reste) * F + chiffres) return {erreur: 6, retour: `${mes(reste, d.de)}, c'est ${mes(convertir(reste, d.de, d.vers), d.vers)}.`};
+    }
+    if (lu === rep * 10n) return {erreur: 5, retour: "Un zéro de trop."};
+    if (lu * 10n === rep) return {erreur: 5, retour: "Un zéro de moins."};
+    if (lu === v) {
+      const t = `${mes(v, d.de)}, ce n'est pas ${mes(v, d.vers)}.`;
+      return {erreur: 7, retour: t.length <= 31 ? t : "Le nombre change aussi."};
+    }
+    return null;
+  }
+  const PLACES_A1 = {
+    valide: ["fait", "rangees", "choix", "inverse", "multiple", "multiple-phrase", "multiple-inverse", "metre-cm", "multiple", "multiple-inverse"],
+    entraine: ["fait", "rangees", "choix", "rangees", "fait-phrase", "rangees",
+      "inverse", "multiple", "multiple-inverse", "multiple-phrase", "inverse", "multiple", "choix", "multiple-inverse", "multiple",
+      "metre-cm", "multiple", "multiple-inverse", "multiple-phrase", "multiple", "metre-cm", "multiple-inverse", "multiple", "choix", "multiple-phrase"],
+    test: ["multiple", "metre-cm", "multiple-inverse", "inverse"],
+    aide: ["fait", "multiple", "multiple-inverse"],
+    retour: ["multiple", "multiple-inverse"],
+    echauffement: ["multiple"]
+  };
+  ETAPES.A1 = {
+    // Les deux égalités SONT ce qu'on apprend par cœur : Je valide doit
+    // pouvoir les demander (comme les relations de P1).
+    exclureExemples: false,
+    clesExemples: ["A1:1dm²>cm²", "A1:1m²>dm²"],
+    formes(usage) {
+      const p = PLACES_A1[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = s; });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, {1: ["fait", "rangees", "choix"], 2: ["inverse", "multiple", "multiple-inverse"], 3: ["metre-cm", "multiple", "multiple-inverse"]}[degre]);
+      const g = choisir(rng, ["dm²", "m²"]);
+      if (sorte === "fait") return faitA1(degre, g, null);
+      if (sorte === "fait-phrase") return enPhrase(faitA1(degre, g, null));
+      if (sorte === "choix") return degre === 3 ? metreCmA1(degre, rng, false, true) : faitA1(degre, g, rng);
+      if (sorte === "inverse") return faitA1(degre, g, null, true);
+      if (sorte === "rangees") return rangeesA1(degre, rng);
+      if (sorte === "metre-cm") return metreCmA1(degre, rng, rng() < 0.3);
+      const x = multipleA1(degre, rng, sorte === "multiple-inverse");
+      return sorte === "multiple-phrase" ? enPhrase(x) : x;
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      // (Les deux carrés : celui de 1 dm² et celui de 1 m².)
+      return serie.filter(x => x.relationCle === "dm²-cm²").length >= 2 && serie.filter(x => x.relationCle === "m²-dm²").length >= 2;
+    },
+    erreurs(question, lu) { return erreursAire(question, lu); }
+  };
+
+  // --------------------------- A2 · Convertir des aires (vers plus petit)
+  // S003 p. 17 : « convertir 3,7 dm² en cm² en s'appuyant sur 1 dm² =
+  // 100 cm² ». Vers une unité plus petite seulement (vers la plus grande :
+  // A3, en 6e). Degré 1 : des dixièmes, quatre carrés dessinés au plus
+  // (3,7 dm² : 3 carrés et 7 rangées) ; degré 2 : des centièmes, des
+  // nombres plus grands (12,4 m²), au choix ; degré 3 : les zéros (3,05 dm²
+  // = 305 cm² ; 0,07 m² = 7 dm²) et m² → cm² (× 10 000).
+  // Des aires vraies : [l'énoncé, la mesure, son unité, l'unité demandée,
+  // le degré]. (Une carte postale de 10 cm sur 15 cm : 1,5 dm².)
+  const SITUATIONS_A2 = [
+    ["Une carte postale a une aire de 1,5 dm².", "1,5", "dm²", "cm²", 1],
+    ["Un écran de tablette a une aire de 3,2 dm².", "3,2", "dm²", "cm²", 1],
+    ["Une serviette de plage a une aire de 1,5 m².", "1,5", "m²", "dm²", 1],
+    ["Un panneau solaire a une aire de 1,7 m².", "1,7", "m²", "dm²", 1],
+    ["Une nappe a une aire de 2,4 m².", "2,4", "m²", "dm²", 1],
+    ["Une feuille A4 a une aire d'environ 6,2 dm².", "6,2", "dm²", "cm²", 2],
+    ["Une chambre a une aire de 12 m².", "12", "m²", "dm²", 2],
+    ["La case créole a une aire de 48,5 m².", "48,5", "m²", "dm²", 2],
+    ["Une ardoise a une aire de 4,5 dm².", "4,5", "dm²", "cm²", 2],
+    ["Le tableau de la classe a une aire de 4,8 m².", "4,8", "m²", "dm²", 2],
+    ["Un carreau de faïence a une aire de 2,25 dm².", "2,25", "dm²", "cm²", 2],
+    ["La varangue a une aire de 18,5 m².", "18,5", "m²", "dm²", 2],
+    ["Le terrain de pétanque a une aire de 45 m².", "45", "m²", "dm²", 2],
+    ["Un carreau de la varangue a une aire de 0,09 m².", "0,09", "m²", "dm²", 3],
+    ["Une dalle de la cour a une aire de 0,25 m².", "0,25", "m²", "dm²", 3],
+    ["Un timbre a une aire de 0,04 dm².", "0,04", "dm²", "cm²", 3],
+    ["Une fenêtre a une aire de 1,2 m².", "1,2", "m²", "cm²", 3],
+    ["Un panneau solaire a une aire de 1,7 m².", "1,7", "m²", "cm²", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  // Peut-on découper ? quatre carrés dessinés au plus (le dernier en
+  // rangées) : n,d avec n ≤ 3, ou n ≤ 4 entier.
+  function decoupeDe(v, g, p) {
+    if (facteur(g, p) !== 100n || decimales(v) > 1) return null;
+    const n = Number(v / MILLE);
+    const d = Number((v % MILLE) / 100n);
+    // (Pas 0,1 dm² : « Une rangée : 10 cm². » serait la réponse.)
+    if (n + (d ? 1 : 0) > 4 || n + d === 0 || (n === 0 && d === 1)) return null;
+    return {n, d, grande: g, petite: p};
+  }
+  function conversionA2(degre, v, g, p) {
+    if (v === MILLE) return null;
+    const F = facteur(g, p);
+    const dec = degre === 1 ? decoupeDe(v, g, p) : null;
+    const extra = dec
+      ? {outil: "decoupe-a2", decoupeA2: dec, decoupeCorr: true, noteOutil: dec.d ? `Une rangée : 10${NB}${p}.` : `Un carré : 1${NB}${g}.`}
+      : {outil: "calcul-a2", calculA2: {nombre: ecrire(v), grande: g, petite: p, facteur: ecrire(F * MILLE)}, noteOutil: `Chaque ${g}, c'est ${mes(F * MILLE, p)}.`};
+    const x = conversionAire("A2", degre, v, g, p, extra);
+    if (!x) return null;
+    x.image = F === 10000n ? [`1${NB}m² = 100${NB}dm²`, `1${NB}dm² = 100${NB}cm²`] : [x.relation];
+    x.sorteA2 = dec ? "decoupe" : "calcul";
+    return x;
+  }
+  function tirerA2(rng, degre) {
+    const c = () => entre(rng, 1, 9);
+    for (let essai = 0; essai < 40; essai += 1) {
+      let [g, p] = choisir(rng, [["dm²", "cm²"], ["m²", "dm²"]]);
+      let t;
+      if (degre === 1) t = rng() < 0.2 ? `${entre(rng, 2, 4)}` : `${entre(rng, 0, 3)},${c()}`;
+      else if (degre === 2) t = choisir(rng, [`${c()},${c()}${c()}`, `${entre(rng, 11, 49)},${c()}`, `${entre(rng, 5, 9)},${c()}`, `${entre(rng, 11, 60)}`]);
+      else {
+        if (rng() < 0.4) { [g, p] = ["m²", "cm²"]; t = choisir(rng, [`${c()},${c()}`, `0,${c()}`, `${entre(rng, 2, 9)}`]); }
+        else t = choisir(rng, [`${c()},0${c()}`, `0,0${c()}`, `${entre(rng, 11, 49)},0${c()}`, `0,${c()}${c()}`]);
+      }
+      const x = conversionA2(degre, milli(t), g, p);
+      if (x) return x;
+    }
+    return null;
+  }
+  function situationA2(degre, rng) {
+    const vivier = SITUATIONS_A2.map((s, k) => [s, k]).filter(([s]) => s[4] === degre);
+    const [[enonce, n, g, p], k] = choisir(rng, vivier);
+    const x = conversionA2(degre, milli(n), g, p);
+    if (!x) return null;
+    const avant = `${mes(milli(n), g)} =`;
+    return Object.assign(x, {texte: `${enonce} ${avant} ${CASE}${NB}${p}`, morceaux: {enonce, avant, apres: p},
+      sorteA2: `situation-${x.sorteA2}`, situationA2: k, cleBase: x.cle, cle: `A2:s:${k}`});
+  }
+  // Au choix : la rangée seule (× 10), un zéro de trop (× 1 000), le
+  // nombre gardé, le zéro mal placé.
+  function enChoixA2(x, rng) {
+    if (!x) return null;
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const rep = milli(x.reponse);
+    const F = facteur(d.de, d.vers);
+    const reste = v % MILLE;
+    const malPlace = reste && decimales(v) < String(F).length - 1 ? (v - reste) * F + BigInt(brut(v).split(",")[1]) * MILLE : null;
+    const faux = [v * 10n, malPlace, F === 100n ? v * 1000n : v * 100n, v].filter(y => y !== null && y !== rep && y <= 100000n * MILLE && decimales(y) <= 2);
+    const propres = [...new Set(faux.map(String))].map(BigInt);
+    if (propres.length < 2) return null;
+    return enQcm(x, rep, [propres[0], choisir(rng, propres.slice(1))], y => {
+      const e = erreursAire(x, y);
+      return e ? e.retour : y > rep ? "Un zéro de trop." : "Un zéro de moins.";
+    }, rng);
+  }
+  const PLACES_A2 = {
+    valide: ["conv", "situation", "conv-phrase", "conv", "choix", "situation", "conv", "conv", "situation", "conv-phrase"],
+    entraine: ["conv", "conv", "situation", "conv-phrase", "conv", "situation",
+      "conv", "choix", "situation", "conv", "conv-phrase", "conv", "choix", "situation", "conv",
+      "conv", "situation", "conv", "choix", "conv-phrase", "conv", "situation", "conv", "choix", "conv"],
+    test: ["conv", "conv", "situation", "choix"],
+    aide: ["conv", "situation", "conv"],
+    retour: ["conv", "situation"],
+    echauffement: ["conv"]
+  };
+  ETAPES.A2 = {
+    clesExemples: ["A2:3,7dm²>cm²", "A2:2,45m²>dm²", "A2:0,6dm²>cm²"],
+    formes(usage) {
+      const p = PLACES_A2[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = s; });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, ["conv", "conv", "situation", "choix"]);
+      if (sorte === "situation") return situationA2(degre, rng);
+      const x = tirerA2(rng, degre);
+      if (sorte === "choix") return enChoixA2(x, rng);
+      return sorte === "conv-phrase" ? enPhrase(x) : x;
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      const n = u => serie.filter(x => x.donnees.de === u).length;
+      return n("dm²") >= 3 && n("m²") >= 3;
+    },
+    erreurs(question, lu) { return erreursAire(question, lu); }
+  };
+  // (Lot B3-2c, mesuré au petit Android et par le robot : « 3 069 m = … km »,
+  // « 46,521 kg ≈ … kg », « 2,4 m² = … dm² » sortaient du cadre de la
+  // question à 360 px.) La ligne de la case un peu plus petite (`long`) dès
+  // 11 signes autour de la case ; une situation (son énoncé au-dessus) plus
+  // serrée aussi (`serre`, comme Q2).
+  function ligneB32(x) {
+    const m = x && x.morceaux;
+    if (!m || m.avant === undefined) return x;
+    const n = m.avant.length + (m.apres || "").length + (m.cases || []).join("").length;
+    if (n >= 11) m.long = true;
+    // Sous un énoncé (une situation, « J'arrondis au mètre. ») : l'énoncé
+    // serré sur deux lignes au plus (`deuxLignes`, comme les phrases au-dessus
+    // de la case : avec une police large, il en prenait trois et la question
+    // de toute la série grandissait), la case un peu moins large (`etroite` :
+    // « 2,632 km ≈ … km », « 2,25 dm² = … cm² » sortaient du cadre à 360 px
+    // avec une police large ; la réponse a six signes au plus).
+    if (m.enonce && x.forme === "nombre") Object.assign(m, {long: true, serre: true, etroite: true, deuxLignes: true});
+    return x;
+  }
+  // (Lot B3-2c, relecture : « 9,855 L arrondi au litre : », « Aire : »,
+  // « … : c'est l'intrus. » avaient une espace normale devant « : » ;
+  // ces textes sont affichés tels quels. Tous passent par CARTE.typo.)
+  function typoB32(x) {
+    if (!x) return x;
+    const t = CARTE.typo;
+    const m = x.morceaux;
+    if (m) ["phrase", "avant", "enonce"].forEach(k => { if (typeof m[k] === "string") m[k] = t(m[k]); });
+    ["texte", "resume", "noteOutil"].forEach(k => { if (typeof x[k] === "string") x[k] = t(x[k]); });
+    ["correction", "ligneB32", "image"].forEach(k => { if (Array.isArray(x[k])) x[k] = x[k].map(t); });
+    if (x.pourquoi) Object.keys(x.pourquoi).forEach(k => { x.pourquoi[k] = t(x.pourquoi[k]); });
+    return x;
+  }
+  ["C9", "A1", "A2"].forEach(code => {
+    const tirer = ETAPES[code].tirer;
+    ETAPES[code].tirer = (...args) => typoB32(ligneB32(tirer(...args)));
+  });
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -8915,7 +9779,8 @@
   // (vers la grande aussi, multiplié : 3).
   // Lot B2-1 : C3 et C4, dans les deux sens ; C5 (B2-1b) : les conversions
   // officielles (1 600 m = … km), seulement.
-  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3], C5: [1, 3], P5: [1, 3]};
+  // Lot B3-2 : C9 (les conversions au millième), A1 et A2 (les aires).
+  const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3], C5: [1, 3], P5: [1, 3], C9: [1, 3], A1: [1, 3], A2: [1]};
   // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
   function erreurDeSens(question, tape) {
     if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") return false;

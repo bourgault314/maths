@@ -56,9 +56,12 @@ const FINE = " ";
 // (Lot B1-2 : toutes les unités du CM1, hm, dam, hg, dag, dg, cg, mg, hL, daL, mL.)
 // (Lot B6-2 : de nano à giga, les octets, les watts.)
 const EXPOSANTS = {Mm: 6, km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9, t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3,
-  "µg": -6, ng: -9, hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6, "€": 2, c: 0, o: 0, ko: 3, Mo: 6, Go: 9, W: 0, kW: 3, MW: 6, GW: 9};
+  "µg": -6, ng: -9, hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6, "€": 2, c: 0, o: 0, ko: 3, Mo: 6, Go: 9, W: 0, kW: 3, MW: 6, GW: 9,
+  // (Lot B3-2 : les aires du CM2, 1 m² = 100 dm² = 10 000 cm².)
+  "m²": 0, "dm²": -2, "cm²": -4};
 const FAMILLE = {Mm: "l", km: "l", hm: "l", dam: "l", m: "l", dm: "l", cm: "l", mm: "l", "µm": "l", nm: "l", t: "m", kg: "m", hg: "m", dag: "m", g: "m", dg: "m", cg: "m", mg: "m",
-  "µg": "m", ng: "m", hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "µL": "c", "€": "a", c: "a", o: "o", ko: "o", Mo: "o", Go: "o", W: "w", kW: "w", MW: "w", GW: "w"};
+  "µg": "m", ng: "m", hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "µL": "c", "€": "a", c: "a", o: "o", ko: "o", Mo: "o", Go: "o", W: "w", kW: "w", MW: "w", GW: "w",
+  "m²": "s", "dm²": "s", "cm²": "s"};
 // Lot B1-2 : le sens des préfixes, recopié à part.
 const SENS_PREFIXES = {kilo: ["k", "mille"], hecto: ["h", "cent"], "déca": ["da", "dix"], "déci": ["d", "un dixième"], centi: ["c", "un centième"], milli: ["m", "un millième"]};
 // Un texte « 12,5 » en millièmes, sans l'outil du générateur.
@@ -91,12 +94,13 @@ const BASE = {l: "mm", m: "mg", c: "mL"};
 function valeurCarte(parts) {
   return parts.reduce((t, [n, u]) => t + versUnite(lire(n), u, BASE[FAMILLE[u]]), 0n);
 }
-function mesureVraieC5(n, u, ou) {
+// (Lot B3-2 : `milliemes`, C9 au CM2 : trois chiffres après la virgule.)
+function mesureVraieC5(n, u, ou, milliemes = false) {
   const m = lire(n);
   assert.ok(m > 0n && m <= 100000000n, `${ou} : ${n} ${u}`);
   assert.ok(!(["mm", "mg", "mL", "cg", "cL"].includes(u) && m % 1000n), `${ou} : ${n} ${u} (pas de virgule)`);
   assert.ok(!(["mm", "cm", "dm", "mg", "cg", "dg", "mL", "cL", "dL", "dam", "hm", "dag", "hg", "daL"].includes(u) && m < 1000n), `${ou} : ${n} ${u} (moins de 1)`);
-  assert.ok(m % 10n === 0n, `${ou} : ${n} ${u} (des millièmes au CM1)`);
+  if (!milliemes) assert.ok(m % 10n === 0n, `${ou} : ${n} ${u} (des millièmes au CM1)`);
 }
 function mesureTexte([n, u]) {
   return `${n} ${u}`;
@@ -342,7 +346,7 @@ function controlerQuestion(q, ou) {
     assert.equal(textes.length, 4); assert.equal(new Set(textes).size, 4, `${ou} : deux cartes pareilles`);
     q.donnees.cartes.forEach((c, k) => {
       assert.equal(textes[k].replace(/[\u00a0\u202f]/g, " "), c.map(([n, u]) => `${G.ecrire(lire(n)).replace(/\u202f/g, " ")} ${u}`).join(" "), `${ou} : texte de la carte ${k}`);
-      c.forEach(([n, u]) => mesureVraieC5(n, u, ou));
+      c.forEach(([n, u]) => mesureVraieC5(n, u, ou, q.code === "C9"));
     });
     if (q.donnees.type === "intrus") {
       const autres = cartes.filter((v, k) => k !== q.bon);
@@ -875,7 +879,8 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       C6: ["nombre", "phrase", "qcm"], C7: ["ranger", "qcm", "plusieurs"], C8: ["nombre", "phrase"], A5: ["nombre", "qcm", "deux-cases"], Q2: ["nombre", "vrai-faux"],
       Q10: ["nombre", "deux-cases", "qcm"], D6: ["nombre", "deux-cases", "qcm"], G1: ["nombre", "phrase", "qcm"],
       P5: ["nombre", "phrase", "qcm", "associer"], P6: ["exposant", "qcm"], Q9: ["nombre", "qcm"],
-      R7: ["qcm"], R8: ["qcm", "associer", "phrase", "ranger"], R9: ["qcm"]}[code];
+      R7: ["qcm"], R8: ["qcm", "associer", "phrase", "ranger"], R9: ["qcm"],
+      C9: ["nombre", "phrase", "qcm", "deux-cases"], A1: ["nombre", "phrase", "qcm"], A2: ["nombre", "phrase", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -2369,4 +2374,187 @@ test("lot B3-1 : R7, R8, R9 — recalculés à part, les choix, l'outil sans la 
   assert.deepEqual([...ops].sort(), ["+", "×", "÷", "−"].sort());
   // Le nom de lieu ne se coupe pas : « Saint‑Paul » avec le trait d'union insécable.
   assert.ok(CARTE.etape("R7").apprends[0].question.enonce.includes("Saint‑Paul"));
+});
+
+// Lot B3-2 : C9, A1, A2. Recalculés à part : l'arrondi à l'entier (le
+// milieu au-dessus), la partie entière, les rangées coloriées ; les
+// millièmes seulement dans la grande unité ; A2 vers une unité plus petite,
+// cm², dm², m² seulement, × 10 000 au degré 3 seulement, quatre carrés
+// découpés au plus ; l'outil ne donne jamais la réponse ; un pourquoi de
+// 31 signes au plus ; la bonne réponse à toutes les places ; la ligne de
+// la correction en trois morceaux, la réponse au milieu.
+test("lot B3-2 : C9, A1, A2 — recalculés à part, l'outil sans la réponse, les places, les pourquoi", () => {
+  const sp = t => String(t).replace(/[\u00a0\u202f\u2011]/g, x => (x === "\u2011" ? "-" : " "));
+  const places = {};
+  const noter = (k, b) => { (places[k] = places[k] || new Set()).add(b); };
+  // (Lot B3-2c : la même question, vue souvent, aussi à toutes les places —
+  // « 1 m² = … cm² » au choix avait toujours sa bonne réponse en premier.)
+  const parTexte = {};
+  const sortes = {C9: {}, A1: {}, A2: {}};
+  const reunion = new Set();
+  const GRANDES = {km: "m", m: "mm", kg: "g", L: "mL", t: "kg"};
+  for (let g = 1; g <= 400; g += 1) {
+    for (const code of ["C9", "A1", "A2"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        G.serie(code, {usage, graine: g}).forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees;
+          const sorte = q.sorteC9 || q.sorteA1 || q.sorteA2 || d.type;
+          sortes[code][sorte] = (sortes[code][sorte] || 0) + 1;
+          if (/Saint|Piton|Bénare|Maïdo|letchis|cannes|case créole|varangue|giraumon|jacquier|Gillot/.test(q.texte)) reunion.add(`${code}:${q.cle}`);
+          // La ligne de la correction : la réponse, en vert, au milieu.
+          if (q.ligneB32) {
+            assert.equal(q.ligneB32[1], q.reponseTexte, `${ou} : la réponse en vert`);
+            assert.equal(q.ligneB32.join(""), q.correction[q.correction.length - 1], `${ou} : la ligne de la correction`);
+          }
+          // L'arrondi et la partie entière, recalculés.
+          if (d.type === "arrondi" || d.type === "entiere") {
+            const x = lire(d.valeur);
+            const a = x / 1000n;
+            const r = x % 1000n;
+            assert.ok(r > 0n, `${ou} : un nombre entier`);
+            const attendu = d.type === "entiere" ? a : r >= 500n ? a + 1n : a;
+            assert.equal(sp(q.reponseTexte), `${attendu} ${d.unite}`, `${ou} : ${q.reponseTexte}`);
+            assert.ok(sp(q.resume).endsWith(sp(q.reponseTexte)), `${ou} : le résumé`);
+            assert.ok(G.verifier(q, q.forme === "qcm" ? q.bon : String(attendu)).juste, `${ou} : refusée`);
+            if (d.type === "arrondi") {
+              assert.equal(q.forme === "qcm", q.degre === 1, `${ou} : au choix au degré 1, tapé ensuite`);
+              assert.ok(!(q.droiteC9.milieu === false), `${ou} : le milieu`);
+              if (q.forme !== "qcm") {
+                // Les erreurs : la troncature, le dixième, la mesure recopiée.
+                const autre = attendu === a ? a + 1n : a;
+                assert.ok(G.verifier(q, String(autre)).retour, `${ou} : l'autre entier sans pourquoi`);
+                assert.ok(G.verifier(q, d.valeur).retour, `${ou} : la mesure recopiée sans pourquoi`);
+              }
+            } else {
+              assert.equal(q.droiteC9.milieu, false, `${ou} : pas de milieu pour la partie entière`);
+              assert.ok(G.verifier(q, String(a + 1n)).retour, `${ou} : l'arrondi sans pourquoi`);
+            }
+            assert.equal(q.droiteC9.a, Number(a), `${ou} : la droite`);
+          }
+          if (d.type === "rangees") {
+            assert.equal(lire(q.reponse), BigInt(d.n * 10) * 1000n, ou);
+            assert.ok(d.n >= 2 && d.n <= 9, ou);
+          }
+          // C9 : les millièmes dans la grande unité, un entier dans la petite.
+          if (code === "C9" && (d.type === "conv" || d.type === "somme" || d.type === "deux")) {
+            const [de, vers] = d.type === "conv" ? [d.de, d.vers] : d.type === "somme" ? [d.ua, d.ub] : [d.grande, d.petite];
+            const grande = EXPOSANTS[de] > EXPOSANTS[vers] ? de : vers;
+            const petite = grande === de ? vers : de;
+            assert.equal(GRANDES[grande], petite, `${ou} : ${grande} et ${petite}`);
+            if (d.type === "conv") {
+              const vg = grande === de ? lire(d.valeur) : lire(q.reponse);
+              const vp = grande === de ? lire(q.reponse) : lire(d.valeur);
+              assert.ok(vp % 1000n === 0n && vp >= 1000n, `${ou} : la petite unité, un nombre entier`);
+              assert.ok(vg > 0n && vg <= 60000n, `${ou} : trop grand`);
+            }
+          }
+          // A1, A2 : cm², dm², m² ; A2 vers une unité plus petite ; × 10 000 au degré 3.
+          if (code !== "C9" && d.type === "conv") {
+            [d.de, d.vers].forEach(u => assert.ok(["cm²", "dm²", "m²"].includes(u), `${ou} : ${u}`));
+            if (code === "A2") {
+              assert.ok(EXPOSANTS[d.de] > EXPOSANTS[d.vers], `${ou} : vers une unité plus petite`);
+              if (d.de === "m²" && d.vers === "cm²") assert.equal(q.degre, 3, `${ou} : × 10 000 au degré 3`);
+              assert.notEqual(d.valeur, "1", `${ou} : une égalité de A1`);
+            }
+          }
+          if (q.decoupeA2) {
+            assert.equal(q.degre, 1, `${ou} : le découpage au degré 1`);
+            const n = q.decoupeA2.n + (q.decoupeA2.d ? 1 : 0);
+            assert.ok(n >= 1 && n <= 4, `${ou} : ${n} carrés`);
+            assert.equal(BigInt(q.decoupeA2.n * 1000 + q.decoupeA2.d * 100), lire(d.valeur), `${ou} : le découpage`);
+          }
+          // L'outil et l'image ne donnent jamais la réponse.
+          const rep = sp(q.reponseTexte);
+          // (Lot B3-2c, relecture : la partie entière, son outil est un
+          // exemple sur un autre nombre, dans une autre unité, jamais le même
+          // nombre entier ; son image, la méthode seule.)
+          const ex = q.exempleC9;
+          if (d.type === "entiere") {
+            assert.ok(ex, `${ou} : l'exemple de la partie entière`);
+            assert.notEqual(ex.u, d.unite, `${ou} : l'exemple dans la même unité`);
+            assert.notEqual(BigInt(ex.entier), lire(d.valeur) / 1000n, `${ou} : l'exemple a le même nombre entier`);
+            assert.equal(ex.entier, ex.nombre.split(",")[0], ou);
+          }
+          const outilT = [q.calculA2 ? `${q.calculA2.nombre} ${q.calculA2.grande} = ${q.calculA2.nombre} × ${q.calculA2.facteur} ${q.calculA2.petite}` : "",
+            ex ? `Dans ${ex.nombre} ${ex.u} : ${ex.entier} ${ex.u} entiers.` : "",
+            q.carreA1 ? q.carreA1.rel : "", q.outil === "glisse-unite" && q.relation ? q.relation : "", ...(q.image || [])].map(sp).join(" | ");
+          // (L'arrondi : l'outil et l'image montrent les deux entiers, c'est
+          // la méthode choisie par Gwenaël, la droite de 3 m à 4 m.)
+          const choixCandidats = d.type === "arrondi";
+          if (!choixCandidats && d.type !== "rangees") assert.ok(!new RegExp(`(^|[^\\d,])${rep.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(outilT), `${ou} : l'aide « ${outilT} » donne « ${rep} »`);
+          if (q.noteOutil && !choixCandidats) assert.ok(!sp(q.noteOutil).includes(rep), `${ou} : la note donne la réponse`);
+          // Au choix : tous différents, un pourquoi de 31 signes au plus.
+          if (q.forme === "qcm") {
+            noter(`${code} ${sorte}`, q.bon);
+            const t = `${code} ${sp(q.texte)}`;
+            (parTexte[t] = parTexte[t] || []).push(q.bon);
+            q.choix.forEach((c, k) => {
+              if (k === q.bon) return;
+              const v = G.verifier(q, k);
+              assert.ok(v.retour, `${ou} : « ${c} » sans pourquoi`);
+              assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`);
+            });
+          }
+          // Les erreurs neuves (A1, A2, l'arrondi, la partie entière) : 31 signes.
+          if (q.forme !== "qcm" && (code !== "C9" || choixCandidats)) {
+            const v0 = q.forme === "deux-cases" ? null : lire(q.reponse);
+            [v0 * 10n, v0 / 10n, v0 * 100n, v0 + 1000n].forEach(y => {
+              const r = G.verifier(q, G.ecrire(y).replace(/\u202f/g, ""));
+              if (r.retour) assert.ok(r.retour.length <= 31, `${ou} : retour trop long « ${r.retour} »`);
+            });
+          }
+          // (Lot B3-2c) La ligne de la case : plus petite dès 11 signes
+          // autour de la case ; sous un énoncé, la case moins large (6 signes
+          // au plus dans la réponse) et l'énoncé sur deux lignes au plus.
+          const m = q.morceaux || {};
+          if (m.avant !== undefined && m.avant.length + (m.apres || "").length + (m.cases || []).join("").length >= 11) assert.ok(m.long, `${ou} : ligne longue sans « long »`);
+          if (m.enonce && q.forme === "nombre") {
+            assert.ok(m.etroite && m.deuxLignes && m.serre, `${ou} : sous un énoncé`);
+            assert.ok(sp(q.reponse).replace(/ /g, "").length <= 6, `${ou} : la réponse ne tient pas dans la case étroite`);
+          }
+          // (Lot B3-2c, relecture) Aucune espace normale devant « : ; ? ! »
+          // dans les textes neufs affichés tels quels.
+          const affiches = [q.texte, q.resume, q.noteOutil, m.phrase, m.avant, m.enonce, ...(q.correction || []), ...(q.ligneB32 || []), ...(q.image || []),
+            ...Object.values(q.pourquoi || {})].filter(t => typeof t === "string");
+          affiches.forEach(t => assert.doesNotMatch(t, / [:;?!]/, `${ou} : une espace normale devant la ponctuation « ${t} »`));
+          // (Lot B3-2c) Au choix, avec une virgule : pas « Un zéro de trop »
+          // quand c'est la virgule qui est mal placée (30,27 pour 3,027).
+          if (code === "C9" && q.forme === "qcm" && d.type === "conv") {
+            const bonne = lire(q.reponse);
+            q.choix.forEach((c, k) => {
+              if (k === q.bon) return;
+              const y = lire(sp(c).replace(/ /g, ""));
+              if ((y === bonne * 10n || y * 10n === bonne) && (y % 1000n || bonne % 1000n)) assert.doesNotMatch(G.verifier(q, k).retour, /zéro de/, `${ou} : « ${c} » : la virgule`);
+            });
+          }
+          if (d.type === "arrondi" && q.forme === "qcm") assert.ok(!q.choix.map(sp).includes(sp(`${d.valeur} ${d.unite}`)), `${ou} : la mesure elle-même au choix`);
+          if (q.rangeesA1) assert.equal(q.carreCorr, true, ou);
+          ecriture(q.texte, ou);
+        });
+      }
+    }
+  }
+  // Toutes les sortes tombent.
+  ["conv", "situation", "arrondi", "entiere", "intrus", "deux-unites", "deux-cases"].forEach(k => assert.ok(sortes.C9[k] > 100, `C9 : ${k} ${sortes.C9[k] || 0}`));
+  ["fait", "inverse", "rangees", "multiple", "multiple-inverse", "metre-cm"].forEach(k => assert.ok(sortes.A1[k] > 100, `A1 : ${k} ${sortes.A1[k] || 0}`));
+  ["decoupe", "calcul", "situation-decoupe", "situation-calcul"].forEach(k => assert.ok(sortes.A2[k] > 100, `A2 : ${k} ${sortes.A2[k] || 0}`));
+  assert.ok([...reunion].some(k => k.startsWith("C9")) && [...reunion].some(k => k.startsWith("A2")), "La Réunion");
+  // La bonne réponse à toutes les places.
+  Object.entries(places).filter(([, v]) => v.size).forEach(([k, v]) => assert.deepEqual([...v].sort(), k.endsWith("intrus") ? [0, 1, 2, 3] : [0, 1, 2], `${k} : la bonne réponse aux places ${[...v]}`));
+  ["C9 arrondi", "C9 conv", "C9 intrus", "A1 fait", "A2 calcul"].forEach(k => assert.ok(places[k], `${k} au choix`));
+  Object.entries(parTexte).filter(([, v]) => v.length >= 30).forEach(([t, v]) => assert.deepEqual([...new Set(v)].sort(), [0, 1, 2], `${t} : la bonne réponse aux places ${[...new Set(v)]}`));
+  // Le milieu : au-dessus (S003 : « l'arrondi à l'entier de 3,5 est 4 »).
+  const milieu = G.serie("C9", {usage: "entraine", graine: 3}).concat(...Array.from({length: 200}, (_, g) => G.serie("C9", {usage: "entraine", graine: g + 10})))
+    .find(q => q.donnees.type === "arrondi" && /,5$/.test(q.donnees.valeur) && q.forme !== "qcm");
+  assert.ok(milieu, "un milieu");
+  assert.equal(G.verifier(milieu, String(lire(milieu.donnees.valeur) / 1000n)).retour, CARTE.typo("Au milieu : au-dessus."));
+  // Les exemples de On te montre : 2,375 kg = 2 375 g ; 18 mm = 0,018 m ; 3,584 m ≈ 4 m ; 3,7 dm² = 370 cm².
+  assert.deepEqual([...G.clesExemples("C9")], ["C9:2,375kg>g", "C9:18mm>m", "C9:a:3,584m"]);
+  assert.deepEqual([...G.clesExemples("A2")], ["A2:3,7dm²>cm²", "A2:2,45m²>dm²", "A2:0,6dm²>cm²"]);
+  assert.deepEqual(G.clesExemples("A1"), [], "A1 : les égalités sont à savoir par cœur, Je valide les demande");
+  // Les noms courts (plus de 25 caractères), et pas de tableau de conversion au CM2 (S001).
+  assert.equal(CARTE.etape("A1").nomCourt, "m², dm² et cm²");
+  assert.equal(CARTE.etape("A2").nomCourt, "Convertir des aires");
+  ["C9", "A1", "A2"].forEach(c => assert.doesNotMatch(JSON.stringify(CARTE.etape(c)), /tableau/i, `${c} : un tableau`));
 });
