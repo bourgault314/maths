@@ -3769,13 +3769,15 @@
         imposes: [m1Calcul(1, "double-de-trou", 12)],
         apprends: m1Apprends({
           manipule: true,
-          represente: m1Calcul(0, "double", 17),
+          // (Lot C3 : un calcul moyen du niveau — 17 en était un des plus
+          // durs ; J'écris, 14, reste au moins aussi dur.)
+          represente: m1Calcul(0, "double", 12),
           ecris: m1Calcul(0, "double", 14),
-          consigne: "double de 17 = 17 + 17",
-          etapesRepresente: [["10 + 10 = ?", 20], ["7 + 7 = ?", 14], ["double de 17 = ?", 34]],
+          consigne: "double de 12 = 12 + 12",
+          etapesRepresente: [["10 + 10 = ?", 20], ["2 + 2 = ?", 4], ["double de 12 = ?", 24]],
           consigneEcris: "double de 14 = 10 + 10 + 4 + 4",
           etapes: [["10 + 10 = ?", 20], ["4 + 4 = ?", 8], ["double de 14 = ?", 28]],
-          bilan: "Le double, c’est le nombre et encore le nombre : double de 17 = 17 + 17 = 34."
+          bilan: "Le double, c’est le nombre et encore le nombre : double de 12 = 12 + 12 = 24."
         })
       },
       {
@@ -3800,13 +3802,16 @@
         composer: m1Niveau(3, [1]),
         imposes: [m1Calcul(3, "double", 136)],
         apprends: m1Apprends({
-          represente: m1Calcul(0, "double", 470),
-          ecris: m1Calcul(0, "double", 36),
-          consigne: "double de 470 = 2 × 470",
-          etapesRepresente: [["2 × 400 = ?", 800], ["2 × 70 = ?", 140], ["double de 470 = ?", 940]],
-          consigneEcris: "double de 36 = 2 × 30 + 2 × 6",
-          etapes: [["2 × 30 = ?", 60], ["2 × 6 = ?", 12], ["double de 36 = ?", 72]],
-          bilan: "Pour le double, je double chaque morceau : double de 470 = 2 × 400 + 2 × 70 = 940."
+          // (Lot C3 : J'écris, tiré à deux chiffres comme le sien, retombait
+          // sous l'exemple, double de 470 : l'exemple est un calcul moyen à
+          // deux chiffres, J'écris au moins aussi dur.)
+          represente: m1Calcul(0, "double", 38),
+          ecris: m1Calcul(0, "double", 49),
+          consigne: "double de 38 = 2 × 38",
+          etapesRepresente: [["2 × 30 = ?", 60], ["2 × 8 = ?", 16], ["double de 38 = ?", 76]],
+          consigneEcris: "double de 49 = 2 × 40 + 2 × 9",
+          etapes: [["2 × 40 = ?", 80], ["2 × 9 = ?", 18], ["double de 49 = ?", 98]],
+          bilan: "Pour le double, je double chaque morceau : double de 38 = 2 × 30 + 2 × 8 = 76."
         })
       },
       {
@@ -4554,14 +4559,15 @@
       imposes: [m8Calcul(2, 7, 23), m8Calcul(2, 6, 47, true)],
       apprends: apprendsSansManip({
         fiche: M8,
-        represente: m8Calcul(0, 7, 23),
+        // (Lot C3 : un calcul moyen du niveau, J'écris au moins aussi dur.)
+        represente: m8Calcul(0, 7, 28),
         ecris: m8Calcul(0, 6, 47, true),
         // (Relecture 2b, remarque 68 : plus de « Je coupe », l'égalité.)
-        consigne: "23 × 7 = 20 × 7 + 3 × 7",
+        consigne: "28 × 7 = 20 × 7 + 8 × 7",
         consigneEcris: "6 × 47 = 40 × 6 + 7 × 6",
         etapes: [["40 × 6 = ?", 240], ["7 × 6 = ?", 42], ["6 × 47 = ?", 282]],
         dessins: (calcul, n) => rectangleDessins(m8Image(calcul), n),
-        bilan: "23 fois 7, c’est 20 fois 7 plus 3 fois 7 : 23 × 7 = 20 × 7 + 3 × 7 = 140 + 21 = 161."
+        bilan: "28 fois 7, c’est 20 fois 7 plus 8 fois 7 : 28 × 7 = 20 × 7 + 8 × 7 = 140 + 56 = 196."
       })
     },
     {
@@ -7669,6 +7675,10 @@
   const D8 = {
     id: "D8", nom: "Doubles et moitiés de décimaux", exemple: "moitié de 9",
     famille: "D", construit: true, virgule: true,
+    // Lot C3 (constat G4 de Codex sur le lot C2) : le piège de l'évaluation
+    // de 6e (moitié de 8,10 = 4,05) est dans les 9 premiers calculs de chaque
+    // série de « Moitiés : centièmes », avant l'arrêt possible.
+    dansLaFenetre: calcul => calcul.niveau === 5 && Math.round(calcul.donnees.n * 100) % 100 === 10 && Math.floor(calcul.donnees.n) % 2 === 0,
     aide_entraine: "barres",
     erreurs: D8_ERREURS, image: d8Image, aide: d8Aide, phrase: d8Phrase, manipulation: () => null, difficulte: d8Difficulte,
     // Comme M1 (lot 7e-2) : la première moitié arrive annoncée, avec son
@@ -8435,7 +8445,11 @@
   // (C4-2 : la leçon commence par « 8 + (2 × □) = 11 », l'exemple officiel.)
   const C4_RANGS = Object.freeze({"fois-moins": 0, "plus-fois": 1, "fois-par": 2, "plus-div": 3});
   const C4_RANGS_2 = Object.freeze({"plus-fois": 0, "fois-moins": 1, "fois-par": 2});
-  const c4Difficulte = calcul => (calcul.niveau === 2 ? C4_RANGS_2 : C4_RANGS)[calcul.forme] * 1000 + Math.min(999, Math.round(calcul.donnees.fin));
+  // (Lot C3 : un calcul de leçon est au niveau 0 — celui du niveau 2 a une
+  // réponse décimale, il se range comme ceux du niveau 2 ; avant, il était
+  // rangé avec ceux du niveau 1, et passait pour le plus dur de son niveau.)
+  const c4Niveau2 = calcul => calcul.niveau === 2 || (calcul.niveau === 0 && !Number.isInteger(calcul.donnees.x));
+  const c4Difficulte = calcul => (c4Niveau2(calcul) ? C4_RANGS_2 : C4_RANGS)[calcul.forme] * 1000 + Math.min(999, Math.round(calcul.donnees.fin));
   const C4_ERREURS = Object.freeze([
     Object.freeze({
       c: 1, nom: "le calcul fait dans le même sens",
@@ -8551,10 +8565,11 @@
       imposes: [c4(2, "fois-moins", 3.5, 2, 3), c4(2, "fois-par", 1.5, 2, 1)],
       apprends: apprendsRecette({
         fiche: C4, recette: recetteRemonter,
-        represente: c4(0, "plus-fois", 1.5, 2, 8),
-        ecris: c4(0, "plus-fois", 2.5, 2, 4),
-        consigne: "Je remonte les flèches : − 8, puis ÷ 2.",
-        bilan: "Je remonte les flèches à l’envers : 11 − 8 = 3. 3 ÷ 2 = 1,5. 8 + (2 × 1,5) = 11."
+        // (Lot C3 : un calcul moyen du niveau ; J'écris au moins aussi dur.)
+        represente: c4(0, "plus-fois", 6.5, 2, 6),
+        ecris: c4(0, "plus-fois", 10.5, 2, 4),
+        consigne: "Je remonte les flèches : − 6, puis ÷ 2.",
+        bilan: "Je remonte les flèches à l’envers : 19 − 6 = 13. 13 ÷ 2 = 6,5. 6 + (2 × 6,5) = 19."
       })
     }
   ];
@@ -9637,15 +9652,17 @@
         // même ligne qu'au-delà : « 3/4 = (3 × 2)/(4 × 2) ».
         apprends: apprendsCaches(fracApprends({
           fiche: "F6",
-          manipule: pourApprendre(f6(1, "3/4 = □/12")),
-          represente: pourApprendre(f6(1, "2/3 = □/12")),
-          ecris: pourApprendre(f6(1, "3/4 = □/8")),
-          consigne: "Chaque tiers est coupé en 4.",
-          consigneEcris: "3/4 = (3 × 2)/(4 × 2)",
-          etapes: [["4 × ? = 8", 2], ["3 × 2 = ?", 6], ["3/4 = ?/8", 6]],
+          // (Lot C3 : des calculs moyens du niveau — 3/4 = ?/12 en était un
+          // des plus durs ; J'écris, à deux chiffres, au moins aussi dur.)
+          manipule: pourApprendre(f6(1, "1/2 = □/8")),
+          represente: pourApprendre(f6(1, "2/3 = □/9")),
+          ecris: pourApprendre(f6(1, "5/6 = □/12")),
+          consigne: "Chaque tiers est coupé en 3.",
+          consigneEcris: "5/6 = (5 × 2)/(6 × 2)",
+          etapes: [["6 × ? = 12", 2], ["5 × 2 = ?", 10], ["5/6 = ?/12", 10]],
           morceaux: [{gros: 2}, {}, {bas: true}],
-          bilan: "Chaque quart coupé en 3 : 3/4 = 9/12 (× 3 en haut et en bas)."
-        }), {consignes: ["3/4 = (3 × ?)/(4 × ?)", "3/4 = (3 × 2)/(4 × 2)"], caches: {1: [[2, null, 0]]}})
+          bilan: "Chaque demi coupé en 4 : 1/2 = 4/8 (× 4 en haut et en bas)."
+        }), {consignes: ["5/6 = (5 × ?)/(6 × ?)", "5/6 = (5 × 2)/(6 × 2)"], caches: {1: [[2, null, 0]]}})
       },
       {
         // Lot 6 « programmes 2 » (19/11, choix de Gwenaël) : le niveau du
@@ -11346,7 +11363,7 @@
       solution: Object.freeze({image: f11Image(calcul), phrase: f11Phrase(calcul)})
     }, {dessins: Object.freeze([aide, trouvee, trouvee]), revele: f11Image(calcul)});
   }
-  function f11Apprends({manipule = null, represente, ecris, consigne, bilan}) {
+  function f11Apprends({manipule = null, represente, ecris, consigne, bilan, autre = null}) {
     const premier = manipule || represente;
     return Object.freeze({
       exemple: Object.freeze({texte: premier.texte.replace(` = ${CASE}/${premier.f11.d}`, "").replace(` = ${CASE}`, ""), reponse: premier.reponse}),
@@ -11359,6 +11376,7 @@
       }),
       ecris: f11Ecris(ecris),
       bilan: frBilan(bilan),
+      ...autreDe(autre),
       image: f11Image(premier),
       calculs: Object.freeze({montre: premier, ecris}),
       textes: Object.freeze([...(manipule ? [manipule.texte] : []), represente.texte, ecris.texte])
@@ -11393,7 +11411,10 @@
           // (Lot 6, choix de Gwenaël : J'écris sur la fraction cherchée.)
           ecris: pourApprendre(f11(2, `3 × ${FRACTION_A_CASES} = 2`)),
           consigne: "7 fois 3 septièmes.",
-          bilan: "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3."
+          bilan: "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.",
+          // Lot C3 (audit de cohérence : « 6/3 = ? », le nom du niveau, n'était
+          // montré nulle part) : la fraction, c'est une division.
+          autre: {phrase: "La fraction, c’est une division\u00a0:", calcul: "6/3 = 6 ÷ 3 = 2"}
         })
       }
     ]
@@ -12184,6 +12205,30 @@
       if (choisir(forme, place)) return;
       formes.filter(autre => autre !== forme).some(autre => choisir(autre, place));
     });
+    // Lot C3 (constat G4 de Codex) : un calcul qu'une fiche veut dans les 9
+    // premiers (`dansLaFenetre` : D8-5, le piège 8,10) y entre, s'il n'y est
+    // pas, à la place du calcul sans aide de sa même écriture le plus proche
+    // de lui ; puis les calculs de cette écriture, dans les 9, sont remis du
+    // plus facile au plus dur (rien ne redescend).
+    const ficheSerie = moduleDe(calculs[0].module);
+    const voulu = ficheSerie && typeof ficheSerie.dansLaFenetre === "function" ? ficheSerie.dansLaFenetre : null;
+    if (voulu && !serie.some(calcul => voulu(calcul))) {
+      const dehors = calculs.filter(calcul => !pris.has(calcul) && voulu(calcul));
+      const places = dehors.length ? serie.map((calcul, i) => i).filter(i => i >= aides && dehors.some(d => d.forme === serie[i].forme)) : [];
+      if (places.length) {
+        const ecart = (i, d) => Math.abs(rang.get(serie[i]) - rang.get(d));
+        let meilleur = null;
+        dehors.forEach(d => places.filter(i => serie[i].forme === d.forme).forEach(i => {
+          if (!meilleur || ecart(i, d) < ecart(meilleur.i, meilleur.d) - 1e-9) meilleur = {i, d};
+        }));
+        pris.delete(serie[meilleur.i]);
+        serie[meilleur.i] = meilleur.d;
+        pris.add(meilleur.d);
+        const memes = serie.map((calcul, i) => i).filter(i => serie[i].forme === meilleur.d.forme);
+        const ranges = memes.map(i => serie[i]).sort((a, b) => rang.get(a) - rang.get(b) || difficulte(a) - difficulte(b));
+        memes.forEach((i, k) => { serie[i] = ranges[k]; });
+      }
+    }
     const fenetre = serie.length;
     // La suite : le plus dur de chaque sorte (dans chaque écriture), le
     // tiers du haut d'abord, mélangé. Chaque sorte (et chaque calcul
@@ -12508,6 +12553,632 @@
     if (calcul && calcul.annonce) return `Nouveau\u00a0: ${calcul.annonce}.`;
     return calcul && ANNONCES[calcul.forme] ? `Nouveau\u00a0: ${ANNONCES[calcul.forme]}.` : "Nouveau\u00a0: c’est écrit autrement.";
   }
+
+  // ------------------------------------- lot C3 : les exemples résolus
+  // Choix de Gwenaël du 20/11/2026 (audit de cohérence, choix 2), planche
+  // validée le 22/11 : une écriture que la leçon n'a jamais montrée (ni
+  // « On te montre », ni J'écris) arrive avec un EXEMPLE RÉSOLU à sa
+  // première apparition — le calcul fait, son dessin révélé, une phrase de
+  // méthode —, puis « À toi » et un calcul pareil. Les écritures « miroir »
+  // (les facteurs ou les termes échangés, l'égalité écrite à l'envers : les
+  // mêmes gestes) n'en ont pas.
+  // La phrase dit ce que montre le dessin, avec les nombres de l'exemple,
+  // comme « On te montre » et « À retenir » du même niveau (règle § 4 du
+  // plan directeur). Une fonction par écriture, jamais un texte fixe.
+  const ECRITURES_MIROIR = Object.freeze(new Set(["produit-gauche", "complement-gauche", "complement-egal", "trou-egal", "multiplier-gauche",
+    "denominateur-gauche", "couper-gauche", "fraction-gauche", "encadrer-bas", "trou-nombre-gauche", "double-fois", "par-fois", "double"]));
+  // (« Sommes jusqu'à 10 » : l'addition est plus simple que la leçon, un
+  // complément à 10.)
+  const SANS_EXEMPLE = Object.freeze(new Set(["A1-1|somme"]));
+  const exC3 = nombre => f(Math.round(Number(nombre) * 1e6) / 1e6);
+  // Le calcul écrit avec sa réponse (« 7/12 − 5/12 = 2/12 »).
+  const resoluC3 = calcul => String(calcul.texte).replace(CASE, exC3(calcul.reponse)).replace(/\.$/, "");
+  // Les nombres d'un texte, dans l'ordre (« 4 469 », « 2,5 » ; la case
+  // compte pour null).
+  const nombresC3 = texte => [...String(texte).matchAll(/□|\d+(?:[\s\u00a0\u202f]\d{3})*(?:,\d+)?/g)]
+    .map(m => (m[0] === CASE ? null : Number(m[0].replace(/[\s\u00a0\u202f]/g, "").replace(",", "."))));
+  const enUnitesC3 = (nombre, mot) => `${exC3(nombre)} ${mot}${Math.abs(nombre) >= 2 ? "s" : ""}`;
+  // Les fractions d'un calcul (`lu`) : [{n, d, s}] de chaque côté, la case.
+  const termesFraction = calcul => (calcul.lu && calcul.lu.cotes ? calcul.lu.cotes : null);
+  const fracC3 = (n, d) => (d === 1 ? exC3(n) : `${exC3(n)}/${exC3(d)}`);
+  const ppcmEntiers = (a, b) => a / pgcdEntiers(a, b) * b;
+  // Toutes les fractions écrites avec un même dénominateur (le plus petit
+  // commun) : « 1/2 = 2/4. 1/2 − 1/4 = 2/4 − 1/4 = 1/4. » ; la case prend
+  // sa réponse. `dire` : la fin (« il manque … »), sinon le calcul résolu.
+  function memeDenominateur(calcul) {
+    const cotes = termesFraction(calcul);
+    if (!cotes) return null;
+    const cache = calcul.lu.cache;
+    const plein = cotes.map((cote, c) => cote.map((t, i) => {
+      if (cache && c === cache.cote && i === cache.i) return cache.part === "n" ? Object.assign({}, t, {n: calcul.reponse}) : Object.assign({}, t, {d: calcul.reponse});
+      return t;
+    }));
+    const dens = plein.flat().map(t => t.d);
+    const L = dens.reduce(ppcmEntiers, 1);
+    const egalites = [];
+    const vus = new Set();
+    plein.forEach((cote, c) => cote.forEach((t, i) => {
+      if (t.d === L || (cache && c === cache.cote && i === cache.i)) return;
+      const texte = `${fracC3(t.n, t.d)} = ${fracC3(t.n * L / t.d, L)}`;
+      if (!vus.has(texte)) { vus.add(texte); egalites.push(texte); }
+    }));
+    const ecrireCote = (cote, conv) => cote.map((t, i) => `${i ? (t.s < 0 ? " − " : " + ") : ""}${conv ? fracC3(t.n * L / t.d, L) : fracC3(t.n, t.d)}`).join("");
+    return {L, egalites, plein, ecrireCote};
+  }
+  function phraseMemeDenominateur(calcul) {
+    const m = memeDenominateur(calcul);
+    if (!m) return null;
+    const [gauche, droite] = m.plein;
+    const somme = cote => cote.reduce((s, t) => s + t.s * t.n * m.L / t.d, 0);
+    const debut = m.egalites.length ? `${m.egalites.join(". ")}. ` : "";
+    // La case à droite, seule : je calcule la gauche.
+    if (calcul.lu.cache.cote === 1 && droite.length === 1) {
+      const n = somme(gauche);
+      const fin = m.L === droite[0].d ? "" : ` = ${fracC3(droite[0].n, droite[0].d)}`;
+      // (Toutes les parts déjà de la même taille, et qui ont un nom : en
+      // mots, comme « Fractions : même dénominateur ».)
+      if (!m.egalites.length && gauche.every(t => t.d === m.L) && nomParts(m.L)) {
+        const mots = gauche.map((t, i) => `${i ? (t.s < 0 ? " − " : " + ") : ""}${enParts(t.n, t.d)}`).join("");
+        const fin = m.L === droite[0].d ? "" : `, c’est ${enPartsOuFraction(droite[0].n, droite[0].d)}`;
+        return `${mots} = ${enParts(n, m.L)}${fin} : ${resoluC3(calcul)}.`;
+      }
+      const converti = gauche.some(t => t.d !== m.L) ? ` = ${m.ecrireCote(gauche, true)}` : "";
+      return `${debut}${m.ecrireCote(gauche, false)}${converti} = ${fracC3(n, m.L)}${fin}.`;
+    }
+    return `${debut}${resoluC3(calcul)}.`;
+  }
+  // « 3 huitièmes − 2 huitièmes = 1 huitième » (les parts qui ont un nom).
+  const enPartsOuFraction = (n, d) => (nomParts(d) ? enParts(n, d) : fracC3(n, d));
+  // Compter en dizaines, en centaines, en milliers (choix 3 de Gwenaël du
+  // 20/11, confirmé au tri C4-0) : 571 − 30 → 57 dizaines − 3 dizaines.
+  const PAQUETS = Object.freeze([[1000, "millier", "milliers"], [100, "centaine", "centaines"], [10, "dizaine", "dizaines"]]);
+  function compterEnPaquets(n, ajout, total) {
+    const p = Math.abs(ajout);
+    const paquet = PAQUETS.find(([taille]) => p % taille === 0);
+    if (!paquet) return null;
+    const [taille, un, plusieurs] = paquet;
+    const nom = k => (k >= 2 ? plusieurs : un);
+    const dans = Math.floor(n / taille);
+    const reste = n - dans * taille;
+    const k = p / taille;
+    const apres = ajout > 0 ? dans + k : dans - k;
+    const resteTexte = reste ? (taille === 10 ? ` et ${enUnitesC3(reste, "unité")}` : ` et ${exC3(reste)}`) : "";
+    return `${exC3(n)}, c’est ${exC3(dans)} ${nom(dans)}${resteTexte}. ${exC3(dans)} ${nom(dans)} ${ajout > 0 ? "+" : "−"} ${exC3(k)} ${nom(k)} = ${exC3(apres)} ${nom(apres)} : ${exC3(n)} ${ajout > 0 ? "+" : "−"} ${exC3(p)} = ${exC3(total)}.`;
+  }
+  // De a à b, en passant par la dizaine, la centaine… : [[de, à], …].
+  function sautsJusqua(a, b) {
+    const sauts = [];
+    let x = a;
+    for (const taille of [10, 100, 1000]) {
+      // (Jamais au-delà de la « rondeur » du nombre à atteindre : vers
+      // 1 100, de 600 on va droit à 1 100, sans passer par 1 000.)
+      if (b % taille !== 0) break;
+      if (x % taille === 0) continue;
+      const suivant = Math.ceil(x / taille) * taille;
+      if (suivant > b) break;
+      sauts.push([x, suivant]);
+      x = suivant;
+    }
+    if (x < b) sauts.push([x, b]);
+    return sauts;
+  }
+  const direSauts = sauts => {
+    const morceaux = sauts.map(([de, a]) => `de ${exC3(de)} à ${exC3(a)}, ${exC3(a - de)}`);
+    return `${morceaux.join(" ; ")}`.replace(/^d/, "D");
+  };
+  const sommeSauts = sauts => (sauts.length > 1 ? `${sauts.map(([de, a]) => exC3(a - de)).join(" + ")} = ${exC3(sauts.reduce((s, [de, a]) => s + a - de, 0))}. ` : "");
+  // Évaluer « (a op b) » dans un texte de calcul, l'intérieur d'abord.
+  function evaluerParentheses(texte) {
+    const op = (a, o, b) => (o === "+" ? a + b : o === "−" ? a - b : o === "×" ? a * b : a / b);
+    const lire = s => Number(s.replace(/[\s\u00a0\u202f]/g, "").replace(",", "."));
+    return texte.replace(/\(([\d\s\u00a0\u202f,]+) ([+−×÷]) ([\d\s\u00a0\u202f,]+)\)/g, (_, a, o, b) => exC3(op(lire(a), o, lire(b))));
+  }
+  // Le nom d'un rang (D4 : 10 puissance `rang`) : « dixièmes », « centaines ».
+  const nomDuRang = (rang, nombre = 2) => (RANGS_DECIMAUX[-rang] ? RANGS_DECIMAUX[-rang][nombre >= 2 ? 1 : 0] : rang === 3 ? (nombre >= 2 ? "milliers" : "millier") : "");
+  const chiffreDuRang = (nombre, rang) => Math.floor(Math.round(Math.abs(nombre) * 1000) / Math.round(10 ** rang * 1000)) % 10;
+  // F3 : « 1/5 de 10 billes, c’est □ billes. » → {k, q, u}.
+  const lirePart = texte => {
+    const m = /^1\/(\d+) de (\d+(?:[\s\u00a0\u202f]\d{3})*(?:,\d+)?)[\s\u00a0]+(.+?), c’est/.exec(String(texte));
+    return m ? {k: Number(m[1]), q: Number(m[2].replace(/[\s\u00a0\u202f]/g, "").replace(",", ".")), u: m[3]} : null;
+  };
+  const avecUnite = (nombre, u) => `${exC3(nombre)}\u00a0${u}`;
+
+  // Une fraction qui manque (« 1/2 + □/4 = 3/4 », « 1 − □/4 = 3/4 ») : le
+  // tout, ce qu'on a ; il manque (ou on a enlevé) la différence.
+  function phraseComplement(calcul) {
+    const m = memeDenominateur(calcul);
+    if (!m) return null;
+    const cache = calcul.lu.cache;
+    const avecCase = m.plein[cache.cote];
+    const autre = m.plein[1 - cache.cote];
+    const inconnu = avecCase[cache.i];
+    const enL = t => fracC3(t.n * m.L / t.d, m.L);
+    const debut = m.egalites.length ? `${m.egalites.join(". ")}. ` : "";
+    if (autre.length !== 1 || avecCase.length !== 2) return `${debut}${resoluC3(calcul)}.`;
+    const total = autre[0];
+    const connu = avecCase[1 - cache.i];
+    // « 1 − □/4 = 3/4 » : on a enlevé la différence.
+    if (inconnu.s < 0) return `${debut}J’enlève ${enL(connu)} − ${enL(total)} = ${enL(inconnu)} : ${resoluC3(calcul)}.`;
+    return `${debut}Il manque ${enL(total)} − ${enL(connu)} = ${enL(inconnu)} : ${resoluC3(calcul)}.`;
+  }
+
+  const METHODES = Object.freeze({
+    // --- Les bases.
+    "A1-3|complement": calcul => {
+      const {m} = calcul.donnees;
+      const connu = m - calcul.reponse;
+      if (connu < 10 && m > 10) return `De ${exC3(connu)} à 10, j’avance de ${exC3(10 - connu)} ; de 10 à ${exC3(m)}, de ${exC3(m - 10)}. ${exC3(10 - connu)} + ${exC3(m - 10)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+      return `De ${exC3(connu)} à ${exC3(m)}, j’avance de ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "M1-1|trou-double": calcul => {
+      const n = calcul.donnees.n;
+      const morceaux = morceauxDe(n);
+      if (morceaux.length < 2) return `Je coupe ${exC3(n)} en deux : ${exC3(n / 2)}. Le double de ${exC3(n / 2)}, c’est ${exC3(n)}.`;
+      return `${exC3(n)}, c’est ${etListe(morceaux.map(exC3))}. Je coupe chaque morceau en deux : ${etListe(morceaux.map(x => exC3(x / 2)))}. ${morceaux.map(x => exC3(x / 2)).join(" + ")} = ${exC3(n / 2)} : le double de ${exC3(n / 2)}, c’est ${exC3(n)}.`;
+    },
+    "M1-2|moitie-de-trou": calcul => {
+      const {n, r} = calcul.donnees;
+      return `Je cherche le nombre qu’on a coupé en deux : c’est le double de ${exC3(n)}. ${exC3(n)} + ${exC3(n)} = ${exC3(r)} : la moitié de ${exC3(r)}, c’est ${exC3(n)}.`;
+    },
+    "M1-4|division": calcul => {
+      const {n, r} = calcul.donnees;
+      const morceaux = morceauxDe(n);
+      if (morceaux.length < 2) return `${exC3(n)} ÷ 2, c’est la moitié de ${exC3(n)} : ${resoluC3(calcul)}.`;
+      return `${exC3(n)} ÷ 2, c’est la moitié de ${exC3(n)}. Je coupe chaque morceau en deux : ${morceaux.map(x => `${exC3(x)} ÷ 2`).join(" + ")} = ${morceaux.map(x => exC3(x / 2)).join(" + ")} = ${exC3(r)}.`;
+    },
+    "M1-6|trou-double": calcul => {
+      const {n, r} = calcul.donnees;
+      return `Je cherche le nombre qu’on a doublé : c’est la moitié de ${exC3(n)}. La moitié de ${exC3(n)}, c’est ${exC3(r)} : ${resoluC3(calcul)}.`;
+    },
+    "A3|difference": calcul => {
+      const {n, d, m} = calcul.donnees;
+      return compterEnPaquets(n, d, m);
+    },
+    "M4|trou-facteur": calcul => {
+      const {a, b, p} = calcul.donnees;
+      if (p === 0) return `${exC3(a)} fois 0, c’est 0 : ${resoluC3(calcul)}.`;
+      return `Je cherche combien de fois ${exC3(a)} il y a dans ${exC3(p)} : ${exC3(b)} fois. ${exC3(p)} ÷ ${exC3(a)} = ${exC3(b)}, donc ${resoluC3(calcul)}.`;
+    },
+    "F8|difference": calcul => {
+      const [[x, y]] = termesFraction(calcul);
+      const r = calcul.reponse;
+      return `Je retire des ${nomParts(x.d)} : ${enParts(x.n, x.d)} − ${enParts(y.n, y.d)} = ${enParts(r, x.d)}.`;
+    },
+    "F8-1|unitaires": calcul => {
+      const [gauche] = termesFraction(calcul);
+      const d = gauche[0].d;
+      return `J’ajoute les ${nomParts(d)} un à un : ${gauche.map((_, i) => exC3(i + 1)).join(", ")}. ${gauche.length} fois 1 ${nomParts(d, false)}, c’est ${enParts(gauche.length, d)} : ${resoluC3(calcul)}.`;
+    },
+    "F8-1|fois": calcul => {
+      const [k, , d] = nombresC3(calcul.texte);
+      return `${exC3(k)} × 1/${exC3(d)}, c’est ${exC3(k)} fois 1 ${nomParts(d, false)} : ${Array.from({length: k}, () => `1/${exC3(d)}`).join(" + ")} = ${exC3(k)}/${exC3(d)}.`;
+    },
+    "F8-2|complement": phraseComplement,
+    "F8-2|un-moins-plusieurs": calcul => {
+      const [gauche] = termesFraction(calcul);
+      const d = gauche[1].d;
+      return `1 = ${exC3(d)}/${exC3(d)}. ${exC3(d)}/${exC3(d)}${gauche.slice(1).map(t => ` − ${fracC3(t.n, d)}`).join("")} = ${fracC3(calcul.reponse, d)} : ${resoluC3(calcul)}.`;
+    },
+    "M5-1|division": calcul => {
+      const {a, b, p} = calcul.donnees;
+      if (a >= 25) return `Dans ${exC3(p)}, combien de fois ${exC3(a)} ? ${exC3(b)} fois : ${exC3(b)} × ${exC3(a)} = ${exC3(p)}. ${resoluC3(calcul)}.`;
+      return `Je coupe ${exC3(p)} en ${exC3(a)} parts égales : chaque part fait ${exC3(b)}. ${resoluC3(calcul)}.`;
+    },
+    "M5-1|trou-facteur": calcul => {
+      const {a, b, p} = calcul.donnees;
+      return `Je coupe ${exC3(p)} en ${exC3(a)} parts égales : chaque part fait ${exC3(b)}. ${resoluC3(calcul)}.`;
+    },
+    "F9|difference": phraseMemeDenominateur,
+    "F9-3|somme": phraseMemeDenominateur,
+    "F9-3|trois": phraseMemeDenominateur,
+    "F9-3|mixtes": calcul => {
+      const cotes = termesFraction(calcul);
+      const [gauche, droite] = cotes;
+      const entiers = gauche.filter(t => t.d === 1);
+      const fractions = gauche.filter(t => t.d !== 1);
+      const D = droite[1].d;
+      const conv = fractions.filter(t => t.d !== D).map(t => `${fracC3(t.n, t.d)} = ${fracC3(t.n * D / t.d, D)}`);
+      // (Courte : les fractions s'écrivent en deux étages, le calcul résolu
+      // est déjà au-dessus.)
+      const converties = fractions.some(t => t.d !== D) ? ` = ${fractions.map(t => fracC3(t.n * D / t.d, D)).join(" + ")}` : "";
+      return `Les unités ensemble : ${entiers.map(t => exC3(t.n)).join(" + ")} = ${exC3(droite[0].n)}. Les fractions ensemble : ${fractions.map(t => fracC3(t.n, t.d)).join(" + ")}${converties} = ${fracC3(calcul.reponse, D)}.`;
+    },
+    "A2|difference": calcul => {
+      const {a, cible} = calcul.donnees;
+      const sauts = sautsJusqua(a, cible);
+      return `${exC3(cible)} − ${exC3(a)}, c’est ce qu’il faut ajouter à ${exC3(a)} pour aller à ${exC3(cible)}. ${direSauts(sauts)}. ${sommeSauts(sauts)}${resoluC3(calcul)}.`;
+    },
+    // --- Les décimaux, fraction et écriture à virgule.
+    "D1|fraction": calcul => {
+      const [n, d] = nombresC3(calcul.texte);
+      const k = Math.round(Math.log10(d));
+      const u = Math.floor(n / d);
+      const reste = n - u * d;
+      const debut = `${UNE_UNITE[k]}. ${exC3(n)}/${exC3(d)}, c’est ${enRang(n, k)}`;
+      if (!u) return `${exC3(n)}/${exC3(d)}, c’est ${enRang(n, k)} : moins d’une unité. ${resoluC3(calcul)}.`;
+      return `${debut} : ${enUnitesC3(u, "unité")}${reste ? ` et ${enRang(reste, k)}` : ""}. ${resoluC3(calcul)}.`;
+    },
+    "D1|numerateur": calcul => {
+      const texte = String(calcul.texte);
+      const nombres = nombresC3(texte);
+      const sousLaCase = /□\/(\d+(?:[\s\u00a0\u202f]\d{3})*)/.exec(texte);
+      const d = sousLaCase ? Number(sousLaCase[1].replace(/[\s\u00a0\u202f]/g, "")) : nombres[nombres.length - 1];
+      const k = Math.round(Math.log10(d));
+      const R = calcul.reponse;
+      // « 1,507 = 1 + □/10 + 7/1 000 » : le chiffre d'un rang.
+      if (/\+/.test(texte)) return `Dans ${exC3(nombres[0])}, le chiffre des ${nomRangs(k)}, c’est ${exC3(R)} : ${resoluC3(calcul)}.`;
+      // « 1/10 = □/1 000 » : une fraction en parts plus petites.
+      const fraction = /^(\d+)\/([\d\s\u00a0\u202f]+) =/.exec(texte);
+      if (fraction) {
+        const a = Number(fraction[1]);
+        const b = Number(fraction[2].replace(/[\s\u00a0\u202f]/g, ""));
+        const kb = Math.round(Math.log10(b));
+        const un = `1 ${RANGS_DECIMAUX[kb][0]}, c’est ${enRang(d / b, k)}`;
+        return `${un}${a === 1 ? "" : ` : ${enRang(a, kb)}, c’est ${enRang(R, k)}`}. ${resoluC3(calcul)}.`;
+      }
+      const v = nombres[0];
+      if (Number.isInteger(v)) return `${UNE_UNITE[k]} : ${enUnitesC3(v, "unité")}, c’est ${enRang(R, k)}. ${resoluC3(calcul)}.`;
+      return `${UNE_UNITE[k]}. ${exC3(v)}, c’est ${enRang(R, k)} : ${resoluC3(calcul)}.`;
+    },
+    // --- Les grands nombres, × 10, × 100, × 1 000.
+    "M2-2|produit": calcul => {
+      const {p} = calcul.donnees;
+      const colonnes = String(p).length - 1;
+      return `× ${exC3(p)} : chaque chiffre glisse de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la gauche, sa valeur devient ${exC3(p)} fois plus grande. ${resoluC3(calcul)}.`;
+    },
+    "M2-2|trou-facteur": calcul => {
+      const {n, p, m} = calcul.donnees;
+      const colonnes = String(p).length - 1;
+      return `De ${exC3(n)} à ${exC3(m)}, chaque chiffre a glissé de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la gauche : sa valeur est ${exC3(p)} fois plus grande. ${resoluC3(calcul)}.`;
+    },
+    "M2-2|trou-nombre": calcul => {
+      const {n, p, m} = calcul.donnees;
+      const colonnes = String(p).length - 1;
+      return `Je cherche le nombre de départ : je fais glisser les chiffres de ${exC3(m)} de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la droite. ${exC3(m)} ÷ ${exC3(p)} = ${exC3(n)}, donc ${resoluC3(calcul)}.`;
+    },
+    "D2-4|trou-nombre": calcul => {
+      const {n, p, m} = calcul.donnees;
+      const colonnes = String(p).length - 1;
+      return `Je cherche le nombre de départ : je fais glisser les chiffres de ${exC3(m)} de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la droite. ${exC3(m)} ÷ ${exC3(p)} = ${exC3(n)}, donc ${resoluC3(calcul)}.`;
+    },
+    // --- Demis et quarts.
+    "F2|difference": phraseMemeDenominateur,
+    "F2-1|egale": calcul => {
+      const m = memeDenominateur(calcul);
+      const [gauche, droite] = m.plein;
+      const g = gauche[0];
+      const dr = droite[0];
+      const dire = t => (t.d === 1 ? enUnitesC3(t.n, "unité") : enPartsOuFraction(t.n, t.d));
+      return `${dire(g)}, c’est ${dire(dr)} : ${resoluC3(calcul)}.`;
+    },
+    "F2-2|complement": phraseComplement,
+    // --- Des parts d'une quantité.
+    "F3|part": calcul => {
+      const lu = lirePart(calcul.texte);
+      if (!lu) return null;
+      const {k, q, u} = lu;
+      const R = calcul.reponse;
+      if (Number.isInteger(R)) return `Pour 1/${k} de ${avecUnite(q, u)}, je partage en ${k} parts égales : une part, c’est ${avecUnite(R, u)}.`;
+      if (k === 2) {
+        const pair = q - 1;
+        return `Pour 1/2 de ${avecUnite(q, u)}, je prends la moitié : ${exC3(pair)} ÷ 2 + 1 ÷ 2 = ${exC3(pair / 2)} + 0,5. Une part, c’est ${avecUnite(R, u)}.`;
+      }
+      if (k === 10) return `Pour 1/10 de ${avecUnite(q, u)}, je divise par 10 : chaque chiffre glisse d’une colonne vers la droite. Une part, c’est ${avecUnite(R, u)}.`;
+      return `Pour 1/${k} de ${avecUnite(q, u)}, je partage en ${k} parts égales. ${exC3(q)}, c’est ${exC3(q * 10)} dixièmes : ${exC3(q * 10)} ÷ ${k} = ${exC3(R * 10)} dixièmes. Une part, c’est ${avecUnite(R, u)}.`;
+    },
+    // --- Un rang qui change.
+    "D4|plus-fraction": calcul => {
+      const {n, d, rang, chiffre, r} = calcul.donnees;
+      const [a, b] = nombresC3(calcul.texte).slice(1, 3);
+      const avant = chiffreDuRang(n, rang);
+      const debut = `${exC3(a)}/${exC3(b)}, c’est ${chiffre} ${nomDuRang(rang, chiffre)}`;
+      if (avant + chiffre >= 10) return `${debut}. ${avant} ${nomDuRang(rang, avant)} + ${chiffre} ${nomDuRang(rang, chiffre)} = ${avant + chiffre} ${nomDuRang(rang)} : 10 ${nomDuRang(rang)} font 1 ${nomDuRang(rang + 1, 1)}. ${resoluC3(calcul)}.`;
+      return `${debut} : seul le chiffre des ${nomDuRang(rang)} change. ${resoluC3(calcul)}.`;
+    },
+    "D4|moins": calcul => {
+      const {n, rang, chiffre} = calcul.donnees;
+      const avant = chiffreDuRang(n, rang);
+      if (avant < chiffre) return `Je retire ${chiffre} ${nomDuRang(rang, chiffre)} : je casse 1 ${nomDuRang(rang + 1, 1)}, qui fait 10 ${nomDuRang(rang)}. ${resoluC3(calcul)}.`;
+      return `Je retire ${chiffre} ${nomDuRang(rang, chiffre)} : seul le chiffre des ${nomDuRang(rang)} change, ${avant} − ${chiffre} = ${avant - chiffre}. ${resoluC3(calcul)}.`;
+    },
+    // --- Parenthèses.
+    "C1|moins-par": calcul => `Je calcule d’abord ce qui est entre parenthèses : ${String(calcul.texte).replace(/ = □$/, "")} = ${evaluerParentheses(String(calcul.texte).replace(/ = □$/, ""))} = ${exC3(calcul.reponse)}.`,
+    "C1|moins-paires": calcul => `Chaque parenthèse d’abord : ${String(calcul.texte).replace(/ = □$/, "")} = ${evaluerParentheses(String(calcul.texte).replace(/ = □$/, ""))} = ${exC3(calcul.reponse)}.`,
+    // --- Écarts, égalités.
+    "A8-2|ecart-trou": calcul => {
+      const {n, m} = calcul.donnees;
+      const petit = n;
+      const grand = m;
+      const rond = [1000, 100].map(t => Math.ceil(petit / t) * t).find(x => x > petit && x <= grand) || grand;
+      const sauts = rond < grand ? [[petit, rond], [rond, grand]] : [[petit, grand]];
+      return `On a retiré l’écart entre ${exC3(petit)} et ${exC3(grand)} : j’avance du petit au grand. ${direSauts(sauts)}. ${sommeSauts(sauts)}${resoluC3(calcul)}.`;
+    },
+    "M8-3|trou": calcul => {
+      const [b, a] = nombresC3(calcul.texte);
+      const R = calcul.reponse;
+      return `${exC3(b)} fois ${exC3(a)}, c’est ${exC3(b - R)} fois ${exC3(a)} plus ${exC3(R)} fois ${exC3(a)} : ${resoluC3(calcul)}.`;
+    },
+    "C3-1|retire": calcul => {
+      const {n, m} = calcul.donnees;
+      const R = calcul.reponse;
+      const differents = [0, 1, 2, 3, 4].filter(rang => chiffreDuRang(n, rang) !== chiffreDuRang(m, rang));
+      if (differents.length === 1) {
+        const rang = differents[0];
+        const x = chiffreDuRang(n, rang);
+        const y = chiffreDuRang(m, rang);
+        return `De ${exC3(n)} à ${exC3(m)}, seul le chiffre des ${nomDuRang(rang)} change : ${x} ${nomDuRang(rang, x)} − ${y} ${nomDuRang(rang, y)} = ${x - y} ${nomDuRang(rang, x - y)}. On a retiré ${exC3(R)}.`;
+      }
+      return `Les deux barres ont la même longueur : on a retiré ${exC3(n)} − ${exC3(m)} = ${exC3(R)}. ${resoluC3(calcul)}.`;
+    },
+    "C3-1|depart": calcul => {
+      const {a, m} = calcul.donnees;
+      return `Les deux barres ont la même longueur : le nombre de départ, c’est ${exC3(m)} + ${exC3(a)} = ${exC3(calcul.reponse)}. ${resoluC3(calcul)}.`;
+    },
+    "C3-1|retire-produit": calcul => {
+      const {n, a, b} = calcul.donnees;
+      return `Je calcule d’abord l’autre côté : ${exC3(a)} × ${exC3(b)} = ${exC3(a * b)}. On a retiré ${exC3(n)} − ${exC3(a * b)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "C3-1|difference-quotient": calcul => {
+      const {x, y, k} = calcul.donnees;
+      return `Je calcule d’abord l’autre côté : ${exC3(x)} − ${exC3(y)} = ${exC3(x - y)}. Le nombre qu’on divise par ${exC3(k)} pour avoir ${exC3(x - y)}, c’est ${exC3(x - y)} × ${exC3(k)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "C3|egalite-difference": calcul => {
+      const {a, b, d} = calcul.donnees;
+      const ecart = d - b;
+      const plus = ecart > 0;
+      return `${exC3(d)}, c’est ${exC3(Math.abs(ecart))} de ${plus ? "plus" : "moins"} que ${exC3(b)}. Dans une soustraction, les deux nombres bougent ensemble : ${exC3(a)} ${plus ? "+" : "−"} ${exC3(Math.abs(ecart))} = ${exC3(calcul.reponse)}. ${resoluC3(calcul)}.`;
+    },
+    // --- Regrouper, couper un facteur.
+    "M10|trou-regroupe": calcul => {
+      const texte = String(calcul.texte).replace(/ = .*$/, "");
+      const nombres = nombresC3(calcul.texte);
+      if (nombres.length === 4 && nombres[2] === null) {
+        // « 12 × 5 = □ × 10 » : la moitié d'un côté, le double de l'autre.
+        const [a, b, , c] = nombres;
+        return `${exC3(c)}, c’est le double de ${exC3(b)} : de l’autre côté, je prends la moitié de ${exC3(a)}. ${resoluC3(calcul)}.`;
+      }
+      const [x, y, z] = nombres;
+      const paire = [x, z].sort((p, q) => p - q);
+      return `${exC3(paire[0])} × ${exC3(paire[1])} = ${exC3(paire[0] * paire[1])} : je les calcule ensemble. ${texte} = ${exC3(y)} × ${exC3(paire[0] * paire[1])}.`;
+    },
+    "M10|couper": calcul => {
+      const {reste} = calcul.donnees;
+      const [a, b] = nombresC3(calcul.texte);
+      const R = calcul.reponse;
+      if (calcul.module === "M10" && calcul.niveau === 2) return `${exC3(b)}, c’est 4 × ${exC3(reste)} : 25 × 4 = 100, et 100 × ${exC3(reste)} = ${exC3(R)}. ${resoluC3(calcul)}.`;
+      return `${exC3(b)}, c’est 2 × 10 : ${exC3(a)} × 2 = ${exC3(a * 2)}, et ${exC3(a * 2)} × 10 = ${exC3(R)}. ${resoluC3(calcul)}.`;
+    },
+    // --- Fractions égales.
+    "F6|diviser": calcul => {
+      const [g, dr] = termesFraction(calcul).map(c => c[0]);
+      const k = g.d / dr.d;
+      return `${exC3(g.d)} ÷ ${exC3(k)} = ${exC3(dr.d)} : je divise aussi en haut par ${exC3(k)}. ${exC3(g.n)} ÷ ${exC3(k)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "F6|diviser-den": calcul => {
+      const [g, dr] = termesFraction(calcul).map(c => c[0]);
+      const k = g.n / dr.n;
+      return `${exC3(g.n)} ÷ ${exC3(k)} = ${exC3(dr.n)} : je divise aussi en bas par ${exC3(k)}. ${exC3(g.d)} ÷ ${exC3(k)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "F6|denominateur": calcul => {
+      const [g, dr] = termesFraction(calcul).map(c => c[0]);
+      const k = dr.n / g.n;
+      return `${exC3(g.n)} × ${exC3(k)} = ${exC3(dr.n)} : je multiplie aussi en bas par ${exC3(k)}. ${exC3(g.d)} × ${exC3(k)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    "F6|multiplier": calcul => {
+      const [g, dr] = termesFraction(calcul).map(c => c[0]);
+      const k = dr.d / g.d;
+      return `${exC3(g.d)} × ${exC3(k)} = ${exC3(dr.d)} : je multiplie aussi en haut par ${exC3(k)}. ${exC3(g.n)} × ${exC3(k)} = ${exC3(calcul.reponse)} : ${resoluC3(calcul)}.`;
+    },
+    // --- Quotient et reste.
+    "M11|reste-nul": calcul => {
+      const {n, q, d} = calcul.donnees;
+      return `${exC3(q)} × ${exC3(d)} = ${exC3(n)}. ${exC3(n)} − ${exC3(n)} = 0 : il reste 0. ${resoluC3(calcul)}.`;
+    },
+    "M11|quotient": calcul => {
+      const {n, q, d, r, p} = calcul.donnees;
+      return `Sans le reste : ${exC3(n)} − ${exC3(r)} = ${exC3(p)}. ${exC3(p)}, c’est ${exC3(q)} fois ${exC3(d)} : ${resoluC3(calcul)}.`;
+    },
+    // --- Fraction : l'entier, l'encadrement.
+    "F5-2|entier": calcul => {
+      const cotes = termesFraction(calcul);
+      const g = cotes[0][0];
+      const reste = cotes[1][1];
+      const u = calcul.reponse;
+      const dire = n => enPartsOuFraction(n, g.d);
+      return `${dire(g.n)}, c’est ${dire(g.n - reste.n)} et ${dire(reste.n)}. ${nomParts(g.d) ? `${enParts(g.d, g.d)} font une unité` : `${exC3(g.d)}/${exC3(g.d)} = 1`} : ${dire(g.n - reste.n)}, c’est ${exC3(u)}. ${resoluC3(calcul)}.`;
+    },
+    "F5-2|encadrer": calcul => {
+      const lu = lireFraction(calcul.texte);
+      const bas = lu.bas;
+      const haut = calcul.reponse;
+      return `${exC3(bas)} = ${exC3(bas * lu.d)}/${exC3(lu.d)} et ${exC3(haut)} = ${exC3(haut * lu.d)}/${exC3(lu.d)} : ${exC3(lu.a)}/${exC3(lu.d)} est entre les deux. ${resoluC3(calcul)}.`;
+    },
+    // --- Fractions au-delà de 1.
+    "F8-3|moins-entier": calcul => {
+      const [[x, y]] = termesFraction(calcul);
+      return `${exC3(y.n)} = ${exC3(y.n * x.d)}/${exC3(x.d)}. ${exC3(x.n)}/${exC3(x.d)} − ${exC3(y.n)} = ${exC3(x.n)}/${exC3(x.d)} − ${exC3(y.n * x.d)}/${exC3(x.d)} = ${exC3(calcul.reponse)}/${exC3(x.d)}.`;
+    },
+    "F8-3|somme": calcul => {
+      const [[x, y]] = termesFraction(calcul);
+      return `J’ajoute des ${nomParts(x.d)} : ${enParts(x.n, x.d)} + ${enParts(y.n, y.d)} = ${enParts(calcul.reponse, x.d)}.`;
+    },
+    // --- Diviser des dizaines, des centaines.
+    "M12-1|trou-facteur": calcul => {
+      const {n, d, q, t, unite} = calcul.donnees;
+      const nom = unite === 10 ? "dizaines" : "centaines";
+      return `Je cherche ${exC3(n)} ÷ ${exC3(d)}. ${exC3(n)}, c’est ${exC3(t)} ${nom} : ${exC3(t)} ÷ ${exC3(d)} = ${exC3(q / unite)}, donc ${exC3(q / unite)} ${q / unite >= 2 ? nom : nom.slice(0, -1)}. ${resoluC3(calcul)}.`;
+    },
+    "M3-3|trou-facteur": calcul => {
+      const {x, c1, t, p, r} = calcul.donnees;
+      return `${exC3(x)}, c’est ${exC3(c1)} × ${exC3(x / c1)}. Je fais la table : ${exC3(c1)} × ${exC3(calcul.reponse)} = ${exC3(r / (x / c1))}, puis × ${exC3(x / c1)} : ${resoluC3(calcul)}.`;
+    },
+    "M13|trou-facteur": calcul => {
+      const {n, d, q, moities} = calcul.donnees;
+      const etapes = [n, ...moities];
+      return `Je cherche ${exC3(n)} ÷ ${exC3(d)} : je coupe en deux ${d === 4 ? "deux fois" : "trois fois"}. ${etapes.slice(0, -1).map((x, i) => `${exC3(x)} ÷ 2 = ${exC3(etapes[i + 1])}`).join(", ")}. ${resoluC3(calcul)}.`;
+    },
+    "M12|trou-facteur": calcul => {
+      const {n, d, q, m1, m2} = calcul.donnees;
+      if (!m2 || !m1) return `Je cherche ${exC3(n)} ÷ ${exC3(d)} : ${exC3(n)} ÷ ${exC3(d)} = ${exC3(q)}. ${resoluC3(calcul)}.`;
+      return `Je cherche ${exC3(n)} ÷ ${exC3(d)}. ${exC3(n)}, c’est ${exC3(d * m1)} et ${exC3(d * m2)} : ${exC3(d * m1)} ÷ ${exC3(d)} + ${exC3(d * m2)} ÷ ${exC3(d)} = ${exC3(m1)} + ${exC3(m2)} = ${exC3(q)}. ${resoluC3(calcul)}.`;
+    },
+    // --- Moitiés de nombres impairs, de décimaux.
+    "D8-1|division": calcul => {
+      const {n, r, morceaux} = calcul.donnees;
+      if (n === 1) return `1 ÷ 2, c’est la moitié de 1 : ${resoluC3(calcul)}.`;
+      return `${exC3(n)} ÷ 2, c’est la moitié de ${exC3(n)} : ${exC3(morceaux[0])} ÷ 2 + 1 ÷ 2 = ${exC3(morceaux[0] / 2)} + 0,5 = ${exC3(r)}.`;
+    },
+    "D8-1|trou-double": calcul => {
+      const {n, r, morceaux} = calcul.donnees;
+      if (n === 1) return `Je cherche le nombre qu’on a doublé : c’est la moitié de 1. 1 ÷ 2 = 0,5 : ${resoluC3(calcul)}.`;
+      return `Je cherche le nombre qu’on a doublé : c’est la moitié de ${exC3(n)}. ${exC3(morceaux[0])} ÷ 2 + 1 ÷ 2 = ${exC3(morceaux[0] / 2)} + 0,5 = ${exC3(r)} : ${resoluC3(calcul)}.`;
+    },
+    "D8-3|division": calcul => {
+      const {n, r, e, dec} = calcul.donnees;
+      if (!e) return `${exC3(n)} ÷ 2, c’est la moitié de ${exC3(n)} : ${resoluC3(calcul)}.`;
+      return `${exC3(n)} ÷ 2, c’est la moitié de ${exC3(n)}. Je coupe chaque morceau en deux : ${exC3(e)} ÷ 2 + ${exC3(dec)} ÷ 2 = ${exC3(e / 2)} + ${exC3(dec / 2)} = ${exC3(r)}.`;
+    },
+    "D8-5|moitie": calcul => {
+      const {r, e, dec} = calcul.donnees;
+      const ecrit = /moitié de ([\d,]+)/.exec(String(calcul.texte));
+      const nombre = ecrit ? ecrit[1] : exC3(calcul.donnees.n);
+      const partie = `0,${nombre.split(",")[1] || "0"}`;
+      const dixCentiemes = /,\d0$/.test(nombre) ? ` ${partie}, c’est ${exC3(dec * 100)} centièmes : leur moitié, c’est ${exC3(dec * 50)} centièmes.` : "";
+      if (!e) return `La moitié de ${nombre}, c’est ${nombre} ÷ 2 = ${exC3(r)}.${dixCentiemes}`;
+      return `La moitié de ${nombre}, c’est ${nombre} ÷ 2. Je coupe chaque morceau en deux : ${exC3(e)} ÷ 2 + ${partie} ÷ 2 = ${exC3(e / 2)} + ${exC3(dec / 2)} = ${exC3(r)}.${dixCentiemes}`;
+    },
+    // --- Remonter un calcul.
+    "C4|remonter": calcul => {
+      const {x, ops, fin} = calcul.donnees;
+      const inverse = {"×": "÷", "÷": "×", "+": "−", "−": "+"};
+      const fais = (a, o, b) => (o === "+" ? a + b : o === "−" ? a - b : o === "×" ? a * b : a / b);
+      let v = fin;
+      const etapes = [...ops].reverse().map(([o, b]) => {
+        const io = inverse[o];
+        const avant = v;
+        v = fais(v, io, b);
+        return `${exC3(avant)} ${io} ${exC3(b)} = ${exC3(v)}`;
+      });
+      return `Je remonte les flèches à l’envers : ${etapes.join(". ")}. ${resoluC3(calcul)}.`;
+    },
+    // --- Regrouper plusieurs nombres.
+    "A9|quatre": calcul => {
+      const {termes, paires, groupes} = calcul.donnees;
+      const dire = paires.map(([i, j], g) => `${exC3(termes[i])} + ${exC3(termes[j])} = ${exC3(groupes[g])}`);
+      return `${etListe(dire)} : je les ajoute ensemble. ${String(calcul.texte).replace(/ = □$/, "")} = ${groupes.map(exC3).join(" + ")} = ${exC3(calcul.reponse)}.`;
+    },
+    // --- Fraction et décimal.
+    "F1|numerateur": calcul => {
+      const nombres = nombresC3(calcul.texte);
+      const v = nombres[0];
+      const d = nombres[nombres.length - 1];
+      const R = calcul.reponse;
+      const parts = n => (nomParts(d) ? enParts(n, d) : RANGS_DECIMAUX[Math.round(Math.log10(d))] ? enRang(n, Math.round(Math.log10(d))) : `${exC3(n)}/${exC3(d)}`);
+      if (Number.isInteger(v)) return `1 unité, c’est ${parts(d)}${v === 1 ? "" : ` : ${enUnitesC3(v, "unité")}, c’est ${parts(R)}`}. ${resoluC3(calcul)}.`;
+      if (d === 5 && R === 1) return `1/5 = 0,2 : ${resoluC3(calcul)}.`;
+      if (d === 5) return `1/5 = 0,2 : ${exC3(v)}, c’est ${exC3(R)} fois 0,2. ${resoluC3(calcul)}.`;
+      if (100 % d === 0) return `${exC3(R)}/${exC3(d)} = ${exC3(R * 100 / d)}/100 = ${exC3(v)} : ${resoluC3(calcul)}.`;
+      return `${resoluC3(calcul)} : ${exC3(v)}, c’est ${exC3(R)} ${nomRangs(Math.round(Math.log10(d)))}.`;
+    },
+    "F1|denominateur": calcul => {
+      const nombres = nombresC3(calcul.texte);
+      const v = nombres.find(x => x !== null && !Number.isInteger(x));
+      const a = nombres.find(x => x !== null && Number.isInteger(x));
+      const R = calcul.reponse;
+      if (R === 5 && a === 1) return `1/5 = 0,2 : ${resoluC3(calcul)}.`;
+      if (R === 5) return `1/5 = 0,2 et ${exC3(a)} × 0,2 = ${exC3(v)} : ${resoluC3(calcul)}.`;
+      if (100 % R === 0) return `${exC3(a)}/${exC3(R)} = ${exC3(a * 100 / R)}/100 = ${exC3(v)} : ${resoluC3(calcul)}.`;
+      return `${exC3(v)}, c’est ${exC3(a)} ${RANGS_DECIMAUX[Math.round(Math.log10(R))] ? RANGS_DECIMAUX[Math.round(Math.log10(R))][a >= 2 ? 1 : 0] : ""} : ${resoluC3(calcul)}.`;
+    },
+    "F1-3|centiemes": calcul => {
+      const nombres = nombresC3(calcul.texte);
+      const D = nombres[nombres.length - 1];
+      const par = D / 5;
+      const k = D === 10 ? 1 : 2;
+      return `Chaque cinquième, c’est ${enRang(par, k)} : ${enParts(nombres[0], 5)}, c’est ${enRang(calcul.reponse, k)}. ${resoluC3(calcul)}.`;
+    },
+    // --- Fraction et quotient.
+    "F11-2|quotient": calcul => {
+      const [a, b] = nombresC3(calcul.texte);
+      return `La fraction, c’est une division : ${exC3(a)}/${exC3(b)} = ${exC3(a)} ÷ ${exC3(b)} = ${exC3(calcul.reponse)}.`;
+    }
+  });
+  // La phrase d'une écriture, cherchée du plus précis (« M1-1|trou-double »)
+  // au plus large (« F8|difference ») ; puis les familles d'écritures qui se
+  // disent pareil (F3 : « part-2 », « part-5 »… ; C4 : toutes).
+  function methodeDe(calcul) {
+    const cle = `${calcul.module}-${calcul.niveau}`;
+    const forme = String(calcul.forme);
+    const essais = [`${cle}|${forme}`, `${calcul.module}|${forme}`];
+    if (/^part-\d+$/.test(forme)) essais.push(`${calcul.module}|part`);
+    if (calcul.module === "C4") essais.push("C4|remonter");
+    if (forme === "egalite-difference-grande") essais.push("C3|egalite-difference");
+    const cleTrouvee = essais.find(c => METHODES[c]);
+    return cleTrouvee ? METHODES[cleTrouvee] : null;
+  }
+
+  // Les écritures montrées par la leçon d'un niveau (« On te montre » et
+  // J'écris, qui est tiré dans la même écriture).
+  function ecrituresMontrees(cleNiveau) {
+    const trouve = niveauDe(cleNiveau);
+    const lecon = trouve && trouve.niveau.apprends ? trouve.niveau.apprends.calculs : null;
+    return new Set(lecon ? [lecon.montre.forme, lecon.ecris.forme] : []);
+  }
+  // Un calcul appelle-t-il un exemple résolu dans ce niveau ? Son écriture
+  // n'est ni montrée par la leçon, ni une écriture miroir.
+  function demandeExemple(calcul, cleNiveau = null) {
+    if (!calcul) return false;
+    const cle = cleNiveau || `${calcul.module}-${calcul.niveau}`;
+    if (ECRITURES_MIROIR.has(calcul.forme) || SANS_EXEMPLE.has(`${cle}|${calcul.forme}`)) return false;
+    return !ecrituresMontrees(cle).has(calcul.forme);
+  }
+  // La phrase de méthode de l'exemple résolu d'un calcul (« 12, c'est 10 et
+  // 2. Je coupe chaque morceau en deux : 5 et 1. … »), ou null quand son
+  // écriture n'en demande pas (ou n'en a pas : un test le signale).
+  function methodeExemple(calcul, cleNiveau = null) {
+    if (!demandeExemple(calcul, cleNiveau)) return null;
+    const methode = methodeDe(calcul);
+    if (!methode) return null;
+    const texte = methode(calcul);
+    return texte ? fr(String(texte)) : null;
+  }
+  // Le calcul de l'exemple résolu d'un calcul « À toi » : de la même
+  // écriture, un cran plus facile (`unCranPlusFacile`, dans `candidats` :
+  // la réserve tirée avec la série, même graine — règle du lot C1), jamais
+  // le même ; de préférence avec les mêmes chiffres nuls aux mêmes places
+  // (le même dessin), pris dans la réserve, sinon dans un tirage du niveau
+  // à la graine donnée ; s'il n'y en a pas, le plus facile de l'écriture qui
+  // n'est pas lui. Jamais un calcul dont le texte est dans `exclure` (la
+  // leçon, la série).
+  function exempleAvant(calcul, {candidats = [], exclure = [], graine = 1} = {}) {
+    if (!calcul) return null;
+    const interdits = new Set([calcul.texte, ...exclure]);
+    const libres = liste => (liste || []).filter(c => c && c.forme === calcul.forme && !interdits.has(c.texte) && c.cle !== calcul.cle && methodeExemple(c));
+    // Le même dessin, de préférence : les mêmes chiffres nuls aux mêmes
+    // places (« double de □ = 12 » avant « double de □ = 18 », pas
+    // « double de □ = 80 », qui ne se coupe pas en morceaux).
+    const motif = c => String(c.texte).replace(/[1-9]/g, "x");
+    const memeMotif = liste => liste.filter(c => motif(c) === motif(calcul));
+    // Sinon, au moins les mêmes signes aux mêmes places (« 3/4 + □/4 = 1 »
+    // n'a pas pour exemple « 3/4 − □/4 = 1/2 », que sa fiche range pourtant
+    // dans la même écriture).
+    const squelette = c => String(c.texte).replace(/\d(?:[\d,\u202f\u00a0 ]*\d)?/g, "n");
+    const memeSquelette = liste => liste.filter(c => squelette(c) === squelette(calcul));
+    const plusFacile = liste => unCranPlusFacile(calcul, liste);
+    const trouve = niveauDe(`${calcul.module}-${calcul.niveau}`);
+    let tire = null;
+    const tirage = () => tire || (tire = trouve && typeof trouve.niveau.composer === "function" ? libres(trouve.niveau.composer(mulberry32(graine >>> 0), 120, [])) : []);
+    const reserve = libres(candidats);
+    const leMoinsDur = liste => (liste.length ? liste.reduce((a, b) => (difficulte(b) < difficulte(a) ? b : a)) : null);
+    // Les mêmes signes passent avant « plus facile » : l'exemple montre
+    // l'écriture.
+    return plusFacile(memeMotif(reserve)) || plusFacile(memeMotif(tirage()))
+      || plusFacile(memeSquelette(reserve)) || plusFacile(memeSquelette(tirage()))
+      || leMoinsDur(memeSquelette(reserve)) || leMoinsDur(memeSquelette(tirage()))
+      || plusFacile(reserve) || plusFacile(tirage())
+      || leMoinsDur(reserve) || leMoinsDur(tirage());
+  }
+
 
   // ---------------------------------------------------------- les erreurs connues
 
@@ -13231,6 +13902,11 @@
     dessinAEtapesDe: calcul => (calcul ? dessinAEtapes(aideDe(calcul), calcul.texte, calcul.reponse) : null),
     manipulationDe,
     annonceDe,
+    // Lot C3 : les exemples résolus.
+    ECRITURES_MIROIR,
+    demandeExemple,
+    methodeExemple,
+    exempleAvant,
     virguleDe,
     virguleDuTexte,
     diagnostiquer,

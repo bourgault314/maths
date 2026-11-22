@@ -1313,6 +1313,10 @@
   // Les largeurs des cases d'une barre : proportionnelles, mais pas plus
   // étroites que `mini` (un « 3 » à côté d'un « 20 » doit se lire).
   function largeursDe(valeurs, total, mini = BARRES.mini) {
+    // (Lot C3 : neuf parts de 80 ne tiennent pas dans la barre — « 41 − 34 =
+    // □ ÷ 9 » donnait une case de largeur négative ; le minimum ne dépasse
+    // jamais une part égale.)
+    mini = Math.min(mini, total / Math.max(1, valeurs.length));
     const largeurs = valeurs.map(() => 0);
     const fixes = new Set();
     for (let tour = 0; tour <= valeurs.length; tour += 1) {
