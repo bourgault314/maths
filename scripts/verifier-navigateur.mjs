@@ -101,6 +101,7 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-C1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C2-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C3-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  { fichier: "tests/defi-calcul-lot-C4a-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

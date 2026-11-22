@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261122-1"></script>
+  <script src="./defi_calcul_core.js?v=20261122-2"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261122-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261122-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261122-2"></script>
   <script>
     (() => {
       "use strict";
@@ -2665,15 +2665,19 @@
       // Sous « J'apprends », ce qu'on va manipuler. (05/11/2026 : chaque outil
       // a sa phrase — C1, D1, D4 et les bandes du lot 6 affichaient
       // « undefined » ; C3, M10, M12, D1-3 disaient « avec la droite ».)
-      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
+      // (Lot C4a : « Ajouter, retrancher des dizaines » et « Compléments à 100 :
+      // dizaines » montrent le tableau de numération après les perles.)
+      const DETAIL_APPRENDS = Object.freeze({perles: "avec les perles et la droite", "perles-tableau": "avec les perles et le tableau de numération", glisse: "avec le glisse-nombres et le tableau", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
         toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", "carre-op": "avec les carrés de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
         billes: "avec les billes"});
       // L'outil de J'apprends d'un niveau : ce qu'on manipule, sinon l'image
       // (M1, M5, M6, F5-3, F6-2, F6-3, F6-4, F8-3 : le schéma en barres ; M4 : la
       // bande ; M8 : le rectangle ; C3 : les deux barres ; M10, M12, D1-3).
       // Modules lot 6b : F3-3 (pas de billes), le schéma du tout et de ses parts.
-      const OUTILS_IMAGE = Object.freeze({barres: "barres", "barres-fois": "barres", parts: "barres", "barre-droite": "barres", "tout-parts": "barres", "bandes-droite": "bandes", bande: "bande", rectangle: "rectangle", "deux-barres": "deux-barres", facteurs: "facteurs", partage: "partage", numeration: "numeration"});
+      const OUTILS_IMAGE = Object.freeze({barres: "barres", "barres-fois": "barres", parts: "barres", "barre-droite": "barres", "tout-parts": "barres", "bandes-droite": "bandes", bande: "bande", rectangle: "rectangle", "deux-barres": "deux-barres", facteurs: "facteurs", partage: "partage", numeration: "numeration",
+        "tableau-rang": "numeration"});
       function outilApprends(apprends) {
+        if (apprends.manipule && apprends.manipule.outil === "perles" && apprends.represente.outil === "tableau-rang") return "perles-tableau";
         if (apprends.manipule) return apprends.manipule.outil;
         return OUTILS_IMAGE[apprends.represente.outil] || "aucun";
       }
@@ -4179,6 +4183,19 @@
         const valeur = CORE.lireReponse(state.answer);
         if (valeur === null) { showAnswerError(); return true; }
         const juste = CORE.estJuste(etapes[question.etape], valeur, state.answer);
+        // Lot C4a (ex-C5, point 4 ; choix du 21/11) : à la première case, le
+        // résultat tapé tout de suite est juste — la case du milieu reste
+        // une aide : elle s'écrit sans vert, le dessin passe à « révélé », et
+        // le calcul se valide comme d'habitude.
+        if (!juste && question.etape === 0 && etapes.length === 2 && CORE.estJuste(question.calcul, valeur, state.answer)) {
+          question.directe = true;
+          question.premierDonne = true;
+          question.etape = 1;
+          question.essaisEtape = 0;
+          renderEtapesQuestion(question);
+          majDessinQuestion(question.dessinEtapes.revele);
+          return false;
+        }
         if (!juste && question.essaisEtape < 1) {
           question.essaisEtape += 1;
           renderInlineAnswer("is-invalid");
@@ -4690,7 +4707,7 @@
         if (juste) {
           renderInlineAnswer("is-correct");
           // Lot 7-0 : le dessin à étapes se remplit jusqu'au bout.
-          if (question.dessinEtapes) majDessinQuestion(question.dessinEtapes.dessins[question.dessinEtapes.etapes.length]);
+          if (question.dessinEtapes) majDessinQuestion(question.directe ? question.dessinEtapes.revele : question.dessinEtapes.dessins[question.dessinEtapes.etapes.length]);
           if (auTest || texteJuste) feedback.textContent = soude(auTest ? "✓ Juste" : texteJuste);
           else bravo(feedback, "Bravo !", question.calcul, state.answer);
         } else if (auTest) {
@@ -5118,7 +5135,7 @@
       }
 
       // Après deux entraînements ratés : ce que l'élève retrouvera demain.
-      const REPRISE = Object.freeze({perles: "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
+      const REPRISE = Object.freeze({perles: "avec les perles", "perles-tableau": "avec les perles", glisse: "avec le glisse-nombres", aucun: "avec la droite", barres: "avec le schéma en barres", bande: "avec la bande de la table", rectangle: "avec le rectangle",
         toucher: "en touchant le calcul à faire", carre: "avec le carré de 100", "carre-op": "avec les carrés de 100", numeration: "avec le tableau de numération", jetons: "avec le tableau à jetons", bandes: "avec les bandes de fractions", "deux-barres": "avec les deux barres", facteurs: "en regroupant les facteurs", partage: "en décomposant le nombre",
         billes: "avec les billes"});
 

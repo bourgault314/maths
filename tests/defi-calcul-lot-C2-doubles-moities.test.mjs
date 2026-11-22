@@ -82,7 +82,9 @@ test("chaque niveau a sa leçon : la moitié montrée par la moitié, À retenir
   ["M1-1", "M1-3", "M1-5", "D8-2", "D8-4"].forEach(cle => {
     const a = CORE.niveauDe(cle).niveau.apprends;
     assert.doesNotMatch(espaces(a.bilan), /moitié/, cle);
-    assert.equal(a.autre, undefined, cle);
+    // (Lot C4a : M1-5 dit le double d'un nombre rond, jamais la moitié.)
+    if (cle === "M1-5") assert.doesNotMatch(espaces(a.autre.phrase + a.autre.calcul), /moitié/, cle);
+    else assert.equal(a.autre, undefined, cle);
   });
   // J'écris tiré : une moitié, jamais plus facile que l'exemple (lot C1).
   ["M1-2", "M1-4", "M1-6", "D8-3", "D8-5"].forEach(cle => {
@@ -233,8 +235,8 @@ test("le serveur : version_min 11 ; les copies pour la page prof identiques ; le
   assert.match(bloc, /'version_min' => 11,/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), "la copie du moteur");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C2-doubles-moities$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C3-exemples$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C2-doubles-moities$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C3-exemples$|^lot defi-calcul-lot-C4a$/m);
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261122-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261122-2/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
 });

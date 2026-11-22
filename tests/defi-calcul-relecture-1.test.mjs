@@ -33,8 +33,11 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // (Lot 7e-2 : la fraction d'une quantité en mots, sans signe =, choix de
 // Gwenaël — « Je partage 500 g en 10 parts égales. », « Un quart, c'est la
 // moitié de la moitié. »)
-const GARDEES = new Set(["A3-1", "A3-4", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
-const SANS_LIGNE = new Set(["A2-1", "A2-2", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
+// (Lot C4a : la ligne dit ce que vaut le nombre — « 768, c’est 76 dizaines
+// et 8 unités. », « 20, c’est 2 dizaines ; 100, c’est 10 dizaines. »,
+// « 350, c’est 35 dizaines. ».)
+const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
+const SANS_LIGNE = new Set(["A2-1", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
 // « moitié de 28 », « 1/2 de 6 L » (l'unité s'en va), « 58 × 10 ÷ 2 ».
@@ -165,7 +168,14 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // Lot 7c : F11-1 et F11-2 (« 3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = … »).
   // Lot 7d : M9-1 et M9-2 (« 9, c’est 10 − 1 : 45 × 9 = … »).
   // Lot C2 : les cinq niveaux de moitiés (M1-2, M1-4, M1-6, D8-3, D8-5).
-  assert.equal(coupes, 82, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // Lot C4a : A3-2, A3-3 et M12-1 écrivent deux égalités, une par ligne
+  // (« 74 + 8 = 82. », puis « 746 + 80 = 826. ») : 3 de moins ici.
+  assert.equal(coupes, 79, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  ["A3-2", "A3-3", "M12-1"].forEach(cle => {
+    const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
+    assert.equal(lignes.length, 2, cle);
+    assert.ok(lignes.every(Boolean) && lignes[0].phrase && !lignes[1].phrase, `${cle} : la phrase et son calcul, puis le calcul seul`);
+  });
   ["M6-1", "M6-2", "M7-1", "M7-2", "M7-3"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.ok(lignes.length >= 2 && lignes.every(Boolean), `${cle} : une ligne par étape`);

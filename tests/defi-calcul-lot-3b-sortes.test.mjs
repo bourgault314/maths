@@ -24,12 +24,13 @@ const tirage = (cle, graines = 40) => {
 test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais annoncée", () => {
   const attendues = {
     "A1-2": ["on ajoute 10", "les deux nombres se suivent"],
-    "A2-2": ["un nombre en 5"],
+    // (Lot C4a : les nombres en 5 sont partis d'A2-2 ; A3 compte en dizaines,
+    // casse une centaine depuis une centaine ronde.)
     "A3-1": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
-    "A3-2": ["on retire des dizaines"],
+    "A3-2": ["on retire des dizaines : je compte en dizaines", "on part d’une centaine ronde : je casse une centaine"],
     // (Lot 6 « programmes 2 », choix de Gwenaël : trois sortes.)
-    "A3-3": ["on retire et on passe sous le millier"],
-    "A3-4": ["on passe la dizaine de mille"],
+    "A3-3": ["on retire et on passe sous le millier", "on part d’un nombre rond : je casse un millier"],
+    "A3-4": ["on passe la dizaine de mille : je compte en milliers"],
     "D3-1": ["le résultat est plus petit que 1"],
     "M2-1": ["× 100, chaque chiffre glisse de 2 colonnes"], "M2-2": ["× 1 000, chaque chiffre glisse de 3 colonnes"],
     "D2-2": ["× 1 000"], "D2-3": ["× 1 000"], "D3-2": ["÷ 1 000"], "D3-3": ["÷ 100", "÷ 1 000"],

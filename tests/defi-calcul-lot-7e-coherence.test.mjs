@@ -85,7 +85,8 @@ test("lot 7e : les bilans faux sont corrigés", () => {
   // 746 + 60 = 806 : pas « je complète la centaine ».
   const a32 = CORE.niveauDe("A3-2").niveau.apprends;
   assert.doesNotMatch(a32.represente.consigne + a32.bilan, /complète la centaine|recule jusqu’à la centaine/);
-  assert.match(bilan("A3-2"), /les unités ne bougent pas : 746 \+ 80 = 746 \+ 60 \+ 20 = 826\.$/);
+  // (Lot C4a : je compte en dizaines — 74 + 8 = 82, puis 746 + 80 = 826.)
+  assert.match(bilan("A3-2"), /les unités ne bougent pas : 74 \+ 8 = 82\. 746 \+ 80 = 826\.$/);
   // Les familles entières (19, 29, 39 ; 98 et 99) et le rang qui change.
   assert.match(bilan("A5-2"), /^Pour ajouter 19, 29 ou 39/);
   assert.match(bilan("A6-3"), /^Pour retrancher 8, 18, 28 ou 38/);

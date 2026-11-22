@@ -112,10 +112,12 @@ test("M1 : « Je représente » par étapes dans les trois niveaux (le double co
   // plusieurs sauts quand « On te montre » est le dessin : où j'arrive après
   // le premier saut, puis le résultat.
   // (Lot 7b : D8, les doubles et moitiés de décimaux, comme M1 — testé ci-dessous.)
+  // (Lot C4a : le tableau des rangs aussi — la case du rang, puis le résultat.)
   NIVEAUX.filter(({fiche}) => fiche.id !== "M1" && fiche.id !== "D8").forEach(({niveau, cle}) => {
     const r = niveau.apprends.represente;
     const sauts = r.image && r.image.outil === "droite-sauts" ? r.image.sauts.length : 0;
-    if (sauts >= 2 && !niveau.apprends.manipule) assert.equal(r.etapes.length, 2, cle);
+    const tableau = r.image && r.image.outil === "tableau-rang" && Boolean(r.image.etape);
+    if ((sauts >= 2 || tableau) && !niveau.apprends.manipule) assert.equal(r.etapes.length, 2, cle);
     else assert.equal(r.etapes, undefined, cle);
   });
 });
@@ -227,8 +229,8 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-1/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-2/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });
