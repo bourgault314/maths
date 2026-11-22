@@ -358,12 +358,16 @@ test("confidentialite.html annonce zéro cookie, zéro traceur tiers, et décrit
   assert.match(page, /n’utilise aucun cookie de mesure ni aucun traceur tiers/);
   assert.match(page, /gardent sur votre appareil, et seulement là, vos réglages et votre progression/);
   assert.match(page, /rien n’est transmis/);
-  assert.match(page, /Dernière mise à jour : 21 novembre 2026/);
+  assert.match(page, /Dernière mise à jour : 22 novembre 2026/);
   // Lot « compteur de visites » (06/11/2026) : la page dit ce que reçoit le compteur, et ce qu'il ne garde pas.
-  assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie et sans rien enregistrer sur votre appareil, sauf, le temps d’un onglet, une marque sans aucune donnée/);
+  assert.match(page, /un simple compteur de visites, GoatCounter, sans cookie\./);
   assert.match(page, /sans ce qui suit le «&nbsp;\?&nbsp;»/);
   assert.match(page, /Il ne garde ni votre adresse IP ni aucun identifiant/);
-  assert.match(page, /Les pages du suivi de classe ne sont pas comptées/);
+  // Lot « confidentialite-compteur-eleves » (22/11/2026) : la page dit en clair quand le compteur se tait pour les élèves.
+  assert.match(page, /Les élèves suivis ne sont pas comptés\. Le compteur se tait pour un élève connecté avec son code, et pour un élève venu de son espace élève/);
+  assert.match(page, /le temps de l’onglet, une marque sans aucune donnée/);
+  assert.match(page, /Il n’envoie jamais ce qu’il regarde pour décider/);
+  assert.match(page, /Les pages du suivi de classe ne le chargent pas/);
   assert.match(page, /<code>mathsgo-compteur-ignorer<\/code>/, "la case durable du compteur est déclarée");
   // Lot « compteur-silence-suivi » (21/11/2026) : la marque d'onglet du compteur est déclarée, et dit ce qu'elle est.
   assert.match(page, /<li><code>mathsgo-compteur-taire<\/code> — stockage de session \(le temps d’un onglet\), valeur «&nbsp;1&nbsp;», aucune donnée, effacée à la fermeture de l’onglet&nbsp;: ne pas compter les élèves venus de leur espace\.<\/li>/);
