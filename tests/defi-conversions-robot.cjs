@@ -628,7 +628,10 @@ async function faireLeGeste(page, aide) {
       // Lot B3-3 (D3, Q3, Q4) : la trotteuse (quatre touchers), la barre de
       // la minute, l'axe à la seconde, la barre et la planche de Q3, la
       // barre qui se partage de Q4.
-      "trotteuse", "barre-minute", "axe-sec", "barre-q3", "planche-q3", "barre-q4"].includes(aide.type)) {
+      "trotteuse", "barre-minute", "axe-sec", "barre-q3", "planche-q3", "barre-q4",
+      // Lot B4-1 (A3, V1, Q5) : on regroupe (un carré par toucher), le
+      // calcul, le pavé qui se démonte (une couche par toucher), le rectangle.
+      "regroupe-a3", "calcul-a3", "cubes-v1", "rect-q5"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");

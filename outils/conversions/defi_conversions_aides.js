@@ -950,12 +950,19 @@
   function figurePb(fig) {
     if (fig.type === "graphe") return grapheQ9(fig);
     if (fig.type === "rectangle") {
-      const s = svg("svg", {viewBox: "0 0 212 92", class: "dessin pb-rect", role: "img",
+      // (B4-1c : `compact` (Q5) — un rectangle plus petit, des cotes plus
+      // grandes, la largeur du dessin qui suit la cote de droite : « 850 cm »
+      // sortait à droite, et les cotes tombaient à 12,2 px à côté de la case.
+      // Q2 ne change pas.)
+      const [lr, hr, fs] = fig.compact ? [104, 50, 20] : [140, 56, 17];
+      const H = fig.compact ? 6 + hr + fs + 8 : 92;
+      const W = fig.compact ? Math.ceil(6 + lr + 8 + 0.7 * fs * String(fig.largeur).length + 4) : 212;
+      const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: "dessin pb-rect", role: "img",
         "aria-label": `Un rectangle de ${fig.longueur} sur ${fig.largeur}`});
-      s.appendChild(svg("rect", {x: 6, y: 6, width: 140, height: 56, fill: "#eaf2fd", stroke: N, "stroke-width": 2.5}));
+      s.appendChild(svg("rect", {x: 6, y: 6, width: lr, height: hr, fill: "#eaf2fd", stroke: N, "stroke-width": 2.5}));
       s.appendChild(svg("path", {d: "M6 18 L18 18 L18 6", fill: "none", stroke: N, "stroke-width": 1.5}));
-      s.appendChild(svg("text", {x: 76, y: 84, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: N}, fig.longueur));
-      s.appendChild(svg("text", {x: 154, y: 40, "text-anchor": "start", "font-size": 17, "font-weight": 900, fill: N}, fig.largeur));
+      s.appendChild(svg("text", {x: 6 + lr / 2, y: fig.compact ? 6 + hr + fs + 1 : 84, "text-anchor": "middle", "font-size": fs, "font-weight": 900, fill: N}, fig.longueur));
+      s.appendChild(svg("text", {x: 6 + lr + 8, y: fig.compact ? 6 + hr / 2 + fs * 0.36 : 40, "text-anchor": "start", "font-size": fs, "font-weight": 900, fill: N}, fig.largeur));
       return s;
     }
     // Une balance de Roberval (les plateaux sur le fléau, sans fils) : les
@@ -3677,7 +3684,9 @@
   // la même unité quand on touche (On te montre). La correction : le tout,
   // les parts ou le dessous en vert.
   function barreQ3(zone, aide, fini = () => {}) {
-    const g = el("div", "q3-barre");
+    // (B4-1c : `serre` — la barre de Q5, sous une question plus haute que
+    // celles de Q3, se fait plus basse au petit téléphone.)
+    const g = el("div", `q3-barre${aide.serre ? " serre" : ""}`);
     zone.appendChild(g);
     let fait = !aide.touche;
     function dessiner() {
@@ -3908,6 +3917,12 @@
       if (c.perdu) plancheQ3(zone, c);
       else barreQ3(zone, c);
     } else if (c && c.type === "barre-q4") barreQ4(zone, c, {mode: "correction"});
+    // Lot B4-1 (A3, V1, Q5) : le regroupement, le pavé démonté, les deux
+    // assemblages, le rectangle, en vert.
+    else if (c && c.type === "regroupe-a3") regroupeA3(zone, c, {mode: "correction"});
+    else if (c && c.type === "cubes-v1") cubesV1(zone, c.a, {mode: "correction"});
+    else if (c && c.type === "deux-v1") deuxV1(zone, [c.A, c.B], {mode: "correction", volumes: [c.vA, c.vB]});
+    else if (c && c.type === "rect-q5") rectQ5(zone, c, {mode: "correction"});
     question.lignesB33.forEach((l, i) => {
       const d = el("div", "calcul-pb b33");
       if (Array.isArray(l)) {
@@ -3924,6 +3939,320 @@
       zone.appendChild(d);
       if (question.noteCorrB33 && der && [].concat(l).join("").length > 20) zone.appendChild(el("div", "note", carte().typo(question.noteCorrB33)));
     });
+  }
+
+
+  // ======================================================= lot B4-1 (palier 4)
+  // A3 « Convertir des aires (vers plus grand) », V1 « Le centimètre cube »,
+  // Q5 « Problèmes : périmètres et aires ». Choix de Gwenaël du 22/11 (lot
+  // B4-1a) : on regroupe (chaque toucher forme un carré de 1 dm²) ; le pavé
+  // se démonte (chaque toucher soulève une couche). Aucun dessin ne donne la
+  // réponse : le regroupement s'arrête sur le reste, sans « 0,7 dm² » écrit ;
+  // le pavé n'a pas de compteur.
+
+  // A3 · regrouper : nb colonnes de 10 carreaux. Chaque toucher forme un
+  // carré de 1 dm² (les 10 colonnes suivantes soulignées en orange) ; le
+  // dernier met le reste dans un carré en pointillé (comme le découpage de
+  // A2). "outil", "montre" : on touche ; "correction" : la fin, en vert.
+  // `note` : la note de l'outil, changée à la fin (« Une colonne : 0,1 dm². »).
+  function regroupeA3(zone, aide, {mode = "outil", fini = () => {}, note = null, noteFin = null} = {}) {
+    const nb = Number(aide.nb);
+    const g = aide.grande;
+    const n = Math.floor(nb / 10);
+    const d = nb % 10;
+    const total = n + (d ? 1 : 0);
+    const vert = mode === "correction";
+    const touche = mode === "outil" || mode === "montre";
+    const c = 6.2;
+    const L = 10 * c;
+    const gap = 16;
+    const x0 = 6;
+    const y0 = 6;
+    const W = x0 * 2 + total * L + (total - 1) * gap;
+    const H = y0 + L + 27;
+    const boite = el("div", "dessin-boite a3-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin a3-regroupe${touche ? " a-toucher" : ""}`, role: touche ? "button" : "img",
+      "aria-label": carte().typo(`${nb * 10} carreaux de 1 ${aide.petite}, en colonnes de 10`)});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let k = vert ? total : 0;
+    const plein = vert ? B32C.toucheV : B32C.touche;
+    const trait = vert ? VERT : N;
+    function grille(x, y, cols) {
+      const gr = svg("g", {stroke: B32C.grille, "stroke-width": 0.7});
+      for (let i = 1; i < cols; i += 1) gr.appendChild(svg("line", {x1: x + i * c, y1: y, x2: x + i * c, y2: y + L}));
+      for (let j = 1; j < 10; j += 1) gr.appendChild(svg("line", {x1: x, y1: y + j * c, x2: x + cols * c, y2: y + j * c}));
+      return gr;
+    }
+    function dessiner() {
+      dessin.textContent = "";
+      if (touche) dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      const faits = Math.min(k, n);
+      const fin = k >= total;
+      const libres = nb - 10 * faits;
+      const larg = faits * (L + gap) + (fin ? (d ? L : -gap) : libres * c);
+      const dx = fin ? x0 : (W - larg) / 2;
+      for (let q = 0; q < faits; q += 1) {
+        const x = dx + q * (L + gap);
+        dessin.appendChild(svg("rect", {x, y: y0, width: L, height: L, fill: plein}));
+        dessin.appendChild(grille(x, y0, 10));
+        dessin.appendChild(svg("rect", {x, y: y0, width: L, height: L, fill: "none", stroke: trait, "stroke-width": 2.2}));
+        dessin.appendChild(svg("text", {x: x + L / 2, y: y0 + L + 19, "text-anchor": "middle", "font-size": 15.5, "font-weight": 900, fill: trait}, carte().typo(`1 ${g}`)));
+      }
+      if (libres > 0) {
+        const x = dx + faits * (L + gap);
+        if (fin) {
+          dessin.appendChild(svg("rect", {x, y: y0, width: L, height: L, fill: "#ffffff"}));
+          dessin.appendChild(svg("rect", {x, y: y0, width: libres * c, height: L, fill: plein}));
+          dessin.appendChild(grille(x, y0, 10));
+          dessin.appendChild(svg("rect", {x, y: y0, width: L, height: L, fill: "none", stroke: trait, "stroke-width": 2.2, "stroke-dasharray": "4 3"}));
+          dessin.appendChild(svg("path", {d: `M${x + libres * c} ${y0}V${y0 + L}`, stroke: trait, "stroke-width": 2.2}));
+        } else {
+          dessin.appendChild(svg("rect", {x, y: y0, width: libres * c, height: L, fill: B32C.fond}));
+          dessin.appendChild(grille(x, y0, libres));
+          dessin.appendChild(svg("rect", {x, y: y0, width: libres * c, height: L, fill: "none", stroke: N, "stroke-width": 2.2}));
+          // les 10 colonnes du prochain carré, soulignées en orange
+          if (libres >= 10) dessin.appendChild(svg("path", {d: `M${x} ${y0 + L + 4}h${10 * c}`, stroke: OR2, "stroke-width": 3, "stroke-linecap": "round"}));
+        }
+      }
+      if (fin && note && noteFin) note.textContent = carte().typo(noteFin);
+    }
+    dessiner();
+    if (!touche) return null;
+    const toucher = () => {
+      if (k >= total) return;
+      k += 1;
+      dessiner();
+      if (k >= total) {
+        dessin.classList.remove("a-toucher");
+        dessin.setAttribute("role", "img");
+        dessin.removeAttribute("tabindex");
+        fini();
+      }
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => k < total, 420);
+  }
+
+  // A3 · le calcul (degrés 2 et 3) : « 2 450 cm² = (2 450 ÷ 100) dm² », le
+  // « 100 » en bleu ; vers plus petit, « 3,7 m² = 3,7 × 100 dm² ». Jamais le
+  // résultat. "montre" : on touche la ligne (comme le calcul de A2).
+  function calculA3(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const l = el("div", `calcul-a2 calcul-a3${mode === "montre" ? " a-toucher" : ""}`);
+    const droite = el("span", "c-b");
+    if (aide.op === "÷") droite.append(texteNoeudA(carte().typo(`(${aide.nombre} ÷ `)), el("span", "g", aide.facteur), texteNoeudA(carte().typo(`) ${aide.unite}`)));
+    else droite.append(texteNoeudA(carte().typo(`${aide.nombre} × `)), el("span", "g", carte().typo(`${aide.facteur} ${aide.unite}`)));
+    l.append(el("span", "c-a", carte().typo(`${aide.gauche} =`)), texteNoeudA(" "), droite);
+    zone.appendChild(l);
+    if (mode !== "montre") return null;
+    let fait = false;
+    const toucher = () => {
+      if (fait) return;
+      fait = true;
+      l.classList.remove("a-toucher");
+      l.removeAttribute("role");
+      l.removeAttribute("tabindex");
+      fini();
+    };
+    l.addEventListener("click", toucher);
+    l.setAttribute("tabindex", "0");
+    l.setAttribute("role", "button");
+    l.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
+  }
+
+  // V1 · un assemblage de cubes de 1 cm en perspective cavalière (fuyantes à
+  // 45°, coefficient 0,6 : le dessus se lit mieux qu'à 0,5). {forme: "pave"
+  // | "escalier", nx (largeur), ny (profondeur), nz (couches)} ; l'escalier :
+  // la couche l a nx − l cubes de large.
+  function couchesV1(a) {
+    return Array.from({length: a.nz}, (_, l) => Array.from({length: a.ny}, () =>
+      Array.from({length: a.nx}, (_, x) => (a.forme === "escalier" ? (x < a.nx - l ? 1 : 0) : 1))));
+  }
+  const K_V1 = 0.6 * Math.SQRT1_2;
+  // Le dessin (un <svg>). `leve[l]` : la hauteur dont la couche l monte ;
+  // `reserve` : la hauteur gardée en haut (le pavé démonté prend sa place
+  // finale dès le début : rien ne bouge) ; `teinte` : les couches soulevées
+  // (turquoise) ; `vert` : la correction ; `cote` : le cube seul, ses cotes.
+  function svgCubes(a, {arete = 22, leve = [], reserve = 0, vert = false, classe = "dessin v1-cubes", titre = null} = {}) {
+    const couches = couchesV1(a);
+    const {nx, ny, nz} = a;
+    const k = K_V1;
+    const coteH = a.cote ? 24 : 0;
+    const W = nx * arete + ny * arete * k + 8 + (a.cote ? 58 : 0);
+    const H = nz * arete + ny * arete * k + reserve + 8 + coteH;
+    const x0 = 4 + (a.cote ? 4 : 0);
+    const ybas = H - 4 - coteH;
+    const P = (x, y, z, l) => [x0 + arete * x + k * arete * y, ybas - arete * z - k * arete * y - (leve[l] || 0)];
+    const s = svg("svg", {viewBox: `0 0 ${W.toFixed(1)} ${H.toFixed(1)}`, class: classe, role: "img",
+      "aria-label": titre || carte().typo(a.cote ? "Un cube de 1 cm de côté" : `Un assemblage de cubes de 1 cm de côté, ${nz} couche${nz > 1 ? "s" : ""}`)});
+    const trait = vert ? VERT : N;
+    const pts = arr => arr.map(p => p.map(v => v.toFixed(2)).join(",")).join(" ");
+    const plein = (l, y, x) => l >= 0 && l < nz && y >= 0 && y < ny && x >= 0 && x < nx && couches[l][y][x];
+    const colle = l => ((leve[l + 1] || 0) - (leve[l] || 0)) === 0;
+    for (let l = 0; l < nz; l += 1) {
+      const leveL = (leve[l] || 0) > 0;
+      const [f, t, d] = vert ? ["#cdeed8", "#e9f8ee", "#9fd9b4"] : leveL ? ["#8fdcd6", "#c9efec", "#5fc4bc"] : ["#ffffff", "#eaf1f8", "#c3d3e3"];
+      for (let y = ny - 1; y >= 0; y -= 1) {
+        for (let x = 0; x < nx; x += 1) {
+          if (!couches[l][y][x]) continue;
+          const A = P(x, y, l, l);
+          const B = P(x + 1, y, l, l);
+          const C = P(x + 1, y, l + 1, l);
+          const D = P(x, y, l + 1, l);
+          const Bp = P(x + 1, y + 1, l, l);
+          const Cp = P(x + 1, y + 1, l + 1, l);
+          const Dp = P(x, y + 1, l + 1, l);
+          const a1 = {stroke: trait, "stroke-width": 1.4, "stroke-linejoin": "round"};
+          if (!(plein(l + 1, y, x) && colle(l))) s.appendChild(svg("polygon", Object.assign({points: pts([D, C, Cp, Dp]), fill: t}, a1)));
+          if (!plein(l, y, x + 1)) s.appendChild(svg("polygon", Object.assign({points: pts([B, Bp, Cp, C]), fill: d}, a1)));
+          if (!plein(l, y - 1, x)) s.appendChild(svg("polygon", Object.assign({points: pts([A, B, C, D]), fill: f}, a1)));
+        }
+      }
+    }
+    if (a.cote) {
+      // (Le cube seul : « 1 cm » sous l'arête du bas et à droite de l'arête de côté.)
+      const [ax, ay] = P(0, 0, 0, 0);
+      const [bx] = P(1, 0, 0, 0);
+      s.appendChild(svg("text", {x: (ax + bx) / 2, y: ay + 20, "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: trait}, carte().typo("1 cm")));
+      const [cx, cy] = P(1, 1, 0, 0);
+      const [, cy2] = P(1, 1, 1, 0);
+      s.appendChild(svg("text", {x: cx + 6, y: (cy + cy2) / 2 + 6, "text-anchor": "start", "font-size": 16, "font-weight": 900, fill: trait}, carte().typo("1 cm")));
+    }
+    return s;
+  }
+  // L'écart entre deux couches soulevées : un peu moins d'une demi-arête
+  // (B4-1a : le pavé démonté débordait de 6 px au petit iPhone).
+  const ECART_V1 = 0.42;
+  // Les hauteurs des couches quand les `s` couches du haut sont soulevées.
+  function leveesV1(nz, s, arete) {
+    return Array.from({length: nz}, (_, l) => Math.max(0, l - (nz - s) + 1) * ECART_V1 * arete);
+  }
+  // V1 · le pavé qui se démonte. "outil", "montre" : chaque toucher soulève
+  // la couche du dessus (puis la suivante…) ; "image" : déjà démonté ;
+  // "correction" : démonté, en vert. Aucun compteur.
+  function cubesV1(zone, a, {mode = "outil", fini = () => {}} = {}) {
+    const arete = 22;
+    const touche = (mode === "outil" || mode === "montre") && a.nz > 1;
+    const boite = el("div", "dessin-boite v1-boite");
+    zone.appendChild(boite);
+    const total = a.nz - 1;
+    let s = touche ? 0 : total;
+    const reserve = total * ECART_V1 * arete;
+    let dessin = null;
+    function dessiner() {
+      // (B4-1c : la réserve reste entière — la retirer à chaque couche soulevée
+      // coupait le haut de la couche du dessus, de toute la hauteur soulevée.)
+      const nouveau = svgCubes(a, {arete, leve: leveesV1(a.nz, s, arete), reserve,
+        vert: mode === "correction", classe: `dessin v1-cubes${a.cote ? " v1-seul" : ""}${touche && s < total ? " a-toucher" : ""}`});
+      if (touche && s < total) { nouveau.setAttribute("role", "button"); nouveau.setAttribute("tabindex", "0"); }
+      if (dessin) dessin.replaceWith(nouveau); else boite.appendChild(nouveau);
+      dessin = nouveau;
+      if (touche && s < total) {
+        dessin.addEventListener("click", toucher);
+        dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+      }
+    }
+    function toucher() {
+      if (s >= total) return;
+      s += 1;
+      dessiner();
+      if (s >= total) fini();
+    }
+    dessiner();
+    if (!touche) {
+      if (mode === "montre") fini();
+      return null;
+    }
+    return enChaine(toucher, () => s < total, 520);
+  }
+  // V1 · la question : l'assemblage, entier, sans réserve.
+  function cubesQuestion(a, lettre = null) {
+    const s = svgCubes(a, {arete: 22, classe: "dessin aire v1-q", titre: lettre ? `L'assemblage ${lettre}` : null});
+    if (!lettre) return s;
+    const f = el("div", "v1-un");
+    f.append(s, el("div", "v1-nom", lettre));
+    return f;
+  }
+  // V1 · comparer : A et B côte à côte, démontés (l'outil) ou en vert (la
+  // correction), la lettre dessous.
+  // (B4-1c : la correction écrit le volume sous chaque lettre, « A : 21 cm³ ».)
+  function deuxV1(zone, [A, B], {mode = "outil", volumes = null} = {}) {
+    const b = el("div", "v1-deux");
+    [["A", A], ["B", B]].forEach(([nom, a], k) => {
+      const arete = 18;
+      const f = el("div", "v1-un");
+      const v = volumes && volumes[k] != null ? carte().typo(`${nom} : ${volumes[k]}${NB}cm³`) : nom;
+      f.append(svgCubes(a, {arete, leve: leveesV1(a.nz, a.nz - 1, arete), reserve: (a.nz - 1) * ECART_V1 * arete, vert: mode === "correction", classe: "dessin v1-cubes v1-petit",
+        titre: `L'assemblage ${nom}, couche par couche`}), el("div", `v1-nom${volumes ? " v1-vol" : ""}`, v));
+      b.appendChild(f);
+    });
+    zone.appendChild(b);
+  }
+
+  // Q5 · le rectangle coté (l'outil : la mesure à convertir écrite
+  // « 3,5 m = … cm » ; la correction : les deux côtés dans la même unité, en
+  // vert). "montre" : on touche, les côtés s'écrivent dans la même unité.
+  // (B4-1c : la largeur du dessin suit la cote de droite — « 2,3 dm = … cm »
+  // sortait du dessin avec une police large ; la correction, un rectangle
+  // plus bas aux cotes plus grandes : le texte tombait à 13,2 px.)
+  const largeTexteQ5 = (t, fs) => 0.68 * fs * String(t).length;
+  function rectQ5(zone, r, {mode = "outil", fini = () => {}} = {}) {
+    const vert = mode === "correction";
+    const [lr, hr, fs] = vert ? [130, 38, 20] : [150, 56, 17];
+    const H = 8 + hr + fs + 10;
+    const boite = el("div", "dessin-boite q5-boite");
+    const dessin = svg("svg", {class: `dessin q5-rect${vert ? " q5-corr" : ""}${mode === "montre" ? " a-toucher" : ""}`, role: mode === "montre" ? "button" : "img",
+      "aria-label": carte().typo(`Un rectangle de ${r.longueur} sur ${r.largeur}`)});
+    // (La même largeur avant et après le toucher de On te montre : rien ne bouge.)
+    const W = Math.ceil(Math.max(vert ? 200 : 240, ...[r, r.apres || r].flatMap(t => [8 + lr + 8 + largeTexteQ5(carte().typo(t.largeur), fs) + 6,
+      8 + largeTexteQ5(carte().typo(t.longueur), fs) + 8])));
+    dessin.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let apres = false;
+    function dessiner() {
+      dessin.textContent = "";
+      const t = apres && r.apres ? r.apres : r;
+      const trait = vert ? VERT : N;
+      dessin.appendChild(svg("rect", {x: 8, y: 8, width: lr, height: hr, fill: vert ? "#e5f7eb" : "#eaf2fd", stroke: trait, "stroke-width": 2.5}));
+      dessin.appendChild(svg("path", {d: "M8 20 L20 20 L20 8", fill: "none", stroke: trait, "stroke-width": 1.5}));
+      dessin.appendChild(svg("text", {x: 8 + lr / 2, y: 8 + hr + fs + 3, "text-anchor": "middle", "font-size": fs, "font-weight": 900, fill: trait}, carte().typo(t.longueur)));
+      dessin.appendChild(svg("text", {x: 8 + lr + 8, y: 8 + hr / 2 + fs * 0.36, "text-anchor": "start", "font-size": fs, "font-weight": 900, fill: trait}, carte().typo(t.largeur)));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const toucher = () => {
+      if (apres) return;
+      apres = true;
+      dessin.classList.remove("a-toucher");
+      dessin.setAttribute("role", "img");
+      dessin.removeAttribute("tabindex");
+      dessiner();
+      fini();
+    };
+    dessin.addEventListener("click", toucher);
+    dessin.setAttribute("tabindex", "0");
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
+  }
+
+  // L'outil des étapes du lot B4-1 : la relation à côté de l'étiquette (A3),
+  // le dessin, la note dessous.
+  function outilB41(zone, question) {
+    const note = el("div", "note", carte().typo(question.noteOutil || ""));
+    if (question.outil === "regroupe-a3") {
+      zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      regroupeA3(zone, question.regroupeA3, {note, noteFin: question.noteFinA3});
+    } else if (question.outil === "calcul-a3") {
+      if (question.relation) zone.appendChild(el("div", "rel petite", carte().typo(question.relation)));
+      if (question.calculA3) calculA3(zone, question.calculA3);
+    } else if (question.outil === "cubes-v1") cubesV1(zone, question.cubesV1);
+    else if (question.outil === "deux-v1") deuxV1(zone, question.deuxV1);
+    else if (question.outil === "rect-q5") rectQ5(zone, question.rectQ5);
+    if (question.noteOutil) zone.appendChild(note);
   }
 
   // ============================================================ les entrées
@@ -4009,6 +4338,11 @@
     if (aide.type === "barre-q3") { const j = barreQ3(zone, aide, f); if (!j) f(); return j; }
     if (aide.type === "planche-q3") { const j = plancheQ3(zone, aide, f); if (!j) f(); return j; }
     if (aide.type === "barre-q4") return barreQ4(zone, aide, {mode: "montre", fini: f});
+    // Lot B4-1 (A3, V1, Q5) : on regroupe, le calcul, le pavé qui se démonte, le rectangle.
+    if (aide.type === "regroupe-a3") return regroupeA3(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "calcul-a3") return calculA3(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "cubes-v1") return cubesV1(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "rect-q5") return rectQ5(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
     return null;
   }
@@ -4184,6 +4518,8 @@
     }
     // Lot B3-2 (A1, A2, C9).
     if (["carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(question.outil)) { outilB32(zone, question); return; }
+    // Lot B4-1 (A3, V1, Q5).
+    if (["regroupe-a3", "calcul-a3", "cubes-v1", "deux-v1", "rect-q5"].includes(question.outil)) { outilB41(zone, question); return; }
     // Lot B3-3 (D3, Q3, Q4).
     if (["aiguilles-d3", "barre-minute", "barre-jour", "axe-sec", "schema-d3", "barre-q3", "barre-q4"].includes(question.outil)) { outilB33(zone, question); return; }
     // Lot B3-1 (R7) : le repère reporté ; le repère compté ; les arrondis.
@@ -4303,6 +4639,13 @@
       zone.appendChild(el("div", "note", carte().typo(question.image[0])));
       return;
     }
+    // Lot B4-1 (V1) : le pavé déjà démonté, et « Je compte une couche, puis
+    // les couches. »
+    if (question.imageV1) {
+      cubesV1(zone, question.imageV1, {mode: "image"});
+      zone.appendChild(el("div", "note", carte().typo(question.image[0])));
+      return;
+    }
     if (question.outil === "reperes-unites") { reperesUnites(zone, question); return; }
     // Lot R1-refonte
     if (question.outil === "carte-repere" || question.outil === "nom-unite") { imageDessinRepere(zone, question); return; }
@@ -4413,5 +4756,6 @@
 
   return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9,
-    trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33});
+    trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33,
+    regroupeA3, calculA3, cubesV1, cubesQuestion, deuxV1, rectQ5});
 });
