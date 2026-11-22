@@ -1216,7 +1216,8 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
       assert.equal(a.represente.outil, "barres");
       // Lot 3a (13/11, choix de Gwenaël) : M1-1 montre le double sur le
       // boulier, les deux 17 déjà poussés (10 | 7 | 10 | 7), rien à pousser.
-      if (cle === "M1-1") assert.deepEqual([...a.manipule.rangees], [10, 7, 10, 7]);
+      // (Lot C3 : la leçon montre 12, un calcul moyen : 10 | 2 | 10 | 2.)
+      if (cle === "M1-1") assert.deepEqual([...a.manipule.rangees], [10, 2, 10, 2]);
       else assert.equal(a.manipule, null);
       const r = CORE.formaterNombre(a.represente.reponse);
       assert.ok(!AIDES.barres(a.represente.image).includes(`>${r}<`), `${cle} : la réponse n'est pas sur l'aide`);
@@ -2938,8 +2939,9 @@ test("modules lot 6 : la barre sur la droite et J'écris — le « ? » reste ju
   assert.deepEqual([f22[0].haut[1].texte, f22[1].haut[1].texte, f22[1].haut[1].trouve, f22[1].haut[0].texte], ["1/2", "2/4", true, "1/4"]);
   // F6-1 (lot 7e, programme du CE2 : 12 parts au plus) : J'écris sur les
   // bandes — un quart coupé en 2, puis la réponse en vert (lignes « 4 × ? = 8 », « 3 × 2 = ? »).
+  // (Lot C3 : J'écris sur 5/6 = □/12, au moins aussi dur que l'exemple.)
   const f61 = CORE.niveauDe("F6-1").niveau.apprends.ecris.dessins;
-  assert.deepEqual(f61.map(d => [d.outil, d.gros, d.bas.texte, Boolean(d.bas.trouve)]), [["barre-droite", 0, "?/8", false], ["barre-droite", 2, "?/8", false], ["barre-droite", 2, "?/8", false], ["barre-droite", 2, "6/8", true]]);
+  assert.deepEqual(f61.map(d => [d.outil, d.gros, d.bas.texte, Boolean(d.bas.trouve)]), [["barre-droite", 0, "?/12", false], ["barre-droite", 2, "?/12", false], ["barre-droite", 2, "?/12", false], ["barre-droite", 2, "10/12", true]]);
   // « Encadrer » (F5-2 depuis le lot « couverture ») : l'entier cherché porte
   // « ? », les unités entières sont des blocs pleins.
   const f53 = CORE.aideDe(lot6("F5-2").find(c => c.lu.entre && c.lu.a === 43 && c.lu.d === 8) || CORE.genererSerie("F5-2", {graine: 1}).find(c => c.lu.entre));
@@ -3391,7 +3393,9 @@ test("lot « couverture » : une deuxième façon sous « À retenir », sur A1-
   // (Lot 6 « programmes 2 », relecture de Codex : les exemples guidés —
   // 50 − 6 (A11-2), 60 + 9 et 61 + 9 (A5-1), 24 × 5 = 12 × 2 × 5 (M10-1),
   // une soustraction (C3-2), 2 < 8/3 < 3 (F5-2).)
-  assert.deepEqual(avec, ["A1-2", "A11-2", "A5-1", "M10-1", "C3-2", "F5-2"], "A1-2 (presque-double), les cinq exemples guidés");
+  // (Lot C3 : « Fraction et quotient », la fraction, c'est une division —
+  // 6/3 = 6 ÷ 3 = 2.)
+  assert.deepEqual(avec, ["A1-2", "A11-2", "A5-1", "M10-1", "C3-2", "F5-2", "F11-2"], "A1-2 (presque-double), les cinq exemples guidés, la fraction-division");
   const a1 = CORE.niveauDe("A1-2").niveau.apprends.autre;
   assert.match(a1.phrase, /passer par le double/);
   // (Lot 3b : sur le calcul du dessin des presque-doubles.)

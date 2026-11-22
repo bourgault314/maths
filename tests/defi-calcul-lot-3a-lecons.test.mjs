@@ -118,9 +118,10 @@ test("les égalités en maths : « 100 = 4 × 25 », puis « 3 × 25 = 75 », un
 
 test("le double sur le rekenrek (M1-1) : les deux nombres déjà poussés, rien à pousser", () => {
   const m = CORE.niveauDe("M1-1").niveau.apprends.manipule;
-  assert.deepEqual([...m.rangees], [10, 7, 10, 7]);
+  // (Lot C3 : la leçon passe de 17, un des plus durs du niveau, à 12.)
+  assert.deepEqual([...m.rangees], [10, 2, 10, 2]);
   assert.deepEqual([...m.gestes], []);
-  assert.deepEqual(m.traces.map(t => [t.apres, espaces(t.texte)]), [[0, "10 + 10 = 20"], [0, "7 + 7 = 14"], [0, "double de 17 = 20 + 14 = 34"]]);
+  assert.deepEqual(m.traces.map(t => [t.apres, espaces(t.texte)]), [[0, "10 + 10 = 20"], [0, "2 + 2 = 4"], [0, "double de 12 = 20 + 4 = 24"]]);
   // À l'entraînement : les doubles jusqu'à 50 au niveau 1 ; ni la moitié, ni les autres niveaux.
   tirages("M1-1").forEach(c => {
     const outil = CORE.manipulationDe(c);

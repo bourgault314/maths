@@ -82,9 +82,10 @@ test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virg
 // (Lot C2 : six niveaux, le double puis la moitié, chacun sa leçon.)
 test("M1 : « Je représente » par étapes dans les trois niveaux (le double comme la moitié)", () => {
   const attendus = {
-    "M1-1": ["double de 17 = 17 + 17", ["10 + 10", "7 + 7", "double de 17"], 34],
+    // (Lot C3 : des calculs moyens — double de 12, double de 38.)
+    "M1-1": ["double de 12 = 12 + 12", ["10 + 10", "2 + 2", "double de 12"], 24],
     "M1-2": ["moitié de 34 = moitié de 30 + moitié de 4", ["moitié de 30", "moitié de 4", "moitié de 34"], 17],
-    "M1-3": ["double de 470 = 2 × 470", ["2 × 400", "2 × 70", "double de 470"], 940],
+    "M1-3": ["double de 38 = 2 × 38", ["2 × 30", "2 × 8", "double de 38"], 76],
     "M1-4": ["moitié de 76 = 70 ÷ 2 + 6 ÷ 2", ["70 ÷ 2", "6 ÷ 2", "moitié de 76"], 38],
     // (Lot 3a, décision 5 : la leçon sur le double, double de 75.)
     "M1-5": ["double de 75 = 2 × 75", ["2 × 70", "2 × 5", "double de 75"], 150],
@@ -224,10 +225,10 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261121-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-2/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-1/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

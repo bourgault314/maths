@@ -132,6 +132,9 @@ async function jouer(page, choisir) {
   let joues = 0;
   for (let tour = 0; tour < 80 && !(await resultat(page)); tour += 1) {
     if (await appel(page, "ecrisEnCours")) { await ecrire(page); continue; }
+    // (Lot C3 : l'exemple résolu d'une écriture jamais montrée ne compte
+    // pas : « À toi → », puis le calcul.)
+    if ((await appel(page, "exempleAffiche")).exemple) { await page.click("#validate"); await pause(page, 600); continue; }
     const e = await appel(page, "entrainement");
     if (!e) break;
     await repondre(page, choisir(e, joues));

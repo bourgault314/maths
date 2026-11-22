@@ -102,14 +102,15 @@ test("J'écris : les morceaux attendus, module par module", () => {
   assert.match(AIDES.dessinerImage(a2[3]), /\+ 76/);
   // M1-3, double de 36 (lot 3a, décision 5 : J'écris sur le double) :
   // 60 sous les deux 30, puis 12 sous les deux 6, puis l'accolade (72).
+  // (Lot C3 : double de 49 — 80, puis 18, puis 98.)
   const m1 = ecris("M1-3").dessins;
   assert.deepEqual(m1.map(d => [d.trouves, d.fini]), [[[], false], [[0], false], [[0, 1], false], [[0, 1], true]]);
   const m1svg = m1.map(AIDES.dessinerImage);
   assert.ok(vertsDe(m1svg[1]) > vertsDe(m1svg[0]) && vertsDe(m1svg[2]) > vertsDe(m1svg[1]), "ce que l'élève trouve s'écrit en vert");
   const compte = (svg, n) => (svg.match(new RegExp(`>${n}<`, "g")) || []).length;
-  assert.deepEqual(m1svg.map(svg => compte(svg, 60)), [0, 1, 1, 1], "2 × 30 = 60 sous les deux 30");
-  assert.deepEqual(m1svg.map(svg => compte(svg, 12)), [0, 0, 1, 1], "2 × 6 = 12 sous les deux 6");
-  assert.deepEqual(m1svg.map(svg => compte(svg, 72)), [0, 0, 0, 1], "la dernière égalité remplit l'accolade");
+  assert.deepEqual(m1svg.map(svg => compte(svg, 80)), [0, 1, 1, 1], "2 × 40 = 80 sous les deux 40");
+  assert.deepEqual(m1svg.map(svg => compte(svg, 18)), [0, 0, 1, 1], "2 × 9 = 18 sous les deux 9");
+  assert.deepEqual(m1svg.map(svg => compte(svg, 98)), [0, 0, 0, 1], "la dernière égalité remplit l'accolade");
   // M1-5 (M1-2 avant le lot C2), double de 75 : 140, puis 10, puis l'accolade (150).
   // (Lot 3a : J'écris sur double de 250 — 400, 100, puis 500.)
   const m12 = ecris("M1-5").dessins.map(AIDES.dessinerImage);

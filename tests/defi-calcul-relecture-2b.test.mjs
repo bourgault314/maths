@@ -212,7 +212,7 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
   assert.equal(titre("A7-1"), "sans passer la dizaine");
   const m82 = CORE.niveauDe("M8-2").niveau.apprends;
   assert.doesNotMatch(JSON.stringify(m82), /coupe/i);
-  assert.equal(m82.represente.consigne.replace(/ /g, " "), "23 × 7 = 20 × 7 + 3 × 7");
+  assert.equal(m82.represente.consigne.replace(/ /g, " "), "28 × 7 = 20 × 7 + 8 × 7"); // (lot C3 : un calcul moyen)
   const m103 = CORE.niveauDe("M10-3").niveau.apprends;
   const dessin = AIDES.dessinerImage(m103.ecris.dessins[m103.ecris.dessins.length - 1]);
   const avant = [...dessin.matchAll(/<text x="([\d.]+)" y="([\d.]+)" text-anchor="end"[^>]*>([^<]*)<\/text>/g)];
@@ -224,14 +224,14 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
 test("les copies pour la page prof, les adresses de cache", async () => {
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_core.js"), SOURCES.core);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(PAGE, /defi_calcul\.css\?v=20261121-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   // Lot 2 « J'apprends en une étape » : le moteur change (20261113-1) ;
   // lot 3a « Une leçon, une méthode » (20261113-3), lot 3b « Chaque sorte
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261121-2/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261121-2/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261120-1/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-1/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

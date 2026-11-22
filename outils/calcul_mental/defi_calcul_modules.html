@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261121-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261122-1">
 <script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
 </head>
 <body>
@@ -312,9 +312,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261121-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261121-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261120-1"></script>
+  <script src="./defi_calcul_core.js?v=20261122-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261122-1"></script>
+  <script src="./defi_calcul_aides.js?v=20261122-1"></script>
   <script>
     (() => {
       "use strict";
@@ -1576,6 +1576,8 @@
         }
         const carte = $("question-card");
         const enJeu = corps.classList.contains("challenge-playing");
+        // (Lot C3 : la place gardée au-dessus du pavé de « À toi » se remesure.)
+        if (carte && carte.classList.contains("a-toi-garde")) { const pave = premierDuPave(); if (pave) pave.style.marginTop = ""; }
         // Le dessin agrandi (grandirDessin) reprend sa taille pour la mesure.
         if (window.innerWidth >= ECHELLE.largeurMin) $("aide").style.zoom = "";
         // En jeu sur un écran de moins de 900 px de haut, la colonne a déjà la
@@ -1628,11 +1630,22 @@
           z = lecon;
           tient(z);
         }
+        // Lot C3 : « À toi » garde la taille de son exemple résolu (la
+        // phrase de méthode prend un peu de place : rien ne bouge).
+        // (Le pavé et la place de la phrase gardés : le même cadre, la même
+        // taille, au pixel près.)
+        const exemple = echelleDeLExemple();
+        const memeCadre = $("answer-feedback").parentElement.style.minHeight !== "";
+        if (exemple !== null && (exemple < z || memeCadre)) {
+          z = exemple;
+          tient(z);
+        }
         corps.classList.remove("mesure-cadre");
         racine.style.setProperty("--echelle", z.toFixed(3));
         if (state.manip) state.manip.mesurer();
         ajusterCalcul();
         grandirDessin();
+        alignerPaveAToi();
         if (window.scrollY !== defilement) window.scrollTo(0, defilement);
       }
 
@@ -1645,6 +1658,38 @@
       // arrive, J'écris fini : rien ne bouge) ; la place de la ligne de
       // retour est gardée quand elle est cachée (Je représente).
       const DESSIN_GRANDI = new WeakMap();
+      // Lot C3 (correctif) : le premier élément du pavé (la touche « , » si
+      // elle est là, sinon les chiffres).
+      function premierDuPave() {
+        const touches = $("touches");
+        return touches && !touches.hidden ? touches : document.querySelector("#question-card > .keypad");
+      }
+      // « À toi », sur ordinateur : son pavé (et « Valider » dessous) se
+      // place là où était celui de l'exemple — un « À toi » sans dessin
+      // garde la place du dessin de l'exemple. Rien ne bouge.
+      function alignerPaveAToi() {
+        const carte = $("question-card");
+        const pave = premierDuPave();
+        if (pave) pave.style.marginTop = "";
+        if (!carte.classList.contains("a-toi-garde") || window.innerWidth < ECHELLE.largeurMin || !pave) return;
+        const serie = state.serie;
+        const exemple = serie && serie.questions ? serie.questions[serie.index - 1] : null;
+        if (!exemple || !exemple.echelle || typeof exemple.echelle.pave !== "number") return;
+        if (Math.abs(echelleCourante() - exemple.echelle.z) > 1e-3) return;
+        const ecart = exemple.echelle.pave - pave.getBoundingClientRect().top;
+        if (ecart <= 0.5) return;
+        const boite = carte.getBoundingClientRect();
+        const zoom = boite.height / (carte.offsetHeight || 1) || 1;
+        const avant = parseFloat(getComputedStyle(pave).marginTop) || 0;
+        let marge = avant + ecart / zoom;
+        pave.style.marginTop = `${marge}px`;
+        // (Jamais au prix d'un cadre qui déborde.)
+        const trop = carte.scrollHeight - carte.clientHeight;
+        if (trop > 0) {
+          marge -= trop;
+          pave.style.marginTop = marge > avant ? `${marge}px` : "";
+        }
+      }
       function grandirDessin() {
         const aide = $("aide");
         const carte = $("question-card");
@@ -1657,13 +1702,32 @@
           || !document.body.classList.contains("challenge-playing") || !carte.classList.contains("aide-image")) { aide.style.zoom = ""; return; }
         const fenetre = cleFenetre();
         const garde = DESSIN_GRANDI.get(serie);
-        const deborde = () => carte.scrollHeight > carte.clientHeight;
+        // (Lot C3, correctif : « À toi » ne dépasse pas le cadre de son
+        // exemple tant qu'on n'a pas répondu.)
+        const cible = carte.classList.contains("a-toi-garde") && !state.waitingForContinue ? parseFloat(carte.style.minHeight) || 0 : 0;
+        const deborde = () => carte.scrollHeight > carte.clientHeight || (cible > 0 && parseFloat(getComputedStyle(carte).height) > cible + 1);
         if (garde && garde.index === serie.index && garde.fenetre === fenetre) {
-          aide.style.zoom = garde.f > 1 ? String(garde.f) : "";
+          aide.style.zoom = garde.f !== 1 ? String(garde.f) : "";
           if (!deborde()) return;
         }
         aide.style.zoom = "";
-        if (deborde()) { DESSIN_GRANDI.set(serie, {index: serie.index, fenetre, f: 1}); return; }
+        if (deborde()) {
+          // Lot C3 (correctif) : à la plus petite échelle, un cadre qui
+          // déborde encore (petit écran d'ordinateur, 1366 × 657 : une
+          // pastille « Nouveau » ou « À toi » de plus) fait rapetisser le
+          // dessin, jamais le calcul ni le pavé ; le dessin garde 56 px de
+          // haut au moins, comme au téléphone.
+          const haut = image.getBoundingClientRect().height || 1;
+          const plancher = Math.min(1, ECHELLE.imageTelephone / haut);
+          let f = 1;
+          for (let k = 0.98; k >= plancher - 1e-9 && deborde(); k -= 0.02) {
+            f = Math.round(k * 100) / 100;
+            aide.style.zoom = String(f);
+          }
+          if (f === 1) aide.style.zoom = "";
+          DESSIN_GRANDI.set(serie, {index: serie.index, fenetre, f});
+          return;
+        }
         // La largeur : celle de la carte, moins ses marges.
         const style = window.getComputedStyle(carte);
         const place = carte.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -1726,6 +1790,19 @@
       }
       // La taille de la leçon pour l'écran qui se mesure (`z` : la sienne,
       // seul) ; null hors d'une leçon.
+      // Lot C3 : l'échelle de l'exemple résolu qui précède le calcul à
+      // l'écran (« À toi »), ou de l'exemple à l'écran, dans la même
+      // fenêtre ; sinon null.
+      function echelleDeLExemple() {
+        const serie = state.serie;
+        if (!serie || !Array.isArray(serie.questions) || $("play").hidden || window.innerWidth <= ECHELLE.telephone) return null;
+        const question = serie.questions[serie.index];
+        // (L'exemple lui-même garde l'échelle trouvée à son affichage.)
+        if (question && question.exemple && question.echelle && question.echelle.fenetre === cleFenetre()) return question.echelle.z;
+        const avant = serie.questions[serie.index - 1];
+        if (!question || !question.aToi || !avant || !avant.exemple || !avant.echelle || avant.echelle.fenetre !== cleFenetre()) return null;
+        return avant.echelle.z;
+      }
       function echelleDeLecon(z) {
         const lecon = state.lecon;
         if (!lecon || state.serie !== lecon.serie || window.innerWidth <= ECHELLE.telephone) return null;
@@ -4155,10 +4232,28 @@
 
       function renderQuestion() {
         const serie = state.serie;
+        // Lot C3 : une écriture jamais montrée — d'abord son exemple résolu.
+        poserExemple(serie);
         const question = serie.questions[serie.index];
         // L'image d'une correction s'en va : le cadre reprend sa taille.
         const avecAide = !$("aide").hidden;
         retirerAide();
+        $("question-card").classList.remove("dc-exemple", "sans-pave");
+        const zoneBulle = $("answer-feedback").parentElement;
+        zoneBulle.style.minHeight = "";
+        $("question-card").style.minHeight = "";
+        $("question-card").classList.remove("a-toi-garde");
+        $("touches").style.marginTop = "";
+        document.querySelector("#question-card > .keypad").style.marginTop = "";
+        if (question.exemple) { renderExemple(serie, question); return; }
+        if (question.aToi) {
+          const exemple = serie.questions[serie.index - 1];
+          if (exemple && exemple.exemple && exemple.echelle && exemple.echelle.bulle && exemple.echelle.fenetre === cleFenetre() && window.innerWidth > ECHELLE.telephone) zoneBulle.style.minHeight = `${exemple.echelle.bulle}px`;
+          if (exemple && exemple.exemple && exemple.echelle && exemple.echelle.hauteur && exemple.echelle.fenetre === cleFenetre() && window.innerWidth >= ECHELLE.largeurMin) {
+            $("question-card").style.minHeight = `${exemple.echelle.hauteur}px`;
+            $("question-card").classList.add("a-toi-garde");
+          }
+        }
         if (serie.genre === "test") {
           renderEscalier();
           majBarre({compte: `Marche ${serie.marche + 1} sur ${serie.marches.length}`, pastille: "Tu connais déjà\u00a0?", avance: (serie.marche + serie.courante.length / serie.aJouer.length) / serie.marches.length * 100});
@@ -4202,10 +4297,17 @@
           $("annonce").textContent = "Un autre, pour vérifier.";
           $("annonce").hidden = false;
         }
+        // Lot C3 : le calcul qui suit un exemple résolu (« À toi : … »).
+        if (question.aToi) {
+          $("annonce").textContent = question.annonceAToi;
+          $("annonce").hidden = false;
+        }
         if (estEntrainement(serie)) {
           // Une écriture nouvelle est annoncée (« Nouveau : la case est devant »).
-          const precedente = serie.index ? serie.questions[serie.index - 1].calcul.forme : null;
-          const vue = serie.questions.slice(0, serie.index).some(q => q.calcul.forme === question.calcul.forme);
+          // (Lot C3 : un exemple résolu n'est pas un calcul de la série.)
+          const avant = serie.questions.slice(0, serie.index).filter(q => !q.exemple);
+          const precedente = avant.length ? avant[avant.length - 1].calcul.forme : null;
+          const vue = avant.some(q => q.calcul.forme === question.calcul.forme);
           const annonce = $("annonce");
           let nouveau = precedente !== null && !vue;
           // Lot 3b « Chaque sorte annoncée » : une sorte nouvelle qui change
@@ -4213,8 +4315,11 @@
           // colonnes. ») est annoncée, et son dessin revient, même au premier
           // calcul de J'apprends quand la leçon montrait une autre sorte. Son
           // texte passe avant celui d'une écriture nouvelle.
-          const sorteNouvelle = nouveauteNouvelle(serie, question);
-          if (sorteNouvelle) {
+          // Lot C3 : « À toi », après l'exemple résolu — son annonce est déjà
+          // écrite, et son dessin revient (le rappel : juste, il ne compte pas).
+          const sorteNouvelle = question.aToi ? "" : nouveauteNouvelle(serie, question);
+          if (question.aToi) nouveau = true;
+          else if (sorteNouvelle) {
             annonce.textContent = sorteNouvelle;
             annonce.hidden = false;
             nouveau = true;
@@ -4229,19 +4334,151 @@
           montrerOutil(question, {nouveau});
           if (serie.genre === "apprends") majMomentApprends(question);
         }
+        // Lot C3 (correctif) : « À toi » sans dessin, après un exemple qui en
+        // avait un, garde les tailles d'un écran avec dessin (le pavé, le
+        // calcul) ; la place du dessin reste vide, le pavé ne monte pas.
+        const avantAToi = question.aToi ? serie.questions[serie.index - 1] : null;
+        const garde = Boolean(avantAToi && avantAToi.exemple && avantAToi.echelle && avantAToi.echelle.aideImage);
+        if (garde) $("question-card").classList.add("aide-image");
         $("question-card").scrollTop = 0;
         $("expression").focus?.({preventScroll: true});
         // La touche « , » qui arrive ou qui s'en va, l'outil qui vient ou qui
         // part : le cadre se remesure.
         const virgule = !$("touches").hidden;
         // Au téléphone, toujours : une annonce « Nouveau : … » prend aussi de la place.
-        if (avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule) || window.innerWidth <= ECHELLE.telephone) ajusterEchelle();
+        if (garde || avecAide || !$("aide").hidden || (serie.virgule !== undefined && virgule !== serie.virgule) || window.innerWidth <= ECHELLE.telephone) ajusterEchelle();
         serie.virgule = virgule;
         // Relecture 2b : le calcul se remesure une fois l'écran posé (l'image,
         // l'annonce, l'échelle) ; sinon il rapetissait à la première touche.
         ajusterCalcul();
         // Le temps d'un calcul : de son affichage à « Valider ». Jamais montré.
         serie.debut = performance.now();
+      }
+
+      // Lot C3 « les exemples résolus » (choix de Gwenaël du 20/11/2026,
+      // planche validée le 22/11) : à la première apparition d'une écriture
+      // que la leçon n'a jamais montrée (`CORE.methodeExemple`), un écran
+      // « Un exemple » passe AVANT son calcul — un calcul de la même écriture,
+      // un cran plus facile (pris dans la réserve tirée avec la série), fait,
+      // son dessin révélé, une phrase de méthode ; puis « À toi » et le calcul
+      // prévu. Il ne compte pas. À l'entraînement (J'apprends, Je m'entraîne,
+      // Je m'entraîne encore) ; dans Mes calculs du jour, au premier retour
+      // d'une compétence entrée par un test (sans J'apprends) ; jamais au
+      // test. Un exemple par écriture et par série, jamais deux de suite.
+      // Rend vrai quand l'exemple est posé (à `serie.index`).
+      function poserExemple(serie) {
+        if (!serie || !Array.isArray(serie.questions)) return false;
+        const question = serie.questions[serie.index];
+        if (!question || question.exemple || question.aToi || question.deuxieme || question.retour) return false;
+        // (Les crochets de test qui posent un calcul précis à l'écran — les
+        // planches des lots d'avant C3 — le veulent sans son exemple.)
+        if (serie.sansExemple) return false;
+        const jour = serie.genre === "jour";
+        if (!jour && !estEntrainement(serie)) return false;
+        const calcul = question.calcul;
+        const cle = jour ? `${calcul.module}-${calcul.niveau}` : `${serie.module}-${serie.niveau}`;
+        if (!CORE.methodeExemple(calcul, cle)) return false;
+        const ecriture = `${cle}|${calcul.forme}`;
+        serie.exemplesVus = serie.exemplesVus || [];
+        if (serie.exemplesVus.includes(ecriture)) return false;
+        if (jour) {
+          if (MODE_PROF || !PARCOURS.premierRetourSansLecon(parcours, calcul.module, calcul.niveau)) return false;
+        } else if (serie.questions.slice(0, serie.index).some(q => !q.exemple && q.calcul.forme === calcul.forme)) return false;
+        const precedente = serie.questions[serie.index - 1];
+        if (precedente && precedente.exemple) return false;
+        // L'exemple est pris dans la réserve tirée avec la série, ou parmi ses
+        // calculs pas encore joués (il quitte alors la suite : jamais deux
+        // fois le même) ; jamais un calcul déjà joué ni un de la leçon.
+        const trouve = CORE.niveauDe(cle);
+        const suite = jour ? [] : serie.questions.slice(serie.index + 1).filter(q => !q.exemple && !q.retour).map(q => q.calcul);
+        const exclure = serie.questions.slice(0, serie.index + 1).map(q => q.calcul.texte).concat(trouve && trouve.niveau.apprends ? trouve.niveau.apprends.textes : []);
+        const exemple = CORE.exempleAvant(calcul, {candidats: jour ? [] : (serie.reserve || []).concat(suite), exclure, graine: CORE.graineDe(String(calcul.cle))});
+        const methode = exemple ? CORE.methodeExemple(exemple, cle) : null;
+        if (!methode) return false;
+        const dansLaSuite = serie.questions.findIndex((q, rang) => rang > serie.index && q.calcul === exemple);
+        if (dansLaSuite >= 0) serie.questions.splice(dansLaSuite, 1);
+        // L'annonce d'aujourd'hui : la sorte nouvelle, sinon l'écriture.
+        const annonce = (jour ? (CORE.nouveauteDe(calcul, cle) || {}).texte : nouveauteNouvelle(serie, question)) || CORE.annonceDe(calcul);
+        if (Array.isArray(serie.reserve)) serie.reserve = serie.reserve.filter(autre => autre !== exemple);
+        serie.exemplesVus.push(ecriture);
+        question.aToi = true;
+        question.annonceAToi = String(annonce).replace(/^Nouveau/, "À toi");
+        serie.questions.splice(serie.index, 0, {calcul: exemple, retour: false, exemple: true, methode, annonce});
+        return true;
+      }
+      // L'écran « Un exemple » : la carte de calcul habituelle, corrigée — la
+      // réponse écrite en vert, le dessin révélé, la phrase de méthode dans la
+      // bulle ; le pavé et « Je ne sais pas » gardent leur place, invisibles ;
+      // « À toi → » à la place de « Valider ». Rien n'est noté.
+      function renderExemple(serie, question) {
+        const calcul = question.calcul;
+        $("question-count").textContent = "Un exemple";
+        $("question-card").classList.remove("no-skip");
+        state.effacerAuProchain = false;
+        renderExpression(calcul.texte);
+        renderTouches(calcul.module, calcul.texte, calcul.niveau);
+        clearAnswerFeedback();
+        $("annonce").textContent = question.annonce;
+        $("annonce").hidden = false;
+        state.answer = CORE.reponseEcrite(calcul);
+        const etapes = CORE.dessinAEtapesDe(calcul);
+        if (etapes) {
+          question.dessinEtapes = etapes;
+          question.etape = etapes.etapes.length;
+          $("question-card").classList.add("ecrit");
+          renderEtapesQuestion(question);
+        } else renderInlineAnswer("is-correct");
+        const image = CORE.imageDe(calcul);
+        // (La touche « , » garde sa place, invisible, comme le pavé : « À toi »
+        // la montrera.)
+        const virgule = !$("touches").hidden;
+        if (image) montrerImage(image);
+        $("touches").hidden = !virgule;
+        const bulle = $("answer-feedback");
+        bulle.className = "dc-bulle dc-methode";
+        AIDES.ecrireTexte(bulle, question.methode);
+        setAnswerControlsEnabled(false);
+        $("validate").textContent = "À toi\u00a0→";
+        $("question-card").classList.add("dc-exemple");
+        state.waitingForContinue = true;
+        state.correctionAfficheeA = 0;
+        $("question-card").scrollTop = 0;
+        // (J'apprends : le moment et la barre restent ceux de la série.)
+        if (serie.genre === "apprends") {
+          majMomentApprends({calcul, outil: serie.outil});
+          $("question-count").textContent = "Un exemple";
+        }
+        ajusterEchelle();
+        // Un petit écran d'ordinateur, à l'échelle la plus petite : si c'est
+        // la phrase qui fait déborder le cadre (pas le calcul lui-même), le
+        // pavé invisible laisse sa place (l'échelle ne change pas : « À toi »
+        // garde la même ; le bouton reste en bas du cadre).
+        const carte = $("question-card");
+        const deborde = () => carte.scrollHeight - carte.clientHeight;
+        const ordinateur = window.innerWidth > ECHELLE.telephone;
+        if (ordinateur && deborde() > 1) {
+          const phrase = [...bulle.childNodes];
+          bulle.className = "dc-bulle";
+          bulle.replaceChildren();
+          const sansPhrase = deborde();
+          bulle.className = "dc-bulle dc-methode";
+          bulle.replaceChildren(...phrase);
+          if (deborde() > sansPhrase + 1) carte.classList.add("sans-pave");
+        }
+        question.echelle = {z: parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--echelle")) || 1, fenetre: cleFenetre()};
+        // Le cadre entier, le pavé à sa place : « À toi » garde la hauteur de
+        // la phrase (le dessin et le bouton ne bougent pas).
+        if (ordinateur && !carte.classList.contains("sans-pave") && deborde() <= 1) question.echelle.bulle = parseFloat(getComputedStyle(bulle.parentElement).height) || 0;
+        // (Et la hauteur de son cadre : « À toi » la garde, son dessin ne la
+        // dépasse pas — le pavé et « Valider » ne bougent pas.)
+        question.echelle.aideImage = carte.classList.contains("aide-image");
+        if (window.innerWidth >= ECHELLE.largeurMin) {
+          question.echelle.hauteur = parseFloat(getComputedStyle(carte).height) || 0;
+          const pave = premierDuPave();
+          if (pave && pave.getClientRects().length) question.echelle.pave = pave.getBoundingClientRect().top;
+        }
+        ajusterCalcul();
+        $("validate").focus?.({preventScroll: true});
       }
 
       // Lot 3b : le texte de la sorte nouvelle d'un calcul d'entraînement, ou
@@ -4252,7 +4489,7 @@
         if (!nouveaute) return "";
         const lecon = serie.lecon && serie.lecon.calculs ? serie.lecon.calculs.montre : null;
         if (!serie.index && !lecon) return "";
-        const vues = serie.questions.slice(0, serie.index).map(q => q.calcul);
+        const vues = serie.questions.slice(0, serie.index).filter(q => !q.exemple).map(q => q.calcul);
         if (lecon) vues.push(lecon);
         return vues.some(calcul => (CORE.nouveauteDe(calcul, cle) || {}).cle === nouveaute.cle) ? "" : nouveaute.texte;
       }
@@ -4260,6 +4497,12 @@
       function avancerSerie() {
         const serie = state.serie;
         clearAutoAdvance();
+        // Lot C3 : après l'exemple résolu, « À toi » — rien n'a compté.
+        if (serie.questions[serie.index] && serie.questions[serie.index].exemple) {
+          serie.index += 1;
+          renderQuestion();
+          return;
+        }
         if (serie.genre === "test") { avancerTest(); return; }
         // Lot F4 : le test de palier s'arrête au 2e faux.
         if (serie.genre === "palier") {
@@ -4296,8 +4539,10 @@
         if (!estEntrainement(serie) || serie.index + 1 < serie.questions.length) return;
         const maximum = serie.genre === "rattrape" ? PARCOURS.SEUILS.rattrapage.maximum
           : serie.genre === "apprends" ? PARCOURS.SEUILS.apprends.maximum : PARCOURS.SEUILS.entraine.maximum;
-        if (serie.questions.length >= maximum) return;
-        const deja = serie.questions.map(question => question.calcul);
+        // (Lot C3 : un exemple résolu ne compte pas dans le nombre de calculs.)
+        const joues = serie.questions.filter(question => !question.exemple).length;
+        if (joues >= maximum) return;
+        const deja = serie.questions.filter(question => !question.exemple).map(question => question.calcul);
         // (Jamais un calcul de la leçon, comme au premier tirage.)
         const trouve = CORE.niveauDe(`${serie.module}-${serie.niveau}`);
         const exclure = trouve && trouve.niveau.apprends ? trouve.niveau.apprends.textes : [];
@@ -4305,7 +4550,7 @@
         // Lot C1 : on ne repart pas du plus facile — la suite d'une série
         // neuve (le plus dur du niveau), sans ses 9 premiers.
         const suite = encore.slice(encore.fenetre || 0);
-        const reprendre = (suite.length ? suite : encore.length ? encore : deja).slice(0, maximum - serie.questions.length);
+        const reprendre = (suite.length ? suite : encore.length ? encore : deja).slice(0, maximum - joues);
         serie.questions.push(...reprendre.map(calcul => ({calcul, retour: false})));
         serie.total = serie.questions.length;
       }
@@ -5264,6 +5509,7 @@
               serie.questions = [vise, ...serie.questions.filter(q => q !== vise)];
               serie.index = 0;
               serie.outil = "image";
+              serie.sansExemple = true;
               renderQuestion();
               ajusterEchelle();
               return {texte: vise.calcul.texte, reponse: vise.calcul.reponse, etapes: CORE.dessinAEtapesDe(vise.calcul).etapes.map(e => ({texte: e.texte, reponse: e.reponse}))};
@@ -5301,6 +5547,7 @@
               serie.index = avant.length;
               serie.outil = outil;
               serie.reponses = avant.map(q => ({calcul: q.calcul, juste: true, outil, rappel: false}));
+              serie.sansExemple = true;
               renderQuestion();
               ajusterEchelle();
               return true;
@@ -5317,14 +5564,82 @@
               let vise = null;
               // (Lot C1 : la série commence par les plus faciles ; le calcul
               // cherché peut n'être que dans sa réserve.)
-              for (let graine = 1; graine <= 400 && !vise; graine += 1) { const s = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}); vise = [...s, ...(s.reserve || [])].find(c => c.texte === texte) || null; }
+              // (Lot C3 : les espaces du texte, insécables ou non, comptent pareil.)
+              const memeTexte = c => String(c.texte).replace(/\s/g, " ") === String(texte).replace(/\s/g, " ");
+              for (let graine = 1; graine <= 400 && !vise; graine += 1) { const s = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}); vise = [...s, ...(s.reserve || [])].find(memeTexte) || null; }
               if (!vise) return false;
-              serie.questions = [{calcul: vise, retour: false}, ...serie.questions.filter(q => q.calcul.texte !== texte)];
+              serie.questions = [{calcul: vise, retour: false}, ...serie.questions.filter(q => !memeTexte(q.calcul))];
               serie.index = 0;
               serie.outil = outil;
+              serie.sansExemple = true;
               renderQuestion();
               ajusterEchelle();
               return true;
+            },
+            // Lot C3 : l'entraînement de J'apprends d'un niveau, un calcul de
+            // l'écriture de la leçon déjà fait, puis le calcul donné par son
+            // texte (une écriture que la leçon ne montre pas) : l'exemple
+            // résolu passe avant lui. Rend l'exemple posé ({texte, methode,
+            // aToi}), ou {texte: null}. Rien n'est enregistré.
+            aToi: (id, n, texte, outil = "aucun") => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve || !trouve.niveau.apprends) return false;
+              state.seance = {jouees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};
+              state.origine = "seance";
+              commencerPratique({module: id, niveau: n, base: trouve.niveau.apprends});
+              const serie = state.serie;
+              const memeTexte = c => String(c.texte).replace(/\s/g, " ") === String(texte).replace(/\s/g, " ");
+              let vise = null;
+              for (let graine = 1; graine <= 400 && !vise; graine += 1) { const s = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}); vise = [...s, ...(s.reserve || [])].find(memeTexte) || null; }
+              if (!vise) return false;
+              const forme = trouve.niveau.apprends.calculs.montre.forme;
+              const avant = serie.questions.find(q => q.calcul.forme === forme && !memeTexte(q.calcul)) || serie.questions[0];
+              serie.questions = [avant, {calcul: vise, retour: false}, ...serie.questions.filter(q => q !== avant && !memeTexte(q.calcul))];
+              serie.index = 1;
+              serie.outil = outil;
+              serie.reponses = [{calcul: avant.calcul, juste: true, outil, rappel: false}];
+              renderQuestion();
+              ajusterEchelle();
+              const q = state.serie.questions[state.serie.index];
+              return q.exemple ? {texte: q.calcul.texte, methode: q.methode, aToi: state.serie.questions[state.serie.index + 1].calcul.texte} : {texte: null};
+            },
+            // Lot C3 : Mes calculs du jour d'une seule compétence, son calcul
+            // donné par son texte, quand la compétence est entrée il y a
+            // quelques jours — par le test (`entree` « test » : la marche la
+            // plus haute, elle revient aujourd'hui) ou par J'apprends
+            // (« apprends » : déjà revenue une fois). La progression de la
+            // page est remplacée (rien n'est envoyé avant une réponse).
+            jour: (id, n, texte, entree = "test") => {
+              const trouve = CORE.niveauDe(`${id}-${n}`);
+              if (!trouve) return false;
+              const memeTexte = c => String(c.texte).replace(/\s/g, " ") === String(texte).replace(/\s/g, " ");
+              let vise = null;
+              for (let graine = 1; graine <= 400 && !vise; graine += 1) { const s = CORE.genererSerie(`${id}-${n}`, {graine, genre: "entraine", total: 25}); vise = [...s, ...(s.reserve || [])].find(memeTexte) || null; }
+              if (!vise) return false;
+              const aujourdhui = jourCourant();
+              const delai = PARCOURS.delaiDeBoite(PARCOURS.SEUILS.revision.test);
+              let p = PARCOURS.creerParcours();
+              if (entree === "test") {
+                const niveaux = Array.from({length: n}, (_, i) => ({niveau: i + 1, justes: 3, total: 3}));
+                p = PARCOURS.appliquerTest(p, {module: id, marche: n, niveaux}, {aujourdhui: PARCOURS.ajouterJours(aujourdhui, -delai)}).parcours;
+              } else {
+                const reponses = Array.from({length: 9}, () => ({juste: true, outil: "aucun"}));
+                p = PARCOURS.appliquerSerie(p, {module: id, niveau: n, genre: "apprends", reponses, causes: {}}, {aujourdhui: PARCOURS.ajouterJours(aujourdhui, -4)}).parcours;
+                p = PARCOURS.appliquerRetour(p, {module: id, niveau: n, juste: true, ms: 3000, type: "P", cause: 0}, {aujourdhui: PARCOURS.ajouterJours(aujourdhui, -3)}).parcours;
+              }
+              parcours = p;
+              state.seance = {jouees: [], etape: {type: "jour", numero: 1, total: 4}};
+              demarrerSerie({genre: "jour", total: 1, questions: [{calcul: vise, retour: false}], mouvements: [], sus: []}, "seance");
+              const q = state.serie.questions[state.serie.index];
+              return {exemple: Boolean(q.exemple), sansLecon: PARCOURS.premierRetourSansLecon(parcours, id, n)};
+            },
+            // Lot C3 : l'écran affiché est-il un exemple résolu ? Ce que la
+            // série en sait (pour les tests d'écran).
+            exempleAffiche: () => {
+              const serie = state.serie;
+              const q = serie && serie.questions ? serie.questions[serie.index] : null;
+              return q ? {exemple: Boolean(q.exemple), aToi: Boolean(q.aToi), texte: q.calcul.texte, reponses: (serie.reponses || []).length,
+                annonce: $("annonce").hidden ? "" : $("annonce").textContent, compte: $("question-count").textContent, bouton: $("validate").textContent} : null;
             },
             // Lot F4 : J'apprends d'un niveau, repris au dessin (1) ou sans
             // aide (2), comme le lendemain d'un arrêt — dans une séance.

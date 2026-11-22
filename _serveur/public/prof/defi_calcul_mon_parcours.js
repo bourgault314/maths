@@ -993,6 +993,37 @@
     return fiche && Array.isArray(fiche.paliers) ? entier(fiche.paliers[niveau - 1], 0, 9) : fiche ? entier(fiche.palier, 0, 9) : 0;
   }
 
+  // Lot C3 « les exemples résolus » (22/11/2026) : une compétence entrée par
+  // un test (« Tu connais déjà ? » ou le test de palier), donc sans
+  // J'apprends, et qui n'est pas encore revenue depuis — son premier retour
+  // dans Mes calculs du jour montre un exemple résolu avant une écriture que
+  // la leçon montre (la page sait laquelle). Aucune donnée nouvelle : tant
+  // qu'elle n'est pas revenue, sa boîte et son échéance sont celles de son
+  // entrée. La marche la plus haute d'un test entre en boîte 3, sans date
+  // « sue », et revient 3 jours après son entrée ; les marches en dessous
+  // et le test de palier, en boîte 4, sues le jour de leur entrée, reviennent
+  // 7 à 13 jours après. Une compétence entrée par J'apprends entre en boîte
+  // 2 ; un retour (juste ou faux) change sa boîte ou son échéance : rien de
+  // tout cela ne ressemble plus à une entrée.
+  function premierRetourSansLecon(parcours, id, niveau) {
+    if (!parcours || !parcours.modules || !Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return false;
+    const ligne = parcours.modules[id];
+    const index = Number(niveau) - 1;
+    if (!ligne || !Array.isArray(ligne.b) || !(index >= 0 && index < NIVEAUX[id])) return false;
+    const boite = ligne.b[index];
+    const entree = dateOuNull(ligne.d && ligne.d[index]);
+    const echeance = dateOuNull(ligne.e && ligne.e[index]);
+    const sue = dateOuNull(ligne.s && ligne.s[index]);
+    if (!entree || !echeance) return false;
+    const ecart = ecartJours(entree, echeance);
+    if (boite === SEUILS.revision.test) return !sue && ecart === delaiDeBoite(SEUILS.revision.test);
+    if (boite === SEUILS.revision.dessous) {
+      const delai = delaiDeBoite(SEUILS.revision.dessous);
+      return sue === entree && ecart >= delai && ecart < delai + SEUILS.palier.etale;
+    }
+    return false;
+  }
+
   function typeDe(carte, id, niveau) {
     const fiche = ficheCarte(carte, id);
     return fiche && Array.isArray(fiche.types) && fiche.types[niveau - 1] === "F" ? "F" : "P";
@@ -3121,6 +3152,8 @@
     parcoursConstruit,
     palierDe,
     typeDe,
+    // Lot C3 : le premier retour d’une compétence entrée sans J’apprends.
+    premierRetourSansLecon,
     rouges,
     estDeCote,
     aVoirEnClasse,

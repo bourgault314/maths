@@ -67,7 +67,7 @@ test("lot 7e : « Fractions égales », niveau 1 — 12 parts au plus, sur les b
   assert.ok(f61.some(c => c.forme === "multiplier-gauche" && /^□\/\d+ = \d+\/\d+$/.test(c.texte)), "l'écriture du programme : ?/8 = 1/2");
   f61.forEach(c => assert.equal(CORE.aideDe(c).outil, "barre-droite", c.texte));
   const a = CORE.niveauDe("F6-1").niveau.apprends;
-  assert.equal(net(a.ecris.consigne), "3/4 = (3 × 2)/(4 × 2)");
+  assert.equal(net(a.ecris.consigne), "5/6 = (5 × 2)/(6 × 2)"); // (lot C3 : J'écris au moins aussi dur que l'exemple)
   assert.ok(a.ecris.dessins.every(d => d.outil === "barre-droite"));
   // Les 1/4 = □/24 et 3/5 = □/20 d’avant sont au niveau 2 (« multiplier »), avec leur annonce.
   // (Correctif « programmes 2 » : au CM2 tout dépasse 20 parts — le schéma

@@ -54,7 +54,8 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
 test("la page annonce une sorte nouvelle, même au premier calcul après la leçon, et fait revenir le dessin", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
   assert.match(page, /function nouveauteNouvelle\(serie, question\)/);
-  assert.match(page, /const sorteNouvelle = nouveauteNouvelle\(serie, question\);\s*if \(sorteNouvelle\) \{\s*annonce\.textContent = sorteNouvelle;\s*annonce\.hidden = false;\s*nouveau = true;/);
+  // (Lot C3 : « À toi », après un exemple résolu, a déjà son annonce.)
+  assert.match(page, /const sorteNouvelle = question\.aToi \? "" : nouveauteNouvelle\(serie, question\);\s*if \(question\.aToi\) nouveau = true;\s*else if \(sorteNouvelle\) \{\s*annonce\.textContent = sorteNouvelle;\s*annonce\.hidden = false;\s*nouveau = true;/);
   assert.match(page, /if \(lecon\) vues\.push\(lecon\);/);
 });
 
@@ -132,7 +133,7 @@ test("niveaux « par cœur » : À retenir avec son schéma, puis « Ma carte à
     assert.ok(schema, cle);
     assert.ok(AIDES.dessinerImage(schema).startsWith("<svg"), cle);
   });
-  assert.deepEqual([...CORE.schemaParCoeur(CORE.niveauDe("M1-1").niveau.apprends).rangees], [10, 7, 10, 7]);
+  assert.deepEqual([...CORE.schemaParCoeur(CORE.niveauDe("M1-1").niveau.apprends).rangees], [10, 2, 10, 2]); // (lot C3 : 12, plus 17)
   assert.deepEqual(CORE.schemaParCoeur(CORE.niveauDe("A2-2").niveau.apprends).paires.map(p => [...p]), [[40, 60]]);
 });
 

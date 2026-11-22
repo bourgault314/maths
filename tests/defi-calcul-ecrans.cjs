@@ -370,9 +370,22 @@ const manipulationDuCalcul = page => page.evaluate(() => {
   return m ? {outil: m.outil, depart: m.depart, gestes: m.gestes, decalage: m.decalage} : null;
 });
 
-// Un calcul d'entraînement : on manipule si l'outil est à manipuler, puis on
-// répond juste (ou faux). Attend la suite.
+// Lot C3 : avant la première apparition d'une écriture jamais montrée,
+// l'écran « Un exemple » (le calcul fait, « À toi → ») ne compte pas : on le
+// passe, et le calcul « À toi » qui suit est celui qu'on joue.
+async function passerExemple(page) {
+  const ex = await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.exempleAffiche());
+  if (!ex || !ex.exemple) return false;
+  assert.equal(ex.bouton, "À toi\u00a0→", "l'exemple n'a qu'un bouton : « À toi → »");
+  await valider(page);
+  await page.waitForTimeout(500);
+  return true;
+}
+
+// Un calcul d'entraînement : on passe l'exemple s'il y en a un, on manipule
+// si l'outil est à manipuler, puis on répond juste (ou faux). Attend la suite.
 async function repondreEntrainement(page, juste, {apresGeste = null} = {}) {
+  await passerExemple(page);
   const avant = await entrainement(page);
   if (avant.outil === "manip") {
     await manipuler(page, await manipulationDuCalcul(page));
@@ -469,7 +482,9 @@ async function jouerApprendsEnUneEtape(page, cle, ecran) {
   assert.equal(await page.isVisible("#question-card.ecrit-fini"), true, `${cle} : J'écris fini reste à l'écran`);
   await valider(page);
   await page.waitForTimeout(600);
-  // ⑤ Sans aide.
+  // ⑤ Sans aide (lot C3 : « 9 + □ = 12 », jamais montré par la leçon, arrive
+  // ici ; son exemple passe d'abord, puis « À toi »).
+  await passerExemple(page);
   assert.equal((await entrainement(page)).outil, "aucun", "puis plus rien");
   assert.equal(await moment(page), "Sans aide");
   await ecran("apprends-sans-aide", {jeu: true, pave: true});
