@@ -334,14 +334,16 @@ test("2 — SPLAT!, « Par monde » : seulement les mondes ouverts à la classe 
 
 // ------------------------------------------------------------ 3. Anzan
 
-const S = (jour, mode, faits, grade = 0, score = faits) => ({jour, mode, faits, calculs: faits, score, grade, reglages: {}});
+// `etape` : le numéro d'une étape du barème révisé (101… en Flash, 201… en Colonne), 0 hors des grades.
+const S = (jour, mode, faits, etape = 0, score = faits) => ({jour, mode, faits, calculs: faits, score, etape, grade: etape ? ANZAN.etape(etape).grade : 0, reglages: {}});
 
 test("3 — Anzan, la classe par mode : les calculs en Flash et en Colonne, passages et entraînements aux grades rangés dans leur mode", () => {
   const f = new Function("ANZAN", `${fonction("calculsParModeAnzan")}\nreturn calculsParModeAnzan;`)(ANZAN);
-  const colonne = ANZAN.NB_GRADES + 1;
-  const lu = {historique: [S("2026-11-01", "flash", 10), S("2026-11-02", "colonne", 6), S("2026-11-03", "grade", 10, 20),
-    S("2026-11-04", "entrainement", 5, colonne), S("2026-11-05", "flash", -3)]};
+  const colonne = ANZAN.PREMIER_COLONNE;
+  const lu = {historique: [S("2026-11-01", "flash", 10), S("2026-11-02", "colonne", 6), S("2026-11-03", "grade", 10, 136),
+    S("2026-11-04", "entrainement", 5, 201), S("2026-11-05", "flash", -3)]};
   assert.equal(ANZAN.estGradeColonne(colonne), true);
+  assert.equal(ANZAN.etape(201).grade, colonne);
   assert.deepEqual(f(lu), {flash: 20, colonne: 11});
   assert.deepEqual(f({}), {flash: 0, colonne: 0});
   assert.match(page, /<th><button type="button" data-tri="flash">Flash<\/button><\/th>\s*<th><button type="button" data-tri="colonne">Colonne<\/button><\/th>/);
@@ -354,7 +356,7 @@ test("3 — Anzan, la fiche : Toutes · Flash · Colonne · Grades (les modes pr
   const r = documentFactice(["pa-compte", "pa-grade", "pa-filtres", "pa-liste", "pa-note", "pa-plus", "pa-imprimer"]);
   const historique = [];
   for (let i = 0; i < 14; i += 1) historique.push(S(`2026-10-${String(10 + i).padStart(2, "0")}`, i % 2 ? "colonne" : "flash", 10));
-  historique.push(S("2026-10-30", "grade", 10, 20, 9));
+  historique.push(S("2026-10-30", "grade", 10, 135, 9));
   historique.reverse();
   const eleve = {id: 3, prenom: "Rania", lu: {historique, seances: historique.length, texte: "150 calculs"}};
   const f = new Function("document", "$", "ANZAN", "classe", `

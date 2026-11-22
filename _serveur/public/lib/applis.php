@@ -203,9 +203,14 @@ const CATALOGUE_APPLIS = [
         'ancre' => null,
         'disponible' => true,
         'cles' => ['version', 'epoque', 'reglages', 'rang', 'mode', 'flash', 'colonne',
-            'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances', 'gradeReussi', 'gradeColonne'],
-        // « grade » et « entrainement » : les séances des grades (lot
-        // « grades », 07/11/2026) ; « gradeReussi » : le plus haut grade réussi.
+            'operations', 'chiffresMin', 'chiffresMax', 'nombres', 'temps', 'limite', 'calculs', 'son', 'seances', 'etapeFlash', 'etapeColonne'],
+        // « grade » et « entrainement » : les séances des grades. Barème
+        // révisé (22/11/2026) : « etapeFlash » et « etapeColonne » gardent le
+        // rang de la plus haute étape réussie (1 … 65, 1 … 26 — les bornes
+        // sont celles du moteur, NB_ETAPES_FLASH et NB_ETAPES_COLONNE ; le
+        // serveur borne tout entier à 1 000 000). « gradeReussi » et
+        // « gradeColonne » de l'ancienne grille ne sont plus acceptés : une
+        // clé inconnue est retirée, jamais rejetée (lib/progression.php).
         'mots' => ['flash', 'colonne', 'plus', 'plusmoins', 'aucun', 'bip', 'grade', 'entrainement'],
         'motifs' => ['/^[1-9]\d{0,3}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances

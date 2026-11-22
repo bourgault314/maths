@@ -52,27 +52,24 @@ export function parcoursComplet() {
   p = seance_(p, "2026-10-21", "flash", {...FLASH, chiffresMin: 2, chiffresMax: 2, temps: 10}, 10, 9);
   p = seance_(p, "2026-10-21", "colonne", COLONNE, 10, 10);
   p = seance_(p, "2026-10-22", "flash", FLASH, 10, 8);
-  // Les grades (lot « grades », 07/11/2026) : un passage réussi (20e kyu),
-  // un entraînement au 19e kyu, un passage « presque », puis réussi — le
-  // serveur doit garder les mots « grade » et « entrainement » et la clé
-  // « gradeReussi ».
-  const GRADE = n => {
-    const g = PARCOURS.GRADES[n - 1];
-    return {operations: "plus", chiffresMin: g.chiffres, chiffresMax: g.chiffres, nombres: g.nombres, calculs: 10, grade: n};
+  // Les grades et leurs étapes (barème révisé, 22/11/2026) : le 20e kyu
+  // gagné (ses deux étapes, 101 et 102), un entraînement à la 1re étape du
+  // 19e kyu (5 calculs), un passage « presque », puis réussi — le serveur
+  // doit garder les mots « grade » et « entrainement » et la clé
+  // « etapeFlash » (le rang de la plus haute étape réussie : 3).
+  const ETAPE = (numero, calculs = 10) => {
+    const e = PARCOURS.etape(numero);
+    return {operations: e.operations, chiffresMin: e.chiffresMin, chiffresMax: e.chiffresMax, nombres: e.nombres, calculs, etape: numero};
   };
-  p = seance_(p, "2026-11-07", "grade", GRADE(1), 10, 9);
-  p = seance_(p, "2026-11-07", "entrainement", GRADE(2), 10, 8);
-  p = seance_(p, "2026-11-07", "grade", GRADE(2), 10, 6);
-  p = seance_(p, "2026-11-08", "grade", GRADE(2), 10, 7);
-  // Les grades en Colonne (lot « grades-colonne », 07/11/2026) : le 10e kyu
-  // (numéro 41) réussi à 5 sur 10, un entraînement au 9e kyu (42) — le
-  // serveur doit garder la clé « gradeColonne ».
-  const COLONNE_GRADE = n => {
-    const c = PARCOURS.GRADES_COLONNE[n - PARCOURS.PREMIER_COLONNE];
-    return {operations: c.operations, chiffresMin: c.chiffresMin, chiffresMax: c.chiffresMax, nombres: c.nombres, calculs: 10, grade: n};
-  };
-  p = seance_(p, "2026-11-08", "grade", COLONNE_GRADE(41), 10, 5);
-  p = seance_(p, "2026-11-08", "entrainement", COLONNE_GRADE(42), 10, 9);
+  p = seance_(p, "2026-11-22", "grade", ETAPE(101), 10, 9);
+  p = seance_(p, "2026-11-22", "grade", ETAPE(102), 10, 8);
+  p = seance_(p, "2026-11-22", "entrainement", ETAPE(103, 5), 5, 4);
+  p = seance_(p, "2026-11-22", "grade", ETAPE(103), 10, 6);
+  p = seance_(p, "2026-11-23", "grade", ETAPE(103), 10, 7);
+  // En Colonne : la 1re étape du 10e kyu (201) réussie à 8 sur 10, un
+  // entraînement à la 2e (202) — le serveur doit garder « etapeColonne ».
+  p = seance_(p, "2026-11-23", "grade", ETAPE(201), 10, 8);
+  p = seance_(p, "2026-11-23", "entrainement", ETAPE(202, 5), 5, 5);
   return PARCOURS.pourServeur(p);
 }
 

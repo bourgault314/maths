@@ -344,9 +344,10 @@ test("2e relecture Codex (24/10) : à rang égal et séances égales, deux appar
 test("l'historique : la plus récente en haut, « arrêtée » quand il manque des calculs ; le compte en calculs et en jours", () => {
   const p = parcoursComplet();
   const toutes = PARCOURS.historique(p);
-  assert.equal(toutes.length, 16, "dix séances de Flash et de Colonne, quatre de grades (lot « grades », 07/11/2026), deux de grades en Colonne (lot « grades-colonne »)");
-  assert.deepEqual(toutes.slice(0, 6).map(s => [s.mode, s.grade, s.score]), [["entrainement", 42, 9], ["grade", 41, 5], ["grade", 2, 7], ["grade", 2, 6], ["entrainement", 2, 8], ["grade", 1, 9]],
-    "les grades, les plus récents en haut");
+  assert.equal(toutes.length, 17, "dix séances de Flash et de Colonne, cinq d'étapes au Flash, deux d'étapes en Colonne (barème révisé, 22/11/2026)");
+  assert.deepEqual(toutes.slice(0, 7).map(s => [s.mode, s.etape, s.grade, s.score]),
+    [["entrainement", 202, 41, 5], ["grade", 201, 41, 8], ["grade", 103, 2, 7], ["grade", 103, 2, 6], ["entrainement", 103, 2, 4], ["grade", 102, 1, 8], ["grade", 101, 1, 9]],
+    "les étapes, les plus récentes en haut");
   const h = toutes.filter(s => s.mode === "flash" || s.mode === "colonne");
   assert.equal(h.length, 10);
   assert.equal(h[0].jour, "2026-10-22");
@@ -358,7 +359,7 @@ test("l'historique : la plus récente en haut, « arrêtée » quand il manque d
   assert.deepEqual(h[0].reglages, {operations: "plus", chiffresMin: 2, chiffresMax: 3, nombres: 10, calculs: 10, temps: 8}, "les réglages joués, au format de la page");
   assert.equal(CORE.resume(h[0].mode, h[0].reglages, {avecMode: false}).replace(/ /g, " "), "2 à 3 chiffres · 10 nombres · 0,8 s par nombre · 8 s en tout", "la page les décrit avec le moteur des calculs");
   const r = PARCOURS.resume(p);
-  assert.deepEqual(r, {calculs: 162, justes: 138, jours: 11, seances: 16, premier: "2026-10-13", dernier: "2026-11-08"},
+  assert.deepEqual(r, {calculs: 162, justes: 141, jours: 11, seances: 17, premier: "2026-10-13", dernier: "2026-11-23"},
     "les calculs des grades comptent aussi");
   assert.equal(PARCOURS.texteResume(p), "162 calculs · 11 jours d’entraînement");
   assert.equal(PARCOURS.texteResume(r), PARCOURS.texteResume(p), "depuis le compte ou depuis le parcours");
@@ -463,7 +464,7 @@ test("sous un code, une séance notée est rangée dans une case à empreinte (j
 
 test("la page charge le moteur à jour (4a-sexies : l'ordre seul, sans le jour) — son numéro de version a monté", () => {
   const html = lire("outils/calcul_mental/flash_anzan.html");
-  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261111-2"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
+  assert.match(html, /<script src="\.\/flash_anzan_parcours\.js\?v=20261122-1"><\/script>/, "un navigateur qui a l'ancien moteur en cache le recharge");
 });
 
 test("4e relecture Codex (24/10) : ni l'horloge ni minuit ne dérangent — une tablette à la mauvaise date ne perd pas sa séance, une séance qui passe minuit garde son jour", () => {

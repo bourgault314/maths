@@ -167,7 +167,7 @@ test("la page : la réserve suit la série, un cran plus facile après une erreu
   assert.match(allonger, /encore\.slice\(encore\.fenetre \|\| 0\)/);
   assert.match(page, /defi_calcul_core\.js\?v=20261122-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
 });
 
 test("les données ne changent pas : progression en version 10 (11 au lot C2), mêmes compétences, mêmes sortes (en nombre)", () => {

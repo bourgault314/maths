@@ -439,6 +439,42 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
   ne doit rien renvoyer, et des identifiants qui ne montent pas dans le sens du
   temps.
 
+## Anzan : les grades et leurs étapes (barème révisé, 22/11/2026)
+
+- Un grade se gagne en réussissant ses **étapes**, dans l'ordre : 10 calculs
+  par étape, 7 justes au Flash, 8 en Colonne. 65 étapes au Flash (40 grades,
+  numéros 101 … 165), 26 en Colonne (10 kyu, numéros 201 … 226 ; les dan de
+  Colonne, grades 51 … 60, viendront après : étapes 227 et suivantes).
+- La grille est dans `flash_anzan_core.js` (`LIGNES_FLASH`, `LIGNES_COLONNE`) ;
+  `flash_anzan_parcours.js` en recopie le format (grade, chiffres, nombres,
+  opérations) et `_serveur/public/prof/flash_anzan_parcours.js` est sa copie.
+  `tests/flash-anzan-parcours-etapes.test.mjs` garde les trois d'accord.
+- Le parcours garde le **rang** de la plus haute étape réussie (`etapeFlash`,
+  `etapeColonne`), pas son numéro. Une fois en ligne, on n'insère donc plus
+  d'étape au milieu d'une liste (tous les rangs gardés se décaleraient) : une
+  étape nouvelle s'ajoute à la fin, ou le lot dit comment les rangs migrent.
+  Un rang plus grand que la liste est ramené à sa dernière étape, jamais à 0.
+- Une séance d'étape porte son numéro dans le champ « temps » ; un passage a
+  10 calculs, « M'entraîner » 5 (la moitié du plan, corrigé après chaque
+  calcul, jamais de chrono). Tout autre numéro ne se lit pas : l'ancienne
+  grille (1 … 53, clés `gradeReussi` et `gradeColonne`) est ignorée sans erreur.
+- **Le tirage** : chaque étape a un plan de profils (`PROFILS`). Un profil tire
+  des nombres au hasard parmi tous ceux de sa largeur jusqu'au premier calcul
+  qui convient ; il ne fabrique jamais un calcul. Trois règles d'affichage
+  seulement : jamais deux fois le même nombre de suite, jamais deux fois le
+  même calcul dans un passage, jamais « 9 + 8 − 9 » à trois nombres. Les gestes
+  viennent du modèle du barème (`_sources/anzan-bareme/soroban.py`, porté dans
+  `gestes`).
+- Toute étape nouvelle ou modifiée a sa **garantie écrite à part** dans
+  `tests/flash-anzan-etapes.test.mjs` (`GARANTIES`, sans se servir de
+  `PROFILS`) : le geste annoncé dans chaque calcul, rien de plus difficile.
+- En Colonne, une étape chronométrée a UN chrono pour ses dix calculs (la
+  pastille), jamais de temps par calcul ; à zéro, le calcul en cours n'est pas
+  compté. Chaque premier chrono reprend un tirage déjà réussi en temps libre.
+- Tout texte d'étape montré à l'élève (fiche, liste, résumé) vient du moteur
+  (`reglesEtape`, `texteEtape`, `texteEtapeCourt`, `texteGrade`) ; un nombre
+  et son unité y sont insécables.
+
 ## Compteur de visites (depuis le 06/11/2026)
 
 - Chaque page HTML du plan du site (`sitemap.xml`) charge

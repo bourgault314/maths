@@ -104,6 +104,7 @@ class El {
   append(...nodes) { nodes.forEach(n => { if (typeof n === "string") n = this.ecran.document.createTextNode(n); n.parent = this; this.children.push(n); }); }
   replaceChildren(...nodes) { this.children.forEach(c => { c.parent = null; }); this.children = []; this.append(...nodes); }
   remove() { if (this.parent) this.parent.removeChild(this); }
+  cloneNode() { const e = new El(this.ecran, this.tagName.toLowerCase(), {...this.attrs}); e.className = this.className; return e; }
   // Le texte lu, enfants compris (ce que l'élève lit dans le bloc de suivi).
   get texteLu() { return this._html !== null ? this._texte : this._texte + this.children.map(c => (c.texteLu !== undefined ? c.texteLu : c.textContent || "")).join(""); }
   getBoundingClientRect() { return {width: 60, height: 60, top: 0, left: 0, right: 60, bottom: 60}; }
@@ -1063,9 +1064,9 @@ test("Mon historique : les séances du compte, dix par dix, la plus récente en 
   assert.equal(p.$("historique-liste").children.length, 20, "puis les dix suivantes (les séances de grades comprises, lots « grades » et « grades-colonne »)");
   assert.equal(p.$("historique-plus").hidden, false);
   p.$("historique-plus").click();
-  assert.equal(p.$("historique-liste").children.length, 21);
+  assert.equal(p.$("historique-liste").children.length, 22);
   assert.equal(p.$("historique-plus").hidden, true);
-  assert.match(texte(p.$("historique-liste").children[20]), /13 oct\./, "la plus ancienne en bas");
+  assert.match(texte(p.$("historique-liste").children[21]), /13 oct\./, "la plus ancienne en bas");
 });
 
 // ---------------------------------------------------------------------------
@@ -1200,37 +1201,66 @@ test("réglages : la ligne de résumé « ⚡ 5 calculs · 4 nombres en 2 s » (
 });
 
 // ---------------------------------------------------------------------------
-// Les grades (lot « grades », 07/11/2026) : la page jouée par un visiteur
-// sans code, le moteur du parcours chargé (sa case « sans code »).
+// Les grades et leurs étapes (barème révisé, 22/11/2026) : la page jouée par
+// un visiteur sans code, le moteur du parcours chargé (sa case « sans code »).
+// Choix de Gwenaël sur planches : les étapes en onglets sur la fiche, un seul
+// « M'entraîner » (5 calculs), la carte qui se colore étape par étape, le
+// chrono des dix calculs en pastille (Colonne).
 // ---------------------------------------------------------------------------
 const CLE_CASE = "mathsgo-anzan-parcours";
 const caseDe = p => JSON.parse(p.stockage.get(CLE_CASE) || "null");
-// La durée d'un calcul de grade : le décompte, la série entière, une marge.
-const dureeGrade = n => AVANT_LE_3 + 3 * 800 + CORE.GRADES[n - 1].dixiemes * 100 + 100;
+// Une case où `flash` étapes du Flash et `colonne` étapes de la Colonne sont
+// déjà réussies (les rangs, comme le parcours les garde).
+const caseEtapes = (flash = 0, colonne = 0) => ({[CLE_CASE]: JSON.stringify({version: 1, epoque: 0, reglages: {}, seances: {},
+  ...(flash ? {etapeFlash: flash} : {}), ...(colonne ? {etapeColonne: colonne} : {})})});
+// La durée d'un calcul d'une étape du Flash : le décompte, la série entière, une marge.
+const dureeEtape = numero => AVANT_LE_3 + 3 * 800 + CORE.etape(numero).dixiemes * 100 + 100;
 // Les calculs que la page tire, séance après séance (une seule graine par page).
 function tirages() {
   const rng = CORE.mulberry32((0.5 * 4294967296) >>> 0);
-  return {suivants: (mode, r) => CORE.tirerSeance(r, rng)};
+  return {suivants: (numero, calculs) => CORE.tirerSeance(CORE.reglagesEtape(numero, "bip", calculs), rng)};
 }
-// Joue un passage entier : `justes` bonnes réponses d'abord, puis des fausses.
-function jouerPassage(p, n, calculs, justes) {
-  for (let i = 0; i < CORE.GRADE_CALCULS; i += 1) {
-    p.avancer(dureeGrade(n));
+// Joue un passage entier du Flash : `justes` bonnes réponses d'abord, puis des fausses.
+function jouerPassage(p, numero, calculs, justes, combien = CORE.GRADE_CALCULS) {
+  for (let i = 0; i < combien; i += 1) {
+    p.avancer(dureeEtape(numero));
     assert.equal(p.$("zone-rep").hidden, false, `calcul ${i + 1} : la réponse est demandée`);
     assert.equal(p.$("revoir").hidden, true, "pas de « Revoir » pendant un passage");
     p.taper(i < justes ? calculs[i].total : calculs[i].total + 1);
     p.touche("Enter", p.$("valider"));
     if (i < CORE.GRADE_CALCULS - 1) {
       assert.equal(p.vue(), "vue-jeu", "pas de correction entre deux calculs : le suivant part");
-      assert.equal(p.$("compte").textContent, `Calcul ${i + 2} / 10`);
+      assert.equal(p.$("compte").textContent, `Calcul ${i + 2}\u00a0/ 10`);
     }
   }
 }
-function ouvrirGrades(appareil = null) {
-  const p = ouvrir(null, {moteur: true, appareil});
+// Joue un passage en Colonne (pas de décompte : la colonne est là tout de suite).
+function jouerPassageColonne(p, calculs, justes, combien = CORE.GRADE_CALCULS) {
+  for (let i = 0; i < combien; i += 1) {
+    assert.equal(p.$("colonne").hidden, false, `calcul ${i + 1} : la colonne est écrite`);
+    assert.equal((String(p.$("colonne").innerHTML).match(/class="nb"/g) || []).length, calculs[i].termes.length, "tous les nombres du calcul, écrits");
+    assert.equal(p.$("revoir").hidden, true, "pas de « Revoir » en Colonne");
+    p.taper(i < justes ? calculs[i].total : calculs[i].total + 1);
+    p.touche("Enter", p.$("valider"));
+    if (i < CORE.GRADE_CALCULS - 1) assert.equal(p.vue(), "vue-jeu", "pas de correction entre deux calculs");
+  }
+}
+function ouvrirGrades(appareil = null, largeur = 390) {
+  const p = ouvrir(null, {moteur: true, appareil, largeur});
   p.$("vers-grades").click();
   return p;
 }
+function ouvrirGradesColonne(appareil = null) {
+  const p = ouvrir(memoireColonne, {moteur: true, appareil});
+  p.$("vers-grades").click();
+  return p;
+}
+const carteFin = p => p.$("fin-carte-place").querySelector(".carte-kyu");
+// Qui a le focus : son id ou sa carte (comparer deux éléments de l'écran
+// simulé ferait imprimer tout l'écran en cas d'échec).
+const ecranActif = p => { const e = p.$("panel").ecran.document.activeElement; return e.id || e.getAttribute("data-carte") || e.tagName; };
+const onglets = p => p.$("fiche-etapes").querySelectorAll("[data-etape]");
+const etatsDesLignes = (p, combien) => p.$("grades-liste").querySelectorAll(".gr-item").slice(0, combien).map(l => l.className.replace("gr-item ", ""));
 
 test("grades : le bouton « 🥋 Grades » est là dans les deux modes ; au départ, le 20e kyu seul est ouvert", () => {
   const p = ouvrir(null, {moteur: true});
@@ -1260,350 +1290,6 @@ test("grades : le bouton « 🥋 Grades » est là dans les deux modes ; au dép
   assert.equal(p.vue(), "reglages");
 });
 
-test("grades : la fiche, puis un passage réussi — 10 calculs sans correction entre eux, au temps de la grille, et le grade suivant s'ouvre", () => {
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  assert.equal(p.$("grades-titre").textContent, "20e kyu");
-  assert.match(texte(p.$("fiche-regles")), /3nombres d’un chiffre à additionner/);
-  assert.match(texte(p.$("fiche-regles")), /5 s/);
-  assert.match(texte(p.$("fiche-regles")), /7\/10bonnes réponses pour réussir le grade/);
-  const t = tirages();
-  p.$("fiche-passer").click();
-  const calculs = t.suivants("grade", CORE.reglagesGrade(1, "bip"));
-  assert.ok(calculs.every(c => c.termes.every(x => x.signe === 1 && x.valeur >= 1 && x.valeur <= 9)), "des additions de nombres d'un chiffre");
-  // Le rythme : 5 s pour trois nombres, soit 1 666,7 ms par nombre.
-  p.avancer(AVANT_LE_3);
-  const nombres = p.oscillateurs.filter(o => o.frequency.value === 880).map(o => o.debut);
-  assert.equal(nombres.length, 3);
-  assert.ok(Math.abs(nombres[1] - nombres[0] - 5 / 3) < 1e-9 && Math.abs(nombres[2] - nombres[1] - 5 / 3) < 1e-9);
-  jouerPassage(p, 1, calculs, 8);
-  assert.equal(p.vue(), "vue-fin");
-  assert.equal(p.$("fin-grade").hidden, false);
-  assert.match(p.$("fin-grade").className, /\breussi\b/);
-  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  assert.match(p.$("fin-grade-score").textContent, /^8\/10$/);
-  assert.equal(p.$("fin-grade-ouvert").hidden, false);
-  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 19e kyu est ouvert");
-  assert.equal(p.$("liste").hidden, true, "la liste des calculs est repliée");
-  p.$("fin-grade-calculs").click();
-  assert.equal(p.$("liste").hidden, false);
-  assert.equal(caseDe(p).gradeReussi, 1, "le grade est gardé dans la case de l'appareil");
-  assert.equal(caseDe(p).seances["1"][1], "grade");
-  // Le repasser une fois réussi : réussi encore, mais rien de « neuf » ne s'ouvre.
-  p.$("fin-grade-a").click();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1, "bip")), 10);
-  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  assert.equal(p.$("fin-grade-ouvert").hidden, true, "le 19e kyu était déjà ouvert : on ne le redit pas");
-  // « Le 19e kyu ▶ » : sa fiche ; la flèche ramène à la liste, où le 20e kyu
-  // a son ✓ et sa note, et le 19e kyu est à passer.
-  assert.equal(p.$("fin-grade-b").textContent, "Le 19e kyu ▶");
-  p.$("fin-grade-b").click();
-  assert.equal(p.$("grades-titre").textContent, "19e kyu");
-  p.$("grades-retour").click();
-  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
-  assert.match(lignes[0].className, /\breussi\b/);
-  assert.match(texte(lignes[0]), /10\/10réussi/, "la meilleure note des passages complets");
-  assert.match(lignes[1].className, /\bactuel\b/);
-});
-
-test("grades : « presque » à 6, « pas encore » à 4, « arrêté » par la flèche — rien ne s'ouvre", () => {
-  const t = tirages();
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 6);
-  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
-  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 7. Tu peux retenter tout de suite.");
-  assert.equal(p.$("fin-grade-ouvert").hidden, true);
-  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Retenter"]);
-  p.$("fin-grade-b").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 4);
-  assert.equal(p.$("fin-grade-titre").textContent, "Pas encore");
-  assert.equal(caseDe(p).gradeReussi, undefined, "aucun grade réussi : la clé n'existe pas");
-  p.$("fin-grade-b").click();
-  const calculs = t.suivants("grade", CORE.reglagesGrade(1));
-  for (let i = 0; i < 3; i += 1) {
-    p.avancer(dureeGrade(1));
-    p.taper(calculs[i].total);
-    p.touche("Enter", p.$("valider"));
-  }
-  p.$("retour").click();
-  assert.equal(p.$("fin-grade-titre").textContent, "Passage arrêté");
-  assert.match(p.$("fin-grade-score").textContent, /^3\/10$/);
-  assert.equal(caseDe(p).gradeReussi, undefined, "3 justes sur 3 faits ne réussissent pas un grade");
-  assert.equal(PARCOURS.historique(caseDe(p))[0].reussi, false);
-});
-
-test("grades : « 🎯 M'entraîner » joue le grade comme le Flash — correction après chaque calcul, « Revoir » — sans compter comme un passage", () => {
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-entrainer-10").click();
-  const calculs = tirages().suivants("entrainement", CORE.reglagesGrade(1, "bip", 10));
-  p.avancer(dureeGrade(1));
-  assert.equal(p.$("revoir").hidden, false, "« Revoir » à l'entraînement");
-  p.taper(calculs[0].total);
-  p.touche("Enter", p.$("valider"));
-  assert.equal(p.vue(), "vue-correction", "la correction après le calcul");
-  p.$("retour").click();
-  assert.equal(p.vue(), "vue-fin");
-  assert.equal(p.$("fin-grade").hidden, true, "pas l'écran d'un passage");
-  assert.equal(p.$("vers-reglages").textContent, "Le grade");
-  assert.equal(caseDe(p).seances["1"][1], "entrainement");
-  assert.equal(caseDe(p).gradeReussi, undefined, "un entraînement ne réussit pas de grade, même tout juste");
-  p.$("vers-reglages").click();
-  assert.equal(p.$("grades-titre").textContent, "20e kyu", "« Le grade » ramène à sa fiche");
-});
-
-test("grades : le plus haut grade réussi gardé ouvre les cadenas même sans ses séances ; Mon historique écrit les grades avec les mots du moteur", () => {
-  const q = ouvrirGrades({[CLE_CASE]: JSON.stringify({version: 1, epoque: 0, reglages: {}, gradeReussi: 3,
-    seances: {"1": ["2026-11-06", "grade", "plus", 1, 1, 5, 3, 10, 10, 9, 77, 1], "2": ["2026-11-07", "entrainement", "plus", 1, 1, 10, 5, 10, 4, 3, 78, 2]}})});
-  const lignes = q.$("grades-liste").querySelectorAll(".gr-item");
-  assert.deepEqual(lignes.slice(0, 5).map(l => l.className.replace("gr-item ", "")), ["reussi", "reussi", "reussi", "actuel", "ferme"],
-    "gradeReussi = 3 : les trois premiers réussis (même sans leur séance), le 4e à passer");
-  assert.match(texte(lignes[2]), /9\/10réussi/, "la note du passage encore dans l'historique");
-  assert.match(texte(lignes[1]), /✓réussi/, "un grade réussi dont la séance n'est plus là : ✓ sans note");
-  assert.match(texte(lignes[3]), /À toi ▶/, "« À toi ▶ » : la ligne ouvre la fiche, pas l'épreuve (lot « anzan-cartes »)");
-  assert.doesNotMatch(texte(lignes[3]), /Passer/);
-  q.$("grades-retour").click();
-  q.$("vers-historique").click();
-  const items = q.$("historique-liste").children;
-  assert.match(texte(items[0]), /🎯 16e kyuEntraînement au grade/);
-  assert.match(texte(items[1]), /🥋 18e kyuPassage · réussi/);
-});
-
-// ---------------------------------------------------------------------------
-// Les cartes des grades (lot « anzan-cartes », 07/11/2026) : la carte à la
-// réussite et « Retourner », la collection sous la liste, la petite carte
-// de la fiche, « À toi ▶ ». Rien de nouveau n'est gardé.
-// ---------------------------------------------------------------------------
-const caseGrades = g => ({[CLE_CASE]: JSON.stringify({version: 1, epoque: 0, reglages: {}, gradeReussi: g, seances: {}})});
-function ouvrirGradesA(largeur, appareil = null) {
-  const p = ouvrir(null, {moteur: true, appareil, largeur});
-  p.$("vers-grades").click();
-  return p;
-}
-const carteFin = p => p.$("fin-carte-place").querySelector(".carte-kyu");
-// Qui a le focus : son id ou sa carte (comparer deux éléments de l'écran
-// simulé ferait imprimer tout l'écran en cas d'échec).
-const ecranActif = p => { const e = p.$("panel").ecran.document.activeElement; return e.id || e.getAttribute("data-carte") || e.tagName; };
-
-test("cartes : un passage réussi montre la carte du grade en grand sous « Grade réussi ! » ; sur ordinateur « Retourner » montre son dos sur place", () => {
-  const t = tirages();
-  const p = ouvrirGradesA(1440);
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 7);
-  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  // « Esprit estampe » : le sceau 合格 à la place du 🎉.
-  assert.equal(p.$("fin-grade-sceau").hidden, false);
-  assert.equal(p.$("fin-grade-emoji").hidden, true);
-  assert.match(PAGE, /<div class="sceau" id="fin-grade-sceau" aria-hidden="true" hidden><span>合格<\/span><\/div>/);
-  assert.equal(p.$("fin-grade-carte").hidden, false);
-  assert.match(p.$("fin-grade").className, /\bavec-carte\b/);
-  const carte = carteFin(p);
-  assert.ok(carte, "la carte est là");
-  const img = carte.querySelector("img");
-  assert.equal(img.src, "./anzan-cartes/kyu20-kaeru.webp");
-  assert.equal(img.attrs.alt, "Carte du 20e Kyu : Kaeru");
-  assert.deepEqual([img.attrs.width, img.attrs.height], ["640", "904"], "sa place est réservée : rien ne bouge quand l'image arrive");
-  const [recto, verso] = carte.querySelectorAll(".carte-face");
-  assert.equal(verso.getAttribute("aria-hidden"), "true", "le dos n'est pas lu tant qu'on ne l'a pas retourné");
-  // Le dos, paragraphe par paragraphe : le grade, le nom (et ce que c'est),
-  // la créature, le message, le proverbe (japonais, lecture, français, idée).
-  const dos = verso.querySelectorAll("p").map(texte);
-  const kaeru = CORE.carteDuGrade(1);
-  assert.deepEqual(dos, ["20e Kyu", "Kaerula grenouille", texte({texteLu: kaeru.creature}), texte({texteLu: kaeru.message}),
-    "案ずるより産むが易し", "anzuru yori umu ga yasushi", "« Agir est plus facile que s’inquiéter. »", "Ose : c’est moins dur que tu ne le crois."]);
-  assert.equal(verso.querySelector(".cv-jp").getAttribute("lang"), "ja");
-  assert.equal(p.$("carte-retourner").hidden, false);
-  assert.match(PAGE, /id="carte-retourner" aria-pressed="false" hidden>↻ Retourner<\/button>/);
-  p.$("carte-retourner").click();
-  assert.match(carte.className, /\bretournee\b/);
-  assert.equal(p.$("carte-retourner").getAttribute("aria-pressed"), "true");
-  assert.deepEqual([recto.getAttribute("aria-hidden"), verso.getAttribute("aria-hidden")], ["true", "false"]);
-  assert.equal(p.$("carte-grand").hidden, true, "sur ordinateur, pas de fenêtre : la carte se retourne sur place");
-  p.$("carte-retourner").click();
-  assert.doesNotMatch(carte.className, /\bretournee\b/, "et revient au recto");
-  // Les boutons d'avant sont toujours là.
-  assert.equal(p.$("fin-grade-b").textContent, "Le 19e kyu ▶");
-  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 19e kyu est ouvert");
-});
-
-test("cartes : au téléphone, « Retourner » ouvre la carte en grand, déjà sur son dos ; Échap la referme et rend le focus", () => {
-  const t = tirages();
-  const p = ouvrirGradesA(390);
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 10);
-  p.$("carte-retourner").click();
-  assert.equal(p.$("carte-grand").hidden, false);
-  const grande = p.$("carte-grand-place").querySelector(".carte-kyu");
-  assert.match(grande.className, /\bretournee\b/, "le dos tout de suite");
-  assert.equal(p.$("carte-grand-retourner").getAttribute("aria-pressed"), "true");
-  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 20e Kyu : Kaeru");
-  p.touche("Escape", p.$("carte-grand-fermer"));
-  assert.equal(p.$("carte-grand").hidden, true);
-  assert.equal(p.$("carte-grand-place").children.length, 0);
-  assert.equal(ecranActif(p), "carte-retourner", "le focus revient sur « Retourner »");
-});
-
-test("cartes : pas de carte pour « presque », « pas encore » ou un passage arrêté", () => {
-  const t = tirages();
-  const p = ouvrirGradesA(1440);
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1)), 6);
-  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
-  assert.equal(p.$("fin-grade-sceau").hidden, true, "le sceau seulement pour un grade réussi");
-  assert.equal(p.$("fin-grade-emoji").hidden, false);
-  assert.equal(p.$("fin-grade-carte").hidden, true);
-  assert.doesNotMatch(p.$("fin-grade").className, /avec-carte/);
-  assert.doesNotMatch(p.$("vue-fin").className, /avec-carte/);
-  assert.equal(p.$("fin-carte-place").children.length, 0);
-});
-
-test("cartes dan : un dan réussi montre sa carte dorée (640 × 984, jamais déformée) et « Retourner » ; sa fiche a sa petite carte ; sa ligne a sa carte grise", () => {
-  const t = tirages();
-  const p = ouvrirGradesA(1440, caseGrades(20));
-  // Avant : le 1er dan est à passer — sa ligne a sa carte dorée, en gris.
-  p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
-  assert.equal(p.$("grades-indice").hidden, false);
-  const premiereDan = p.$("grades-liste").querySelectorAll(".gr-item")[0].querySelector(".gr-carte");
-  assert.match(premiereDan.className, /\bor\b/, "la place d'une carte dan a sa hauteur");
-  assert.equal(premiereDan.querySelector("img").src, "./anzan-cartes/dan01-kuma-vignette.webp");
-  assert.equal(premiereDan.querySelector(".gr-sceau"), null, "pas de sceau : pas encore réussi");
-  p.$("grades-liste").querySelector('[data-grade="21"]').click();
-  assert.equal(p.$("fiche-carte-place").hidden, false, "la fiche d'un dan a sa carte");
-  assert.match(p.$("fiche-haut").className, /\bavec-carte\b/);
-  const grisee = p.$("fiche-carte-place").querySelector(".fiche-carte");
-  assert.match(grisee.className, /\bgrisee\b/);
-  assert.match(grisee.className, /\bor\b/);
-  assert.deepEqual([grisee.querySelector("img").attrs.width, grisee.querySelector("img").attrs.height], ["640", "984"]);
-  p.$("fiche-passer").click();
-  jouerPassage(p, 21, t.suivants("grade", CORE.reglagesGrade(21)), 9);
-  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  assert.match(p.$("fin-grade-carte").className, /\bdan\b/, "le cadre de la carte prend la hauteur d'une carte dan");
-  const carte = carteFin(p);
-  assert.ok(carte);
-  assert.match(carte.className, /\bor\b/);
-  const img = carte.querySelector("img");
-  assert.equal(img.src, "./anzan-cartes/dan01-kuma.webp");
-  assert.equal(img.attrs.alt, "Carte du 1er Dan : Kuma");
-  assert.deepEqual([img.attrs.width, img.attrs.height], ["640", "984"]);
-  assert.equal(p.$("carte-retourner").hidden, false);
-  assert.equal(texte(carte.querySelector(".cv-grade")), "1er Dan");
-  assert.match(PAGE, /\.carte-kyu\.or, \.fiche-carte\.or img \{ aspect-ratio: 640 \/ 984; \}/);
-  assert.match(PAGE, /\.gr-carte\.or \{ aspect-ratio: 640 \/ 984; \}/);
-  assert.match(PAGE, /\.fin-carte\.dan \{ --carte-l: min\(clamp\(140px, 44vw, 230px\), \(100vh - 420px\) \* 640 \/ 984\);/);
-  assert.match(PAGE, /\.carte-grand-boite\.dan \{ --carte-l: min\(380px, calc\(100vw - 48px\), calc\(\(100dvh - 130px\) \* 640 \/ 984\)\); \}/);
-});
-
-// Lot « grades-estampe » (07/11/2026, choix B de Gwenaël) : la carte de
-// chaque grade est sur sa ligne ; la collection du bas, qui redisait la
-// liste, n'existe plus.
-test("grades-estampe : chaque ligne a sa carte — en couleur avec le sceau 合 si réussi, grise pour le grade à passer, une place vide fermée", () => {
-  const p = ouvrirGradesA(1440, caseGrades(3));
-  const avant = p.stockage.get(CLE_CASE);
-  assert.doesNotMatch(PAGE, /cartes-collection|cartes-compte|Mes cartes/, "plus de collection sous la liste");
-  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
-  assert.equal(lignes.length, 10);
-  const cartes = lignes.map(l => l.querySelector(".gr-carte"));
-  assert.ok(lignes.every((l, i) => l.children.includes(cartes[i]) && !l.querySelector(".gr-ligne").querySelector(".gr-carte")), "la carte est posée sur la ligne, pas dans son bouton");
-  assert.ok(cartes.slice(3).every(c => c.tagName === "SPAN" && c.getAttribute("aria-hidden") === "true"), "une carte pas gagnée est muette : la ligne garde ses mots");
-  // Réussis : 20e, 19e, 18e kyu.
-  [0, 1, 2].forEach(i => {
-    assert.match(lignes[i].className, /\breussi\b/);
-    assert.equal(cartes[i].querySelector("img").src, CORE.carteDuGrade(i + 1).vignette);
-    assert.equal(texte(cartes[i].querySelector(".gr-sceau")), "合");
-    assert.doesNotMatch(cartes[i].className, /\bvide\b|\bor\b/);
-    assert.equal(cartes[i].tagName, "BUTTON", "une carte gagnée se touche");
-    assert.equal(cartes[i].getAttribute("data-carte"), String(i + 1));
-  });
-  assert.equal(cartes[2].getAttribute("aria-label"), "Suzume, 18e Kyu : voir la carte");
-  assert.equal(p.$("grades-indice").hidden, false, "une carte gagnée : on dit qu'elle se touche");
-  assert.match(PAGE, /<p class="gr-indice" id="grades-indice" hidden>Touche une carte pour la revoir en grand<\/p>/);
-  // La toucher l'ouvre en grand (sans ouvrir la fiche) ; fermer rend le focus à la carte.
-  cartes[1].click();
-  assert.equal(p.$("carte-grand").hidden, false);
-  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 19e Kyu : Usagi");
-  assert.equal(p.$("grades-liste-vue").hidden, false, "la liste reste dessous");
-  p.$("carte-grand-retourner").click();
-  assert.match(p.$("carte-grand-place").querySelector(".carte-kyu").className, /\bretournee\b/, "et se retourne");
-  p.$("carte-grand-fermer").click();
-  assert.equal(p.$("carte-grand").hidden, true);
-  assert.equal(ecranActif(p), "2", "le focus revient sur la carte");
-  assert.equal(cartes[0].querySelector("img").src, "./anzan-cartes/kyu20-kaeru-vignette.webp");
-  assert.deepEqual([cartes[0].querySelector("img").attrs.width, cartes[0].querySelector("img").attrs.height], ["160", "226"]);
-  // À passer : le 17e kyu, sa carte (grise par le CSS), sans sceau.
-  assert.match(lignes[3].className, /\bactuel\b/);
-  assert.equal(cartes[3].querySelector("img").src, CORE.carteDuGrade(4).vignette);
-  assert.equal(cartes[3].querySelector(".gr-sceau"), null);
-  // Fermés : une place vide, un cadenas, pas d'image.
-  for (let i = 4; i < 10; i += 1) {
-    assert.match(cartes[i].className, /\bvide\b/);
-    assert.equal(cartes[i].querySelector("img"), null);
-    assert.equal(texte(cartes[i]), "🔒");
-  }
-  // Les noms japonais, à côté des noms (posés par le CSS).
-  assert.equal(lignes[0].querySelector(".gr-nom").getAttribute("data-jp"), "二十級");
-  assert.equal(lignes[9].querySelector(".gr-nom").getAttribute("data-jp"), "十一級");
-  // La ligne ouvre toujours la fiche, où la carte s'ouvre en grand.
-  p.$("grades-liste").querySelector('[data-grade="2"]').click();
-  assert.equal(p.$("grades-titre").textContent, "19e kyu");
-  assert.equal(p.$("grades-titre").getAttribute("data-jp"), "十九級");
-  p.$("grades-retour").click();
-  assert.equal(p.$("grades-titre").getAttribute("data-jp"), "", "« Les grades » n'a pas de nom japonais");
-  // Les dan : leurs places ont la hauteur dan.
-  p.$("grades-groupes").querySelector('[data-groupe="3"]').click();
-  const dan = p.$("grades-liste").querySelectorAll(".gr-carte");
-  assert.ok(dan.every(c => /\bor\b/.test(c.className) && /\bvide\b/.test(c.className)));
-  assert.equal(p.$("grades-liste").querySelectorAll(".gr-nom")[9].getAttribute("data-jp"), "二十段");
-  assert.equal(p.stockage.get(CLE_CASE), avant, "regarder ses grades n'enregistre rien");
-});
-
-test("grades-estampe : une carte dan réussie sur sa ligne, dorée et à sa hauteur", () => {
-  const p = ouvrirGradesA(1440, caseGrades(22));
-  p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
-  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
-  const taka = lignes[1].querySelector(".gr-carte");
-  assert.match(taka.className, /\bor\b/);
-  assert.equal(taka.querySelector("img").src, "./anzan-cartes/dan02-taka-vignette.webp");
-  assert.deepEqual([taka.querySelector("img").attrs.width, taka.querySelector("img").attrs.height], ["160", "246"]);
-  assert.equal(texte(taka.querySelector(".gr-sceau")), "合");
-  assert.equal(lignes[0].querySelector(".gr-nom").getAttribute("data-jp"), "初段");
-  assert.match(lignes[2].className, /\bactuel\b/);
-});
-
-test("cartes : la fiche d'un grade — la petite carte en couleur si réussi (elle s'ouvre en grand), grisée sinon ; une ligne sous chaque bouton ; « 7/10 »", () => {
-  const p = ouvrirGradesA(1440, caseGrades(3));
-  p.$("grades-liste").querySelector('[data-grade="3"]').click();
-  assert.match(p.$("fiche-haut").className, /\bavec-carte\b/);
-  assert.match(p.$("grades-fiche-vue").className, /\bavec-carte\b/);
-  const reussie = p.$("fiche-carte-place").querySelector(".fiche-carte");
-  assert.equal(reussie.tagName, "BUTTON");
-  assert.doesNotMatch(reussie.className, /grisee/);
-  assert.equal(reussie.querySelector("img").src, "./anzan-cartes/kyu18-suzume.webp");
-  reussie.click();
-  assert.equal(p.$("carte-grand").hidden, false);
-  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 18e Kyu : Suzume");
-  p.$("carte-grand-fermer").click();
-  p.$("grades-retour").click();
-  p.$("grades-liste").querySelector('[data-grade="4"]').click();
-  const grisee = p.$("fiche-carte-place").querySelector(".fiche-carte");
-  assert.equal(grisee.tagName, "DIV", "une carte à gagner ne s'ouvre pas");
-  assert.match(grisee.className, /\bgrisee\b/);
-  assert.equal(grisee.querySelector("img").attrs.alt, "Carte à gagner : Tombo");
-  // Le texte fixe de la fiche (l'écran simulé ne lit pas le texte du HTML).
-  const fiche = PAGE.slice(PAGE.indexOf('id="grades-fiche-vue"'), PAGE.indexOf("<!-- La séance"));
-  assert.match(fiche, /id="fiche-entrainer-10" data-calculs="10"><span>🎯&nbsp;10<\/span> <span>calculs<\/span><\/button>\s*<\/div>\s*<p class="fiche-note">M’entraîner&nbsp;: correction après chaque calcul<\/p>/);
-  assert.match(fiche, /id="fiche-passer"><\/button>\s*<p class="fiche-note">Comme à l’examen&nbsp;: correction à la fin<\/p>/);
-  assert.doesNotMatch(fiche, /Revoir/, "la phrase « Pas de Revoir… » n'est plus là");
-  assert.equal(p.$("grades-fiche-vue").querySelectorAll(".fiche-note").length, 2);
-  assert.match(texte(p.$("fiche-regles")), /7\/10bonnes réponses pour réussir le grade/);
-});
-
 test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la taille de la carte, la carte de la ligne aussi", () => {
   const style = PAGE.slice(PAGE.indexOf("<style>"), PAGE.indexOf("</style>"));
   assert.match(style, /\.carte-kyu \{[^}]*aspect-ratio: 640 \/ 904;[^}]*container-type: inline-size;/);
@@ -1616,11 +1302,6 @@ test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la tai
   assert.match(style, /@media \(prefers-reduced-motion: reduce\) \{ \.carte-tour \{ transition: none; \} \}/);
 });
 
-// ---------------------------------------------------------------------------
-// Lot « bandeau des grades » (07/11/2026, maquette A) : sous « C'est parti »,
-// le bandeau montre la dernière carte gagnée, le grade à passer et le compte
-// des cartes ; il ouvre la liste des grades. Rien de nouveau n'est gardé.
-// ---------------------------------------------------------------------------
 test("bandeau des grades : au départ, le kimono et « À toi : le 20e kyu · 0 carte sur 40 » ; il ouvre la liste", () => {
   const p = ouvrir(null, {moteur: true});
   assert.equal(p.$("bg-det").texteLu, "À toi : le 20e kyu · 0 carte sur 40");
@@ -1636,26 +1317,6 @@ test("bandeau des grades : au départ, le kimono et « À toi : le 20e kyu · 0 
   assert.equal(p.$("grades-titre").textContent, "Les grades");
 });
 
-test("bandeau des grades : trois grades réussis → toujours le kimono, « À toi : le 17e kyu · 3 cartes sur 40 » ; tout réussi : « 40 cartes sur 40 »", () => {
-  const p = ouvrir(null, {moteur: true, appareil: caseGrades(3)});
-  assert.equal(p.$("bg-det").texteLu, "À toi : le 17e kyu · 3 cartes sur 40");
-
-  const q = ouvrir(null, {moteur: true, appareil: caseGrades(1)});
-  assert.equal(q.$("bg-det").texteLu, "À toi : le 19e kyu · 1 carte sur 40", "une carte : au singulier");
-  const r = ouvrir(null, {moteur: true, appareil: caseGrades(CORE.NB_GRADES)});
-  assert.equal(r.$("bg-det").texteLu, "Tous les grades sont réussis · 40\u00a0cartes sur 40");
-  // Après un passage réussi, le bandeau suit (retour aux réglages).
-  const t = tirages();
-  const s = ouvrirGrades();
-  s.$("grades-liste").querySelector('[data-grade="1"]').click();
-  s.$("fiche-passer").click();
-  jouerPassage(s, 1, t.suivants("grade", CORE.reglagesGrade(1)), 8);
-  s.$("grades-retour").click();
-  if (!s.$("ecran-grades").hidden) s.$("grades-retour").click();
-  assert.equal(s.$("ecran-reglages").hidden, false);
-  assert.equal(s.$("bg-det").texteLu, "À toi : le 19e kyu · 1 carte sur 40");
-});
-
 test("bandeau des grades : sur ordinateur, il prend la largeur de la rangée de « C'est parti » (CSS) ; au téléphone, « Historique » passe dessous", () => {
   assert.match(PAGE, /\.bas-pile \{ width: fit-content; max-width: 100%;/);
   assert.match(PAGE, /\.bandeau-grades \{ width: 0; min-width: 100%;/, "le bandeau ne compte pas dans la largeur de la pile");
@@ -1665,249 +1326,536 @@ test("bandeau des grades : sur ordinateur, il prend la largeur de la rangée de 
   assert.match(PAGE, /\.reglages-corps \.bas-pile \.historique-bouton \{ order: 3;/);
 });
 
-test("sans retenue : la fiche du 19e kyu dit « à ajouter ou à enlever, sans retenue », celle du 12e « dizaines rondes », celle du 20e « à additionner, sans retenue »", () => {
-  const p = ouvrirGradesA(1440, caseGrades(9));
-  const premiere = n => {
-    p.$("grades-liste").querySelector(`[data-grade="${n}"]`).click();
-    const l = texte(p.$("fiche-regles").querySelectorAll("li")[0]);
-    p.$("grades-retour").click();
-    return l;
-  };
-  assert.match(premiere(1), /nombres d’un chiffre à additionner, sans retenue$/);
-  assert.match(premiere(2), /nombres d’un chiffre à ajouter ou à enlever, sans retenue$/);
-  assert.match(premiere(9), /dizaines rondes à ajouter ou à enlever, sans retenue$/);
-  assert.match(premiere(10), /nombres de 2 chiffres à ajouter ou à enlever, sans retenue$/);
+test("étapes : la liste dit ce que chaque grade travaille, et l'étape à tenter du grade en cours ; la fiche du 20e kyu a deux onglets, quatre lignes, un seul « M'entraîner »", () => {
+  const p = ouvrirGrades();
+  assert.equal(p.$("grades-compte").textContent, "Flash · 10 calculs par étape · réussie à 7 sur 10");
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(texte(lignes[0].querySelector(".gr-det")), "Étape 1 sur 2 · comme 2 + 5", "le grade en cours : son étape à tenter");
+  assert.equal(texte(lignes[1].querySelector(".gr-det")), "2 puis 3 nombres d’un chiffre · avec un complément à 5", "les autres : ce que le grade travaille");
+  lignes.forEach((l, i) => { if (i) assert.equal(l.querySelector(".gr-det").textContent, CORE.texteGrade(i + 1)); });
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  assert.equal(p.$("fiche-niveau").textContent, "Débutant · grade 1 sur 40");
+  assert.equal(p.$("fiche-etapes").hidden, false);
+  assert.equal(p.$("fiche-etapes").style.getPropertyValue("--etapes"), "2");
+  const [un, deux] = onglets(p);
+  assert.deepEqual([un.getAttribute("data-etape"), un.getAttribute("aria-pressed"), un.disabled, texte(un)], ["101", "true", false, "Étape 1à toi"]);
+  assert.deepEqual([deux.getAttribute("data-etape"), deux.getAttribute("aria-pressed"), deux.disabled, texte(deux)], ["102", "false", true, "Étape 2🔒"]);
+  assert.equal(deux.getAttribute("aria-label"), "Étape 2, fermée");
+  const regles = texte(p.$("fiche-regles"));
+  assert.equal(p.$("fiche-regles").children.length, 4);
+  assert.match(regles, /2nombres d’un chiffre à additionner/);
+  assert.match(regles, /2 \+ 5par exemple : sans complément ni retenue/);
+  assert.match(regles, /4 spour voir les nombres d’un calcul/);
+  assert.match(regles, /7\/10bonnes réponses sur 10 calculs pour réussir l’étape/);
+  // Une étape fermée ne s'ouvre pas : la fiche ne change pas.
+  deux.click();
+  assert.equal(onglets(p)[0].getAttribute("aria-pressed"), "true");
+  // Un seul bouton d'entraînement (choix du 22/11/2026), et « Je tente ▶ ».
+  assert.match(PAGE, /<button type="button" class="secondary" id="fiche-entrainer">🎯&nbsp;M’entraîner<\/button>/);
+  assert.equal(p.$("fiche-entrainer").disabled, false);
+  assert.equal(p.$("fiche-passer").textContent, "Je tente ▶");
+  assert.doesNotMatch(PAGE, /fiche-entrainer-5|fiche-entrainer-10|fiche-paire/, "plus de boutons « 5 calculs » et « 10 calculs »");
+  assert.match(PAGE, /<p class="fiche-note">5&nbsp;calculs · correction après chaque calcul<\/p>/);
+  // La carte de la fiche : grise, sans couleur tant qu'aucune étape n'est réussie.
+  const carte = p.$("fiche-carte-place").querySelector(".fiche-carte");
+  assert.match(carte.className, /\bgrisee\b/);
+  assert.equal(carte.querySelector(".couleur"), null);
+});
+
+test("étapes : un grade à une seule étape n'a pas d'onglets ; un grade à 4 étapes les serre ; l'étape montrée par défaut est celle à tenter", () => {
+  const p = ouvrirGrades(caseEtapes(24)); // 20e → 10e kyu gagnés : le 9e kyu (une étape) est à tenter
+  p.$("grades-groupes").querySelector('[data-groupe="1"]').click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.match(lignes[1].className, /\bactuel\b/);
+  assert.equal(texte(lignes[1].querySelector(".gr-det")), "3 nombres de 2 chiffres · 6 s en tout", "une seule étape : la ligne ne dit pas « Étape 1 sur 1 »");
+  p.$("grades-liste").querySelector('[data-grade="12"]').click();
+  assert.equal(p.$("fiche-etapes").hidden, true);
+  assert.equal(onglets(p).length, 1);
+  assert.match(texte(p.$("fiche-regles")), /3nombres de 2 chiffres à additionner10 à 99des nombres tirés au hasard6 spour voir/);
+  // Le 2e dan : quatre étapes, les deux premières réussies.
+  const q = ouvrirGrades(caseEtapes(39));
+  q.$("grades-groupes").querySelector('[data-groupe="2"]').click();
+  q.$("grades-liste").querySelector('[data-grade="22"]').click();
+  assert.equal(q.$("fiche-etapes").classList.contains("serre"), true);
+  assert.deepEqual(onglets(q).map(o => texte(o)), ["Étape 1✓", "Étape 2✓", "Étape 3à toi", "Étape 4🔒"]);
+  assert.deepEqual(onglets(q).map(o => o.getAttribute("aria-pressed")), ["false", "false", "true", "false"]);
+  // Une étape réussie se revoit : sa fiche, et on peut la retenter.
+  onglets(q)[0].click();
+  assert.deepEqual(onglets(q).map(o => o.getAttribute("aria-pressed")), ["true", "false", "false", "false"]);
+  assert.match(texte(q.$("fiche-regles")), /312 \+ 245par exemple : sans retenue/);
+  assert.equal(q.$("fiche-passer").disabled, false);
+  // La carte du 2e dan : deux étapes sur quatre, la moitié en couleur.
+  const carte = q.$("fiche-carte-place").querySelector(".fiche-carte");
+  assert.ok(carte.querySelector(".couleur"), "la même image, en couleur, par-dessus la grise");
+  assert.equal(carte.style.getPropertyValue("--part"), "50%");
+});
+
+test("étapes : l'étape 1 réussie → « Étape 1 réussie ! », les ronds, la carte qui se colore, l'étape 2 s'ouvre ; puis l'étape 2 → « Grade réussi ! » et la carte entière", () => {
+  const t = tirages();
+  const p = ouvrirGrades(null, 1440);
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  const calculs = t.suivants(101);
+  assert.ok(calculs.every(c => c.termes.length === 2 && c.termes.every(x => x.signe === 1 && x.valeur <= 9) && c.total <= 9), "deux nombres d'un chiffre, total jusqu'à 9");
+  // Le rythme : 4 s pour deux nombres, 2 s par nombre.
+  p.avancer(AVANT_LE_3);
+  const bips = p.oscillateurs.filter(o => o.frequency.value === 880).map(o => o.debut);
+  assert.equal(bips.length, 2);
+  assert.ok(Math.abs(bips[1] - bips[0] - 2) < 1e-9);
+  jouerPassage(p, 101, calculs, 8);
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("compte").textContent, "🥋 20e kyu · étape 1");
+  assert.match(p.$("fin-grade").className, /\breussi\b/);
+  assert.equal(p.$("fin-grade-titre").textContent, "Étape 1 réussie !");
+  assert.equal(p.$("fin-grade-sceau").hidden, true, "le sceau 合格 est pour le grade gagné");
+  assert.equal(p.$("fin-grade-emoji").hidden, true);
+  const pips = p.$("fin-grade-pips");
+  assert.equal(pips.hidden, false);
+  assert.deepEqual(pips.querySelectorAll("i").map(i => [i.textContent, i.className]), [["✓", "faite"], ["2", ""]]);
+  assert.match(p.$("fin-grade-score").textContent, /^8\/10$/);
+  // La carte : pas encore gagnée — grise, la moitié en couleur, pas de dos.
+  assert.equal(p.$("fin-grade-carte").hidden, false);
+  const carte = carteFin(p);
+  assert.match(carte.className, /\bpartielle\b/);
+  assert.equal(carte.style.getPropertyValue("--part"), "50%");
+  assert.deepEqual(carte.querySelectorAll("img").map(i => i.className), ["grise", "couleur"]);
+  assert.equal(carte.querySelectorAll(".carte-face").length, 1, "pas de dos à une carte pas encore gagnée");
+  assert.equal(p.$("carte-retourner").hidden, true);
+  assert.equal(texte(p.$("fin-carte-legende")), "Ta carte se colore : encore 1 étape");
+  assert.equal(p.$("fin-carte-legende").hidden, false);
+  // Toucher la carte ne la retourne pas, et ne l'ouvre pas en grand.
+  p.$("fin-carte-place").querySelector(".carte-kyu").click();
+  assert.doesNotMatch(carteFin(p).className, /retournee/);
+  assert.equal(p.$("carte-grand").hidden, true);
+  assert.equal(texte(p.$("fin-grade-ouvert")), "🔓 L’étape 2 est ouverte");
+  assert.deepEqual([p.$("fin-grade-a").textContent, texte(p.$("fin-grade-b"))], ["Le grade", "Étape 2 ▶"]);
+  assert.equal(caseDe(p).etapeFlash, 1, "le rang de l'étape réussie est gardé");
+  assert.equal(caseDe(p).gradeReussi, undefined, "la clé de l'ancienne grille n'est plus écrite");
+  assert.deepEqual(caseDe(p).seances["1"].slice(1, 10), ["grade", "plus", 1, 1, 2, 101, 10, 10, 8], "la séance porte le numéro de l'étape");
+  // « Étape 2 ▶ » : la fiche du grade, sur l'étape 2 — pas l'épreuve.
+  p.$("fin-grade-b").click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  assert.deepEqual(onglets(p).map(o => [texte(o), o.getAttribute("aria-pressed"), o.disabled]), [["Étape 1✓ réussie", "false", false], ["Étape 2à toi", "true", false]]);
+  assert.match(texte(p.$("fiche-regles")), /3nombres d’un chiffre à additionner/);
+  assert.equal(p.$("fiche-carte-place").querySelector(".fiche-carte").style.getPropertyValue("--part"), "50%");
+  // L'étape 2, la dernière : le grade est gagné.
+  p.$("fiche-passer").click();
+  jouerPassage(p, 102, t.suivants(102), 7);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  assert.equal(p.$("compte").textContent, "🥋 20e kyu · étape 2");
+  assert.equal(p.$("fin-grade-sceau").hidden, false);
+  assert.equal(p.$("fin-grade-pips").hidden, true);
+  assert.doesNotMatch(carteFin(p).className, /partielle/);
+  assert.equal(carteFin(p).querySelectorAll(".carte-face").length, 2, "la carte gagnée a son dos");
+  assert.equal(p.$("carte-retourner").hidden, false);
+  assert.equal(p.$("fin-carte-legende").hidden, true);
+  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 19e kyu est ouvert");
+  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["Les grades", "Le 19e kyu ▶"]);
+  assert.equal(caseDe(p).etapeFlash, 2);
+  // Sur ordinateur, « Retourner » montre le dos sur place.
+  p.$("carte-retourner").click();
+  assert.match(carteFin(p).className, /\bretournee\b/);
+  assert.equal(p.$("carte-grand").hidden, true);
+  // Retenter l'étape 1, déjà réussie : réussie encore, rien de neuf ne s'ouvre,
+  // et la carte, gagnée, reste entière.
+  p.$("fin-grade-a").click();
+  assert.deepEqual(etatsDesLignes(p, 3), ["reussi", "actuel", "ferme"]);
+  assert.match(texte(p.$("grades-liste").querySelectorAll(".gr-item")[0]), /7\/10réussi/, "la note de l'épreuve du grade (sa dernière étape)");
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  assert.deepEqual(onglets(p).map(o => o.getAttribute("aria-pressed")), ["false", "true"], "un grade gagné s'ouvre sur son épreuve");
+  onglets(p)[0].click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 101, t.suivants(101), 10);
+  assert.equal(p.$("fin-grade-titre").textContent, "Étape 1 réussie !");
+  assert.equal(p.$("fin-grade-ouvert").hidden, true, "l'étape 2 était déjà ouverte : on ne le redit pas");
+  assert.deepEqual(p.$("fin-grade-pips").querySelectorAll("i").map(i => i.textContent), ["✓", "✓"]);
+  assert.doesNotMatch(carteFin(p).className, /partielle/);
+  assert.equal(p.$("fin-carte-legende").hidden, true);
+  assert.equal(caseDe(p).etapeFlash, 2, "retenter une étape ne fait pas redescendre");
+  // « Le 19e kyu ▶ » ouvrait la fiche du grade suivant : toujours vrai.
+  p.$("fin-grade-a").click(); // « Le grade »
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+});
+
+test("étapes : « presque » à 6, « pas encore » à 4, « arrêté » par la flèche — rien ne s'ouvre, pas de carte", () => {
+  const t = tirages();
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 101, t.suivants(101), 6);
+  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
+  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 7. Tu peux retenter tout de suite.");
+  assert.equal(p.$("fin-grade-ouvert").hidden, true);
+  assert.equal(p.$("fin-grade-sceau").hidden, true);
+  assert.equal(p.$("fin-grade-pips").hidden, true);
+  assert.equal(p.$("fin-grade-emoji").hidden, false);
+  assert.equal(p.$("fin-grade-carte").hidden, true);
+  assert.doesNotMatch(p.$("fin-grade").className, /avec-carte/);
+  assert.doesNotMatch(p.$("vue-fin").className, /avec-carte/);
+  assert.equal(p.$("fin-carte-place").children.length, 0);
+  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Retenter"]);
+  p.$("fin-grade-b").click();
+  jouerPassage(p, 101, t.suivants(101), 4);
+  assert.equal(p.$("fin-grade-titre").textContent, "Pas encore");
+  assert.equal(p.$("fin-grade-sous").textContent, "Entraîne-toi à cette étape, puis reviens.");
+  assert.equal(caseDe(p).etapeFlash, undefined, "aucune étape réussie : la clé n'existe pas");
+  // « 🎯 M'entraîner » après un passage manqué : la fiche, sur cette étape.
+  p.$("fin-grade-a").click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu");
+  assert.equal(onglets(p)[0].getAttribute("aria-pressed"), "true");
+  p.$("fiche-passer").click();
+  const calculs = t.suivants(101);
+  for (let i = 0; i < 3; i += 1) {
+    p.avancer(dureeEtape(101));
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+  }
+  p.$("retour").click();
+  assert.equal(p.$("fin-grade-titre").textContent, "Passage arrêté");
+  assert.equal(p.$("fin-grade-sous").textContent, "Une étape se passe en 10 calculs d’affilée.");
+  assert.match(p.$("fin-grade-score").textContent, /^3\/10$/);
+  assert.equal(caseDe(p).etapeFlash, undefined, "3 justes sur 3 faits ne réussissent pas une étape");
+  assert.equal(PARCOURS.historique(caseDe(p))[0].reussi, false);
+});
+
+test("étapes : « 🎯 M'entraîner » joue 5 calculs de l'étape — correction après chaque calcul, « Revoir » — sans compter comme un passage ; « Rejouer » en redonne 5", () => {
+  const t = tirages();
+  const p = ouvrirGrades();
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-entrainer").click();
+  const calculs = t.suivants(101, 5);
+  assert.equal(calculs.length, 5);
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
+  for (let i = 0; i < 5; i += 1) {
+    p.avancer(dureeEtape(101));
+    assert.equal(p.$("revoir").hidden, false, "« Revoir » à l'entraînement");
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+    assert.equal(p.vue(), "vue-correction", "la correction après chaque calcul");
+    p.touche("Enter", p.$("suivant"));
+  }
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("fin-grade").hidden, true, "pas l'écran d'un passage");
+  assert.match(p.$("score").textContent, /^5\s*\/ 5$/);
+  assert.equal(p.$("vers-reglages").textContent, "Le grade");
+  assert.deepEqual(caseDe(p).seances["1"].slice(1, 10), ["entrainement", "plus", 1, 1, 2, 101, 5, 5, 5]);
+  assert.equal(caseDe(p).etapeFlash, undefined, "un entraînement ne réussit pas d'étape, même tout juste");
+  p.$("rejouer").click();
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5", "« Rejouer » : 5 calculs de la même étape");
+  const encore = t.suivants(101, 5);
+  p.avancer(dureeEtape(101));
+  p.taper(encore[0].total);
+  p.touche("Enter", p.$("valider"));
+  assert.match(p.$("verdict").className, /\bok\b/, "les mêmes tirages que le moteur");
+  p.$("retour").click();
+  p.$("vers-reglages").click();
+  assert.equal(p.$("grades-titre").textContent, "20e kyu", "« Le grade » ramène à sa fiche");
+  assert.equal(Object.keys(caseDe(p).seances).length, 2);
+});
+
+test("étapes : « les dix » — un passage du 19e kyu (étape 1) pose les dix compléments à 5, chacun une fois", () => {
+  const p = ouvrirGrades(caseEtapes(2));
+  p.$("grades-liste").querySelector('[data-grade="2"]').click();
+  assert.match(texte(p.$("fiche-regles")), /4 \+ 3par exemple : un complément à 5 : les dix calculs possibles/);
+  p.$("fiche-passer").click();
+  const vus = [];
+  for (let i = 0; i < 10; i += 1) {
+    const nombres = relever(p, dureeEtape(103)).map(v => Number(v.texte));
+    assert.equal(nombres.length, 2, "deux nombres, même quand ce sont les mêmes (3 + 3) : le blanc les sépare");
+    vus.push(nombres.join(" + "));
+    p.taper(nombres[0] + nombres[1]);
+    p.touche("Enter", p.$("valider"));
+  }
+  assert.deepEqual(vus.slice().sort(), CORE.DIX.complements.map(([x, y]) => `${x} + ${y}`).sort());
+  assert.equal(p.$("fin-grade-titre").textContent, "Étape 1 réussie !");
+});
+
+test("étapes : les rangs gardés ouvrent les cadenas même sans leurs séances ; le bandeau et Mon historique suivent", () => {
+  const p = ouvrir(null, {moteur: true, appareil: caseEtapes(17)});
+  assert.match(p.$("bg-det").texteLu, /^À toi : le 12e kyu · 8 cartes sur 40$/);
+  p.$("vers-grades").click();
+  assert.deepEqual(etatsDesLignes(p, 10), ["reussi", "reussi", "reussi", "reussi", "reussi", "reussi", "reussi", "reussi", "actuel", "ferme"]);
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.match(texte(lignes[1]), /✓réussi/, "un grade gagné dont les séances ne sont plus là : ✓ sans note");
+  assert.equal(texte(lignes[8].querySelector(".gr-det")), "Étape 2 sur 3 · comme 27 + 6");
+  assert.match(texte(lignes[8]), /À toi ▶/);
+  // Chaque ligne a sa carte : en couleur avec le sceau si gagnée, grise pour
+  // le grade en cours, une place vide fermée.
+  const cartes = p.$("grades-liste").querySelectorAll(".gr-carte");
+  assert.equal(cartes[0].querySelector("img").src, "./anzan-cartes/kyu20-kaeru-vignette.webp");
+  assert.ok(cartes[0].querySelector(".gr-sceau"));
+  assert.equal(cartes[8].querySelector("img").src, CORE.carteDuGrade(9).vignette);
+  assert.equal(cartes[8].querySelector(".gr-sceau"), null);
+  assert.match(cartes[9].className, /\bvide\b/);
+  assert.equal(p.$("grades-indice").hidden, false);
+  // Une carte gagnée s'ouvre en grand.
+  cartes[1].click();
+  assert.equal(p.$("carte-grand").hidden, false);
+  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 19e Kyu : Usagi");
+  p.$("carte-grand-fermer").click();
+  // Un passage « presque » de l'étape 2 du 12e kyu, puis Mon historique.
+  const t = tirages();
+  p.$("grades-liste").querySelector('[data-grade="9"]').click();
+  assert.deepEqual(onglets(p).map(o => texte(o)), ["Étape 1✓ réussie", "Étape 2à toi", "Étape 3🔒"]);
+  p.$("fiche-passer").click();
+  jouerPassage(p, 118, t.suivants(118), 6);
+  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
+  p.$("fin-grade-a").click();
+  p.$("fiche-entrainer").click();
+  p.avancer(dureeEtape(118));
+  p.taper(t.suivants(118, 5)[0].total);
+  p.touche("Enter", p.$("valider"));
+  p.$("retour").click();
+  p.$("vers-reglages").click();
+  p.$("grades-retour").click();
+  p.$("grades-retour").click();
+  p.$("vers-historique").click();
+  const items = p.$("historique-liste").children;
+  assert.match(texte(items[0]), /🎯 12e kyuEntraînement · étape 2 sur 3/);
+  assert.match(texte(items[1]), /🥋 12e kyuÉtape 2 sur 3 · presque/);
+  // Tout est gagné : le bandeau le dit.
+  const q = ouvrir(null, {moteur: true, appareil: caseEtapes(65)});
+  assert.match(q.$("bg-det").texteLu, /^Tous les grades sont réussis · 40 cartes sur 40$/);
+});
+
+test("étapes : une case de l'ancienne grille (gradeReussi, séances aux numéros de grade) est ignorée sans erreur — tout repart du 20e kyu, le reste de l'historique est gardé", () => {
+  const ancienne = {[CLE_CASE]: JSON.stringify({version: 1, epoque: 0, reglages: {}, gradeReussi: 12, gradeColonne: 5, seances: {
+    "1": ["2026-11-06", "grade", "plus", 1, 1, 3, 1, 10, 10, 9, 77, 1],
+    "2": ["2026-11-07", "flash", "plus", 2, 3, 10, 8, 10, 10, 10, 78, 2],
+    "3": ["2026-11-08", "grade", "plus", 1, 1, 5, 41, 10, 10, 9, 79, 3]}})};
+  const p = ouvrir(null, {moteur: true, appareil: ancienne});
+  assert.match(p.$("bg-det").texteLu, /^À toi : le 20e kyu · 0 carte sur 40$/);
+  p.$("vers-grades").click();
+  assert.deepEqual(etatsDesLignes(p, 3), ["actuel", "ferme", "ferme"]);
+  p.$("grades-retour").click();
+  p.$("vers-historique").click();
+  assert.equal(p.$("historique-liste").children.length, 1, "la séance de Flash libre reste, les deux séances de l'ancienne grille ne se lisent plus");
+  assert.match(texte(p.$("historique-liste").children[0]), /⚡ Flash/);
+});
+
+test("cartes : au téléphone, « Retourner » ouvre la carte gagnée en grand, déjà sur son dos ; Échap la referme et rend le focus", () => {
+  const t = tirages();
+  const p = ouvrirGrades(caseEtapes(1), 390);
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  jouerPassage(p, 102, t.suivants(102), 7);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  p.$("carte-retourner").click();
+  assert.equal(p.$("carte-grand").hidden, false);
+  const grande = p.$("carte-grand-place").querySelector(".carte-kyu");
+  assert.match(grande.className, /\bretournee\b/, "le dos tout de suite");
+  assert.equal(p.$("carte-grand-retourner").getAttribute("aria-pressed"), "true");
+  assert.equal(p.$("carte-grand-titre").textContent, "La carte du 20e Kyu : Kaeru");
+  p.touche("Escape", p.$("carte-grand-fermer"));
+  assert.equal(p.$("carte-grand").hidden, true);
+  assert.equal(p.$("carte-grand-place").children.length, 0);
+  assert.equal(ecranActif(p), "carte-retourner", "le focus revient sur « Retourner »");
+});
+
+test("cartes dan : la dernière étape du 1er dan montre sa carte dorée (640 × 984, jamais déformée) et « Retourner »", () => {
+  const t = tirages();
+  const p = ouvrirGrades(caseEtapes(36), 1440); // 20e → 1er kyu gagnés, et la 1re étape du 1er dan
+  p.$("grades-groupes").querySelector('[data-groupe="2"]').click();
+  const premiereDan = p.$("grades-liste").querySelectorAll(".gr-item")[0].querySelector(".gr-carte");
+  assert.match(premiereDan.className, /\bor\b/, "la place d'une carte dan a sa hauteur");
+  assert.equal(premiereDan.querySelector("img").src, "./anzan-cartes/dan01-kuma-vignette.webp");
+  p.$("grades-liste").querySelector('[data-grade="21"]').click();
+  const petite = p.$("fiche-carte-place").querySelector(".fiche-carte");
+  assert.match(petite.className, /\bor\b/);
+  assert.equal(petite.style.getPropertyValue("--part"), "50%", "une étape sur deux : la moitié de la carte en couleur");
+  assert.deepEqual(onglets(p).map(o => o.getAttribute("aria-pressed")), ["false", "true"]);
+  p.$("fiche-passer").click();
+  jouerPassage(p, 137, t.suivants(137), 7);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  assert.match(p.$("fin-grade-carte").className, /\bdan\b/);
+  const carte = carteFin(p);
+  assert.match(carte.className, /\bor\b/);
+  assert.deepEqual([carte.querySelector("img").attrs.width, carte.querySelector("img").attrs.height], ["640", "984"]);
+  assert.equal(p.$("carte-retourner").hidden, false);
+  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 2e dan est ouvert");
 });
 
 // ---------------------------------------------------------------------------
-// Lot « grades-colonne » (07/11/2026) : les 13 grades en Colonne, selon
-// l'onglet ; une estampe faite par la page à la place de la carte.
+// La Colonne : 10 kyu, des estampes, et un chrono pour les DIX calculs (à
+// la place du temps par calcul) aux trois étapes chronométrées.
 // ---------------------------------------------------------------------------
-function ouvrirGradesColonne(appareil = null) {
-  const p = ouvrir(memoireColonne, {moteur: true, appareil});
-  p.$("vers-grades").click();
-  return p;
-}
-// Joue un passage en Colonne : `justes` bonnes réponses d'abord, puis des fausses.
-function jouerPassageColonne(p, calculs, justes) {
-  for (let i = 0; i < CORE.GRADE_CALCULS; i += 1) {
-    assert.equal(p.$("colonne").hidden, false, `calcul ${i + 1} : la colonne est écrite`);
-    assert.equal((String(p.$("colonne").innerHTML).match(/class="nb"/g) || []).length, calculs[i].termes.length, "tous les nombres du calcul, écrits");
-    assert.equal(p.$("revoir").hidden, true, "pas de « Revoir » en Colonne");
-    p.taper(i < justes ? calculs[i].total : calculs[i].total + 1);
-    p.touche("Enter", p.$("valider"));
-    if (i < CORE.GRADE_CALCULS - 1) assert.equal(p.vue(), "vue-jeu", "pas de correction entre deux calculs");
-  }
-}
-
-test("grades en Colonne : le bandeau et l'écran des grades suivent l'onglet — 13 grades, une estampe par ligne", () => {
+test("Colonne : le bandeau et l'écran des grades suivent l'onglet — 10 kyu, une estampe par ligne ; la fiche d'une étape libre", () => {
   const p = ouvrir(memoireColonne, {moteur: true});
-  assert.equal(p.$("bg-det").texteLu, "À toi : le 10e kyu · 0 sur 13");
-
+  assert.equal(p.$("bg-det").texteLu, "À toi : le 10e kyu · 0 sur 10");
   p.$("vers-grades").click();
   assert.equal(p.$("grades-eyebrow").textContent, "Soroban · 📝 Colonne");
   assert.equal(p.$("grades-groupes").hidden, true, "une seule liste, pas de groupes");
-  assert.equal(p.$("grades-indice").hidden, true);
-  assert.equal(p.$("grades-compte").textContent, "10 calculs en Colonne · grille du test japonais");
+  assert.equal(p.$("grades-compte").textContent, "Colonne · 10 calculs par étape · réussie à 8 sur 10");
   const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
-  assert.equal(lignes.length, 13);
-  assert.match(lignes[0].className, /\bactuel\b/);
+  assert.equal(lignes.length, 10, "dix kyu (les dan viendront au lot 2)");
   assert.equal(lignes[0].querySelector(".gr-ligne").getAttribute("data-grade"), "41");
-  assert.match(texte(lignes[0]), /10e kyu/);
+  assert.equal(texte(lignes[0].querySelector(".gr-det")), "Étape 1 sur 2 · comme 2 + 6 − 3");
+  assert.match(texte(lignes[9]), /1er kyu/);
+  assert.doesNotMatch(texte(p.$("grades-liste")), /pré-/, "plus de grades « pré- »");
   const es = lignes[0].querySelector(".es");
-  assert.ok(es, "l'estampe du grade à passer");
   assert.match(es.className, /\bgrisee\b/);
+  assert.doesNotMatch(es.className, /partielle/);
   assert.equal(es.querySelector(".es-jp").textContent, "十級");
-  assert.equal(es.querySelector(".gr-sceau"), null, "pas de sceau avant la réussite");
-  assert.equal(lignes[7].querySelector(".gr-nom").getAttribute("data-jp"), "準三級");
-  assert.match(texte(lignes[7]), /pré-3e kyu/);
-  lignes.slice(1).forEach(l => {
-    assert.match(l.className, /\bferme\b/);
-    assert.equal(l.querySelector(".gr-carte").textContent, "🔒");
-  });
+  lignes.slice(1).forEach(l => { assert.match(l.className, /\bferme\b/); assert.equal(l.querySelector(".gr-carte").textContent, "🔒"); });
+  p.$("grades-liste").querySelector('[data-grade="41"]').click();
+  assert.equal(p.$("grades-titre").textContent, "10e kyu");
+  assert.equal(p.$("grades-eyebrow").textContent, "Les grades · 📝 Colonne");
+  assert.equal(p.$("fiche-niveau").textContent, "Colonne · grade 1 sur 10");
+  const regles = texte(p.$("fiche-regles"));
+  assert.match(regles, /3nombres d’un chiffre à ajouter ou à enlever/);
+  assert.match(regles, /2 \+ 6 − 3par exemple : sans complément ni retenue/);
+  assert.match(regles, /Librepas de chrono à cette étape/);
+  assert.match(regles, /8\/10bonnes réponses sur 10 calculs pour réussir l’étape/);
   // Retour au menu, onglet Flash : le bandeau redevient celui des cartes.
+  p.$("grades-retour").click();
   p.$("grades-retour").click();
   p.$("ecran-reglages").querySelector('[data-mode="flash"]').click();
   assert.match(p.$("bg-det").texteLu, /^À toi : le 20e kyu · 0 carte sur 40$/);
-  p.$("vers-grades").click();
-  assert.equal(p.$("grades-eyebrow").textContent, "Soroban");
-  assert.equal(p.$("grades-liste").querySelectorAll(".gr-item").length, 10);
 });
 
-test("grades en Colonne : la fiche dit ce qui est officiel ; le passage se joue en colonne, 15 s par calcul, correction à la fin ; réussi à 5 sur 10 au 10e kyu", () => {
+test("Colonne : une étape libre se joue sans aucun chrono, correction à la fin ; 7 sur 10, c'est « presque » (il en faut 8) ; réussie, l'estampe fonce", () => {
   const t = tirages();
   const p = ouvrirGradesColonne();
   p.$("grades-liste").querySelector('[data-grade="41"]').click();
-  assert.equal(p.$("grades-titre").textContent, "10e kyu");
-  assert.equal(p.$("grades-titre").getAttribute("data-jp"), "十級");
-  assert.equal(p.$("grades-eyebrow").textContent, "Les grades · 📝 Colonne");
-  assert.equal(p.$("fiche-niveau").textContent, "Colonne · grade 1 sur 13");
-  const regles = texte(p.$("fiche-regles"));
-  assert.match(regles, /3 à 5nombres d’un chiffre à additionner, tous différents/);
-  assert.match(regles, /15 spar calcul \(12 min pour 50 à l’examen\)/);
-  assert.match(regles, /10calculs \(50 à l’examen\)/);
-  assert.match(regles, /5\/10pour réussir \(50 % à l’examen\)/);
-  assert.equal(p.$("fiche-carte-place").querySelector(".es-jp").textContent, "十級");
   p.$("fiche-passer").click();
-  const calculs = t.suivants("grade", CORE.reglagesGrade(41, "bip"));
-  assert.deepEqual(calculs.map(c => c.termes.length), [3, 3, 3, 4, 4, 4, 5, 5, 5, 5]);
-  assert.equal(p.$("chrono").hidden, false, "15 s par calcul");
+  let calculs = t.suivants(201);
   assert.equal(p.$("decompte").hidden, true, "pas de décompte : la colonne est là tout de suite");
-  jouerPassageColonne(p, calculs, 5);
-  assert.equal(p.vue(), "vue-fin");
-  assert.equal(p.$("compte").textContent, "🥋 10e kyu · Colonne");
-  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
-  assert.match(p.$("fin-grade-score").textContent, /^5\/10$/);
-  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 9e kyu est ouvert");
-  const grande = p.$("fin-carte-place").querySelector(".es");
-  assert.ok(grande, "l'estampe en grand à la place de la carte");
-  assert.equal(grande.querySelector(".es-jp").textContent, "十級");
-  assert.equal(grande.querySelector(".es-sceau").textContent, "合");
-  assert.equal(grande.querySelector(".es-fr").textContent, "10e kyu");
-  assert.equal(p.$("carte-retourner").hidden, true, "une estampe n'a pas de dos");
-  assert.equal(caseDe(p).gradeColonne, 1, "le rang du grade réussi en Colonne");
-  assert.equal(caseDe(p).gradeReussi, undefined, "le Flash ne bouge pas");
-  assert.equal(caseDe(p).seances["1"][1], "grade");
-  assert.equal(caseDe(p).seances["1"][6], 41, "le numéro du grade dans le champ « temps »");
-  // « Le 9e kyu ▶ », puis la liste : le 10e kyu a son sceau et sa note.
-  assert.equal(p.$("fin-grade-b").textContent, "Le 9e kyu ▶");
+  assert.equal(p.$("chrono").hidden, true, "plus de temps par calcul");
+  assert.equal(p.$("chrono-global").hidden, true, "une étape libre n'a pas de chrono");
+  assert.ok(calculs.every(c => c.termes.length === 3 && c.termes.some(x => x.signe < 0)));
+  p.avancer(600000);
+  assert.equal(p.vue(), "vue-jeu", "dix minutes sans répondre : rien ne se passe");
+  jouerPassageColonne(p, calculs, 7);
+  assert.equal(p.$("compte").textContent, "🥋 10e kyu · Colonne · étape 1");
+  assert.equal(p.$("fin-grade-titre").textContent, "Presque !");
+  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 8. Tu peux retenter tout de suite.");
   p.$("fin-grade-b").click();
-  assert.equal(p.$("grades-titre").textContent, "9e kyu");
-  assert.match(texte(p.$("fiche-regles")), /6\/10pour réussir/);
-  p.$("grades-retour").click();
-  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
-  assert.match(lignes[0].className, /\breussi\b/);
-  assert.equal(lignes[0].querySelector(".gr-sceau").textContent, "合");
-  assert.match(texte(lignes[0]), /5\/10réussi/);
-  assert.match(lignes[1].className, /\bactuel\b/);
-  // Le bandeau du menu : toujours le kimono, le 9e à passer.
-  p.$("grades-retour").click();
-  assert.equal(p.$("bg-det").texteLu, "À toi : le 9e kyu · 1 sur 13");
-
+  calculs = t.suivants(201);
+  jouerPassageColonne(p, calculs, 8);
+  assert.equal(p.$("fin-grade-titre").textContent, "Étape 1 réussie !");
+  const estampe = p.$("fin-carte-place").querySelector(".es");
+  assert.match(estampe.className, /\bgrande\b/);
+  assert.match(estampe.className, /\bgrisee\b/);
+  assert.match(estampe.className, /\bpartielle\b/);
+  assert.equal(estampe.style.getPropertyValue("--encre"), "rgb(92, 115, 134)", "à mi-chemin du gris vers l'encre : une étape sur deux");
+  assert.equal(estampe.querySelector(".es-sceau"), null, "le sceau 合 attend le grade");
+  assert.equal(texte(p.$("fin-carte-legende")), "Ton estampe se colore : encore 1 étape");
+  assert.equal(caseDe(p).etapeColonne, 1);
+  assert.equal(caseDe(p).etapeFlash, undefined, "la Colonne ne touche pas au Flash");
+  p.$("fin-grade-b").click();
+  p.$("fiche-passer").click();
+  jouerPassageColonne(p, t.suivants(202), 10);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+  const gagnee = p.$("fin-carte-place").querySelector(".es");
+  assert.doesNotMatch(gagnee.className, /grisee|partielle/);
+  assert.equal(gagnee.querySelector(".es-sceau").textContent, "合");
+  assert.equal(p.$("carte-retourner").hidden, true, "une estampe n'a pas de dos");
+  assert.equal(p.$("fin-grade-ouvert").textContent, "🔓 Le 9e kyu est ouvert");
 });
 
-test("grades en Colonne : 4 sur 10 au 10e kyu, c'est « presque » (il en fallait 5) ; le temps écoulé compte faux et passe au calcul suivant", () => {
+test("Colonne, étape chronométrée : un seul chrono pour les dix calculs, en pastille ; à zéro « Temps écoulé », le calcul en cours n'est pas compté, rien ne s'ouvre", () => {
   const t = tirages();
-  const p = ouvrirGradesColonne();
-  p.$("grades-liste").querySelector('[data-grade="41"]').click();
+  const p = ouvrirGradesColonne(caseEtapes(0, 8)); // 7e kyu : les deux étapes libres réussies
+  p.$("grades-liste").querySelector('[data-grade="44"]').click();
+  assert.deepEqual(onglets(p).map(o => o.getAttribute("aria-pressed")), ["false", "false", "true"]);
+  assert.match(texte(p.$("fiche-regles")), /3 minpour les 10 calculs/);
   p.$("fiche-passer").click();
-  const calculs = t.suivants("grade", CORE.reglagesGrade(41, "bip"));
-  // Le premier calcul : rien tapé, les 15 s passent.
-  p.avancer(15100);
+  const calculs = t.suivants(209);
+  assert.equal(p.$("chrono-global").hidden, false);
+  assert.equal(p.$("chrono").hidden, true, "pas l'anneau des séances libres");
+  assert.equal(p.$("chrono-global-s").textContent, "3:00");
+  assert.equal(p.$("chrono-global").getAttribute("role"), "timer");
+  // Trois calculs, vingt secondes chacun : le chrono ne repart pas à chaque calcul.
+  for (let i = 0; i < 3; i += 1) {
+    p.avancer(20000);
+    p.taper(calculs[i].total);
+    p.touche("Enter", p.$("valider"));
+    assert.equal(p.vue(), "vue-jeu");
+  }
+  p.avancer(20);
+  assert.equal(p.$("chrono-global-s").textContent, "2:00", "une minute est passée sur les trois");
+  assert.equal(p.$("compte").textContent, "Calcul 4\u00a0/ 10");
+  p.taper(calculs[3].total); // une réponse tapée, pas validée
+  p.avancer(118980);
+  assert.equal(p.$("chrono-global-s").textContent, "0:01");
   assert.equal(p.vue(), "vue-jeu");
-  assert.equal(p.$("compte").textContent, "Calcul 2\u00a0/ 10");
-  for (let i = 1; i < 10; i += 1) {
-    p.taper(i <= 4 ? calculs[i].total : calculs[i].total + 1);
+  p.avancer(1500);
+  assert.equal(p.vue(), "vue-fin", "à zéro, le passage s'arrête");
+  assert.equal(p.$("chrono-global").hidden, true);
+  assert.equal(p.$("fin-grade-titre").textContent, "Temps écoulé");
+  assert.match(p.$("fin-grade").className, /\btemps\b/);
+  assert.match(p.$("fin-grade-score").textContent, /^3\/10$/);
+  assert.equal(p.$("fin-grade-sous").textContent, "3 calculs sur 10 en 3 min. Tu peux retenter tout de suite.");
+  assert.equal(p.$("fin-grade-carte").hidden, true);
+  assert.equal(p.$("fin-grade-ouvert").hidden, true);
+  assert.deepEqual([p.$("fin-grade-a").textContent, p.$("fin-grade-b").textContent], ["🎯 M’entraîner", "Retenter"]);
+  assert.deepEqual(caseDe(p).seances["1"].slice(1, 10), ["grade", "plusmoins", 1, 1, 7, 209, 10, 3, 3], "trois calculs faits : celui en cours n'est pas compté");
+  assert.equal(caseDe(p).etapeColonne, 8, "rien ne s'ouvre");
+  // « Retenter » : un chrono neuf.
+  p.$("fin-grade-b").click();
+  assert.equal(p.$("chrono-global-s").textContent, "3:00");
+  assert.equal(p.$("chrono-global").hidden, false);
+});
+
+test("Colonne, étape chronométrée : une réponse validée après l'heure ne compte pas, même si l'image du chrono n'est pas passée ; dans les temps, 8 sur 10 réussit l'étape et gagne le grade", () => {
+  const t = tirages();
+  const p = ouvrirGradesColonne(caseEtapes(0, 8));
+  p.$("grades-liste").querySelector('[data-grade="44"]').click();
+  p.$("fiche-passer").click();
+  let calculs = t.suivants(209);
+  p.avancer(179990);
+  p.taper(calculs[0].total);
+  p.avancer(20, {images: false}); // l'heure est passée, aucune image ne l'a encore vu
+  p.$("valider").click();
+  assert.equal(p.vue(), "vue-fin");
+  assert.equal(p.$("fin-grade-titre").textContent, "Temps écoulé");
+  assert.match(p.$("fin-grade-score").textContent, /^0\/10$/);
+  assert.equal(p.$("fin-grade-sous").textContent, "0 calcul sur 10 en 3 min. Tu peux retenter tout de suite.");
+  assert.equal(caseDe(p).seances["1"], undefined, "aucun calcul fait : pas de séance");
+  p.$("fin-grade-b").click();
+  calculs = t.suivants(209);
+  for (let i = 0; i < 10; i += 1) {
+    p.avancer(15000);
+    p.taper(i < 8 ? calculs[i].total : calculs[i].total + 1);
     p.touche("Enter", p.$("valider"));
   }
-  assert.match(p.$("fin-grade").className, /\bpresque\b/);
-  assert.equal(p.$("fin-grade-sous").textContent, "Il en fallait 5. Tu peux retenter tout de suite.");
-  assert.equal(p.$("fin-carte-place").querySelector(".es"), null);
-  assert.equal(caseDe(p).gradeColonne, undefined);
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !", "la 3e étape du 7e kyu est sa dernière");
+  assert.equal(p.$("chrono-global").hidden, true);
+  assert.equal(caseDe(p).etapeColonne, 9);
+  p.avancer(600000);
+  assert.equal(p.vue(), "vue-fin", "le chrono est arrêté : il ne revient pas après la fin");
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
 });
 
-test("grades en Colonne : « 🎯 M'entraîner » corrige après chaque calcul, sans compter pour le grade", () => {
+test("Colonne, étape chronométrée : quitter le passage arrête le chrono ; « M'entraîner » n'en a pas ; une séance libre garde son anneau par calcul", () => {
   const t = tirages();
-  const p = ouvrirGradesColonne();
-  p.$("grades-liste").querySelector('[data-grade="41"]').click();
-  p.$("fiche-entrainer-10").click();
-  const calculs = t.suivants("entrainement", CORE.reglagesGrade(41, "bip", 10));
-  assert.equal(p.$("colonne").hidden, false);
+  const p = ouvrirGradesColonne(caseEtapes(0, 8));
+  p.$("grades-liste").querySelector('[data-grade="44"]').click();
+  p.$("fiche-passer").click();
+  t.suivants(209);
+  p.avancer(5000);
+  p.$("retour").click(); // rien de fait : retour à la fiche
+  assert.equal(p.$("ecran-grades").hidden, false);
+  assert.equal(p.$("grades-titre").textContent, "7e kyu");
+  assert.equal(p.$("chrono-global").hidden, true);
+  p.avancer(400000);
+  assert.equal(p.$("ecran-grades").hidden, false, "le chrono quitté ne fait plus rien");
+  assert.equal(p.$("ecran-seance").hidden, true);
+  // L'entraînement : 5 calculs, correction après chacun, pas de chrono.
+  p.$("fiche-entrainer").click();
+  const calculs = t.suivants(209, 5);
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 5");
+  assert.equal(p.$("chrono-global").hidden, true);
+  assert.equal(p.$("chrono").hidden, true);
+  p.avancer(300000);
   p.taper(calculs[0].total);
   p.touche("Enter", p.$("valider"));
-  assert.equal(p.vue(), "vue-correction", "la correction après le calcul");
-  for (let i = 1; i < 10; i += 1) {
-    p.$("suivant").click();
-    p.taper(calculs[i].total);
-    p.touche("Enter", p.$("valider"));
-  }
-  p.$("suivant").click();
-  assert.equal(p.vue(), "vue-fin");
-  assert.equal(p.$("vers-reglages").textContent, "Le grade");
-  assert.equal(caseDe(p).gradeColonne, undefined, "un entraînement ne passe pas le grade");
-  assert.equal(caseDe(p).seances["1"][1], "entrainement");
-  p.$("vers-reglages").click();
-  assert.equal(p.$("grades-titre").textContent, "10e kyu");
-});
-
-// ---------------------------------------------------------------------------
-// « 🎯 M'entraîner » en 5 ou 10 calculs (lot « entraînement 5 ou 10 »,
-// 07/11/2026) : deux boutons sur la fiche ; le passage reste à 10.
-
-test("entraînement 5 ou 10 : au Flash, « 🎯 5 calculs » joue 5 calculs, la séance garde 5 prévus, « Rejouer » refait 5", () => {
-  const t = tirages();
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  assert.equal(p.$("fiche-entrainer-5").dataset.calculs, "5");
-  assert.equal(p.$("fiche-entrainer-10").dataset.calculs, "10");
-  p.$("fiche-entrainer-5").click();
-  const calculs = t.suivants("entrainement", CORE.reglagesGrade(1, "bip", 5));
-  assert.equal(calculs.length, 5);
-  for (let i = 0; i < 5; i += 1) {
-    p.avancer(dureeGrade(1));
-    assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), `Calcul ${i + 1} / 5`);
-    p.taper(calculs[i].total);
-    p.touche("Enter", p.$("valider"));
-    assert.equal(p.vue(), "vue-correction");
-    p.$("suivant").click();
-  }
-  assert.equal(p.vue(), "vue-fin", "fini après 5 calculs");
-  assert.match(p.$("score").textContent, /^5\s*\/ 5$/);
-  const s = caseDe(p).seances["1"];
-  assert.deepEqual([s[1], s[6], s[7], s[8], s[9]], ["entrainement", 1, 5, 5, 5], "entraînement au 20e kyu, 5 prévus, 5 faits, 5 justes");
-  assert.equal(caseDe(p).gradeReussi, undefined, "5 sur 5 à l'entraînement ne réussit pas le grade");
-  assert.equal(PARCOURS.historique(caseDe(p))[0].arretee, false, "5 sur 5 prévus : pas « arrêtée »");
-  p.$("rejouer").click();
-  p.avancer(dureeGrade(1));
-  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 5", "« Rejouer » refait 5 calculs");
-});
-
-test("entraînement 5 ou 10 : « 🎯 10 calculs » joue 10 calculs ; « Je tente ▶ » en fait toujours 10", () => {
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  assert.equal(p.$("fiche-passer").textContent, "Je tente ▶", "« Je tente ▶ » (choix du 07/11, avant « Je le passe ▶ »)");
-  p.$("fiche-entrainer-10").click();
-  p.avancer(dureeGrade(1));
-  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 10");
-  p.$("retour").click();
-  p.$("retour").click();
-  assert.equal(p.$("grades-titre").textContent, "20e kyu");
-  p.$("fiche-entrainer-5").click();
-  p.$("retour").click();
-  p.$("fiche-passer").click();
-  p.avancer(dureeGrade(1));
-  assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), "Calcul 1 / 10", "un passage : 10 calculs, même juste après un entraînement à 5");
-});
-
-test("entraînement 5 ou 10 : en Colonne, « 🎯 5 calculs » joue la moitié de la feuille (une forme sur deux)", () => {
-  const t = tirages();
-  const p = ouvrirGradesColonne();
-  p.$("grades-liste").querySelector('[data-grade="41"]').click();
-  p.$("fiche-entrainer-5").click();
-  const calculs = t.suivants("entrainement", CORE.reglagesGrade(41, "bip", 5));
-  assert.deepEqual(calculs.map(c => c.termes.length), [3, 4, 4, 5, 5], "10e kyu : 3, 4, 4, 5, 5 nombres");
-  for (let i = 0; i < 5; i += 1) {
-    if (i) p.$("suivant").click();
-    assert.equal(p.$("compte").textContent.replace(/\u00a0/g, " "), `Calcul ${i + 1} / 5`);
-    p.taper(calculs[i].total);
-    p.touche("Enter", p.$("valider"));
-  }
-  p.$("suivant").click();
-  assert.equal(p.vue(), "vue-fin");
-  const s = caseDe(p).seances["1"];
-  assert.deepEqual([s[1], s[6], s[7], s[8]], ["entrainement", 41, 5, 5]);
-  assert.equal(caseDe(p).gradeColonne, undefined);
-});
-
-test("entraînement 5 ou 10 : après un passage manqué, « 🎯 M'entraîner » ouvre la fiche du grade (on y choisit 5 ou 10)", () => {
-  const t = tirages();
-  const p = ouvrirGrades();
-  p.$("grades-liste").querySelector('[data-grade="1"]').click();
-  p.$("fiche-passer").click();
-  jouerPassage(p, 1, t.suivants("grade", CORE.reglagesGrade(1, "bip")), 4);
-  assert.equal(p.$("fin-grade-a").dataset.action, "entrainer");
-  p.$("fin-grade-a").click();
-  assert.equal(p.$("grades-fiche-vue").hidden, false, "la fiche du grade");
-  assert.equal(p.$("grades-titre").textContent, "20e kyu");
-  assert.equal(p.$("ecran-seance").hidden, true, "aucune séance lancée d'office");
+  assert.equal(p.vue(), "vue-correction");
+  assert.match(p.$("verdict").className, /\bok\b/);
+  // Une séance libre en Colonne (temps limite de 10 s par calcul) : l'anneau.
+  const q = ouvrir(memoireColonne);
+  q.$("partir").click();
+  assert.equal(q.$("chrono").hidden, false);
+  assert.equal(q.$("chrono-global").hidden, true);
 });

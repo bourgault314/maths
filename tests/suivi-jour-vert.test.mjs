@@ -228,12 +228,14 @@ test("Anzan : un passage de grade dit réussi (1) ou pas encore (0) ; null hors 
   let p = A.creer();
   const flash = {operations: "plus", chiffresMin: 1, chiffresMax: 1, nombres: 5, temps: 10, calculs: 10, son: "bip"};
   p = A.noterSeance(p, {id: 21, mode: "flash", reglages: flash, faits: 10, score: 8}, LUNDI).parcours;
-  const g = A.etatGrades(p)[0];
-  const reg = {operations: "plus", chiffresMin: g.chiffres, chiffresMax: g.chiffres, nombres: g.nombres, grade: 1, calculs: 10};
+  // L'étape 1 du 20e kyu (barème révisé, 22/11/2026), telle que la page la note.
+  const e = A.etape(101);
+  const reg = {operations: e.operations, chiffresMin: e.chiffresMin, chiffresMax: e.chiffresMax, nombres: e.nombres, etape: 101, grade: e.grade, calculs: 10};
   p = A.noterSeance(p, {id: 22, mode: "grade", reglages: reg, faits: 10, score: 6}, MARDI).parcours;
   p = A.noterSeance(p, {id: 23, mode: "grade", reglages: reg, faits: 10, score: 10}, JEUDI).parcours;
   const r = A.resumeSuivi(p, VENDREDI);
   assert.deepEqual(r.jours.map(j => j.lignes[0].reussi), [null, 0, 1]);
+  assert.deepEqual(r.jours.map(j => [j.lignes[0].etape, j.lignes[0].sur]), [[undefined, undefined], [1, 2], [1, 2]], "une séance de grade dit son étape");
 });
 
 // ------------------------------------------------------------ la page du professeur
@@ -272,6 +274,10 @@ test("Page prof, « Activité » : chaque ligne dit ce qui a été fait — sans
   assert.deepEqual(texteLigne("defi-calcul", {calculs: 0, justes: 0, nouveautes: 1, prouvees: 0, rouges: 0, modules: ["A1", "ZZ9"]})[0], `${nom} · 1 nouveauté réussie`, "un code sans nom n'est jamais écrit");
   assert.match(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 6, prevus: 10, grade: 1, reussi: 0})[0], / · pas encore$/);
   assert.match(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 10, prevus: 10, grade: 1, reussi: 1})[0], / · réussi ✓$/);
+  // Barème révisé (22/11/2026) : la ligne dit l'étape, quand le grade en a plusieurs.
+  assert.equal(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 8, prevus: 10, grade: 1, reussi: 1, etape: 1, sur: 2})[0].replace(/\u00a0/g, " "), "grade 20e kyu, étape 1 sur 2 · réussie ✓");
+  assert.equal(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 5, prevus: 10, grade: 12, reussi: 0, etape: 1, sur: 1})[0].replace(/\u00a0/g, " "), "grade 9e kyu · pas encore");
+  assert.equal(texteLigne("flash-anzan", {mode: "entrainement", calculs: 5, justes: 5, prevus: 5, grade: 9, reussi: null, etape: 2, sur: 3})[0].replace(/\u00a0/g, " "), "entraînement au 12e kyu, étape 2 sur 3");
   assert.equal(texteLigne("flash-anzan", {mode: "flash", calculs: 10, justes: 8, prevus: 10, grade: 0, reussi: null})[0], "Flash");
   const corps = fonction("texteLigne").replace(/\/\/.*$/gm, "");
   assert.doesNotMatch(corps, /hors séance|minute|\bil a\b|\belle a\b/i);
@@ -284,6 +290,6 @@ test("Copies du moteur dans prof/ : identiques octet pour octet ; cache-busters 
   }
   assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(lire("../outils/splat.html"), /splat-parcours\.js\?v=20261111-2"/);
-  assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261111-2"/);
+  assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261122-1"/);
   assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261122-1"/);
 });

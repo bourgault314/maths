@@ -497,6 +497,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   h3.fe-periode { margin: 4px 0 8px; }
   h3.fe-periode ~ h3.fe-periode { margin-top: 18px; }
   .anzan-grade { display: block; margin-top: 2px; font-size: .8rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  /* Le grade et l'étape en cours (barème révisé, 22/11/2026) : sous le grade
+     gagné, en maigre ; la ligne peut se couper après « · » (au téléphone,
+     elle n'élargit pas le tableau). */
+  .anzan-grade.en-cours { font-weight: 400; white-space: normal; }
   .pa-liste { margin: 0; padding: 0; list-style: none; border: 1px solid var(--line); border-radius: 12px; }
   .pa-liste li { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px;
                  min-height: 54px; padding: 6px 12px; border-bottom: 1px solid #edf3f7; }
@@ -6586,17 +6590,20 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       // Lot S4c « les onglets d'appli » : par mode. Chaque colonne dit les
       // calculs faits dans ce mode (passages et entraînements aux grades
       // compris) et, dessous, le plus haut grade réussi dans ce mode (lots
-      // « grades » et « grades-colonne » du 07/11/2026).
+      // « grades » et « grades-colonne » du 07/11/2026), puis le grade et
+      // l'étape en cours (barème révisé du 22/11/2026 : un grade se gagne
+      // étape par étape ; les mots viennent du moteur, resumeProf).
       const parMode = calculsParModeAnzan(lu);
-      const cellule = (calculs, grade) => {
+      const cellule = (calculs, grade, enCours) => {
         const td = document.createElement("td");
         if (!lu.commence || !calculs) { td.textContent = "—"; td.className = "sans"; return td; }
         td.append(el("b", "", `${calculs} calcul${calculs > 1 ? "s" : ""}`));
         if (grade && ANZAN && ANZAN.nomGrade) td.append(el("small", "anzan-grade", `🥋 ${ANZAN.nomGrade(grade)}`));
+        if (enCours) td.append(el("small", "anzan-grade en-cours", `En\u00a0cours\u00a0: ${enCours.split(" · ").map(m => m.replace(/ /g, "\u00a0")).join(" · ")}`));
         return td;
       };
-      const cFlash = cellule(parMode.flash, lu.grade);
-      const cColonne = cellule(parMode.colonne, lu.gradeColonne);
+      const cFlash = cellule(parMode.flash, lu.grade, lu.enCours);
+      const cColonne = cellule(parMode.colonne, lu.gradeColonne, lu.enCoursColonne);
       const cJours = document.createElement("td");
       if (lu.commence) cJours.textContent = `${lu.jours} jour${lu.jours > 1 ? "s" : ""}`;
       else { cJours.textContent = "—"; cJours.className = "sans"; }
@@ -6692,7 +6699,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const toutes = filtre ? gardees.filter(s => modeAnzan(s) === filtre) : gardees;
     const seances = toutes.slice(0, combien).map(s => {
       // Un grade (lot « grades », 07/11/2026) : les mots du moteur,
-      // « 🥋 13e kyu · Passage · réussi » ou « 🎯 13e kyu · Entraînement au grade ».
+      // « 🥋 12e kyu · Étape 2 sur 3 · réussie » ou « 🎯 12e kyu · Entraînement · étape 2 sur 3 ».
       const grade = ANZAN && ANZAN.libelleGrade ? ANZAN.libelleGrade(s) : null;
       return {
         jour: jourAnzan(s.jour, aujourdhui),
@@ -9069,7 +9076,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       } else if (cle === "splat") {
         f.filter(x => x.type === "monde").forEach(x => liste.push({appli: cle, texte: `monde ${x.monde} fini`, rang: 1}));
       } else if (cle === "flash-anzan") {
-        f.filter(x => x.type === "grade").forEach(x => liste.push({appli: cle, texte: `${ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(x.grade) : `grade ${x.grade}`} réussi`, rang: 2}));
+        f.filter(x => x.type === "grade").forEach(x => liste.push({appli: cle, texte: `${ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(x.grade) : `grade ${x.grade}`}${ANZAN && ANZAN.estGradeColonne && ANZAN.estGradeColonne(x.grade) ? " en Colonne" : ""} réussi`, rang: 2}));
       } else if (cle === "defi-calcul") {
         // Lot 6-0 (livré avec le lot F4) : la ceinture gagnée cette semaine.
         const NOMS_CEINTURES = ["ceinture jaune", "ceinture orange", "ceinture verte", "ceinture bleue"];
@@ -9853,10 +9860,12 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       score(l.justes, l.calculs, "calculs du jour ");
     } else if (cle === "flash-anzan") {
       const grade = l.grade && ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(l.grade) : "";
-      const mode = l.mode === "colonne" ? "Colonne" : l.mode === "grade" ? `grade ${grade}`.trim() : l.mode === "entrainement" ? `entraînement${grade ? ` au ${grade}` : ""}` : "Flash";
+      // Barème révisé (22/11/2026) : un passage se fait étape par étape.
+      const etape = l.etape && l.sur > 1 ? `, étape ${l.etape} sur ${l.sur}` : "";
+      const mode = l.mode === "colonne" ? "Colonne" : l.mode === "grade" ? `grade ${grade}${etape}`.trim() : l.mode === "entrainement" ? `entraînement${grade ? ` au ${grade}${etape}` : ""}` : "Flash";
       morceaux.push(mode);
       // Lot « le jour vert » : un passage de grade dit son verdict.
-      if (l.mode === "grade" && l.reussi === 1) morceaux.push("réussi ✓");
+      if (l.mode === "grade" && l.reussi === 1) morceaux.push(etape ? "réussie ✓" : "réussi ✓");
       else if (l.mode === "grade" && l.reussi === 0) morceaux.push("pas encore");
       score(l.justes, l.calculs, "");
       if (chiffres) chiffres += l.justes > 1 ? " justes" : " juste";

@@ -7179,26 +7179,34 @@ verifier("anzan-suivi — le parcours de référence d'Anzan ressort identique d
     $obtenu = json_encode(filtrer_progression('flash-anzan', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Anzan produit : compléter 'cles'/'mots'/'motifs' de « flash-anzan » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(16, count(get_object_vars($reference->seances)), 'seize séances (dix d’entraînement, quatre de grades depuis le lot « grades » du 07/11/2026, deux de grades en Colonne depuis le lot « grades-colonne »)');
+    egal(17, count(get_object_vars($reference->seances)), 'dix-sept séances (dix d’entraînement libre, cinq aux étapes du Flash, deux à celles de la Colonne : barème révisé du 22/11/2026)');
     egal('colonne', $reference->reglages->mode, 'le mode choisi');
     egal(12, count($reference->seances->{'7'}), 'une séance = douze scalaires (les deux derniers : son identifiant et son ordre)');
     vrai($reference->seances->{'7'}[8] < $reference->seances->{'7'}[7], 'la séance 7 est arrêtée : moins de calculs faits (7) que prévus (10)');
-    egal(16, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
-    vrai(strlen($attendu) < 2300, 'seize séances pèsent moins de 2,3 ko : 500 tiennent sous la borne de 40 ko');
-    // Lot « grades » (07/11/2026) : les mots des séances de grade et le plus
-    // haut grade réussi passent le filtre.
-    egal('grade', $reference->seances->{'11'}[1], 'un passage de grade');
-    egal('entrainement', $reference->seances->{'12'}[1], 'un entraînement à un grade');
-    egal(2, $reference->gradeReussi, 'le plus haut grade réussi (le 19e kyu)');
+    egal(17, compter_elements_declares('flash-anzan', $attendu), '« Revenir à… » compte les séances');
+    vrai(strlen($attendu) < 2400, 'dix-sept séances pèsent moins de 2,4 ko : 500 tiennent sous la borne de 40 ko');
+    // Les mots des séances de grade passent le filtre ; le champ « temps »
+    // porte le numéro de l'ÉTAPE (101 … en Flash, 201 … en Colonne).
+    egal('grade', $reference->seances->{'11'}[1], 'un passage');
+    egal(101, $reference->seances->{'11'}[6], 'le passage porte le numéro de son étape (101 : la 1re du 20e kyu)');
+    egal('entrainement', $reference->seances->{'13'}[1], 'un entraînement à une étape');
+    egal(5, $reference->seances->{'13'}[7], 'un entraînement fait 5 calculs');
+    egal(3, $reference->etapeFlash, 'la plus haute étape réussie en Flash (la 3e)');
     $filtre = filtrer_progression('flash-anzan', json_decode($texte, false));
     egal('grade', $filtre->seances->{'11'}[1], 'le serveur garde le mot « grade »');
-    egal('entrainement', $filtre->seances->{'12'}[1], 'le serveur garde le mot « entrainement »');
-    egal(2, $filtre->gradeReussi, 'le serveur garde « gradeReussi »');
-    // Lot « grades-colonne » (07/11/2026) : le numéro 41 (10e kyu en
-    // Colonne) dans le champ « temps », et « gradeColonne » (le rang).
-    egal(41, $reference->seances->{'15'}[6], 'un passage de grade en Colonne porte son numéro (41 = 10e kyu)');
-    egal(1, $reference->gradeColonne, 'le plus haut grade réussi en Colonne (le 10e kyu)');
-    egal(1, $filtre->gradeColonne, 'le serveur garde « gradeColonne »');
+    egal('entrainement', $filtre->seances->{'13'}[1], 'le serveur garde le mot « entrainement »');
+    egal(3, $filtre->etapeFlash, 'le serveur garde « etapeFlash »');
+    egal(201, $reference->seances->{'16'}[6], 'un passage en Colonne porte le numéro de son étape (201 : la 1re du 10e kyu)');
+    egal(1, $reference->etapeColonne, 'la plus haute étape réussie en Colonne (la 1re)');
+    egal(1, $filtre->etapeColonne, 'le serveur garde « etapeColonne »');
+    // Une progression de l'ancienne grille (clés « gradeReussi » et
+    // « gradeColonne », numéros de grade 1 … 53) passe sans erreur : les
+    // deux clés sont retirées, les séances restent des listes de scalaires —
+    // c'est le moteur qui les ignore à la lecture.
+    $ancienne = json_decode('{"version":1,"epoque":0,"reglages":{},"gradeReussi":12,"gradeColonne":5,"seances":{"1":["2026-11-08","grade","plus",1,1,3,1,10,10,9,4242,1]}}', false);
+    $gardee = filtrer_progression('flash-anzan', $ancienne);
+    vrai(!isset($gardee->gradeReussi) && !isset($gardee->gradeColonne), 'les clés de l’ancienne grille ne sont plus gardées');
+    egal(1, count(get_object_vars($gardee->seances)), 'la vieille séance reste lisible par le filtre (le moteur l’ignore)');
 });
 
 verifier("anzan-suivi — un texte, une clé étrangère, un numéro de séance hors motif, une liste de listes sont retirés", function () {
@@ -7255,12 +7263,12 @@ verifier("anzan-suivi — Anzan s'enregistre et se relit par l'API élève, à s
     $ligne->execute([(int)$eleves[0]['id']]);
     $compte = (int)$ligne->fetchColumn();
     $ligne->closeCursor();
-    egal(16, $compte, 'la version du jour est comptée en séances');
+    egal(17, $compte, 'la version du jour est comptée en séances');
     $r = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $classe, 'appli' => 'flash-anzan'], ['jeton' => $jetonS1]);
     egal(200, $r['code'], 'le tableau de la classe se demande pour Anzan');
     $lu = null;
     foreach ($r['json']['eleves'] as $e) if ((int)$e['id'] === (int)$eleves[0]['id']) $lu = $e;
-    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['seances'] ?? []) === 16,
+    vrai($lu !== null && is_array($lu['parcours'] ?? null) && count($lu['parcours']['seances'] ?? []) === 17,
         'le tableau rend le parcours Anzan de l’élève, ses séances comprises');
     // L'ordre de la liste de la classe est celui du catalogue : Anzan juste après Coffres.
     $classes = appel('/api/prof.php', ['action' => 'classes.liste'], ['jeton' => $jetonS1])['json']['classes'];

@@ -266,6 +266,7 @@
     .primary { color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; padding-top: 12px; padding-bottom: 8px; }
     .primary:disabled { color: #4f6474; background: #dbe5eb; box-shadow: 0 3px 0 #bdcbd4; cursor: not-allowed; }
     .secondary { color: var(--blue); border: 2px solid #c5d9e6; background: #fff; box-shadow: 0 5px 0 #c5d9e6; padding-top: 11px; padding-bottom: 7px; }
+    .secondary:disabled { color: #4f6474; border-color: #dbe5eb; background: #f3f6f8; box-shadow: 0 3px 0 #dbe5eb; cursor: not-allowed; }
 
     /* ---- La séance ---- */
     .seance { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
@@ -278,6 +279,11 @@
       background: conic-gradient(var(--teal) calc(var(--reste) * 360deg), #d7e3ec 0); }
     .chrono span { width: 34px; height: 34px; border-radius: 50%; background: #fff; display: inline-flex; align-items: center; justify-content: center;
       font-weight: 950; font-size: .8rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+    /* Le chrono d'un passage en Colonne (barème révisé, 22/11/2026, choix
+       « la pastille ») : le temps qui reste pour les DIX calculs, en minutes
+       et secondes. L'anneau reste celui des séances libres (par calcul). */
+    .chrono-pastille { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--teal);
+      background: #fff; font-weight: 950; font-size: 1rem; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
     .vue-jeu { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin-top: 10px; }
     .scene { position: relative; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center;
@@ -506,14 +512,25 @@
     .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
     .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
     .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
-    /* « 🎯 M'entraîner » en 5 ou 10 calculs (lot « entraînement 5 ou 10 »,
-       07/11/2026) : deux boutons côte à côte à la place d'un, à la même
-       hauteur que « Je tente ». Trop étroits (téléphone), « calculs »
-       passe sous le nombre, dans le bouton. */
+    /* Un seul « 🎯 M'entraîner » (5 calculs, choix du 22/11/2026 : avec les
+       étapes, deux boutons d'entraînement faisaient un choix de trop), à la
+       même hauteur que « Je tente ». */
     .fiche-grade .fiche-boutons { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+    .fiche-grade .fiche-boutons .secondary { width: 100%; font-size: 1.05rem; }
     .fiche-grade .fiche-note { text-wrap: balance; }
-    .fiche-grade .fiche-paire { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .fiche-grade .fiche-paire .secondary { flex-wrap: wrap; column-gap: .3em; row-gap: 0; padding-left: 6px; padding-right: 6px; font-size: 1.05rem; line-height: 1.15; }
+    /* Barème révisé (22/11/2026), choix « B » : les étapes d'un grade sont des
+       onglets au-dessus du tableau — une étape à la fois, la fiche garde la
+       même hauteur de 2 à 5 étapes. Un grade à une seule étape n'en a pas.
+       Les mêmes boutons que les groupes de la liste des grades. */
+    .fiche-grade .fiche-tableau { min-width: 0; }
+    .fiche-etapes { grid-template-columns: repeat(var(--etapes, 3), minmax(0, 1fr)); gap: 8px; margin: 0 0 10px; }
+    .fiche-etapes.serre { gap: 6px; }
+    .fiche-etapes .option { height: auto; min-height: 52px; flex-direction: column; gap: 1px; font-family: var(--serif); font-weight: 700; font-size: .98rem; padding: 6px 4px; }
+    .fiche-etapes.serre .option { font-size: .88rem; }
+    .fiche-etapes .option small { font-family: var(--sans); font-weight: 800; font-size: .72rem; color: var(--muted); }
+    .fiche-etapes .option.reussie small { color: var(--green); }
+    .fiche-etapes .option:disabled { color: #8aa0ad; background: #fbfcfd; cursor: default; }
+    .fiche-etapes .option[aria-pressed="true"] { border: 2px solid var(--ink); background: var(--papier); box-shadow: 0 3px 0 var(--papier-ombre); color: var(--ink); }
     /* Lot « anzan-cartes » (07/11/2026) : sous chaque bouton, ce qu'il fait
        (la phrase « Pas de Revoir… » était fausse pour M'entraîner). */
     .fiche-grade .fiche-note { margin: 10px 0 0; color: var(--muted); font-weight: 700; font-size: .85rem; line-height: 1.3; }
@@ -532,6 +549,13 @@
     button.fiche-carte { cursor: pointer; }
     .fiche-carte img { display: block; width: 100%; height: auto; aspect-ratio: 640 / 904; border-radius: 6px; box-shadow: 0 3px 10px rgba(20, 52, 81, .16); }
     .fiche-carte.grisee img { filter: grayscale(1); opacity: .45; box-shadow: none; }
+    /* La carte se colore étape par étape (choix du 22/11/2026) : la carte
+       grise, et par-dessus la même en couleur, découverte par le bas — la
+       part des étapes réussies du grade (--part). Entière à la dernière. */
+    .fiche-carte { position: relative; }
+    .fiche-carte.grisee img.couleur, .carte-kyu.partielle img.couleur { position: absolute; inset: 0; filter: none; opacity: 1;
+      clip-path: inset(calc(100% - var(--part, 0%)) 0 0 0); }
+    .carte-kyu.partielle img.grise { filter: grayscale(1); opacity: .45; }
 
     /* ---- Les cartes des grades (lot « anzan-cartes », 07/11/2026) ----
        Une carte = l'image de la créature (recto) et son dos (la créature, le
@@ -609,6 +633,10 @@
     .es.long .es-jp { font-size: .78rem; letter-spacing: .02em; }
     .es.grisee { border-color: #d9d1bb; box-shadow: none; }
     .es.grisee .es-jp { color: #a3b1ba; }
+    /* L'estampe se colore elle aussi, étape par étape : son nom japonais
+       fonce, du gris vers l'encre (--encre, calculée par la page : une
+       coupe à mi-hauteur d'un caractère ressemblait à un défaut d'impression). */
+    .es.partielle .es-jp { color: var(--encre, #a3b1ba); }
     .gr-carte.es { background: #fdfbf6; }
     .gr-carte.es .es-jp { translate: 0 -4px; }
     /* En Colonne, pas de groupes : la liste garde sa distance au compte. */
@@ -647,6 +675,16 @@
     .sceau span { writing-mode: vertical-rl; font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif CJK JP", "Noto Serif JP", "MS Mincho", serif;
       font-weight: 700; font-size: 1.32rem; line-height: 1; letter-spacing: .02em; }
     .fin-grade .score { margin-top: 10px; }
+    /* « Étape réussie » (barème révisé, 22/11/2026) : les étapes du grade en
+       ronds — faites en vert, la suivante à son numéro — à la place du sceau
+       (le sceau 合格 reste pour le grade gagné). */
+    .et-pips { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 2px auto 0; }
+    .et-pips i { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-style: normal;
+      font-family: var(--serif); font-weight: 700; font-size: 1rem; border: 2px solid #c9d6de; color: #6f8796; background: #fff; }
+    .et-pips i.faite { background: var(--green); border-color: var(--green); color: #fff; font-family: var(--sans); font-weight: 950; }
+    .et-pips b { flex: 0 1 18px; height: 2px; background: #c9d6de; }
+    .et-pips b.faite { background: var(--green); }
+    .fin-carte-legende { width: var(--carte-l, 220px); margin: 8px auto 0; color: var(--muted); font-weight: 800; font-size: .85rem; text-align: center; text-wrap: balance; }
     .points { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
     .points i { width: 18px; height: 18px; border-radius: 50%; background: var(--green); }
     .points i.x { background: #fff; border: 2px solid var(--red); }
@@ -1067,18 +1105,19 @@
         <div class="fiche-grade" id="grades-fiche-vue" hidden>
           <p class="niv" id="fiche-niveau"></p>
           <div class="fiche-haut" id="fiche-haut">
-            <ol class="regles" id="fiche-regles"></ol>
+            <div class="fiche-tableau">
+              <!-- Barème révisé (22/11/2026) : les étapes du grade, en onglets. -->
+              <div class="options fiche-etapes" id="fiche-etapes" role="group" aria-label="Les étapes du grade" hidden></div>
+              <ol class="regles" id="fiche-regles"></ol>
+            </div>
             <div class="fiche-carte-place" id="fiche-carte-place" hidden></div>
           </div>
           <div class="fiche-boutons">
             <div>
-              <!-- Lot « entraînement 5 ou 10 » (07/11/2026) : l'élève choisit 5
-                   ou 10 calculs ; le passage reste à 10. -->
-              <div class="fiche-paire" role="group" aria-label="M’entraîner">
-                <button type="button" class="secondary" id="fiche-entrainer-5" data-calculs="5"><span>🎯&nbsp;5</span> <span>calculs</span></button>
-                <button type="button" class="secondary" id="fiche-entrainer-10" data-calculs="10"><span>🎯&nbsp;10</span> <span>calculs</span></button>
-              </div>
-              <p class="fiche-note">M’entraîner&nbsp;: correction après chaque calcul</p>
+              <!-- Un seul bouton (choix du 22/11/2026) : 5 calculs de l'étape,
+                   la moitié de son plan ; « Rejouer » en redonne 5. -->
+              <button type="button" class="secondary" id="fiche-entrainer">🎯&nbsp;M’entraîner</button>
+              <p class="fiche-note">5&nbsp;calculs · correction après chaque calcul</p>
             </div>
             <div>
               <button type="button" class="primary" id="fiche-passer"></button>
@@ -1096,7 +1135,7 @@
           <div class="jeu-haut">
             <button type="button" class="rond" id="retour" aria-label="Arrêter la séance"><svg viewBox="0 0 24 24" fill="none" stroke="#143451" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
             <span class="compte" id="compte" aria-live="polite"></span>
-            <span class="haut-droite"><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><span id="suivi-pastille-slot"></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
+            <span class="haut-droite"><span class="chrono-pastille" id="chrono-global" role="timer" aria-label="Temps qui reste pour les dix calculs" hidden><span aria-hidden="true">⏱</span><span id="chrono-global-s"></span></span><span class="chrono" id="chrono" hidden><span id="chrono-s"></span></span><span id="suivi-pastille-slot"></span><button type="button" class="rond plein-ecran" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran" title="Plein écran"><svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></button></span>
           </div>
         </div>
 
@@ -1145,12 +1184,15 @@
             <!-- Grade réussi (lot « anzan-cartes », choix du 07/11/2026 : « esprit
                  estampe ») : un sceau rouge 合格 (« réussi ») à la place du 🎉. -->
             <div class="sceau" id="fin-grade-sceau" aria-hidden="true" hidden><span>合格</span></div>
+            <!-- Une étape réussie, la carte pas encore gagnée : les étapes du grade. -->
+            <div class="et-pips" id="fin-grade-pips" aria-hidden="true" hidden></div>
             <div class="titre-fin" id="fin-grade-titre"></div>
             <div class="fin-grade-corps">
               <!-- Lot « anzan-cartes » (07/11/2026) : la carte du grade réussi, et « Retourner ». -->
               <div class="fin-carte" id="fin-grade-carte" hidden>
                 <div id="fin-carte-place"></div>
                 <button type="button" class="lien-calculs carte-retourner" id="carte-retourner" aria-pressed="false" hidden>↻ Retourner</button>
+                <p class="fin-carte-legende" id="fin-carte-legende" hidden></p>
               </div>
               <div class="fin-grade-bilan">
                 <div class="fin-grade-note">
@@ -1197,10 +1239,10 @@
     </div>
   </div>
 
-  <script src="./flash_anzan_core.js?v=20261107-5"></script>
+  <script src="./flash_anzan_core.js?v=20261122-1"></script>
   <!-- Le parcours de l'élève (moteur partagé avec le serveur de suivi) et l'habillage du suivi de
        classe (bloc, pastille, garde) : lot « Qui voit quoi », lot 4a, 23/10/2026 -->
-  <script src="./flash_anzan_parcours.js?v=20261111-2"></script>
+  <script src="./flash_anzan_parcours.js?v=20261122-1"></script>
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
   <script src="./flash_anzan_suivi.js?v=20261111-2"></script>
   <script>
@@ -1532,7 +1574,8 @@
         enRevoir: false, // un « ↻ Revoir » est en train de rejouer le calcul
         echeance: 0, // instant (performance.now) où le temps limite est fini ; 0 = sans limite
         tailleFlash: 0,
-        gradeAvant: 0, // le plus haut grade réussi au début d'un passage
+        etapeAvant: 0, // le rang de la plus haute étape réussie au début d'un passage
+        tempsFini: false, // le chrono des dix calculs (Colonne) est arrivé à zéro
         idSuivi: 0 // l'identifiant de cette séance dans la case de l'élève à code (tiré au départ)
       };
       const rng = CORE.mulberry32((Math.random() * 4294967296) >>> 0);
@@ -1554,27 +1597,28 @@
       function demarrerSeance() {
         commencer(memoire.mode, {...reglages()});
       }
-      // … ou d'un grade (lot « grades », 07/11/2026) : « grade » pour le
-      // passage (10 calculs, correction à la fin, pas de « Revoir »),
-      // « entrainement » pour s'y entraîner (comme le Flash : correction
-      // après chaque calcul, « Revoir »). Les réglages sont ceux de la grille ;
-      // le bip à chaque nombre suit l'interrupteur du Flash. `calculs` : 5 ou
-      // 10 pour un entraînement (lot « entraînement 5 ou 10 ») ; un passage
-      // en fait toujours 10.
-      function demarrerGrade(n, mode, calculs) {
-        const r = CORE.reglagesGrade(n, memoire.flash.son, mode === "grade" ? CORE.GRADE_CALCULS : calculs);
+      // … ou d'une étape d'un grade (barème révisé, 22/11/2026) : « grade »
+      // pour le passage (10 calculs, correction à la fin, pas de « Revoir »),
+      // « entrainement » pour s'y entraîner (5 calculs, la moitié du plan de
+      // l'étape : correction après chaque calcul, « Revoir », pas de chrono).
+      // Les réglages sont ceux de l'étape ; le bip à chaque nombre suit
+      // l'interrupteur du Flash.
+      function demarrerEtape(numero, mode) {
+        const r = CORE.reglagesEtape(numero, memoire.flash.son, mode === "grade" ? CORE.GRADE_CALCULS : CORE.ENTRAINEMENT_CALCULS[0]);
         if (!r) return;
-        if (mode === "grade" && !etatDuGrade(n).ouvert) return; // un cadenas ne s'ouvre pas d'ici
+        if (!etatDeLEtape(numero).ouverte) return; // un cadenas ne s'ouvre pas d'ici
         commencer(mode === "grade" ? "grade" : "entrainement", r);
       }
       function commencer(mode, r) {
         preparerSon();
         seance.mode = mode;
         seance.reglages = r;
-        // Le plus haut grade réussi AVANT ce passage (chaque calcul validé
-        // note la séance : à la fin, le grade est déjà compté) — pour dire
-        // « le … est ouvert » seulement quand ce passage l'ouvre.
-        seance.gradeAvant = mode === "grade" ? plusHautGrade(CORE.estGradeColonne(r.grade)) : 0;
+        // La plus haute étape réussie AVANT ce passage (chaque calcul validé
+        // note la séance : à la fin, l'étape est déjà comptée) — pour dire
+        // « … est ouvert(e) » seulement quand ce passage l'ouvre.
+        seance.etapeAvant = mode === "grade" ? rangReussi(Boolean(r.colonne)) : 0;
+        seance.tempsFini = false;
+        arreterChronoPassage();
         seance.calculs = CORE.tirerSeance(seance.reglages, rng);
         seance.resultats = [];
         seance.index = 0;
@@ -1769,6 +1813,9 @@
         $("vue-jeu").classList.add("avec-reponse");
         tailleColonne();
         if (seance.reglages.limite) lancerChrono(seance.reglages.limite);
+        // Le passage d'une étape chronométrée : un seul chrono pour les dix
+        // calculs, lancé au premier (un entraînement n'en a pas).
+        if (seance.mode === "grade" && seance.reglages.chrono) lancerChronoPassage();
       }
       // Toute la colonne à l'écran si possible ; en dessous de 20 px, elle
       // garde 20 px et défile dans son cadre.
@@ -1802,6 +1849,43 @@
           seance.chrono = window.requestAnimationFrame(tic);
         };
         seance.chrono = window.requestAnimationFrame(tic);
+      }
+
+      // ---- Le chrono d'un passage en Colonne (barème révisé, 22/11/2026) ----
+      // Un temps pour les DIX calculs ensemble, saisie comprise, à la place
+      // du temps par calcul. Il vit à part des minuteries d'un calcul
+      // (annulerMinuteries repart à chaque calcul) : lancé au premier calcul,
+      // arrêté à la fin du passage ou quand on le quitte. Il se juge à
+      // l'heure (performance.now), pas au nombre d'images : un onglet mis de
+      // côté retrouve le bon temps. À zéro, le passage s'arrête là : le
+      // calcul en cours n'est pas compté.
+      const chronoPassage = {fin: 0, image: 0, jeton: 0};
+      function arreterChronoPassage() {
+        chronoPassage.jeton += 1;
+        chronoPassage.fin = 0;
+        if (chronoPassage.image) { window.cancelAnimationFrame(chronoPassage.image); chronoPassage.image = 0; }
+        $("chrono-global").hidden = true;
+      }
+      function lancerChronoPassage() {
+        if (chronoPassage.fin) return; // il tourne déjà : un seul chrono pour les dix calculs
+        const total = seance.reglages.chrono * 1000;
+        chronoPassage.fin = performance.now() + total;
+        const jeton = chronoPassage.jeton;
+        $("chrono-global-s").textContent = CORE.texteReste(total);
+        $("chrono-global").hidden = false;
+        const tic = maintenant => {
+          if (jeton !== chronoPassage.jeton) return;
+          const reste = chronoPassage.fin - maintenant;
+          $("chrono-global-s").textContent = CORE.texteReste(reste);
+          if (reste <= 0) { chronoPassage.image = 0; tempsDuPassageFini(); return; }
+          chronoPassage.image = window.requestAnimationFrame(tic);
+        };
+        chronoPassage.image = window.requestAnimationFrame(tic);
+      }
+      function tempsDuPassageFini() {
+        if (seance.mode !== "grade" || seance.phase === "fin" || seance.phase === "aucune") return;
+        seance.tempsFini = true;
+        finir(false);
       }
 
       // ---- La réponse ----
@@ -1874,6 +1958,9 @@
 
       function valider(tempsEcoule) {
         if (seance.phase !== "reponse") return;
+        // Le chrono des dix calculs : à zéro, cette réponse arrive trop tard —
+        // jugé à l'heure de la validation, comme l'échéance d'un calcul.
+        if (chronoPassage.fin && performance.now() >= chronoPassage.fin) { tempsDuPassageFini(); return; }
         // Relecture Codex (A3) : l'échéance se juge à l'heure de la validation,
         // pas à l'ordre dans lequel le clic et l'image du chrono arrivent.
         if (seance.echeance && performance.now() >= seance.echeance) tempsEcoule = true;
@@ -1950,6 +2037,7 @@
       // gardé, et c'est ce que le professeur voit (« 6/7 arrêtée »).
       function finir(arretee) {
         annulerMinuteries();
+        arreterChronoPassage();
         seance.phase = "fin";
         rendreVeille();
         montrerVue("fin");
@@ -1966,7 +2054,7 @@
         $("fin-grade").hidden = !passage;
         $("liste").hidden = passage;
         $("vers-reglages").textContent = seance.mode === "entrainement" ? "Le grade" : "Réglages";
-        if (passage) dessinerFinGrade(justes, seance.gradeAvant || 0, arretee);
+        if (passage) dessinerFinGrade(justes, seance.etapeAvant || 0, arretee, seance.tempsFini);
         $("liste").innerHTML = seance.resultats.map((r, i) => {
           const marque = r.juste
             ? '<span class="m v" aria-label="juste">✓</span>'
@@ -1990,6 +2078,7 @@
       });
       function versReglages() {
         annulerMinuteries();
+        arreterChronoPassage();
         rendreVeille();
         seance.phase = "aucune";
         corps.classList.remove("en-seance");
@@ -2004,15 +2093,14 @@
         majSuivi();
         $("titre").focus({preventScroll: true});
       }
-      // En fin d'entraînement à un grade : « Le grade » ramène à sa fiche,
-      // « Rejouer » relance le même entraînement (5 ou 10 calculs, comme
-      // celui qui vient de finir).
+      // En fin d'entraînement à une étape : « Le grade » ramène à sa fiche
+      // (sur cette étape), « Rejouer » relance 5 calculs de la même étape.
       $("vers-reglages").addEventListener("click", () => {
-        if (seance.mode === "entrainement") versGrades(seance.reglages.grade);
+        if (seance.mode === "entrainement") versGrades(seance.reglages.grade, seance.reglages.etape);
         else versReglages();
       });
       $("rejouer").addEventListener("click", () => {
-        if (seance.mode === "entrainement") demarrerGrade(seance.reglages.grade, "entrainement", seance.reglages.calculs);
+        if (seance.mode === "entrainement") demarrerEtape(seance.reglages.etape, "entrainement");
         else demarrerSeance();
       });
       $("partir").addEventListener("click", demarrerSeance);
@@ -2021,7 +2109,7 @@
       // sinon l'écran de fin, avec ce qui est fait. Depuis la fin → réglages.
       // Un grade (passage ou entraînement) : retour à sa fiche.
       function quitterSeance() {
-        if (seance.mode === "grade" || seance.mode === "entrainement") versGrades(seance.reglages.grade);
+        if (seance.mode === "grade" || seance.mode === "entrainement") versGrades(seance.reglages.grade, seance.reglages.etape);
         else versReglages();
       }
       $("retour").addEventListener("click", () => {
@@ -2347,45 +2435,75 @@
       // -----------------------------------------------------------------
       let groupeAffiche = -1; // -1 : celui du grade à passer
       let ficheGrade = 0; // le grade dont la fiche est ouverte (0 : la liste)
+      // Barème révisé (22/11/2026) : l'étape montrée sur la fiche (son numéro).
+      let ficheEtape = 0;
       // Lot « grades-colonne » (07/11/2026, choix de Gwenaël : « selon
       // l'onglet ») : l'écran des grades montre ceux du Flash (1 … 40) ou
-      // ceux de la Colonne (41 … 53) — le bandeau ouvre ceux du mode choisi.
+      // ceux de la Colonne (41 … 50) — le bandeau ouvre ceux du mode choisi.
       let gradesColonne = false;
-      // Sans le moteur du parcours (son fichier n'a pas pu se charger) : le
-      // premier grade seul est ouvert, et rien ne se garde.
+      // Sans le moteur du parcours (son fichier n'a pas pu se charger) : la
+      // première étape du premier grade seule est ouverte, et rien ne se garde.
       function gradesSansMoteur(colonne) {
         const premier = colonne ? CORE.PREMIER_COLONNE : 1;
         const combien = colonne ? CORE.NB_GRADES_COLONNE : CORE.NB_GRADES;
-        return Array.from({length: combien}, (_, i) => ({numero: premier + i, rang: i + 1, nom: CORE.nomGrade(premier + i), reussi: false, ouvert: i === 0, actuel: i === 0, meilleur: null}));
+        return Array.from({length: combien}, (_, i) => {
+          const n = premier + i;
+          const etapes = CORE.etapesDuGrade(n).map((e, k) => ({numero: e.numero, rang: k + 1, reussie: false,
+            ouverte: i === 0 && k === 0, actuelle: i === 0 && k === 0, meilleur: null}));
+          return {numero: n, rang: i + 1, nom: CORE.nomGrade(n), reussi: false, ouvert: i === 0, actuel: i === 0, meilleur: null,
+            etape: i === 0 ? 1 : 0, etapes};
+        });
       }
-      // Les grades du Flash (par défaut) ou de la Colonne.
+      // Les grades du Flash (par défaut) ou de la Colonne, chacun avec ses
+      // étapes (lesquelles sont réussies, laquelle se tente).
       function gradesDeLEleve(colonne = false) {
-        if (!PARCOURS || (colonne && !PARCOURS.etatGradesColonne)) return gradesSansMoteur(colonne);
+        if (!PARCOURS) return gradesSansMoteur(colonne);
         const c = caseHistorique();
         try { return colonne ? PARCOURS.etatGradesColonne(c || PARCOURS.creer()) : PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(colonne); }
       }
       // L'état du grade n, du Flash ou de la Colonne.
       function etatDuGrade(n) {
         const colonne = CORE.estGradeColonne(n);
-        return gradesDeLEleve(colonne).find(g => g.numero === n) || {ouvert: false, reussi: false};
+        return gradesDeLEleve(colonne).find(g => g.numero === n) || {ouvert: false, reussi: false, etape: 0, etapes: []};
       }
-      // Le NUMÉRO du plus haut grade réussi (0 : aucun), au Flash ou en Colonne.
-      function plusHautGrade(colonne = false) {
+      // L'état d'une étape (son numéro) : {reussie, ouverte, actuelle, …}.
+      function etatDeLEtape(numero) {
+        const e = CORE.etape(numero);
+        const etat = e ? etatDuGrade(e.grade).etapes.find(x => x.numero === numero) : null;
+        return etat || {reussie: false, ouverte: false, actuelle: false};
+      }
+      // Le RANG de la plus haute étape réussie (0 : aucune), au Flash ou en Colonne.
+      function rangReussi(colonne = false) {
         const c = caseHistorique();
-        try {
-          if (!c) return 0;
-          if (!colonne) return PARCOURS.gradeReussi(c);
-          const rang = PARCOURS.gradeColonneReussi ? PARCOURS.gradeColonneReussi(c) : 0;
-          return rang ? CORE.NB_GRADES + rang : 0;
-        } catch (e) { return 0; }
+        try { return c ? PARCOURS.etapeReussie(c, colonne) : 0; } catch (e) { return 0; }
+      }
+      // La part des étapes réussies d'un grade, de 0 à 1 : ce que sa carte
+      // (ou son estampe) a déjà de couleur.
+      function partDuGrade(n) {
+        const g = etatDuGrade(n);
+        return g.etapes.length ? g.etapes.filter(e => e.reussie).length / g.etapes.length : 0;
+      }
+      // Ce qu'une ligne de la liste dit de son grade : ce qu'il travaille, ou
+      // — pour le grade en cours, s'il a plusieurs étapes — l'étape à tenter.
+      function detailDuGrade(g) {
+        if (g.actuel && g.etapes.length > 1) return `Étape ${g.etape} sur ${g.etapes.length}\u00a0· ${CORE.texteEtapeCourt(g.etapes[g.etape - 1].numero)}`;
+        return CORE.texteGrade(g.numero);
       }
       // L'estampe d'un grade en Colonne (voir .es) : « reussi » (le sceau 合),
       // « grisee » (le grade à passer) ; `classe` la place (gr-carte,
       // fiche-carte ; « grande » à la réussite, avec le nom français) ; `el`
       // (facultatif) : l'élément vide à remplir (le bandeau a déjà le sien).
-      function construireEstampe(n, etat, classe, el = document.createElement("span")) {
+      // `part` (facultatif, 0 à 1) : une estampe grisée dont le nom fonce vers
+      // l'encre, à la mesure des étapes réussies du grade.
+      function construireEstampe(n, etat, classe, el = document.createElement("span"), part = 0) {
         const jp = CORE.nomJaponais(n);
-        el.className = `${classe} es${jp.length > 2 ? " long" : ""}${etat === "grisee" ? " grisee" : ""}`;
+        const partielle = etat === "grisee" && part > 0;
+        el.className = `${classe} es${jp.length > 2 ? " long" : ""}${etat === "grisee" ? " grisee" : ""}${partielle ? " partielle" : ""}`;
+        if (partielle) {
+          // Du gris (#a3b1ba) à l'encre (#143451), à la mesure des étapes réussies.
+          const melange = (gris, encre) => Math.round(gris + (encre - gris) * Math.min(1, part));
+          el.style.setProperty("--encre", `rgb(${melange(163, 20)}, ${melange(177, 52)}, ${melange(186, 81)})`);
+        }
         const texte = document.createElement("span");
         texte.className = "es-jp";
         texte.lang = "ja";
@@ -2413,7 +2531,7 @@
       function dessinerGrades() {
         if (gradesColonne) { dessinerGradesColonne(); return; }
         $("grades-groupes").hidden = false;
-        $("grades-compte").textContent = "10 calculs en Flash · réussi à 7 sur 10";
+        $("grades-compte").textContent = `Flash · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.GRADE_REUSSI} sur ${CORE.GRADE_CALCULS}`;
         const etat = gradesDeLEleve();
         const actuel = etat.find(g => g.actuel);
         const k = groupeAffiche >= 0 ? groupeAffiche : groupeDuGrade(actuel ? actuel.numero : CORE.NB_GRADES);
@@ -2483,7 +2601,7 @@
           if (CORE.nomJaponais) nom.setAttribute("data-jp", CORE.nomJaponais(g.numero));
           const det = document.createElement("span");
           det.className = "gr-det";
-          det.textContent = CORE.texteGrade(g.numero);
+          det.textContent = detailDuGrade(g);
           milieu.append(nom, det);
           const droite = document.createElement("span");
           droite.className = "gr-droite";
@@ -2513,14 +2631,14 @@
         });
       }
 
-      // Les 13 grades en Colonne : une seule liste (pas de groupes), une
+      // Les grades en Colonne : une seule liste (pas de groupes), une
       // estampe sur chaque ligne à la place de la carte ; la ligne ouvre la
       // fiche du grade, comme au Flash.
       function dessinerGradesColonne() {
         const etat = gradesDeLEleve(true);
         $("grades-groupes").hidden = true;
         $("grades-indice").hidden = true;
-        $("grades-compte").textContent = "10 calculs en Colonne · grille du test japonais";
+        $("grades-compte").textContent = `Colonne · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.SEUIL_COLONNE} sur ${CORE.GRADE_CALCULS}`;
         const liste = $("grades-liste");
         liste.replaceChildren();
         etat.forEach(g => {
@@ -2545,7 +2663,7 @@
           nom.setAttribute("data-jp", CORE.nomJaponais(g.numero));
           const det = document.createElement("span");
           det.className = "gr-det";
-          det.textContent = CORE.texteGrade(g.numero);
+          det.textContent = detailDuGrade(g);
           milieu.append(nom, det);
           const droite = document.createElement("span");
           droite.className = "gr-droite";
@@ -2688,7 +2806,7 @@
         const place = $("fiche-carte-place");
         // Un grade en Colonne : son estampe, à la place de la carte.
         if (CORE.estGradeColonne(n)) {
-          place.replaceChildren(construireEstampe(n, etatDuGrade(n).reussi ? "reussi" : "grisee", "fiche-carte"));
+          place.replaceChildren(construireEstampe(n, etatDuGrade(n).reussi ? "reussi" : "grisee", "fiche-carte", undefined, partDuGrade(n)));
           place.hidden = false;
           $("fiche-haut").classList.add("avec-carte");
           $("grades-fiche-vue").classList.add("avec-carte");
@@ -2714,6 +2832,15 @@
         img.width = c.largeur;
         img.height = c.hauteur;
         el.append(img);
+        // La carte se colore étape par étape (choix du 22/11/2026).
+        const part = reussi ? 0 : partDuGrade(n);
+        if (part > 0) {
+          const couleur = img.cloneNode();
+          couleur.className = "couleur";
+          couleur.alt = "";
+          el.style.setProperty("--part", `${Math.round(part * 100)}%`);
+          el.append(couleur);
+        }
         place.append(el);
       }
       $("fiche-carte-place").addEventListener("click", e => {
@@ -2721,34 +2848,61 @@
         if (b) ouvrirCarteGrand(Number(b.getAttribute("data-carte")), b);
       });
 
-      // À la réussite : la carte du grade (kyu ou dan), sous « Grade
-      // réussi ! » ; rien pour les autres verdicts.
-      function dessinerCarteFin(n, verdict) {
+      // À la réussite. Le grade GAGNÉ (sa dernière étape) : sa carte (kyu ou
+      // dan) ou son estampe, sous « Grade réussi ! », avec « Retourner ».
+      // Une étape réussie, la carte pas encore gagnée (choix du 22/11/2026) :
+      // la carte grise qui se colore par le bas, à la mesure des étapes
+      // réussies du grade, et dessous ce qui reste à faire. Rien pour les
+      // autres verdicts.
+      function dessinerCarteFin(n, montrer, gagne) {
         const bloc = $("fin-grade-carte");
         const place = $("fin-carte-place");
         place.replaceChildren();
-        const montrer = verdict === "reussi";
         bloc.hidden = !montrer;
         $("fin-grade").classList.toggle("avec-carte", montrer);
         $("vue-fin").classList.toggle("avec-carte", montrer);
         $("carte-retourner").hidden = true;
         $("carte-retourner").setAttribute("aria-pressed", "false");
+        const legende = $("fin-carte-legende");
+        legende.hidden = true;
         if (!montrer) return;
+        const colonne = CORE.estGradeColonne(n);
+        const etat = etatDuGrade(n);
+        const restent = etat.etapes.filter(e => !e.reussie).length;
+        const entiere = gagne || restent === 0;
+        if (!entiere) {
+          legende.textContent = `${colonne ? "Ton estampe" : "Ta carte"} se colore\u00a0: encore ${restent}\u00a0étape${restent > 1 ? "s" : ""}`;
+          legende.hidden = false;
+        }
         // Un grade en Colonne : son estampe en grand (pas de dos à retourner).
-        if (CORE.estGradeColonne(n)) {
+        if (colonne) {
           $("fin-grade-carte").classList.remove("dan");
-          place.append(construireEstampe(n, "reussi", "grande"));
+          place.append(construireEstampe(n, entiere ? "reussi" : "grisee", "grande", undefined, partDuGrade(n)));
           return;
         }
         const c = CORE.carteDuGrade(n);
         $("fin-grade-carte").classList.toggle("dan", estDan(c));
         if (!c) return;
-        place.append(construireCarte(c));
-        $("carte-retourner").hidden = false;
+        const carte = construireCarte(c);
+        place.append(carte);
+        if (entiere) { $("carte-retourner").hidden = false; return; }
+        // La carte pas encore gagnée : pas de dos, la même image deux fois.
+        carte.classList.add("partielle");
+        carte.style.setProperty("--part", `${Math.round(partDuGrade(n) * 100)}%`);
+        const [recto, verso] = carte.querySelectorAll(".carte-face");
+        if (verso) verso.remove();
+        const grise = recto.querySelector("img");
+        grise.className = "grise";
+        grise.alt = `Carte à gagner : ${c.nom}`;
+        const couleur = grise.cloneNode();
+        couleur.className = "couleur";
+        couleur.alt = "";
+        recto.append(couleur);
       }
       // Sur ordinateur, la carte se retourne sur place ; au téléphone elle
       // est trop petite pour lire son dos : il s'ouvre en grand.
       function retournerCarteFin() {
+        if ($("carte-retourner").hidden) return; // une carte pas encore gagnée ne se retourne pas
         const n = seance.reglages && seance.reglages.grade;
         if (window.innerWidth < 900 && n && ouvrirCarteGrand(n, $("carte-retourner"), true)) return;
         retourner($("fin-carte-place").querySelector(".carte-kyu"), $("carte-retourner"));
@@ -2771,90 +2925,77 @@
         if (b) versGrades(Number(b.getAttribute("data-grade")));
       });
 
-      // La première règle de la fiche : « nombres d'un chiffre à additionner »,
-      // et pour un grade sans retenue (07/11/2026) « … à ajouter ou à
-      // enlever, sans retenue », « dizaines rondes (10, 20 … 90) … ».
-      function texteNombresFiche(n, g) {
-        const sr = CORE.SANS_RETENUE[n];
-        const quoi = sr && sr.forme === "dizaines" ? "dizaines rondes"
-          : `nombres ${g.chiffres === 1 ? "d’un chiffre" : `de ${g.chiffres} chiffres`}`;
-        const faire = sr && sr.plusmoins ? "à ajouter ou à enlever" : "à additionner";
-        return `${quoi} ${faire}${sr ? ", sans retenue" : ""}`;
-      }
-      // La fiche d'un grade : ses règles, « 🎯 M'entraîner », « Je passe le … ».
-      // Un grade en Colonne : ses règles, et ce qui est officiel ou non
-      // (choix du 07/11/2026 : « dire honnêtement ce qui est officiel »).
-      function reglesColonne(n) {
-        const c = CORE.GRADES_COLONNE[n - CORE.PREMIER_COLONNE];
-        const debut = c.plan[0];
-        let fort;
-        let quoi;
-        if (debut[0] === "u") { fort = "3 à 5"; quoi = "nombres d’un chiffre à additionner, tous différents"; }
-        else if (debut === "m6") { fort = "5"; quoi = "nombres à additionner : un de 2 chiffres, quatre d’un chiffre"; }
-        else if (debut === "m8") { fort = "5"; quoi = "nombres à additionner : trois de 2 chiffres, deux d’un chiffre"; }
-        else if (c.chiffresMin !== c.chiffresMax) { fort = "5"; quoi = "nombres de 2 chiffres, puis de 3 chiffres, à additionner"; }
-        else {
-          const premiers = Number(debut.slice(1));
-          fort = premiers === c.nombres ? String(c.nombres) : `${premiers} puis ${c.nombres}`;
-          quoi = `nombres de ${c.chiffresMax} chiffres ${c.operations === "plusmoins" ? "à additionner ou à soustraire" : "à additionner"}`;
-        }
-        const examen = c.limite ? 50 : 20;
-        return [
-          [fort, quoi],
-          c.limite ? [`${c.limite} s`, "par calcul (12 min pour 50 à l’examen)"] : ["Libre", "pas de temps officiel à ce grade"],
-          [String(CORE.GRADE_CALCULS), `calculs (${examen} à l’examen)`],
-          [`${c.seuil}/${CORE.GRADE_CALCULS}`, `pour réussir (${c.seuil * 10}\u00a0% à l’examen)`]
-        ];
+      // La fiche d'un grade (barème révisé, 22/11/2026, choix « B ») : ses
+      // étapes en onglets (rien pour un grade à une seule étape), les quatre
+      // lignes de l'étape montrée (les mots du moteur), « 🎯 M'entraîner » et
+      // « Je tente ▶ » pour cette étape. Une étape fermée ne s'ouvre pas.
+      function etapeParDefaut(n) {
+        const g = etatDuGrade(n);
+        if (!g.etapes.length) return 0;
+        // L'étape à tenter ; pour un grade gagné, la dernière (son épreuve).
+        return g.etapes[(g.etape || (g.reussi ? g.etapes.length : 1)) - 1].numero;
       }
       function dessinerFiche(n) {
-        if (CORE.estGradeColonne(n)) {
-          $("fiche-niveau").textContent = `Colonne · grade ${n - CORE.NB_GRADES} sur ${CORE.NB_GRADES_COLONNE}`;
-          const regles = $("fiche-regles");
-          regles.replaceChildren();
-          reglesColonne(n).forEach(([fort, texte]) => {
-            const li = document.createElement("li");
-            const b = document.createElement("b");
-            b.textContent = fort;
-            li.append(b, document.createTextNode(texte));
-            regles.append(li);
-          });
-          $("fiche-passer").textContent = "Je tente ▶";
-          $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
-          dessinerCarteFiche(n);
-          return;
-        }
-        const g = CORE.GRADES[n - 1];
-        $("fiche-niveau").textContent = `${CORE.GROUPES_GRADES[groupeDuGrade(n)].nom} · grade ${n} sur ${CORE.NB_GRADES}`;
+        const colonne = CORE.estGradeColonne(n);
+        const g = etatDuGrade(n);
+        if (!g.etapes.some(e => e.numero === ficheEtape && e.ouverte)) ficheEtape = etapeParDefaut(n);
+        $("fiche-niveau").textContent = colonne
+          ? `Colonne · grade ${n - CORE.NB_GRADES} sur ${CORE.NB_GRADES_COLONNE}`
+          : `${CORE.GROUPES_GRADES[groupeDuGrade(n)].nom} · grade ${n} sur ${CORE.NB_GRADES}`;
+        const onglets = $("fiche-etapes");
+        onglets.replaceChildren();
+        onglets.hidden = g.etapes.length < 2;
+        onglets.style.setProperty("--etapes", String(Math.max(1, g.etapes.length)));
+        onglets.classList.toggle("serre", g.etapes.length > 3);
+        g.etapes.forEach(e => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = `option${e.reussie ? " reussie" : ""}`;
+          b.setAttribute("data-etape", String(e.numero));
+          b.setAttribute("aria-pressed", String(e.numero === ficheEtape));
+          b.disabled = !e.ouverte;
+          const etat = e.reussie ? "réussie" : (e.ouverte ? "à toi" : "fermée");
+          b.setAttribute("aria-label", `Étape ${e.rang}, ${etat}`);
+          const petit = document.createElement("small");
+          petit.setAttribute("aria-hidden", "true");
+          petit.textContent = e.reussie ? (g.etapes.length > 3 ? "✓" : "✓ réussie") : (e.ouverte ? "à toi" : "🔒");
+          b.append(document.createTextNode(`Étape ${e.rang}`), petit);
+          onglets.append(b);
+        });
         const regles = $("fiche-regles");
         regles.replaceChildren();
-        [
-          [String(g.nombres), texteNombresFiche(n, g)],
-          [CORE.secondes(g.dixiemes / 10), "pour voir tous les nombres d’un calcul"],
-          [String(CORE.GRADE_CALCULS), "calculs"],
-          [`${CORE.GRADE_REUSSI}/${CORE.GRADE_CALCULS}`, "bonnes réponses pour réussir le grade"]
-        ].forEach(([fort, texte]) => {
+        CORE.reglesEtape(ficheEtape).forEach(([fort, texte]) => {
           const li = document.createElement("li");
           const b = document.createElement("b");
           b.textContent = fort;
           li.append(b, document.createTextNode(texte));
           regles.append(li);
         });
-        // « Je tente ▶ » (choix du 07/11/2026, 16 h 30 ; avant : « Je le
-        // passe ▶ » — « on n'est pas en mode examen ») : le nom du grade est
-        // déjà le titre (« Je passe le
-        // 13e kyu » passait sur deux lignes au téléphone).
+        // « Je tente ▶ » (choix du 07/11/2026 : « on n'est pas en mode examen »).
+        const ouverte = etatDeLEtape(ficheEtape).ouverte;
         $("fiche-passer").textContent = "Je tente ▶";
-        $("fiche-passer").disabled = !etatDuGrade(n).ouvert;
+        $("fiche-passer").disabled = !ouverte;
+        $("fiche-entrainer").disabled = !ouverte;
         dessinerCarteFiche(n);
       }
-      [5, 10].forEach(k => {
-        $(`fiche-entrainer-${k}`).addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "entrainement", k); });
+      $("fiche-etapes").addEventListener("click", e => {
+        const b = e.target.closest("[data-etape]");
+        if (!b || b.disabled || !ficheGrade) return;
+        ficheEtape = Number(b.getAttribute("data-etape"));
+        dessinerFiche(ficheGrade);
+        ajusterEchelle();
+        const choisi = $("fiche-etapes").querySelector('[aria-pressed="true"]');
+        if (choisi) choisi.focus({preventScroll: true});
       });
-      $("fiche-passer").addEventListener("click", () => { if (ficheGrade) demarrerGrade(ficheGrade, "grade"); });
+      $("fiche-entrainer").addEventListener("click", () => { if (ficheGrade && ficheEtape) demarrerEtape(ficheEtape, "entrainement"); });
+      $("fiche-passer").addEventListener("click", () => { if (ficheGrade && ficheEtape) demarrerEtape(ficheEtape, "grade"); });
 
       // L'écran des grades : la liste (n = 0) ou la fiche du grade n.
-      function versGrades(n) {
+      // `etapeChoisie` (facultatif) : l'étape que la fiche montre d'abord (au
+      // retour d'une séance : celle qu'on vient de jouer).
+      function versGrades(n, etapeChoisie) {
         annulerMinuteries();
+        arreterChronoPassage();
         rendreVeille();
         seance.phase = "aucune";
         corps.classList.remove("en-seance");
@@ -2864,6 +3005,7 @@
         $("ecran-grades").hidden = false;
         const fiche = CORE.gradeExiste(n) ? n : 0;
         ficheGrade = fiche;
+        ficheEtape = fiche && CORE.etape(etapeChoisie) && CORE.etape(etapeChoisie).grade === fiche ? etapeChoisie : 0;
         if (fiche) gradesColonne = CORE.estGradeColonne(fiche);
         $("grades-liste-vue").hidden = Boolean(fiche);
         $("grades-fiche-vue").hidden = !fiche;
@@ -2907,7 +3049,7 @@
         $("bg-det").replaceChildren(morceau(tete, "bg-tete"), morceau(" · ", "bg-point"), morceau(compte, "bg-compte"));
       }
       function dessinerBandeauGrades() {
-        // En Colonne (lot « grades-colonne ») : le grade à passer et « N sur 13 ».
+        // En Colonne (lot « grades-colonne ») : le grade à passer et « N sur 10 ».
         if (memoire.mode === "colonne") {
           const etat = gradesDeLEleve(true);
           const actuel = etat.find(g => g.actuel);
@@ -2932,25 +3074,53 @@
         else versReglages();
       });
 
-      // La fin d'un passage : réussi (7 ou plus), presque (5 ou 6), pas encore,
-      // ou arrêté (la flèche avant le 10e calcul).
-      function dessinerFinGrade(justes, avantGrade, arretee) {
-        const n = seance.reglages.grade;
+      // La fin d'un passage (barème révisé, 22/11/2026) : réussi (le seuil ou
+      // plus), presque (à deux réponses), pas encore, arrêté (la flèche avant
+      // le 10e calcul), ou « temps écoulé » (le chrono des dix calculs en
+      // Colonne). Réussi : « Grade réussi ! » avec la carte si c'était la
+      // dernière étape du grade ; sinon « Étape k réussie ! », les étapes du
+      // grade en ronds et la carte qui se colore.
+      function dessinerFinGrade(justes, etapeAvant, arretee, tempsFini) {
+        const e = CORE.etape(seance.reglages.etape);
+        const n = e.grade;
         const faits = seance.resultats.length;
-        const colonne = CORE.estGradeColonne(n);
-        const verdict = arretee ? "arrete" : CORE.verdictGrade(faits, justes, n);
-        $("compte").textContent = `🥋 ${CORE.nomGrade(n)}${colonne ? " · Colonne" : ""}`;
+        const colonne = e.colonne;
+        const verdict = tempsFini ? "temps" : (arretee ? "arrete" : CORE.verdictGrade(faits, justes, n));
+        const reussi = verdict === "reussi";
+        const gagne = reussi && e.rang === e.sur; // la dernière étape : le grade, sa carte
+        const nouvelle = CORE.rangEtape(e.numero) > etapeAvant; // ce passage ouvre la suite
+        $("compte").textContent = `🥋 ${CORE.nomGrade(n)}${colonne ? " · Colonne" : ""}${e.sur > 1 ? ` · étape\u00a0${e.rang}` : ""}`;
         const textes = {
-          reussi: ["🎉", "Grade réussi !"],
+          reussi: ["🎉", gagne ? "Grade réussi !" : `Étape ${e.rang} réussie !`],
           presque: ["💪", "Presque !"],
           pasencore: ["🌱", "Pas encore"],
-          arrete: ["⏸", "Passage arrêté"]
+          arrete: ["⏸", "Passage arrêté"],
+          temps: ["⏱", "Temps écoulé"]
         }[verdict];
         $("fin-grade").className = `fin-grade ${verdict}`;
-        dessinerCarteFin(n, verdict);
+        dessinerCarteFin(n, reussi, gagne);
         $("fin-grade-emoji").textContent = textes[0];
-        $("fin-grade-emoji").hidden = verdict === "reussi";
-        $("fin-grade-sceau").hidden = verdict !== "reussi";
+        $("fin-grade-emoji").hidden = reussi;
+        $("fin-grade-sceau").hidden = !gagne;
+        // Les étapes du grade en ronds : ✓ pour les réussies, leur numéro
+        // pour les autres.
+        const pips = $("fin-grade-pips");
+        pips.replaceChildren();
+        pips.hidden = !reussi || gagne;
+        if (!pips.hidden) {
+          const etapes = etatDuGrade(n).etapes;
+          etapes.forEach((x, i) => {
+            if (i) {
+              const trait = document.createElement("b");
+              if (x.reussie) trait.className = "faite";
+              pips.append(trait);
+            }
+            const rond = document.createElement("i");
+            if (x.reussie) rond.className = "faite";
+            rond.textContent = x.reussie ? "✓" : String(x.rang);
+            pips.append(rond);
+          });
+        }
         $("fin-grade-titre").textContent = textes[1];
         $("fin-grade-score").innerHTML = `${Number(justes)}<small>/${CORE.GRADE_CALCULS}</small>`;
         const points = $("fin-grade-points");
@@ -2965,22 +3135,30 @@
         const sous = $("fin-grade-sous");
         ouvert.hidden = true;
         sous.hidden = true;
-        // Ce que le passage ouvre : le grade suivant, s'il ne l'était pas déjà.
+        // Ce que le passage ouvre : l'étape ou le grade suivant, s'ils ne
+        // l'étaient pas déjà.
         const dernier = CORE.dernierDeSaListe(n);
-        if (verdict === "reussi" && n === dernier) {
+        const mot = e.sur > 1 ? "Une étape" : "Un grade";
+        if (gagne && n === dernier) {
           ouvert.textContent = "🏆 Tu as tous les grades !";
           ouvert.hidden = false;
-        } else if (verdict === "reussi" && n > avantGrade && plusHautGrade(colonne) >= n) {
+        } else if (gagne && nouvelle) {
           ouvert.textContent = `🔓 Le ${CORE.nomGrade(n + 1)} est ouvert`;
+          ouvert.hidden = false;
+        } else if (reussi && !gagne && nouvelle) {
+          ouvert.textContent = `🔓 L’étape\u00a0${e.rang + 1} est ouverte`;
           ouvert.hidden = false;
         } else if (verdict === "presque") {
           sous.textContent = `Il en fallait ${CORE.seuilGrade(n)}. Tu peux retenter tout de suite.`;
           sous.hidden = false;
         } else if (verdict === "pasencore") {
-          sous.textContent = "Entraîne-toi à ce grade, puis reviens.";
+          sous.textContent = e.sur > 1 ? "Entraîne-toi à cette étape, puis reviens." : "Entraîne-toi à ce grade, puis reviens.";
           sous.hidden = false;
         } else if (verdict === "arrete") {
-          sous.textContent = `Un grade se passe en ${CORE.GRADE_CALCULS} calculs d’affilée.`;
+          sous.textContent = `${mot} se passe en ${CORE.GRADE_CALCULS} calculs d’affilée.`;
+          sous.hidden = false;
+        } else if (verdict === "temps") {
+          sous.textContent = `${faits} calcul${faits > 1 ? "s" : ""} sur ${CORE.GRADE_CALCULS} en ${CORE.texteChrono(e.chrono)}. Tu peux retenter tout de suite.`;
           sous.hidden = false;
         }
         const a = $("fin-grade-a");
@@ -2988,7 +3166,7 @@
         const actions = $("fin-grade-actions");
         actions.classList.remove("seul");
         a.hidden = false;
-        if (verdict === "reussi") {
+        if (gagne) {
           a.textContent = "Les grades";
           a.dataset.action = "liste";
           if (n < dernier) {
@@ -3000,6 +3178,13 @@
             b.textContent = "Les grades";
             b.dataset.action = "liste";
           }
+        } else if (reussi) {
+          // L'étape suivante du même grade : sa fiche, comme « Le 11e kyu ▶ »
+          // ouvre la fiche du grade suivant.
+          a.textContent = "Le grade";
+          a.dataset.action = "fiche";
+          b.textContent = `Étape\u00a0${e.rang + 1} ▶`;
+          b.dataset.action = "etape-suivante";
         } else if (verdict === "arrete") {
           a.textContent = "Les grades";
           a.dataset.action = "liste";
@@ -3016,15 +3201,18 @@
         $("fin-grade-calculs").textContent = "Voir mes calculs";
       }
       function actionFinGrade(bouton) {
-        const n = seance.reglages && seance.reglages.grade;
-        if (!n) return;
+        const numero = seance.reglages && seance.reglages.etape;
+        const e = CORE.etape(numero);
+        if (!e) return;
+        const n = e.grade;
         const action = bouton.dataset.action;
         if (action === "liste") { groupeAffiche = -1; gradesColonne = CORE.estGradeColonne(n); versGrades(0); }
         else if (action === "suivant") versGrades(n + 1);
-        else if (action === "repasser") demarrerGrade(n, "grade");
-        // « 🎯 M'entraîner » après un passage manqué : la fiche du grade, où
-        // l'élève choisit 5 ou 10 calculs (lot « entraînement 5 ou 10 »).
-        else if (action === "entrainer") versGrades(n);
+        else if (action === "etape-suivante") versGrades(n, numero + 1);
+        else if (action === "repasser") demarrerEtape(numero, "grade");
+        // « 🎯 M'entraîner » après un passage manqué, « Le grade » après une
+        // étape réussie : la fiche du grade, sur cette étape.
+        else if (action === "entrainer" || action === "fiche") versGrades(n, numero);
       }
       $("fin-grade-a").addEventListener("click", () => actionFinGrade($("fin-grade-a")));
       $("fin-grade-b").addEventListener("click", () => actionFinGrade($("fin-grade-b")));

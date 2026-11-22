@@ -53,28 +53,27 @@
   //                     séance en coûterait dix, une liste une seule. Rien
   //                     d'autre n'est envoyé : ni heure, ni calculs posés, ni
   //                     réponses, ni temps de réponse. }
-  //     LES GRADES (lot « grades », 07/11/2026) : un passage de grade est une
-  //     séance de mode « grade », un entraînement à un grade une séance de
-  //     mode « entrainement » ; pour elles, le champ « temps » porte le
-  //     NUMÉRO du grade (1 = 20e kyu … 40 = 20e dan) et les réglages sont
-  //     exactement ceux de la grille (additions, chiffres, nombres, 10
-  //     calculs) — sinon la séance est jetée. Seule exception (lot
-  //     « entraînement 5 ou 10 », 07/11/2026) : un ENTRAÎNEMENT peut faire 5
-  //     calculs (ENTRAINEMENT_CALCULS) ; un passage, jamais. Un grade est réussi à 7 justes
-  //     sur 10 calculs faits. À côté des séances, « gradeReussi » garde le
-  //     plus haut grade réussi (0 ou absent : aucun) : les cadenas restent
-  //     ouverts quand les vieilles séances sortent des 500 gardées. Il ne
-  //     fait que monter : en fusion, le plus haut des deux.
-  //     LES GRADES EN COLONNE (lot « grades-colonne », 07/11/2026) : la
-  //     grille du 暗算検定 (GRADES_COLONNE de flash_anzan_core.js, recopiée
-  //     plus bas), numéros 41 (10e kyu) à 53 (1er kyu) dans le même champ
-  //     « temps » — aucun mot nouveau. Les réglages enregistrés sont ceux de
-  //     la ligne de la grille (chiffres de … à, le plus grand nombre de
-  //     nombres d'un calcul, les opérations, 10 calculs) : les calculs d'un
-  //     grade n'ont pas tous le même nombre de nombres, rien de plus n'est
-  //     gardé. Réussi au seuil du grade (5, 6, 7 ou 8 sur 10). À côté,
-  //     « gradeColonne » garde le RANG du plus haut grade réussi en Colonne
-  //     (1 = 10e kyu … 13 = 1er kyu ; absent : aucun), comme « gradeReussi ».
+  //     LES GRADES ET LEURS ÉTAPES (barème révisé, 22/11/2026) : un grade
+  //     se gagne en réussissant ses étapes, dans l'ordre. Un passage est une
+  //     séance de mode « grade », un entraînement une séance de mode
+  //     « entrainement » ; pour elles, le champ « temps » porte le NUMÉRO DE
+  //     L'ÉTAPE (101 … 165 en Flash, 201 … 226 en Colonne : ETAPES, recopiée
+  //     de flash_anzan_core.js) et les réglages sont exactement ceux de
+  //     l'étape (opérations, chiffres de … à, nombre de nombres ; 10 calculs
+  //     pour un passage, 5 pour un entraînement) — sinon la séance est jetée.
+  //     Une étape est réussie au seuil de son mode (7 sur 10 en Flash, 8 en
+  //     Colonne), les 10 calculs faits. À côté des séances, « etapeFlash » et
+  //     « etapeColonne » gardent le RANG de la plus haute étape réussie (1 …
+  //     65, 1 … 26 ; absent : aucune) : les cadenas restent ouverts quand les
+  //     vieilles séances sortent des 500 gardées. Ils ne font que monter : en
+  //     fusion, le plus haut des deux.
+  //     L'ANCIENNE GRILLE (lots « grades » et « grades-colonne » du
+  //     07/11/2026) portait dans « temps » un numéro de GRADE, 1 … 53, et
+  //     gardait « gradeReussi » et « gradeColonne ». Aucun élève n'avait
+  //     commencé : ces séances et ces deux clés sont IGNORÉES à la lecture
+  //     (une séance de grade dont le numéro n'est pas une étape n'est pas une
+  //     séance), sans erreur, et ne sont plus jamais écrites. Les numéros
+  //     d'étape commencent à 101 pour qu'aucune ne soit prise pour une autre.
   //     Les SEANCES_MAX dernières séances sont gardées (≈ deux années de
   //     classe à une séance par jour) ; au-delà, la plus ancienne part.
   //     UN SEUL ORDRE pour tout (historique, borne, numéros, fusion) :
@@ -141,62 +140,85 @@
     colonne: Object.freeze({operations: "plusmoins", chiffresMin: 3, chiffresMax: 3, nombres: 8, limite: 0, calculs: 10})
   });
 
-  // Les grades : la grille de flash_anzan_core.js (GRADES), recopiée — la page
-  // prof charge ce moteur seul ; tests/flash-anzan-parcours.test.mjs vérifie
-  // qu'elle est la même. [chiffres, nombres, temps de toute la série en
-  // dixièmes de seconde], du 20e kyu (1) au 20e dan (40).
-  const GRADES = Object.freeze([
-    [1, 3, 50], [1, 3, 50], [1, 5, 70], [1, 8, 100], [1, 10, 120], [1, 12, 150], [1, 15, 150], [1, 20, 150], [2, 10, 100], [2, 15, 150],
-    [2, 2, 40], [2, 3, 60], [2, 4, 70], [2, 5, 80], [2, 6, 90], [2, 7, 100], [2, 8, 110], [2, 10, 120], [2, 12, 120], [2, 15, 130],
-    [2, 15, 100], [3, 4, 40], [3, 6, 50], [3, 8, 60], [3, 10, 70], [3, 12, 80], [3, 15, 80], [3, 15, 60], [3, 15, 45], [3, 15, 30],
-    [3, 15, 28], [3, 15, 26], [3, 15, 24], [3, 15, 22], [3, 15, 20], [3, 15, 19], [3, 15, 18], [3, 15, 17], [3, 15, 16], [3, 15, 15]
-  ].map(([chiffres, nombres, dixiemes]) => Object.freeze({chiffres, nombres, dixiemes})));
-  const NB_GRADES = GRADES.length;
-  // Les grades « + et − » (du 19e au 11e kyu, sans retenue : SANS_RETENUE de
-  // flash_anzan_core.js, 07/11/2026). Leurs séances d'avant, toutes en
-  // additions, restent valables : « plus » est toujours accepté.
-  const GRADES_PLUS_ET_MOINS = Object.freeze([2, 3, 4, 5, 6, 7, 8, 9, 10]);
-  const GRADE_CALCULS = 10;
-  // « 🎯 M'entraîner » en 5 ou 10 calculs (ENTRAINEMENT_CALCULS de
-  // flash_anzan_core.js, recopié ; un test vérifie qu'il est le même).
-  const ENTRAINEMENT_CALCULS = Object.freeze([5, 10]);
-  const GRADE_REUSSI = 7;
-  // Les grades en Colonne : la grille de flash_anzan_core.js
-  // (GRADES_COLONNE), recopiée — un test vérifie qu'elle est la même.
-  // [kyu, pré, chiffresMin, chiffresMax, nombres (le plus grand), opérations,
-  // seuil sur 10], du 10e kyu (numéro 41) au 1er kyu (53).
-  const GRADES_COLONNE = Object.freeze([
-    [10, false, 1, 1, 5, "plus", 5], [9, false, 1, 1, 5, "plus", 6], [8, false, 1, 1, 5, "plus", 7], [7, false, 1, 1, 5, "plus", 8],
-    [6, false, 1, 2, 5, "plus", 8], [5, false, 1, 2, 5, "plus", 8], [4, false, 2, 2, 5, "plus", 8], [3, true, 2, 3, 5, "plus", 8],
-    [3, false, 3, 3, 5, "plus", 8], [2, true, 3, 3, 7, "plus", 8], [2, false, 3, 3, 7, "plus", 8], [1, true, 3, 3, 10, "plusmoins", 8],
-    [1, false, 3, 3, 10, "plusmoins", 8]
-  ].map(([kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil]) => Object.freeze({kyu, pre, chiffresMin, chiffresMax, nombres, operations, seuil})));
-  const NB_GRADES_COLONNE = GRADES_COLONNE.length;
+  // Les étapes des grades : celles de flash_anzan_core.js (ETAPES), recopiées
+  // — la page prof charge ce moteur seul ; tests/flash-anzan-parcours.test.mjs
+  // vérifie qu'elles sont les mêmes. Une ligne par étape, dans l'ordre :
+  // [grade, chiffresMin, chiffresMax, nombres, opérations]. Les grades : 1
+  // (20e kyu) … 40 (20e dan) en Flash ; 41 (10e kyu) … 50 (1er kyu) en
+  // Colonne (les dan de Colonne viendront avec leurs étapes).
+  const NB_GRADES = 40;
+  const NB_GRADES_COLONNE = 10;
   const PREMIER_COLONNE = NB_GRADES + 1;
   const DERNIER_GRADE = NB_GRADES + NB_GRADES_COLONNE;
+  const ETAPE_FLASH = 100;
+  const ETAPE_COLONNE = 200;
+  const GRADE_CALCULS = 10;
+  // « 🎯 M'entraîner » en 5 calculs (ENTRAINEMENT_CALCULS de
+  // flash_anzan_core.js, recopié ; un test vérifie qu'il est le même).
+  const ENTRAINEMENT_CALCULS = Object.freeze([5]);
+  const GRADE_REUSSI = 7;
+  const SEUIL_COLONNE = 8;
+  const P = "plus";
+  const M = "plusmoins";
+  const lignesEtapes = (lignes, base) => Object.freeze(lignes.map(([grade, chiffresMin, chiffresMax, nombres, operations], i) =>
+    Object.freeze({numero: base + i + 1, grade, chiffresMin, chiffresMax, nombres, operations})));
+  const ETAPES_FLASH = lignesEtapes([
+    [1, 1, 1, 2, P], [1, 1, 1, 3, P], [2, 1, 1, 2, P], [2, 1, 1, 3, P], [3, 1, 1, 2, P], [3, 1, 1, 3, P],
+    [4, 1, 1, 2, P], [4, 1, 1, 3, P], [5, 1, 1, 4, P], [5, 1, 1, 5, P], [6, 1, 1, 6, P], [6, 1, 1, 7, P],
+    [7, 1, 1, 10, P], [7, 1, 1, 10, P], [8, 1, 1, 10, P], [8, 1, 1, 10, P], [9, 1, 2, 2, P], [9, 1, 2, 2, P],
+    [9, 1, 2, 3, P], [10, 2, 2, 2, P], [10, 2, 2, 2, P], [11, 2, 2, 2, P], [11, 2, 2, 2, P], [11, 2, 2, 2, P],
+    [12, 2, 2, 3, P], [13, 2, 2, 4, P], [14, 2, 2, 5, P], [15, 2, 2, 6, P], [16, 2, 2, 7, P], [17, 2, 2, 8, P],
+    [18, 2, 2, 10, P], [19, 2, 2, 12, P], [19, 2, 2, 12, P], [20, 2, 2, 15, P], [20, 2, 2, 15, P], [21, 2, 2, 15, P],
+    [21, 2, 2, 15, P], [22, 3, 3, 2, P], [22, 3, 3, 2, P], [22, 3, 3, 3, P], [22, 3, 3, 4, P], [23, 3, 3, 6, P],
+    [24, 3, 3, 8, P], [25, 3, 3, 10, P], [26, 3, 3, 12, P], [27, 3, 3, 15, P], [27, 3, 3, 15, P], [27, 3, 3, 15, P],
+    [28, 3, 3, 15, P], [28, 3, 3, 15, P], [29, 3, 3, 15, P], [29, 3, 3, 15, P], [30, 3, 3, 15, P], [30, 3, 3, 15, P],
+    [30, 3, 3, 15, P], [31, 3, 3, 15, P], [32, 3, 3, 15, P], [33, 3, 3, 15, P], [34, 3, 3, 15, P], [35, 3, 3, 15, P],
+    [36, 3, 3, 15, P], [37, 3, 3, 15, P], [38, 3, 3, 15, P], [39, 3, 3, 15, P], [40, 3, 3, 15, P]
+  ], ETAPE_FLASH);
+  const ETAPES_COLONNE = lignesEtapes([
+    [41, 1, 1, 3, M], [41, 1, 1, 3, M], [42, 1, 1, 5, M], [42, 1, 1, 3, P], [43, 1, 1, 3, M], [43, 1, 1, 3, M],
+    [44, 1, 1, 5, M], [44, 1, 1, 7, M], [44, 1, 1, 7, M], [45, 2, 2, 2, M], [45, 2, 2, 2, M], [46, 2, 2, 3, P],
+    [46, 2, 2, 3, M], [47, 2, 2, 5, P], [47, 2, 2, 5, M], [47, 2, 2, 5, M], [48, 3, 3, 2, M], [48, 3, 3, 2, M],
+    [48, 3, 3, 3, M], [48, 3, 3, 5, P], [48, 3, 3, 5, M], [49, 3, 3, 7, P], [49, 3, 3, 7, M], [50, 3, 3, 10, P],
+    [50, 3, 3, 10, M], [50, 3, 3, 10, M]
+  ], ETAPE_COLONNE);
+  const NB_ETAPES_FLASH = ETAPES_FLASH.length;
+  const NB_ETAPES_COLONNE = ETAPES_COLONNE.length;
   const estGradeColonne = n => Number.isInteger(n) && n >= PREMIER_COLONNE && n <= DERNIER_GRADE;
-  const ligneColonne = n => (estGradeColonne(n) ? GRADES_COLONNE[n - PREMIER_COLONNE] : null);
-  // Les bonnes réponses sur 10 pour réussir le grade n.
-  function seuilGrade(n) {
-    const c = ligneColonne(n);
-    return c ? c.seuil : GRADE_REUSSI;
-  }
-  const estModeGrade = mode => mode === "grade" || mode === "entrainement";
   function gradeValide(n) {
     return Number.isInteger(n) && n >= 1 && n <= NB_GRADES;
   }
-  // Le rang d'un grade en Colonne (1 = 10e kyu … 13 = 1er kyu).
-  function rangColonneValide(k) {
-    return Number.isInteger(k) && k >= 1 && k <= NB_GRADES_COLONNE;
+  // L'étape de ce numéro, ou null (un numéro de l'ancienne grille : null).
+  function etape(numero) {
+    if (!Number.isInteger(numero)) return null;
+    if (numero > ETAPE_COLONNE) return ETAPES_COLONNE[numero - ETAPE_COLONNE - 1] || null;
+    return numero > ETAPE_FLASH ? ETAPES_FLASH[numero - ETAPE_FLASH - 1] || null : null;
   }
-  // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan » (les mots du noyau).
+  const etapeColonne = numero => Boolean(etape(numero)) && numero > ETAPE_COLONNE;
+  // Le rang d'une étape dans sa liste (1 … 65, 1 … 26), et l'inverse.
+  const rangEtape = numero => (etape(numero) ? numero - (numero > ETAPE_COLONNE ? ETAPE_COLONNE : ETAPE_FLASH) : 0);
+  const numeroEtape = (rang, colonne) => (colonne ? ETAPE_COLONNE : ETAPE_FLASH) + rang;
+  // Les étapes d'un grade, dans l'ordre.
+  function etapesDuGrade(n) {
+    return (estGradeColonne(n) ? ETAPES_COLONNE : ETAPES_FLASH).filter(e => e.grade === n);
+  }
+  // Les bonnes réponses sur 10 pour réussir une étape du grade n.
+  function seuilGrade(n) {
+    return estGradeColonne(n) ? SEUIL_COLONNE : GRADE_REUSSI;
+  }
+  const seuilEtape = numero => (numero > ETAPE_COLONNE ? SEUIL_COLONNE : GRADE_REUSSI);
+  // Un rang d'étape de la liste (Flash, ou Colonne).
+  function rangValide(rang, colonne) {
+    return Number.isInteger(rang) && rang >= 1 && rang <= (colonne ? NB_ETAPES_COLONNE : NB_ETAPES_FLASH);
+  }
+  const estModeGrade = mode => mode === "grade" || mode === "entrainement";
+  // « 20e kyu », « 1er kyu », « 1er dan », « 20e dan » ; en Colonne, du 10e
+  // kyu (41) au 1er kyu (50) — les mots du noyau.
+  const ordinal = k => `${k}${k === 1 ? "er" : "e"}`;
   function nomGrade(n) {
-    const c = ligneColonne(n);
-    if (c) return `${c.pre ? "pré-" : ""}${c.kyu}${c.kyu === 1 ? "er" : "e"} kyu`;
+    if (estGradeColonne(n)) return `${ordinal(PREMIER_COLONNE + 10 - n)} kyu`;
     if (!gradeValide(n)) return "";
-    if (n <= 20) { const k = 21 - n; return `${k}${k === 1 ? "er" : "e"} kyu`; }
-    const d = n - 20;
-    return `${d}${d === 1 ? "er" : "e"} dan`;
+    return n <= 20 ? `${ordinal(21 - n)} kyu` : `${ordinal(n - 20)} dan`;
   }
 
   // Une séance : les douze champs, dans cet ordre, et rien d'autre.
@@ -215,7 +237,7 @@
   // toute profondeur), les mots et le motif des numéros de séance. Un test
   // compare le texte du catalogue à ces trois listes.
   const CLES_SERVEUR = Object.freeze(["version", "epoque", "reglages", "rang", "mode", "flash", "colonne",
-    "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances", "gradeReussi", "gradeColonne"]);
+    "operations", "chiffresMin", "chiffresMax", "nombres", "temps", "limite", "calculs", "son", "seances", "etapeFlash", "etapeColonne"]);
   const MOTS_SERVEUR = Object.freeze(["flash", "colonne", "plus", "plusmoins", "aucun", "bip", "grade", "entrainement"]);
   const MOTIF_SEANCES_PHP = "/^[1-9]\\d{0,3}$/";
   const COMPTE_MAX = 1000000;
@@ -327,21 +349,15 @@
     s.nombres = entier(s.nombres, 0, NOMBRES.max + 1, 0);
     if (s.nombres < NOMBRES.min || s.nombres > NOMBRES.max) return null;
     s.temps = entier(s.temps, -1, COMPTE_MAX, -1);
-    // Les calculs d'un grade : 10 pour un passage ; 5 ou 10 pour un
-    // entraînement (lot « entraînement 5 ou 10 », 07/11/2026).
-    const calculsDuGrade = s.mode === "entrainement" ? ENTRAINEMENT_CALCULS : [GRADE_CALCULS];
-    if (estModeGrade(s.mode) && estGradeColonne(s.temps)) {
-      // Un grade en Colonne : exactement sa ligne de la grille.
-      const c = ligneColonne(s.temps);
-      if (s.operations !== c.operations || s.chiffresMin !== c.chiffresMin || s.chiffresMax !== c.chiffresMax
-        || s.nombres !== c.nombres || calculsDuGrade.indexOf(s.calculs) < 0) return null;
-    } else if (estModeGrade(s.mode)) {
-      // Un grade : exactement sa ligne de la grille, rien d'approché.
-      if (!gradeValide(s.temps)) return null;
-      const g = GRADES[s.temps - 1];
-      const operationsDuGrade = s.operations === "plus" || GRADES_PLUS_ET_MOINS.indexOf(s.temps) >= 0;
-      if (!operationsDuGrade || s.chiffresMin !== g.chiffres || s.chiffresMax !== g.chiffres
-        || s.nombres !== g.nombres || calculsDuGrade.indexOf(s.calculs) < 0) return null;
+    if (estModeGrade(s.mode)) {
+      // Une étape d'un grade : exactement sa ligne, rien d'approché ; 10
+      // calculs pour un passage, 5 pour un entraînement. Un numéro de
+      // l'ancienne grille (1 … 53) n'est pas une étape : la séance est
+      // ignorée, sans erreur.
+      const e = etape(s.temps);
+      const calculsDeLEtape = s.mode === "entrainement" ? ENTRAINEMENT_CALCULS : [GRADE_CALCULS];
+      if (!e || s.operations !== e.operations || s.chiffresMin !== e.chiffresMin || s.chiffresMax !== e.chiffresMax
+        || s.nombres !== e.nombres || calculsDeLEtape.indexOf(s.calculs) < 0) return null;
     } else if ((s.mode === "flash" ? TEMPS : LIMITES).indexOf(s.temps) < 0) return null;
     if (CALCULS.indexOf(s.calculs) < 0) return null;
     s.faits = entier(s.faits, 0, s.calculs, 0);
@@ -360,15 +376,15 @@
   // Les réglages d'une séance, au format de la page (temps ou limite).
   function reglagesDeSeance(s) {
     const r = {operations: s.operations, chiffresMin: s.chiffresMin, chiffresMax: s.chiffresMax, nombres: s.nombres, calculs: s.calculs};
-    if (estModeGrade(s.mode)) r.grade = s.temps;
+    if (estModeGrade(s.mode)) { r.etape = s.temps; r.grade = etape(s.temps).grade; }
     else if (s.mode === "flash") r.temps = s.temps; else r.limite = s.temps;
     return r;
   }
 
-  // Un PASSAGE réussi : 10 calculs faits, le seuil du grade atteint (7 au
-  // Flash ; 5 à 8 en Colonne).
+  // Un PASSAGE réussi : 10 calculs faits, le seuil de l'étape atteint (7 en
+  // Flash, 8 en Colonne).
   function passageReussi(s) {
-    return s.mode === "grade" && s.faits >= GRADE_CALCULS && s.score >= seuilGrade(s.temps);
+    return s.mode === "grade" && s.faits >= GRADE_CALCULS && s.score >= seuilEtape(s.temps);
   }
 
   const I_JOUR = SEANCE_CHAMPS.indexOf("jour");
@@ -421,22 +437,22 @@
       parId.set(s[I_ID], deja ? plusAvancee(deja, s) : s);
     });
     const triees = [...parId.values()].sort(avant);
-    // Le plus haut grade réussi : celui que p connaissait, ou celui d'un
-    // passage réussi — compté AVANT que la borne fasse sortir les plus
-    // vieilles séances.
-    let grade = gradeValide(p.gradeReussi) ? p.gradeReussi : 0;
-    let colonne = rangColonneValide(p.gradeColonne) ? p.gradeColonne : 0;
+    // La plus haute étape réussie de chaque mode : celle que p connaissait,
+    // ou celle d'un passage réussi — comptée AVANT que la borne fasse sortir
+    // les plus vieilles séances.
+    let flash = rangValide(p.etapeFlash, false) ? p.etapeFlash : 0;
+    let colonne = rangValide(p.etapeColonne, true) ? p.etapeColonne : 0;
     triees.forEach(s => {
-      if (s[I_MODE] !== "grade" || s[I_FAITS] < GRADE_CALCULS || s[I_SCORE] < seuilGrade(s[I_TEMPS])) return;
-      if (gradeValide(s[I_TEMPS]) && s[I_TEMPS] > grade) grade = s[I_TEMPS];
-      if (estGradeColonne(s[I_TEMPS]) && s[I_TEMPS] - NB_GRADES > colonne) colonne = s[I_TEMPS] - NB_GRADES;
+      if (s[I_MODE] !== "grade" || s[I_FAITS] < GRADE_CALCULS || s[I_SCORE] < seuilEtape(s[I_TEMPS])) return;
+      const rang = rangEtape(s[I_TEMPS]);
+      if (etapeColonne(s[I_TEMPS])) { if (rang > colonne) colonne = rang; } else if (rang > flash) flash = rang;
     });
     p.seances = {};
     triees.slice(Math.max(0, triees.length - SEANCES_MAX)).forEach((s, i) => { p.seances[String(i + 1)] = s.slice(); });
-    // Absent tant qu'aucun grade n'est réussi : le parcours d'une élève qui
-    // ne passe pas de grade reste octet pour octet celui d'avant.
-    if (grade) p.gradeReussi = grade; else delete p.gradeReussi;
-    if (colonne) p.gradeColonne = colonne; else delete p.gradeColonne;
+    // Absent tant qu'aucune étape n'est réussie : le parcours d'une élève
+    // qui ne passe pas de grade reste octet pour octet celui d'avant.
+    if (flash) p.etapeFlash = flash; else delete p.etapeFlash;
+    if (colonne) p.etapeColonne = colonne; else delete p.etapeColonne;
     return p;
   }
 
@@ -449,10 +465,12 @@
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return p;
     p.epoque = entier(brut.epoque, 0, COMPTE_MAX, 0);
     p.reglages = normaliserReglages(brut.reglages);
-    const grade = entier(brut.gradeReussi, 0, NB_GRADES, 0);
-    if (grade) p.gradeReussi = grade;
-    const colonne = entier(brut.gradeColonne, 0, NB_GRADES_COLONNE, 0);
-    if (colonne) p.gradeColonne = colonne;
+    // « gradeReussi » et « gradeColonne » de l'ancienne grille ne sont pas
+    // lus : remis à zéro (décision du 22/11/2026).
+    const flash = entier(brut.etapeFlash, 0, NB_ETAPES_FLASH, 0);
+    if (flash) p.etapeFlash = flash;
+    const colonne = entier(brut.etapeColonne, 0, NB_ETAPES_COLONNE, 0);
+    if (colonne) p.etapeColonne = colonne;
     const seances = brut.seances && typeof brut.seances === "object" && !Array.isArray(brut.seances) ? brut.seances : {};
     const propres = [];
     Object.keys(seances).forEach(cle => {
@@ -524,11 +542,11 @@
     if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
     const fusion = creer();
     fusion.epoque = a.epoque;
-    // Le plus haut grade réussi ne fait que monter : le plus haut des deux.
-    const grade = Math.max(a.gradeReussi || 0, b.gradeReussi || 0);
-    if (grade) fusion.gradeReussi = grade;
-    const colonne = Math.max(a.gradeColonne || 0, b.gradeColonne || 0);
-    if (colonne) fusion.gradeColonne = colonne;
+    // La plus haute étape réussie ne fait que monter : la plus haute des deux.
+    const flash = Math.max(a.etapeFlash || 0, b.etapeFlash || 0);
+    if (flash) fusion.etapeFlash = flash;
+    const colonne = Math.max(a.etapeColonne || 0, b.etapeColonne || 0);
+    if (colonne) fusion.etapeColonne = colonne;
     // L'union par identifiant, rangée dans l'ordre du temps : aucune séance
     // ne dépend de la place qu'elle avait dans l'une ou l'autre copie.
     ranger(fusion, listes(a).concat(listes(b)));
@@ -591,7 +609,7 @@
       chiffresMin: r.chiffresMin,
       chiffresMax: r.chiffresMax,
       nombres: r.nombres,
-      temps: estModeGrade(mode) ? r.grade : (mode === "flash" ? r.temps : r.limite),
+      temps: estModeGrade(mode) ? r.etape : (mode === "flash" ? r.temps : r.limite),
       calculs: r.calculs,
       faits: s.faits,
       score: s.score,
@@ -648,7 +666,8 @@
         const vue = {numero: n, id: s.id, jour: s.jour, mode: s.mode, reglages: reglagesDeSeance(s),
           calculs: s.calculs, faits: s.faits, score: s.score, arretee: s.faits < s.calculs};
         if (estModeGrade(s.mode)) {
-          vue.grade = s.temps;
+          vue.etape = s.temps;
+          vue.grade = etape(s.temps).grade;
           if (s.mode === "grade") vue.reussi = passageReussi(s);
         }
         return vue;
@@ -682,106 +701,150 @@
     return `${r.calculs} calcul${r.calculs > 1 ? "s" : ""} · ${r.jours} jour${r.jours > 1 ? "s" : ""} d’entraînement`;
   }
 
-  // Ce que « Ma classe » montre d'un élève : le compte, le dernier jour et les
-  // dix dernières séances.
+  // Ce que « Ma classe » montre d'un élève : le compte, le dernier jour, les
+  // dix dernières séances, et où il en est des grades — `grade` et
+  // `gradeColonne` : le NUMÉRO du plus haut grade gagné dans chaque mode (0 :
+  // aucun), pour que nomGrade le nomme ; `enCours` et `enCoursColonne` : le
+  // grade et l'étape à tenter (« 12e kyu · étape 2 sur 3 » ; rien avant la
+  // première étape réussie, rien quand tout est gagné).
   function resumeProf(parcours) {
     const r = resume(parcours);
     const grade = gradeReussi(parcours);
     const rang = gradeColonneReussi(parcours);
-    // gradeColonne : le NUMÉRO du plus haut grade réussi en Colonne (41 …
-    // 53 ; 0 : aucun), pour que nomGrade le nomme.
     const gradeColonne = rang ? NB_GRADES + rang : 0;
+    const enCours = texteEnCours(parcours, false);
+    const enCoursColonne = texteEnCours(parcours, true);
     return Object.assign(r, {texte: texteResume(r), dernieres: historique(parcours).slice(0, 10), commence: r.calculs > 0,
-      grade, gradeColonne, texteGrade: texteGradesReussis(grade, gradeColonne)});
+      grade, gradeColonne, enCours, enCoursColonne, texteGrade: texteGradesReussis(grade, gradeColonne, enCours, enCoursColonne)});
   }
 
-  // ------------------------------------------------------------- les grades
+  // ------------------------------------------------- les grades et les étapes
   //
-  // Lot « grades » (07/11/2026). Les cadenas : le grade suivant le plus haut
-  // réussi est ouvert, ceux d'en dessous aussi (on peut repasser un grade
-  // réussi), les autres sont fermés.
+  // Barème révisé (22/11/2026). Les cadenas : l'étape qui suit la plus haute
+  // réussie est ouverte, celles d'avant aussi (on peut retenter une étape
+  // réussie), les autres sont fermées. Un grade est GAGNÉ quand sa dernière
+  // étape est réussie : c'est là que se gagne sa carte (ou son estampe).
 
-  // Le plus haut grade réussi (0 : aucun).
-  function gradeReussi(parcours) {
+  // Le rang de la plus haute étape réussie (0 : aucune), en Flash ou en Colonne.
+  function etapeReussie(parcours, colonne) {
     const p = normaliser(parcours);
-    return gradeValide(p.gradeReussi) ? p.gradeReussi : 0;
+    const rang = colonne ? p.etapeColonne : p.etapeFlash;
+    return rangValide(rang, Boolean(colonne)) ? rang : 0;
   }
 
-  // « 🥋 Grade réussi : 13e kyu » ; rien sans grade réussi.
+  // Le plus haut grade gagné d'une liste d'étapes dont `rang` sont réussies
+  // (0 : aucun) : le grade de la dernière étape réussie si c'est la dernière
+  // de son grade, sinon le grade d'avant.
+  function gradeGagne(etapes, rang, premier) {
+    if (!rang) return 0;
+    const e = etapes[rang - 1];
+    const suivante = etapes[rang];
+    return !suivante || suivante.grade !== e.grade ? e.grade : (e.grade > premier ? e.grade - 1 : 0);
+  }
+
+  // Le plus haut grade gagné en Flash (0 : aucun ; 1 = 20e kyu … 40 = 20e dan).
+  function gradeReussi(parcours) {
+    return gradeGagne(ETAPES_FLASH, etapeReussie(parcours, false), 1);
+  }
+
+  // « 🥋 Grade réussi : 13e kyu » ; rien sans grade gagné.
   function texteGradeReussi(grade) {
     return gradeValide(grade) ? `🥋 Grade réussi\u00a0: ${nomGrade(grade)}` : "";
   }
 
-  // Le plus haut grade réussi en Colonne, en RANG (0 : aucun ; 1 = 10e kyu).
+  // Le plus haut grade gagné en Colonne, en RANG (0 : aucun ; 1 = 10e kyu).
   function gradeColonneReussi(parcours) {
-    const p = normaliser(parcours);
-    return rangColonneValide(p.gradeColonne) ? p.gradeColonne : 0;
+    const n = gradeGagne(ETAPES_COLONNE, etapeReussie(parcours, true), PREMIER_COLONNE);
+    return n ? n - NB_GRADES : 0;
   }
 
-  // Ce que « Ma classe » écrit des grades : celui du Flash seul comme avant
-  // (« 🥋 Grade réussi : 13e kyu ») ; « … : 8e kyu en Colonne » ; les deux :
-  // « 🥋 Grades réussis : 13e kyu en Flash · 8e kyu en Colonne ».
-  function texteGradesReussis(grade, gradeColonne) {
-    const flash = gradeValide(grade);
-    const colonne = estGradeColonne(gradeColonne);
-    if (flash && colonne) return `🥋 Grades réussis\u00a0: ${nomGrade(grade)} en Flash · ${nomGrade(gradeColonne)} en Colonne`;
-    if (colonne) return `🥋 Grade réussi\u00a0: ${nomGrade(gradeColonne)} en Colonne`;
-    return texteGradeReussi(grade);
+  // L'étape à tenter d'un mode : {numero, grade, rang, sur}, ou null quand
+  // toutes les étapes sont réussies.
+  function etapeATenter(parcours, colonne) {
+    const etapes = colonne ? ETAPES_COLONNE : ETAPES_FLASH;
+    const e = etapes[etapeReussie(parcours, colonne)];
+    if (!e) return null;
+    const duGrade = etapesDuGrade(e.grade);
+    return {numero: e.numero, grade: e.grade, rang: duGrade.indexOf(e) + 1, sur: duGrade.length};
   }
 
-  // Les 13 grades en Colonne, pour l'écran des grades : comme etatGrades,
-  // {numero (41 … 53), rang, nom, reussi, ouvert, actuel, meilleur, seuil}.
-  function etatGradesColonne(parcours) {
-    const plusHaut = gradeColonneReussi(parcours);
+  // « 12e kyu · étape 2 sur 3 », « 9e kyu » (un grade à une seule étape) :
+  // le grade et l'étape à tenter. Rien tant qu'aucune étape n'est réussie
+  // (l'élève n'a pas commencé les grades), rien quand tout est gagné.
+  function texteEnCours(parcours, colonne) {
+    if (!etapeReussie(parcours, colonne)) return "";
+    const e = etapeATenter(parcours, colonne);
+    if (!e) return "";
+    return e.sur > 1 ? `${nomGrade(e.grade)} · étape ${e.rang} sur ${e.sur}` : nomGrade(e.grade);
+  }
+
+  // Ce que « Ma classe » écrit des grades, une phrase par mode :
+  // « 🥋 Flash : 13e kyu réussi, 12e kyu · étape 2 sur 3 en cours » ; un
+  // mode sans étape réussie ne dit rien.
+  function texteGradesReussis(grade, gradeColonne, enCours, enCoursColonne) {
+    const phrase = (mode, n, cours) => {
+      const morceaux = [];
+      if (n) morceaux.push(`${nomGrade(n)} réussi`);
+      if (cours) morceaux.push(`${cours} en cours`);
+      return morceaux.length ? `${mode}\u00a0: ${morceaux.join(", ")}` : "";
+    };
+    const phrases = [phrase("Flash", gradeValide(grade) ? grade : 0, enCours || ""), phrase("Colonne", estGradeColonne(gradeColonne) ? gradeColonne : 0, enCoursColonne || "")].filter(Boolean);
+    return phrases.length ? `🥋 ${phrases.join(" — ")}` : "";
+  }
+
+  // Les grades d'un mode, pour l'écran des grades : {numero, nom, reussi
+  // (gagné), ouvert, actuel (celui de l'étape à tenter), meilleur (le
+  // meilleur score d'un passage complet de sa DERNIÈRE étape encore dans
+  // l'historique, ou null), etape (le rang de son étape à tenter : 1 … ;
+  // 0 s'il est gagné ou fermé), etapes : [{numero, rang, reussie, ouverte,
+  // actuelle, meilleur}]}.
+  function etatDesGrades(parcours, colonne) {
+    const etapes = colonne ? ETAPES_COLONNE : ETAPES_FLASH;
+    const faites = etapeReussie(parcours, colonne);
     const meilleurs = {};
     historique(parcours).forEach(s => {
-      if (s.mode !== "grade" || s.faits < GRADE_CALCULS || !estGradeColonne(s.grade)) return;
-      if (!(s.grade in meilleurs) || s.score > meilleurs[s.grade]) meilleurs[s.grade] = s.score;
+      if (s.mode !== "grade" || s.faits < GRADE_CALCULS) return;
+      if (!(s.etape in meilleurs) || s.score > meilleurs[s.etape]) meilleurs[s.etape] = s.score;
     });
-    return GRADES_COLONNE.map((c, i) => {
-      const rang = i + 1;
-      const n = NB_GRADES + rang;
-      return {numero: n, rang, nom: nomGrade(n), seuil: c.seuil,
-        reussi: rang <= plusHaut, ouvert: rang <= plusHaut + 1, actuel: rang === plusHaut + 1,
-        meilleur: n in meilleurs ? meilleurs[n] : null};
-    });
-  }
-
-  // Les 40 grades, pour l'écran des grades : {numero, nom, reussi, ouvert,
-  // actuel (le premier non réussi, celui à passer), meilleur (le meilleur
-  // score d'un passage complet encore dans l'historique, ou null)}.
-  function etatGrades(parcours) {
-    const plusHaut = gradeReussi(parcours);
-    const meilleurs = {};
-    historique(parcours).forEach(s => {
-      if (s.mode !== "grade" || s.faits < GRADE_CALCULS || !gradeValide(s.grade)) return;
-      if (!(s.grade in meilleurs) || s.score > meilleurs[s.grade]) meilleurs[s.grade] = s.score;
-    });
-    return GRADES.map((g, i) => {
-      const n = i + 1;
-      return {numero: n, nom: nomGrade(n), chiffres: g.chiffres, nombres: g.nombres, dixiemes: g.dixiemes,
-        reussi: n <= plusHaut, ouvert: n <= plusHaut + 1, actuel: n === plusHaut + 1,
-        meilleur: n in meilleurs ? meilleurs[n] : null};
+    const premier = colonne ? PREMIER_COLONNE : 1;
+    const combien = colonne ? NB_GRADES_COLONNE : NB_GRADES;
+    return Array.from({length: combien}, (_, i) => {
+      const n = premier + i;
+      const duGrade = etapes.filter(e => e.grade === n).map((e, k) => {
+        const rang = rangEtape(e.numero);
+        return {numero: e.numero, rang: k + 1, reussie: rang <= faites, ouverte: rang <= faites + 1, actuelle: rang === faites + 1,
+          meilleur: e.numero in meilleurs ? meilleurs[e.numero] : null};
+      });
+      const derniere = duGrade[duGrade.length - 1];
+      const actuelle = duGrade.find(e => e.actuelle);
+      return {numero: n, rang: i + 1, nom: nomGrade(n), seuil: seuilGrade(n),
+        reussi: derniere.reussie, ouvert: duGrade[0].ouverte, actuel: Boolean(actuelle), meilleur: derniere.meilleur,
+        etape: actuelle ? actuelle.rang : 0, etapes: duGrade};
     });
   }
+  const etatGrades = parcours => etatDesGrades(parcours, false);
+  const etatGradesColonne = parcours => etatDesGrades(parcours, true);
 
   // Ce que l'historique écrit d'une séance de grade (la page et « Ma
-  // classe ») : {mode: « 🥋 13e kyu », details: « Passage · réussi »}, ou
-  // {mode: « 🎯 13e kyu », details: « Entraînement au grade »} ; null pour
-  // une séance de Flash ou de Colonne.
-  // Un grade en Colonne : « 🥋 8e kyu · Colonne » (seuil du grade ;
-  // « presque » à deux réponses du seuil, comme au Flash).
+  // classe ») : {mode: « 🥋 12e kyu », details: « Étape 2 sur 3 · réussie »}
+  // (« Passage · réussi » pour un grade à une seule étape), ou {mode:
+  // « 🎯 12e kyu », details: « Entraînement · étape 2 sur 3 »} ; null pour
+  // une séance de Flash ou de Colonne. En Colonne : « 🥋 7e kyu · Colonne ».
   function libelleGrade(s) {
-    if (!s || !estModeGrade(s.mode) || !(gradeValide(s.grade) || estGradeColonne(s.grade))) return null;
-    const nom = `${nomGrade(s.grade)}${estGradeColonne(s.grade) ? " · Colonne" : ""}`;
-    if (s.mode === "entrainement") return {mode: `🎯 ${nom}`, details: "Entraînement au grade"};
-    const seuil = seuilGrade(s.grade);
+    const e = s && estModeGrade(s.mode) ? etape(s.etape) : null;
+    if (!e) return null;
+    const duGrade = etapesDuGrade(e.grade);
+    const rang = duGrade.indexOf(e) + 1;
+    const nom = `${nomGrade(e.grade)}${etapeColonne(e.numero) ? " · Colonne" : ""}`;
+    const plusieurs = duGrade.length > 1;
+    if (s.mode === "entrainement") return {mode: `🎯 ${nom}`, details: plusieurs ? `Entraînement · étape ${rang} sur ${duGrade.length}` : "Entraînement au grade"};
+    const seuil = seuilEtape(e.numero);
     let verdict;
-    if (s.faits < GRADE_CALCULS) verdict = "arrêté";
-    else if (s.score >= seuil) verdict = "réussi";
+    if (s.faits < GRADE_CALCULS) verdict = plusieurs ? "arrêtée" : "arrêté";
+    else if (s.score >= seuil) verdict = plusieurs ? "réussie" : "réussi";
     else if (s.score >= seuil - 2) verdict = "presque";
     else verdict = "pas encore";
-    return {mode: `🥋 ${nom}`, details: `Passage · ${verdict}`};
+    return {mode: `🥋 ${nom}`, details: `${plusieurs ? `Étape ${rang} sur ${duGrade.length}` : "Passage"} · ${verdict}`};
   }
 
   // La tuile de l'espace élève : une ligne, « 230 calculs · 5 jours
@@ -801,11 +864,14 @@
   // séance : rien de nouveau n'est enregistré.
   // Anzan : un jour de travail = une séance avec au moins un calcul fait ;
   // une ligne par séance, dans l'ordre {mode (le code : flash, colonne,
-  // grade, entrainement), calculs (faits), justes, prevus, grade (le numéro,
-  // 0 hors des grades), reussi (lot « le jour vert » : 1 ou 0 pour un
-  // passage de grade, null sinon)} ; à aider : rien (aucune règle décidée) ; à
-  // féliciter : un grade réussi cette semaine ({type: "grade", grade}, le
-  // plus haut).
+  // grade, entrainement), calculs (faits), justes, prevus, grade (le numéro
+  // du grade, 0 hors des grades), etape et sur (barème révisé du
+  // 22/11/2026 : le rang de l'étape dans son grade et le nombre d'étapes du
+  // grade ; 0 hors des grades), reussi (lot « le jour vert » : 1 ou 0 pour
+  // un passage, null sinon)} ; à aider : rien (aucune règle décidée) ; à
+  // féliciter : un grade GAGNÉ cette semaine — sa dernière étape réussie
+  // ({type: "grade", grade}, le plus haut de chaque mode ; celui du Flash
+  // d'abord).
   function jourPlus(jour, nombre) {
     const d = new Date(`${jour}T12:00:00`);
     if (Number.isNaN(d.getTime())) return jour;
@@ -835,13 +901,22 @@
     faites.filter(s => s.jour >= debut).forEach(s => {
       // Lot « le jour vert » (11/11/2026) : un passage de grade dit aussi
       // s'il est réussi (1) ou pas encore (0) ; null hors des grades.
+      const duGrade = s.grade ? etapesDuGrade(s.grade) : [];
+      // Barème révisé (22/11/2026) : une séance de grade dit aussi son étape
+      // (« étape 2 sur 3 ») ; les autres lignes gardent leur forme d'avant.
       const ligne = {mode: s.mode, calculs: s.faits, justes: s.score, prevus: s.calculs, grade: s.grade || 0,
         reussi: s.mode === "grade" ? (s.reussi ? 1 : 0) : null};
+      if (s.grade) { ligne.etape = duGrade.findIndex(e => e.numero === s.etape) + 1; ligne.sur = duGrade.length; }
       const dernierJour = jours[jours.length - 1];
       if (dernierJour && dernierJour.jour === s.jour) dernierJour.lignes.push(ligne);
       else jours.push({jour: s.jour, lignes: [ligne]});
     });
-    const grades = faites.filter(s => s.reussi && s.jour >= lundi).map(s => s.grade);
+    // Un grade est gagné par le passage réussi de sa DERNIÈRE étape.
+    const gagnes = faites.filter(s => s.reussi && s.jour >= lundi)
+      .filter(s => { const duGrade = etapesDuGrade(s.grade); return duGrade[duGrade.length - 1].numero === s.etape; }).map(s => s.grade);
+    const flash = gagnes.filter(gradeValide);
+    const colonne = gagnes.filter(estGradeColonne);
+    const grades = (flash.length ? [Math.max(...flash)] : []).concat(colonne.length ? [Math.max(...colonne)] : []);
     // La borne des 500 séances atteinte : les jours d'avant la plus ancienne
     // gardée ne sont plus connus (« ordre » range les séances, pas le jour :
     // la plus ancienne date gardée).
@@ -854,7 +929,7 @@
       dernier: faites.length ? faites.map(s => s.jour).sort().pop() : null,
       jours,
       aider: [],
-      feliciter: grades.length ? [{type: "grade", grade: Math.max(...grades)}] : []
+      feliciter: grades.map(grade => ({type: "grade", grade}))
     };
   }
 
@@ -1890,18 +1965,29 @@
 
   return Object.freeze({
     MODES_SEANCE,
-    GRADES,
+    ETAPES_FLASH,
+    ETAPES_COLONNE,
+    NB_ETAPES_FLASH,
+    NB_ETAPES_COLONNE,
+    ETAPE_FLASH,
+    ETAPE_COLONNE,
+    etape,
+    etapesDuGrade,
+    rangEtape,
+    numeroEtape,
+    etapeReussie,
+    etapeATenter,
+    texteEnCours,
     NB_GRADES,
-    GRADES_COLONNE,
     NB_GRADES_COLONNE,
     PREMIER_COLONNE,
     DERNIER_GRADE,
     estGradeColonne,
     seuilGrade,
+    SEUIL_COLONNE,
     gradeColonneReussi,
     etatGradesColonne,
     texteGradesReussis,
-    GRADES_PLUS_ET_MOINS,
     GRADE_CALCULS,
     ENTRAINEMENT_CALCULS,
     GRADE_REUSSI,
