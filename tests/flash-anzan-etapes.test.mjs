@@ -209,7 +209,10 @@ test("le modèle redonne les comptes du barème (preuves/resultats.txt), calcul 
   assert.equal(combien(U(3), LIBRES3, P.cComplementPlus.ok), 50, "C02 : un complément à 5 en +");
   assert.equal(combien(U(3), LIBRES3, P.cComplementMoins.ok), 100, "C02 : un complément à 5 en −");
   assert.equal(combien(U(3), [[1, 1, -1]], P.cRetenuePuisEmprunt.ok), 195, "C05 : une retenue puis un emprunt");
-  assert.equal(combien(U(3), LIBRES3, P.cEmpruntComplement.ok), 60, "C06 : un emprunt avec complément à 5");
+  assert.equal(combien(U(3), LIBRES3, a => a.n.EC === 1), 60, "C06 : un emprunt avec complément à 5 (le compte du barème, retenue combinée ou non)");
+  assert.equal(combien(U(3), LIBRES3, P.cEmpruntComplement.ok), 30, "C06 : … dont 30 sans retenue combinée dans le même calcul (les « 5 autres » du barème)");
+  assert.equal(combien(U(3), [[1, 1, 1], ...LIBRES3], P.cRetenueComplement.ok), 200, "C06 : une retenue avec complément à 5, sans emprunt combiné");
+  assert.equal(combien(U(3), PLUS(3), P.cRetenueComplement.ok), 110, "C06 : … dont 110 additions seules (1 + 7 + 6)");
   assert.equal(combien([2, 2], [[1, -1]], P.cEmprunt22.ok), 1620, "C11 : 2 chiffres − 2 chiffres, un emprunt");
 });
 
@@ -367,6 +370,17 @@ const repartition = (calculs, classer) => {
   return n;
 };
 const moins = c => c.termes.filter(t => t.signe < 0).length;
+// Ce que chaque nombre AJOUTÉ fait, par l'addition posée (nombres de 2 chiffres) : une retenue des unités, un
+// passage à la centaine, les deux, ou une retenue des unités qui traverse un 9 (cascade). Rien : le nombre n'y est pas.
+const parNombre22 = c => {
+  let s = 0;
+  return c.termes.map(t => {
+    const u = s % 10 + t.valeur % 10 >= 10;
+    const dz = Math.floor(s / 10) % 10 + Math.floor(t.valeur / 10) % 10;
+    s += t.valeur;
+    return u && dz === 9 ? "cascade" : u && dz >= 10 ? "double" : u ? "unites" : dz >= 10 ? "centaine" : "";
+  }).filter(Boolean);
+};
 const placesMoins = c => c.termes.map((t, i) => (t.signe < 0 ? i + 1 : 0)).filter(Boolean);
 const fourchette = (mini, maxi) => ({chaque: c => { const r = pose(c.termes).retenues; return r >= mini && r <= maxi; }});
 const GARANTIES = {
@@ -406,7 +420,8 @@ const GARANTIES = {
   C04: {chaque: c => moins(c) === 0 && nb(c, "R") === 1 && pose(c.termes).retenues === 1 && parmi(c, "D", "P", "R", "rD", "rP")},
   C05: {chaque: c => placesMoins(c).join() === "3" && nb(c, "R") === 1 && nb(c, "E") === 1 && pose(c.termes).retenues === 1 && pose(c.termes).emprunts === 1
     && gestesDe(c)[1].includes("R") && gestesDe(c)[2].includes("E")},
-  C06: {chaque: c => moins(c) >= 1 && (nb(c, "EC") === 1 || (nb(c, "RC") === 1 && pose(c.termes).retenues === 1)),
+  // Deux groupes qui ne se recouvrent pas (relecture Codex) : une retenue combinée sans emprunt combiné, ou l'inverse.
+  C06: {chaque: c => { const rc = nb(c, "RC"); const ec = nb(c, "EC"); return (ec === 1 && rc === 0 && moins(c) >= 1) || (rc === 1 && ec === 0 && pose(c.termes).retenues === 1); },
     passage: cs => repartition(cs, c => (nb(c, "EC") ? "emprunt" : "retenue")), attendu: {emprunt: 5, retenue: 5}},
   C07: {chaque: c => moins(c) === 2 && pose(c.termes).retenues >= 1 && pose(c.termes).emprunts >= 1},
   C08: {chaque: c => moins(c) === 3 && pose(c.termes).retenues >= 1 && pose(c.termes).emprunts >= 1},
@@ -415,15 +430,17 @@ const GARANTIES = {
     passage: cs => repartition(cs, c => (moins(c) ? "−" : "+")), attendu: {"+": 5, "−": 5}},
   C11: {chaque: c => (moins(c) ? pose(c.termes).emprunts === 1 : classe22(c) === "unites" && c.total < 100),
     passage: cs => repartition(cs, c => (moins(c) ? "−" : "+")), attendu: {"+": 5, "−": 5}},
-  C12: {chaque: c => moins(c) === 0 && c.total >= 100,
-    passage: cs => repartition(cs, c => { const p = pose(c.termes); return p.cascades ? "cascade" : {1: "centaine", "01": "double"}[tiges(p.tigesRetenue)]; }),
+  // Le geste est celui d'UN nombre, le 2e ou le 3e ; l'autre entre sans retenue (relecture Codex).
+  C12: {chaque: c => moins(c) === 0 && c.total >= 100 && parNombre22(c).length === 1,
+    passage: cs => repartition(cs, c => parNombre22(c)[0]),
     attendu: {centaine: 4, double: 3, cascade: 3}},
   C13: {chaque: c => moins(c) === 1 && placesMoins(c)[0] >= 2 && pose(c.termes).emprunts >= 1 && pose(c.termes).cascadesMoins === 0,
     passage: cs => repartition(cs, c => (pose(c.termes).tigesEmprunt.has(1) ? "sur la centaine" : "sur la dizaine")),
     attendu: {"sur la centaine": 4, "sur la dizaine": 6}},
   C14: {chaque: c => moins(c) === 0},
-  C15: {chaque: c => moins(c) === 2},
-  C16: {chaque: c => moins(c) === 2},
+  // L'emprunt en cascade attend son étape (C18) : aucun avant (relecture Codex).
+  C15: {chaque: c => moins(c) === 2 && pose(c.termes).cascadesMoins === 0},
+  C16: {chaque: c => moins(c) === 2 && pose(c.termes).cascadesMoins === 0},
   C17: {chaque: c => { const p = pose(c.termes); const n = moins(c) ? p.emprunts : p.retenues; return n >= 1 && n <= 2 && !p.cascades && !p.cascadesMoins; },
     passage: cs => repartition(cs, c => (moins(c) ? "−" : "+")), attendu: {"+": 5, "−": 5}},
   C18: {chaque: () => true,
@@ -522,7 +539,7 @@ test("« M'entraîner » en 5 calculs = la moitié du plan, dans le désordre", 
   assert.equal(moities("F39", classe33, [{dizaines: 1, centaines: 1, millier: 1, double: 1, cascade: 1}]), 1);
   assert.equal(moities("F04", c => gestesDe(c).findIndex(ev => ev.includes("P")) + 1, [{2: 3, 3: 2}, {2: 2, 3: 3}]), 2, "5 + 5 → 3 + 2 ou 2 + 3, les deux se voient");
   assert.equal(moities("C25", c => (moins(c) ? "s" : "a"), [{a: 3, s: 2}]), 1, "6 + 4 → 3 + 2");
-  assert.equal(moities("C12", c => { const p = pose(c.termes); return p.cascades ? "cascade" : {1: "centaine", "01": "double"}[tiges(p.tigesRetenue)]; },
+  assert.equal(moities("C12", c => parNombre22(c)[0],
     [{centaine: 2, double: 2, cascade: 1}, {centaine: 2, double: 1, cascade: 2}]), 2, "4 + 3 + 3 → 2 + 2 + 1 ou 2 + 1 + 2");
   // Les étapes à un seul profil : 5 calculs du même tirage.
   CORE.ETAPES.forEach(e => {
@@ -533,33 +550,45 @@ test("« M'entraîner » en 5 calculs = la moitié du plan, dans le désordre", 
 
 // ----------------------------------------------------------------- le hasard
 
+// Les règles d'affichage du tirage, récrites ici sans le moteur : jamais deux fois le même nombre de suite, jamais
+// « 9 + 8 − 9 » à trois nombres, et un boulier jamais vide en cours de calcul (chaque sous-total vaut au moins 1).
+function affichable(c) {
+  const t = c.termes;
+  if (t.some((x, i) => i > 0 && x.valeur === t[i - 1].valeur)) return false;
+  if (t.length === 3 && t[2].valeur === t[0].valeur && t[2].signe !== t[0].signe) return false;
+  let s = 0;
+  return t.every(x => { s += x.signe * x.valeur; return s >= 1; });
+}
+
 // Un calcul « naturel » d'un profil : des nombres tirés au hasard, rien de
 // retiré — ce que le moteur tire AVANT de regarder si le calcul convient.
 function naturel(profil, rng) {
   let signes;
   if (profil.signes) signes = profil.signes[Math.floor(rng() * profil.signes.length)];
-  else if (profil.moins === "libre") signes = profil.l.map((_, i) => (i > 0 && rng() < 0.5 ? -1 : 1));
+  else if (profil.moins === "libre" || profil.moins === "possible") signes = profil.l.map((_, i) => (i > 0 && rng() < 0.5 ? -1 : 1));
   else if (profil.moins) {
-    const places = profil.l.slice(1).map((_, i) => i + 1).sort(() => rng() - 0.5).slice(0, profil.moins);
+    const [debut, fin] = profil.places || [1, profil.l.length - 1];
+    const places = profil.l.map((_, i) => i).filter(i => i >= debut && i <= fin).sort(() => rng() - 0.5).slice(0, profil.moins);
     signes = profil.l.map((_, i) => (places.includes(i) ? -1 : 1));
   } else signes = profil.l.map(() => 1);
   return profil.l.map((l, i) => terme(signes[i], CORE.nombreDeChiffres(rng, l)));
 }
 
-test("chaque profil se trouve vite : au moins un tirage naturel sur cent convient (la borne du moteur n'est jamais approchée)", () => {
+test("chaque profil se trouve vite : au moins un tirage naturel sur deux cents convient, règles d'affichage comprises (la borne du moteur n'est jamais approchée)", () => {
   const rng = CORE.mulberry32(99);
   Object.entries(CORE.PROFILS).forEach(([nom, profil]) => {
-    if (profil.forme) return;
     let bons = 0;
     const essais = 20000;
     for (let k = 0; k < essais; k += 1) {
       const termes = naturel(profil, rng);
       if (termes.some((t, i) => i > 0 && t.valeur === termes[i - 1].valeur)) continue;
       if (profil.moins === "libre" && termes.every(t => t.signe > 0)) continue;
+      if (!affichable({termes})) continue; // les règles d'affichage du tirage, récrites ici
       const a = CORE.analyser(termes);
       if (a && a.total >= 1 && (!profil.ok || profil.ok(a))) bons += 1;
     }
-    assert.ok(bons / essais >= 0.01, `${nom} : ${(100 * bons / essais).toFixed(2)} % des tirages conviennent`);
+    // Le plus rare : l'emprunt avec complément à 5 sans retenue combinée (C06), 0,9 % — 100 000 essais permis.
+    assert.ok(bons / essais >= 0.005, `${nom} : ${(100 * bons / essais).toFixed(2)} % des tirages conviennent`);
   });
 });
 
@@ -626,6 +655,7 @@ test("l'exemple écrit sur la fiche d'une étape est un calcul que cette étape 
     exemples += 1;
     const c = calculEcrit(e.exemple);
     assert.equal(c.termes.length, e.nombres, `${e.code} : ${e.exemple}`);
+    assert.ok(affichable(c), `${e.code} : l'exemple ${e.exemple} ne peut pas sortir (un nombre répété de suite, ou une règle d'affichage)`);
     assert.ok(GARANTIES[e.code].chaque(c), `${e.code} : l'exemple ${e.exemple} ne tient pas ce que l'étape annonce (${gestesDe(c).map(ev => ev.join(" ")).join(" | ")})`);
     // … et il a bien le profil d'un calcul du plan.
     if (e.dix) assert.ok(CORE.DIX[e.dix].some(([x, y]) => `${x} + ${y}` === e.exemple));
@@ -733,4 +763,77 @@ test("trois nombres : jamais « 9 + 8 − 9 », où le dernier nombre efface le 
     }
   }
   assert.ok(vus >= 6 * PASSAGES * 10, "C01, C02, C04, C05, C06, C12, C13, C19 : les étapes à trois nombres");
+});
+
+// ------------------------------------------------- relecture Codex (22/11/2026)
+
+test("Colonne : le boulier n'est jamais vide en cours de calcul — chaque sous-total vaut au moins 1 (300 passages et 300 entraînements par étape)", () => {
+  const rng = CORE.mulberry32(16180);
+  for (const e of CORE.ETAPES_COLONNE) {
+    for (const calculs of [10, 5]) {
+      for (let k = 0; k < PASSAGES; k += 1) {
+        for (const c of CORE.tirerEtape(e.numero, rng, calculs)) assert.ok(affichable(c), `${e.code} : ${ecrire(c)}`);
+      }
+    }
+  }
+});
+
+// Les garanties disent ce qui SORT ; ce test dit ce qui ne doit pas avoir DISPARU. Pour chaque étape de la Colonne,
+// on cherche — sans le moteur — toutes les suites de signes qu'un calcul tenant la garantie peut avoir (des nombres
+// tirés au hasard, pour chaque suite possible du format) ; le moteur doit les poser toutes. Ôter « + − + » du
+// tirage du 3e kyu, par exemple, ne passait aucun test avant celui-ci.
+test("Colonne : chaque étape pose TOUTES les suites de signes que sa garantie permet (aucune famille de calculs n'a disparu)", () => {
+  const rng = CORE.mulberry32(14142);
+  const suite = c => c.termes.map(t => (t.signe < 0 ? "−" : "+")).join("");
+  const candidates = e => {
+    const n = e.nombres;
+    if (n === 10) { // la feuille japonaise : des additions, ou 4 nombres enlevés du 3e au 9e
+      const liste = ["+".repeat(10)];
+      const choisir = (debut, pris) => {
+        if (pris.length === 4) { liste.push(Array.from({length: 10}, (_, i) => (pris.includes(i) ? "−" : "+")).join("")); return; }
+        for (let i = debut; i <= 8; i += 1) choisir(i + 1, pris.concat([i]));
+      };
+      choisir(2, []);
+      return liste;
+    }
+    return Array.from({length: 2 ** (n - 1)}, (_, m) => "+" + Array.from({length: n - 1}, (_, i) => ((m >> i) & 1 ? "−" : "+")).join(""));
+  };
+  let etapesAPlusieursSuites = 0;
+  for (const e of CORE.ETAPES_COLONNE) {
+    const garantie = GARANTIES[e.code].chaque;
+    const poids = {};
+    let total = 0;
+    for (const signes of candidates(e)) {
+      let bons = 0;
+      for (let k = 0; k < 300; k += 1) {
+        const c = {termes: e.largeurs.map((l, i) => terme(signes[i] === "−" ? -1 : 1, CORE.nombreDeChiffres(rng, l)))};
+        if (!affichable(c)) continue;
+        c.total = c.termes.reduce((x, t) => x + t.signe * t.valeur, 0);
+        if (garantie(c)) bons += 1;
+      }
+      poids[signes] = bons;
+      total += bons;
+    }
+    // Une suite compte dès qu'elle pèse 3 % des calculs possibles (en dessous, 3 000 tirages peuvent la manquer).
+    const attendues = Object.keys(poids).filter(s => poids[s] >= 0.03 * total).sort();
+    assert.ok(attendues.length >= 1, `${e.code} : au moins une suite de signes`);
+    if (attendues.length > 1) etapesAPlusieursSuites += 1;
+    const vues = new Set();
+    for (let k = 0; k < PASSAGES; k += 1) CORE.tirerEtape(e.numero, rng, 10).forEach(c => vues.add(suite(c)));
+    const manquantes = attendues.filter(s => !vues.has(s));
+    assert.deepEqual(manquantes, [], `${e.code} : ces suites de signes devraient sortir et ne sortent jamais`);
+  }
+  assert.ok(etapesAPlusieursSuites >= 15, "la plupart des étapes de la Colonne ont plusieurs suites de signes");
+});
+
+test("un hasard truqué ne bloque jamais le tirage : il s'arrête, par une erreur ou par un passage complet", () => {
+  // Toujours le même nombre : aucun calcul n'est possible, le tirage s'arrête par une erreur (il ne tourne pas sans fin).
+  for (const numero of [101, 125, 201, 214, 225]) assert.throws(() => CORE.tirerEtape(numero, () => 0, 10), /tirage impossible/, `étape ${numero}`);
+  // Deux nombres en alternance : un seul calcul possible au 20e kyu. Le passage sort quand même (le même calcul
+  // dix fois) plutôt que de bloquer l'élève — avec un vrai hasard, ce filet n'est jamais atteint (test des doublons).
+  let bascule = 0;
+  const alterne = () => ((bascule++ % 2) ? 0.2 : 0);
+  const passage = CORE.tirerEtape(101, alterne, 10);
+  assert.equal(passage.length, 10);
+  assert.ok(passage.every(c => GARANTIES.F01.chaque(c)));
 });

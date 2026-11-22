@@ -339,67 +339,6 @@
     return {termes, total};
   }
 
-  // ---- Les colonnes de la feuille japonaise (lot « grades-colonne ») ----
-  // Les formes du 暗算検定 (みとり暗算), reprises telles quelles :
-  //   "d5"              : 5 nombres de 2 chiffres ;
-  //   "t5", "t7", "t10" : 5, 7 ou 10 nombres de 3 chiffres ;
-  //   "s10"             : 10 nombres de 3 chiffres, dont 4 enlevés (jamais le
-  //                       1er, le 2e ni le dernier ; total et sous-totaux
-  //                       positifs, comme au sujet modèle).
-  // Un nombre de `chiffres` chiffres, différent du précédent.
-  function nombrePasPareil(rng, chiffres, avant) {
-    let v = nombreDeChiffres(rng, chiffres);
-    while (v === avant) v = nombreDeChiffres(rng, chiffres);
-    return v;
-  }
-  // Les places des nombres enlevés d'un calcul « s10 » : 4 parmi la 3e …
-  // la 9e (jamais la 1re, la 2e ni la dernière).
-  function placesEnleves(rng) {
-    const places = [2, 3, 4, 5, 6, 7, 8];
-    for (let i = places.length - 1; i > 0; i -= 1) {
-      const j = Math.floor(rng() * (i + 1));
-      [places[i], places[j]] = [places[j], places[i]];
-    }
-    return places.slice(0, 4);
-  }
-  function tirerCalculColonne(forme, rng) {
-    const valeurs = [];
-    const chiffres = forme[0] === "d" ? 2 : 3;
-    const k = Number(forme.slice(1));
-    for (let i = 0; i < k; i += 1) valeurs.push(nombrePasPareil(rng, chiffres, valeurs[i - 1]));
-    if (forme === "s10") {
-      // Quatre nombres enlevés ; le total reste au-dessus de zéro après
-      // chacun. Une suite impossible (un enlevé plus grand que le total)
-      // est retirée en entier : on recommence avec un nouveau tirage.
-      for (let essai = 0; essai < 1000; essai += 1) {
-        const enleves = placesEnleves(rng);
-        const v = [];
-        let total = 0;
-        let bon = true;
-        for (let i = 0; i < 10 && bon; i += 1) {
-          if (enleves.indexOf(i) >= 0) {
-            const maxi = Math.min(999, total - 1);
-            if (maxi < 100) { bon = false; break; }
-            let x = 100 + Math.floor(rng() * (maxi - 99));
-            if (x === v[i - 1]) x = x > 100 ? x - 1 : (x < maxi ? x + 1 : x);
-            if (x === v[i - 1]) { bon = false; break; }
-            v.push(x);
-            total -= x;
-          } else {
-            const x = nombrePasPareil(rng, 3, v[i - 1]);
-            v.push(x);
-            total += x;
-          }
-        }
-        if (!bon) continue;
-        const termes = v.map((valeur, i) => ({signe: enleves.indexOf(i) >= 0 ? -1 : 1, valeur}));
-        return {termes, total};
-      }
-    }
-    const termes = valeurs.map(valeur => ({signe: 1, valeur}));
-    return {termes, total: valeurs.reduce((a, x) => a + x, 0)};
-  }
-
   // ---------------------------------------------------------------------
   // Les gestes du boulier (barème révisé, 22/11/2026)
   // ---------------------------------------------------------------------
@@ -564,12 +503,23 @@
   const seulement = (...codes) => a => CODES_GESTES.every(code => !a.n[code] || codes.indexOf(code) >= 0);
   const contient = (ev, code) => ev.some(e => e[0] === code);
   const entre = (x, mini, maxi) => x >= mini && x <= maxi;
+  // Les retenues qu'UN nombre fait naître en entrant : les tiges où il en
+  // pose une, et s'il en fait courir une en cascade.
+  const retenuesDe = ev => ({
+    tiges: ev.filter(e => e[0] === "R" || e[0] === "RC").map(e => e[1]).sort().join(""),
+    cascade: contient(ev, "CASC")
+  });
+  // Un seul nombre du calcul fait naître des retenues, et ce sont celles-là.
+  const unSeulGeste = test => a => {
+    const avec = a.parTerme.map(retenuesDe).filter(r => r.tiges || r.cascade);
+    return avec.length === 1 && test(avec[0]);
+  };
   // Un profil : les largeurs des nombres (l), les signes (rien : des
   // additions ; moins : k → k nombres enlevés à des places tirées au hasard,
   // jamais la première ; moins : "libre" → chaque nombre après le premier
   // est ajouté ou enlevé, au moins un enlevé ; signes : la liste des suites
   // de signes permises), et ce que le calcul doit vérifier (ok). Un profil
-  // « forme » reprend une colonne de la feuille japonaise (tirerCalculColonne).
+  // « places » borne les rangs des nombres enlevés (comptés à partir de 0).
   const libre = (largeurs, mini, maxi) => Object.freeze({l: largeurs, ok: a => entre(a.retenues, mini, maxi), hasard: true});
   const PROFILS = Object.freeze({
     // ---- un chiffre, additions ----
@@ -606,19 +556,28 @@
     cComplementMoins: {l: fois(1, 3), moins: "libre", ok: a => a.n.p === 1 && a.n.P === 0 && !a.retenues && !a.emprunts},
     cSansRetenue5: {l: fois(1, 5), moins: 2, ok: a => !a.retenues && !a.emprunts && a.n.P + a.n.p >= 1},
     cRetenuePuisEmprunt: {l: fois(1, 3), signes: [[1, 1, -1]], ok: a => a.n.R === 1 && a.n.E === 1 && a.retenues === 1 && a.emprunts === 1},
-    cRetenueComplement: {l: fois(1, 3), moins: "libre", ok: a => a.n.RC === 1 && a.retenues === 1 && !a.n.EC},
-    cEmpruntComplement: {l: fois(1, 3), moins: "libre", ok: a => a.n.EC === 1},
+    // C06 — deux groupes qui ne se recouvrent pas : 5 calculs avec UNE retenue
+    // avec complément à 5 et aucun emprunt de cette sorte (7 + 6, 1 + 7 + 6,
+    // 8 + 6 − 1 : les additions seules en sont) ; 5 AUTRES avec un emprunt
+    // avec complément à 5 et aucune retenue de cette sorte (8 + 5 − 6).
+    cRetenueComplement: {l: fois(1, 3), moins: "possible", ok: a => a.n.RC === 1 && a.retenues === 1 && !a.n.EC},
+    cEmpruntComplement: {l: fois(1, 3), moins: "libre", ok: a => a.n.EC === 1 && !a.n.RC},
     cMele5: {l: fois(1, 5), moins: 2, ok: a => a.retenues >= 1 && a.emprunts >= 1},
     cMele7: {l: fois(1, 7), moins: 3, ok: a => a.retenues >= 1 && a.emprunts >= 1},
     // ---- Colonne : deux chiffres ----
     cSansEmprunt22: {l: [2, 2], signes: [[1, -1]], ok: a => a.emprunts === 0},
     cEmprunt22: {l: [2, 2], signes: [[1, -1]], ok: a => a.emprunts === 1},
-    cCentaine222: {l: fois(2, 3), ok: a => a.tigesRetenue === "1" && !a.n.CASC},
-    cDouble222: {l: fois(2, 3), ok: a => a.tigesRetenue === "01" && !a.n.CASC},
-    cCascade222: {l: fois(2, 3), ok: a => a.n.CASC >= 1},
+    // C12 — le geste annoncé est celui d'UN nombre, le 2e ou le 3e ; l'autre
+    // entre sans aucune retenue (64 + 52 + 31 : seul 52 fait passer la centaine).
+    cCentaine222: {l: fois(2, 3), ok: unSeulGeste(r => r.tiges === "1" && !r.cascade)},
+    cDouble222: {l: fois(2, 3), ok: unSeulGeste(r => r.tiges === "01" && !r.cascade)},
+    cCascade222: {l: fois(2, 3), ok: unSeulGeste(r => r.cascade)},
     cEmpruntCentaine: {l: fois(2, 3), signes: [[1, 1, -1]], ok: a => a.tigesEmprunt.indexOf("1") >= 0 && !a.n.casc},
     cEmpruntDizaine: {l: fois(2, 3), signes: [[1, -1, 1], [1, 1, -1]], ok: a => a.tigesEmprunt === "0" && !a.n.casc},
-    cLibre25: {l: fois(2, 5), moins: 2, hasard: true},
+    // L'emprunt en cascade (116 − 18, où la dizaine vide fait prendre sur la
+    // centaine) a son étape au 3e kyu (C18) : avant elle, C13 puis C15 et C16
+    // n'en posent pas. C'est la seule règle de ce tirage libre.
+    cLibre25: {l: fois(2, 5), moins: 2, ok: a => !a.n.casc, hasard: true},
     // ---- Colonne : trois chiffres ----
     cRetenues33: {l: [3, 3], ok: a => entre(a.retenues, 1, 2) && !a.n.CASC},
     cEmprunts33: {l: [3, 3], signes: [[1, -1]], ok: a => entre(a.emprunts, 1, 2) && !a.n.casc},
@@ -627,11 +586,16 @@
     cLibre35: {l: fois(3, 5), moins: 2, hasard: true},
     cLibre37: {l: fois(3, 7), moins: 3, hasard: true},
     // ---- les colonnes de la feuille japonaise ----
-    d5: {forme: "d5", l: fois(2, 5), hasard: true},
-    t5: {forme: "t5", l: fois(3, 5), hasard: true},
-    t7: {forme: "t7", l: fois(3, 7), hasard: true},
-    t10: {forme: "t10", l: fois(3, 10), hasard: true},
-    s10: {forme: "s10", l: fois(3, 10), moins: 4, hasard: true}
+    // Les formes du 暗算検定 (みとり暗算) : 5 nombres de 2 chiffres ; 5, 7 ou 10
+    // nombres de 3 chiffres ; et 10 nombres de 3 chiffres dont 4 enlevés,
+    // jamais le 1er, le 2e ni le dernier. Tirées comme tous les profils
+    // (relecture Codex du 22/11/2026 : l'ancien tirage de « s10 » retouchait
+    // certains nombres et pouvait rendre une colonne sans soustraction).
+    d5: {l: fois(2, 5), hasard: true},
+    t5: {l: fois(3, 5), hasard: true},
+    t7: {l: fois(3, 7), hasard: true},
+    t10: {l: fois(3, 10), hasard: true},
+    s10: {l: fois(3, 10), moins: 4, places: [2, 8], hasard: true}
   });
   Object.keys(PROFILS).forEach(nom => Object.freeze(PROFILS[nom]));
   const P = PROFILS;
@@ -664,9 +628,9 @@
   const SANS = "sans complément ni retenue";
   const LIGNES_FLASH = [
     [1, tous(P.direct2), 40, false, "2 + 5", SANS],
-    [1, tous(P.direct3), 60, false, "2 + 2 + 5", SANS],
+    [1, tous(P.direct3), 60, false, "1 + 2 + 5", SANS],
     [2, "complements", 40, false, "4 + 3", "un complément à 5 : les dix calculs possibles"],
-    [2, [[P.complement2e, 5], [P.complement3e, 5]], 60, false, "2 + 2 + 3", "un complément à 5 par calcul"],
+    [2, [[P.complement2e, 5], [P.complement3e, 5]], 60, false, "1 + 3 + 2", "un complément à 5 par calcul"],
     [3, tous(P.retenue2), 40, false, "8 + 4", "une retenue"],
     [3, [[P.retenue2e, 5], [P.retenue3e, 5]], 60, false, "2 + 6 + 4", "une retenue par calcul"],
     [4, "retenues", 40, false, "7 + 6", "une retenue avec complément à 5 : les dix calculs possibles"],
@@ -870,12 +834,14 @@
   // nombre enlevé alors qu'il en faut un).
   function signesDuProfil(profil, rng) {
     if (profil.signes) return profil.signes[Math.floor(rng() * profil.signes.length)];
-    if (profil.moins === "libre") {
+    if (profil.moins === "libre" || profil.moins === "possible") {
       const signes = profil.l.map((_, i) => (i > 0 && rng() < 0.5 ? -1 : 1));
-      return signes.indexOf(-1) < 0 ? false : signes;
+      // « libre » : au moins un nombre enlevé ; « possible » : rien d'imposé.
+      return profil.moins === "libre" && signes.indexOf(-1) < 0 ? false : signes;
     }
     if (profil.moins) {
-      const places = melanger(profil.l.slice(1).map((_, i) => i + 1), rng).slice(0, profil.moins);
+      const [debut, fin] = profil.places || [1, profil.l.length - 1];
+      const places = melanger(profil.l.map((_, i) => i).filter(i => i >= debut && i <= fin), rng).slice(0, profil.moins);
       return profil.l.map((_, i) => (places.indexOf(i) >= 0 ? -1 : 1));
     }
     return profil.l.map(() => 1);
@@ -883,12 +849,11 @@
   // Un calcul du profil : des nombres tirés au hasard parmi TOUS ceux de
   // leur largeur, jusqu'au premier calcul qui convient — chaque calcul
   // possible a donc la même chance de sortir. Les tests mesurent, profil
-  // par profil, qu'au moins un tirage sur cent convient : la borne
+  // par profil, qu'au moins un tirage sur deux cents convient : la borne
   // ESSAIS_MAX n'est jamais approchée.
   const ESSAIS_MAX = 100000;
   function tirerProfil(profil, rng) {
     if (profil.choix) return tirerProfil(profil.choix[Math.floor(rng() * profil.choix.length)], rng);
-    if (profil.forme) return tirerCalculColonne(profil.forme, rng);
     for (let essai = 0; essai < ESSAIS_MAX; essai += 1) {
       const signes = signesDuProfil(profil, rng);
       if (!signes) continue;
@@ -903,6 +868,10 @@
       // (la réponse se lit sans calculer ; un calcul sur cinq à certaines
       // étapes de la Colonne avant cette règle, mesuré le 22/11/2026).
       if (termes.length === 3 && termes[2].valeur === termes[0].valeur && termes[2].signe !== termes[0].signe) continue;
+      // Le boulier ne reste jamais vide en cours de calcul : chaque
+      // sous-total vaut au moins 1 (le barème ; relecture Codex du 22/11/2026).
+      let sousTotal = 0;
+      if (termes.some(t => { sousTotal += t.signe * t.valeur; return sousTotal < 1; })) continue;
       const a = analyser(termes);
       if (!a || a.total < 1) continue;
       if (profil.ok && !profil.ok(a)) continue;
@@ -958,7 +927,10 @@
     // il n'existe que 23 à 32 calculs possibles : sans cette règle, neuf
     // passages sur dix reposaient un calcul déjà fait (mesuré le 22/11/2026).
     // Chaque profil a toujours assez de calculs différents pour ses tirages
-    // (le test les compte) ; la borne n'est qu'un filet.
+    // (le test les compte) ; la borne n'est qu'un filet : passée, le calcul
+    // est gardé même déjà vu (un élève ne reste jamais bloqué). Avec un vrai
+    // hasard elle est hors d'atteinte (au pire 9 chances sur 23 de retomber
+    // sur un calcul déjà posé, deux cents fois de suite).
     const vus = new Set();
     return profilsDuPassage(e, combien, rng).map(profil => {
       let calcul = tirerProfil(profil, rng);
@@ -1235,7 +1207,6 @@
     gradeExiste,
     dernierDeSaListe,
     seuilGrade,
-    tirerCalculColonne,
     nomGrade,
     nomJaponais,
     verdictGrade,

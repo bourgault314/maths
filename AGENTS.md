@@ -460,14 +460,18 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
   grille (1 … 53, clés `gradeReussi` et `gradeColonne`) est ignorée sans erreur.
 - **Le tirage** : chaque étape a un plan de profils (`PROFILS`). Un profil tire
   des nombres au hasard parmi tous ceux de sa largeur jusqu'au premier calcul
-  qui convient ; il ne fabrique jamais un calcul. Trois règles d'affichage
+  qui convient ; il ne fabrique jamais un calcul. Quatre règles d'affichage
   seulement : jamais deux fois le même nombre de suite, jamais deux fois le
-  même calcul dans un passage, jamais « 9 + 8 − 9 » à trois nombres. Les gestes
+  même calcul dans un passage, jamais « 9 + 8 − 9 » à trois nombres, et en
+  Colonne chaque sous-total vaut au moins 1. Ce que le barème ne disait pas
+  est écrit dans `_sources/anzan-bareme/PRECISIONS.md`. Les gestes
   viennent du modèle du barème (`_sources/anzan-bareme/soroban.py`, porté dans
   `gestes`).
 - Toute étape nouvelle ou modifiée a sa **garantie écrite à part** dans
   `tests/flash-anzan-etapes.test.mjs` (`GARANTIES`, sans se servir de
   `PROFILS`) : le geste annoncé dans chaque calcul, rien de plus difficile.
+  Un autre test dit ce qui ne doit pas avoir disparu (toutes les suites de
+  signes que la garantie permet).
 - En Colonne, une étape chronométrée a UN chrono pour ses dix calculs (la
   pastille), jamais de temps par calcul ; à zéro, le calcul en cours n'est pas
   compté. Chaque premier chrono reprend un tirage déjà réussi en temps libre.
