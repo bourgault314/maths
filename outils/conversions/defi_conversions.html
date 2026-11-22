@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261121-b32">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261122-b33">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261121-b32"></script>
-  <script src="./conversions_generateurs.js?v=20261121-b32"></script>
+  <script src="./conversions_carte.js?v=20261122-b33"></script>
+  <script src="./conversions_generateurs.js?v=20261122-b33"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261121-b32"></script>
+  <script src="./defi_conversions_aides.js?v=20261122-b33"></script>
   <script>
   (function () {
     "use strict";
@@ -350,7 +350,8 @@
         // paliers 3 à 5 arrivent bientôt » ; « Le palier 2 arrive bientôt »
         // était faux dès l'ouverture du palier 2.)
         const aVenir = CARTE.PALIERS.map(x => x.n).filter(n => !CARTE.palierPret(n));
-        const suiteA = aVenir.every((n, i) => !i || n === aVenir[i - 1] + 1);
+        // (Lot B3-3 : deux paliers, « Les paliers 4 et 5 », pas « 4 à 5 ».)
+        const suiteA = aVenir.length > 2 && aVenir.every((n, i) => !i || n === aVenir[i - 1] + 1);
         carteEtape.appendChild(el("h2", "", !aVenir.length ? "Tu as tout fini !"
           : aVenir.length === 1 ? `Le palier ${aVenir[0]} arrive bientôt`
             : `Les paliers ${suiteA ? `${aVenir[0]} à ${aVenir[aVenir.length - 1]}` : `${aVenir.slice(0, -1).join(", ")} et ${aVenir[aVenir.length - 1]}`} arrivent bientôt`));
@@ -615,7 +616,7 @@
       else bonneReponse(reponse, qn);
       if (AIDES.correctionGlisse(zone, qn, {phrase, ensuite: () => { reponse.style.visibility = ""; }})) {
         if (animer) reponse.style.visibility = "hidden";
-      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.ligneB32 && !qn.schemaCorr && !qn.arcsCorr && !qn.droiteH && !qn.etapesV && !qn.ligneP6 && !qn.tableauP && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
+      } else if (!qn.choix && !qn.objets && !qn.ordre && !qn.cartes && !qn.droite && !qn.aire && !qn.ligneB32 && !qn.lignesB33 && !qn.schemaCorr && !qn.arcsCorr && !qn.droiteH && !qn.etapesV && !qn.ligneP6 && !qn.tableauP && qn.correction && qn.correction[0] && qn.correction[0] !== qn.resume && !reponse.querySelector(".horl-ligne")) {
         // Sans glisse-unité : la relation (ou le premier pas) sous la réponse.
         reponse.appendChild(el("div", "rel petite", qn.correction[0]));
       }
@@ -760,11 +761,13 @@
     // tombait à 79 % (déjà sur main pour C1 et C2 : « Un bassin de baignade
     // de 32 m. Combien de centimètres ? ») : elle se fait un peu plus petite,
     // jusqu'à 80 % de sa taille. Mesuré au rendu.
-    function deuxLignes(p) {
+    // (Correctif B3-3 : `plancher` — l'énoncé ne descend jamais sous 14 px
+    // au téléphone ; s'il ne tient pas, il prend trois lignes.)
+    function deuxLignes(p, plancher = 0) {
       if (!p.isConnected) return p;
       const taille = parseFloat(getComputedStyle(p).fontSize);
       const ligne = parseFloat(getComputedStyle(p).lineHeight) || taille * 1.25;
-      for (let k = 1; k <= 4 && p.getBoundingClientRect().height > ligne * 2.5; k += 1) p.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
+      for (let k = 1; k <= 4 && taille * (1 - 0.05 * k) >= plancher - 0.01 && p.getBoundingClientRect().height > ligne * 2.5; k += 1) p.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
       return p;
     }
 
@@ -806,7 +809,8 @@
       for (let k = 1; k <= 6 && trop(); k += 1) l.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
     }
     function poserQuestion(qEl, question, toucherCase = () => {}) {
-      const nbCases = question.forme === "deux-cases" ? 2 : 1;
+      // (Lot B3-3 : trois cases, « … h … min … s ».)
+      const nbCases = question.forme === "deux-cases" ? (Array.isArray(question.reponse) ? question.reponse.length : 2) : 1;
       const casesEl = [];
       qEl.textContent = "";
       qEl.classList.toggle("long", Boolean(question.morceaux.long));
@@ -814,6 +818,8 @@
       qEl.classList.toggle("serre", Boolean(question.morceaux.serre));
       // (Lot B3-2c : sous un énoncé de C9, A1, A2, la case un peu moins large.)
       qEl.classList.toggle("etroite", Boolean(question.morceaux.etroite));
+      // (Lot B3-3 : trois cases sur la ligne, « … h … min … s », plus serrées.)
+      qEl.classList.toggle("trois", nbCases === 3);
       const m = question.morceaux;
       const nouvelleCase = (i, petite) => {
         const c = el("span", `case${petite ? " petite" : ""}${i === 0 ? " focus" : ""}`, "");
@@ -828,8 +834,10 @@
       // La règle à lire (lot 3b-2) : l'objet posé sur la règle, sous la phrase.
       const regle = () => { if (m.regle) qEl.appendChild(AIDES.regle(m.regle)); };
       const deuxCases = l => {
-        l.append(nouvelleCase(0, true), el("span", "", m.cases[0]), nouvelleCase(1, true));
-        if (m.cases[1]) l.appendChild(el("span", "", m.cases[1]));
+        m.cases.forEach((u, i) => {
+          l.appendChild(nouvelleCase(i, true));
+          if (u) l.appendChild(el("span", "", u));
+        });
       };
       // Lot B2-3a (A5) : la figure à gauche, la question et la case à
       // droite (sur une ligne : la question reste basse) ; pour comparer,
@@ -908,10 +916,21 @@
         // est égal à… », ses quatre cartes aussi.)
         qEl.appendChild(el("div", "phrase-t", m.phrase));
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
+      } else if (m.horlogeD3) {
+        // Lot B3-3 (D3, S003 p. 18) : lire l'heure à la seconde ; l'horloge à
+        // trois aiguilles à gauche ; à droite, la phrase puis les trois cases
+        // sur une ligne (la question reste basse au petit téléphone).
+        const l = el("div", "d3-q-l");
+        const droite = el("div", "d3-droite");
+        const cases = el("div", "l1 d3-cases");
+        m.cases.forEach((u, i) => cases.append(nouvelleCase(i, true), el("span", "", u)));
+        droite.append(el("div", "phrase-t", m.phrase), cases);
+        l.append(AIDES.horlogeSec(m.horlogeD3.h, m.horlogeD3.m, m.horlogeD3.s), droite);
+        qEl.appendChild(l);
       } else if (m.enonce) {
         const enonceEl = qEl.appendChild(el("div", "enonce", m.enonce));
         // (Lot B3-2c : C9, A1, A2, l'énoncé sur deux lignes au plus.)
-        if (m.deuxLignes) deuxLignes(enonceEl);
+        if (m.deuxLignes) deuxLignes(enonceEl, m.plancher || 0);
         // Lot B2-3b-2 (Q10, choix de Gwenaël du 21/11) : l'horaire du Car
         // Jaune, les marées de Saint-Gilles, en tableau sous l'énoncé.
         if (m.support) tableauQ10(qEl, m.support);
@@ -928,7 +947,7 @@
         const l = el("div", "l1");
         l.append(nouvelleCase(0), el("span", "", m.apres));
         qEl.appendChild(l);
-      } else if (nbCases === 2) {
+      } else if (nbCases >= 2) {
         qEl.appendChild(el("div", "phrase-t", m.avant));
         pieces();
         const l = el("div", "l1");
@@ -984,8 +1003,8 @@
       return t;
     }
     function interroger(ui, question, {avant, apres}) {
-      const saisie = {cases: ["", ""], focus: 0, fige: false};
-      const nbCases = question.forme === "deux-cases" ? 2 : 1;
+      const saisie = {cases: ["", "", ""], focus: 0, fige: false};
+      const nbCases = question.forme === "deux-cases" ? (Array.isArray(question.reponse) ? question.reponse.length : 2) : 1;
       const exposantQ = question.forme === "exposant";
       const m = question.morceaux;
       const casesEl = poserQuestion(ui.q, question, i => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
@@ -994,7 +1013,7 @@
       function peindre() {
         casesEl.forEach((c, i) => {
           c.textContent = saisie.cases[i].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-          if (!saisie.fige) c.className = `case${nbCases === 2 ? " petite" : ""}${exposantQ ? " exp" : ""}${i === saisie.focus ? " focus" : ""}`;
+          if (!saisie.fige) c.className = `case${nbCases >= 2 ? " petite" : ""}${exposantQ ? " exp" : ""}${i === saisie.focus ? " focus" : ""}`;
           dansLaCase(c);
         });
       }
@@ -1194,6 +1213,16 @@
           choixEl.appendChild(b);
         });
         ui.bas.appendChild(choixEl);
+        // (Correctif B3-3 : trois durées côte à côte, « 52 min 24 s », sortaient
+        // du cadre au téléphone ; une durée ne se coupe pas : la réponse se fait
+        // un peu plus petite dans son bouton, jamais sous 14 px.)
+        if (["D3", "Q3", "Q4"].includes(question.code) && !choixEl.classList.contains("mots")) {
+          choixEl.classList.add("ajuste");
+          choixEl.querySelectorAll("button").forEach(b => {
+            const taille = parseFloat(getComputedStyle(b).fontSize);
+            for (let k = 1; k <= 6 && b.scrollWidth > b.clientWidth + 1 && taille * (1 - 0.05 * k) >= 13.99; k += 1) b.style.fontSize = `${(taille * (1 - 0.05 * k)).toFixed(2)}px`;
+          });
+        }
         ui.action.style.visibility = "hidden";
         // (Lot B3-1c, remarque de Gwenaël du 21/11 : sans « Valider », « Je
         // ne sais pas » se met au milieu, sous les réponses, au lieu de
@@ -1235,7 +1264,7 @@
         else if (exposantQ && (ev.key === "-" || ev.key === "−")) taper("−");
         else if (!exposantQ && (ev.key === "," || ev.key === ".")) taper(",");
         else if (ev.key === "Backspace") { ev.preventDefault(); taper("⌫"); }
-        else if (ev.key === "Tab" && nbCases === 2) { ev.preventDefault(); saisie.focus = 1 - saisie.focus; peindre(); }
+        else if (ev.key === "Tab" && nbCases >= 2) { ev.preventDefault(); saisie.focus = (saisie.focus + (ev.shiftKey ? nbCases - 1 : 1)) % nbCases; peindre(); }
         else if (ev.key === "Enter") { ev.preventDefault(); repondre(null); }
       };
       // « Je ne sais pas » (lot 3a) : la correction, comptée comme une erreur.
@@ -1261,12 +1290,12 @@
             peindre();
             return;
           }
-          reponse = nbCases === 2 ? saisie.cases.slice(0, 2) : saisie.cases[0];
+          reponse = nbCases >= 2 ? saisie.cases.slice(0, nbCases) : saisie.cases[0];
         }
         saisie.fige = true;
         if (ui.jnsp) ui.jnsp.style.visibility = "hidden";
         const verdict = jeNeSaisPas ? {juste: false, erreur: null, retour: null, jnsp: true} : G.verifier(question, reponse);
-        verdict.tape = jeNeSaisPas || gesteEl ? "" : question.choix ? question.choix[choix] : (nbCases === 2 ? `${saisie.cases[0]} ; ${saisie.cases[1]}` : saisie.cases[0]);
+        verdict.tape = jeNeSaisPas || gesteEl ? "" : question.choix ? question.choix[choix] : (nbCases >= 2 ? saisie.cases.slice(0, nbCases).join(" ; ") : saisie.cases[0]);
         if (gesteEl) {
           // Chaque objet relié (ou chaque mesure rangée) : juste ou faux.
           gesteEl.classList.add("fige");
@@ -1294,7 +1323,7 @@
             else b.classList.add("eteint");
           });
         } else {
-          casesEl.forEach(c => { c.className = `case${nbCases === 2 ? " petite" : ""}${exposantQ ? " exp" : ""}${jeNeSaisPas ? "" : verdict.juste ? " vert" : " rouge"}`; });
+          casesEl.forEach(c => { c.className = `case${nbCases >= 2 ? " petite" : ""}${exposantQ ? " exp" : ""}${jeNeSaisPas ? "" : verdict.juste ? " vert" : " rouge"}`; });
           const pave = ui.bas.querySelector(".pave4");
           if (pave) pave.classList.add("pale");
         }
@@ -1431,6 +1460,9 @@
       zone.appendChild(c);
     }
     function bonneReponse(zone, question) {
+      // Lot B3-3 (D3, Q3, Q4) : le dessin en vert, puis les lignes de calcul
+      // avec les unités ; la dernière, la réponse en vert.
+      if (question.lignesB33) { AIDES.correctionB33(zone, question, texteNoeud); return; }
       if (question.ligneB32) { b32Corrige(zone, question); return; }
       if (question.ligneR7) { r7Corrige(zone, question); return; }
       if (question.perimAire) {
@@ -1609,7 +1641,7 @@
         let geste = false;
         const fini = () => {
           geste = true;
-          if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = `case${ex.question.exposant ? " exp" : ""} vert`; }
+          if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = `case${ex.question.exposant ? " exp" : ""} vert`; dansLaCase(caseEl); }
           if (ajusterLigne) ajusterLigne();
           if (ex.apres && !ui.zone.querySelector(".apres")) {
             // La somme qui s'est construite laisse sa place à l'écriture finale.

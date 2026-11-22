@@ -862,7 +862,10 @@
       if (plus) {
         const b = el("div", "heure-bloc plus");
         b.style.flex = String(Math.max(plus, 22));
-        b.appendChild(el("div", "heure-tout vide", ""));
+        // (Lot B3-3 : la case vide garde la hauteur d'une ligne — une espace
+        // insécable —, sinon le bloc des minutes en plus se décalait d'une
+        // demi-ligne vers le haut.)
+        b.appendChild(el("div", "heure-tout vide", NB));
         const bas = el("div", "heure-parts");
         bas.appendChild(el("div", "heure-part", `${plus}${NB}min`));
         b.appendChild(bas);
@@ -3395,6 +3398,534 @@
     zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
   }
 
+
+  // ======================================================= lot B3-3 (palier 3)
+  // D3 « Minutes et secondes », Q3 « Plusieurs fois, partager », Q4 « Une
+  // fraction d'une quantité ». Choix pris en l'absence de Gwenaël (lot
+  // B3-3a, réversibles) : la barre de la minute (comme la barre de l'heure de
+  // D1), l'axe à arcs de Q10 à la seconde, la barre du document (S003 p. 4
+  // et 11-12) ; la trotteuse dans On te montre, la barre qui se partage dans
+  // On te montre de Q4. Aucun dessin ne donne la réponse.
+  const TROTTEUSE = "#FA7D05";
+  // Le cadran à trois aiguilles : la petite (encre), la grande (bleue), la
+  // trotteuse (orange, fine, avec sa queue). `balaye` : les secondes
+  // parcourues depuis le 12, en bleu pâle, « 15 s », « 30 s »… dehors.
+  function cadranSec(parent, cx, cy, R, {h = 10, m = 14, s = 0, balaye = 0, etiquettes = true, taille = 15, ticks = true} = {}) {
+    const pt = (a, r) => [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+    parent.appendChild(svg("circle", {cx, cy, r: R, fill: "#fff", stroke: ENCRE, "stroke-width": 3.5}));
+    if (balaye) {
+      const a = (2 * Math.PI * balaye) / 60;
+      if (balaye >= 60) parent.appendChild(svg("circle", {cx, cy, r: R - 4, fill: "#cfe2fb"}));
+      else {
+        const [x, y] = pt(a, R - 4);
+        parent.appendChild(svg("path", {d: `M${cx} ${cy} L${cx} ${cy - R + 4} A${R - 4} ${R - 4} 0 ${balaye > 30 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)} Z`, fill: "#cfe2fb"}));
+      }
+    }
+    if (ticks) {
+      for (let k = 0; k < 60; k += 1) {
+        const a = (2 * Math.PI * k) / 60;
+        const [x1, y1] = pt(a, R - 3);
+        // (Correctif B3-3 : des graduations plus longues et plus épaisses — la
+        // trotteuse se lit à la seconde au téléphone.)
+        const [x2, y2] = pt(a, k % 5 === 0 ? R - 13 : R - 9);
+        parent.appendChild(svg("line", {x1: x1.toFixed(2), y1: y1.toFixed(2), x2: x2.toFixed(2), y2: y2.toFixed(2), stroke: ENCRE, "stroke-width": k % 5 === 0 ? 2.6 : 1.5}));
+      }
+    }
+    for (let k = 1; k <= 12; k += 1) {
+      const [x, y] = pt((2 * Math.PI * k) / 12, R - taille * 0.55 - 12);
+      parent.appendChild(svg("text", {x: x.toFixed(1), y: (y + taille * 0.36).toFixed(1), "text-anchor": "middle", "font-size": taille, "font-weight": 800, fill: ENCRE}, String(k)));
+    }
+    if (etiquettes) {
+      for (let k = 15; k <= Math.min(balaye, 60); k += 15) {
+        const [x, y] = pt((2 * Math.PI * k) / 60, k % 30 === 0 ? R + 15 : R + 30);
+        parent.appendChild(svg("text", {x: x.toFixed(1), y: (y + 7).toFixed(1), "text-anchor": "middle", "font-size": 21, "font-weight": 900, fill: BLEU}, `${k}${NB}s`));
+      }
+    }
+    const [hx, hy] = pt((2 * Math.PI * ((h % 12) + m / 60)) / 12, R * 0.48);
+    parent.appendChild(svg("line", {x1: cx, y1: cy, x2: hx.toFixed(2), y2: hy.toFixed(2), stroke: ENCRE, "stroke-width": 6.5, "stroke-linecap": "round"}));
+    const [mx, my] = pt((2 * Math.PI * (m + s / 60)) / 60, R * 0.8);
+    parent.appendChild(svg("line", {x1: cx, y1: cy, x2: mx.toFixed(2), y2: my.toFixed(2), stroke: BLEU, "stroke-width": 4.2, "stroke-linecap": "round"}));
+    const as = (2 * Math.PI * s) / 60;
+    const [sx, sy] = pt(as, R * 0.9);
+    const [qx, qy] = pt(as + Math.PI, R * 0.2);
+    parent.appendChild(svg("line", {x1: qx.toFixed(2), y1: qy.toFixed(2), x2: sx.toFixed(2), y2: sy.toFixed(2), stroke: TROTTEUSE, "stroke-width": 2.2, "stroke-linecap": "round"}));
+    parent.appendChild(svg("circle", {cx, cy, r: 5.5, fill: ENCRE}));
+    parent.appendChild(svg("circle", {cx, cy, r: 2.6, fill: TROTTEUSE}));
+  }
+  // La trotteuse de On te montre (chaque toucher : 15 s de plus ; au bout
+  // du tour, la grande aiguille a avancé d'une minute). (Correctif B3-3 :
+  // les modes « outil » et « correction », jamais produits, retirés ; le
+  // dessin à toucher est un bouton pour les lecteurs d'écran.)
+  function trotteuse(zone, aide, fini = () => {}) {
+    const boite = el("div", "dessin-boite d3-boite");
+    const s = svg("svg", {viewBox: "0 0 270 212", class: "dessin d3-horloge a-toucher", role: "button", "aria-label": "Touche l'horloge : la trotteuse avance de 15 s"});
+    const somme = el("div", "somme");
+    boite.append(s, somme);
+    zone.appendChild(boite);
+    let sec = 0;
+    function dessiner() {
+      s.textContent = "";
+      // (Les chiffres à 22 : 15 px au moins au petit téléphone.)
+      cadranSec(s, 135, 106, 76, {h: 10, m: sec >= 60 ? 15 : 14, s: sec % 60, balaye: sec, taille: 22});
+      somme.textContent = "";
+      if (sec) somme.appendChild(el("span", "", Array(sec / 15).fill(`15${NB}s`).join(" + ")));
+      else somme.appendChild(el("span", "touche", "touche l'horloge"));
+      if (sec >= 60) { s.classList.remove("a-toucher"); s.setAttribute("role", "img"); s.setAttribute("aria-label", "Un tour de trotteuse : 1 min"); }
+    }
+    dessiner();
+    const toucher = () => {
+      if (sec >= 60) return;
+      sec += 15;
+      dessiner();
+      if (sec >= 60) fini();
+    };
+    s.setAttribute("tabindex", "0");
+    s.addEventListener("click", toucher);
+    s.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, () => sec < 60, 520);
+  }
+  // L'horloge de la question « Quelle heure est-il ? » (S003 p. 18 : lire
+  // l'heure à la seconde) : trois aiguilles, rien de balayé.
+  function horlogeSec(h, m, s, titre = "Une horloge à trois aiguilles") {
+    const d = svg("svg", {viewBox: "0 0 160 160", class: "dessin d3-lire", role: "img", "aria-label": titre});
+    // (Les chiffres à 22 dans le dessin : 14 px au moins au petit téléphone.)
+    cadranSec(d, 80, 80, 76, {h, m, s, etiquettes: false, taille: 23});
+    return d;
+  }
+  // L'outil de « Quelle heure est-il ? » : les trois aiguilles et leur rôle
+  // (jamais l'heure).
+  function aiguillesD3(zone) {
+    const g = el("div", "d3-aiguilles");
+    [["la petite : les heures", ENCRE, 6], ["la grande : les minutes", BLEU, 4], ["la trotteuse : les secondes", TROTTEUSE, 2]].forEach(([t, c, ep]) => {
+      const i = el("i", "");
+      i.style.height = `${ep}px`;
+      i.style.background = c;
+      g.append(i, el("span", "", t));
+    });
+    zone.appendChild(g);
+  }
+  // La barre de la minute (comme la barre de l'heure de D1) : un bloc par
+  // minute, « 1 min » en haut, « 60 s » en bas ; les secondes en plus au
+  // bout. `jour` : la barre d'un jour (« 1 jour », « 24 h »). `cache` : les
+  // « 60 s » pas encore écrits (On te montre, on touche la barre).
+  // (La case du haut d'un bloc de secondes garde sa hauteur : une espace
+  // insécable, sinon le bloc se décale d'une demi-ligne.)
+  function barreMinute(zone, {n = 1, plus = 0, jour = false, vert = false, touche = false, quarts = false}, fini = () => {}) {
+    const boite = el("div", "heure d3-barre");
+    zone.appendChild(boite);
+    let ouverte = !touche;
+    const [haut, bas, pas] = jour ? [`1${NB}jour`, `24${NB}h`, 24] : [`1${NB}min`, `60${NB}s`, 60];
+    function dessiner() {
+      boite.textContent = "";
+      const ligne = el("div", "heure-ligne");
+      // (Cinq minutes et plus : les deux premières, « … », la dernière ;
+      // neuf blocs coupaient « 1 min » au petit téléphone, cinq en police
+      // large. Le calcul de la correction dit combien.)
+      const blocs = n >= 5 ? [0, 1, -1, n - 1] : Array.from({length: n}, (_, i) => i);
+      for (const i of blocs) {
+        if (i < 0) {
+          const b = el("div", "heure-bloc etc");
+          b.style.flex = String(pas * 0.5);
+          b.appendChild(el("div", "heure-tout", "…"));
+          const p = el("div", "heure-parts");
+          p.appendChild(el("div", `heure-part${vert ? " verte" : ""}`, "…"));
+          b.appendChild(p);
+          ligne.appendChild(b);
+          continue;
+        }
+        const b = el("div", "heure-bloc");
+        b.style.flex = String(pas);
+        b.appendChild(el("div", "heure-tout", haut));
+        const p = el("div", "heure-parts");
+        // (`quarts` : « 1 min = … s » ; la minute en quatre quarts de 15 s,
+        // comme l'heure en quarts de D2 ; jamais « 60 s ».)
+        if (quarts) for (let k = 0; k < 4; k += 1) p.appendChild(el("div", `heure-part${vert ? " verte" : ""}`, `15${NB}s`));
+        else p.appendChild(el("div", `heure-part${vert ? " verte" : ""}`, ouverte ? bas : NB));
+        b.appendChild(p);
+        ligne.appendChild(b);
+      }
+      if (plus) {
+        const b = el("div", "heure-bloc plus");
+        b.style.flex = String(Math.max(plus, pas * 0.72));
+        b.appendChild(el("div", "heure-tout vide", NB));
+        const p = el("div", "heure-parts");
+        p.appendChild(el("div", `heure-part${vert ? " verte" : ""}`, `${plus}${NB}${jour ? "h" : "s"}`));
+        b.appendChild(p);
+        ligne.appendChild(b);
+      }
+      boite.appendChild(ligne);
+      if (touche && !ouverte) {
+        ligne.classList.add("a-toucher");
+        ligne.setAttribute("role", "button");
+        ligne.tabIndex = 0;
+        boite.appendChild(el("div", "somme"));
+        boite.lastChild.appendChild(el("span", "touche", "touche la barre"));
+        ligne.addEventListener("click", ouvrir);
+        ligne.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ouvrir(); } });
+      }
+    }
+    function ouvrir() {
+      if (ouverte) return;
+      ouverte = true;
+      dessiner();
+      fini();
+    }
+    dessiner();
+    return touche ? ouvrir : null;
+  }
+  // L'axe à la seconde (comme l'axe de Q10) : les instants sous l'axe sur
+  // deux lignes (« 9 h 58 min » puis « 40 s ») ; `gris` : l'heure (ou la
+  // minute) pile, le point de passage ; `cache` : « ? » ; `vert` : trouvé.
+  // Les instants presque à intervalles égaux (leurs heures, sur deux lignes,
+  // ont besoin de la même place).
+  // (`sansHeure` : tous les instants dans la même heure — la minute pile —,
+  // l'heure est dans l'énoncé ; avec elle, trois heures se touchaient sous
+  // l'axe avec une police large.)
+  function lignesInstant(t, sansHeure = false) {
+    const h = Math.floor(t / 3600);
+    const m = Math.floor((t % 3600) / 60);
+    const s = t % 60;
+    if (!m && !s) return [`${h}${NB}h`, ""];
+    return [sansHeure ? `${m}${NB}min` : `${h}${NB}h${NB}${m}${NB}min`, s ? `${s}${NB}s` : ""];
+  }
+  function axeSec(zone, {instants, arcs}) {
+    const W = 330;
+    const x0 = 58;
+    const x1 = W - 58;
+    const yA = 50;
+    const H = 98;
+    const pts = [...new Set(instants.map(i => i.t))].sort((a, b) => a - b);
+    const total = Math.max(1, pts[pts.length - 1] - pts[0]);
+    const poids = pts.slice(1).map((p, k) => Math.max(p - pts[k], total * 0.8));
+    const somme = poids.reduce((a, b) => a + b, 0) || 1;
+    const xs = [x0];
+    poids.forEach(w => xs.push(xs[xs.length - 1] + (w / somme) * (x1 - x0)));
+    const X = t => {
+      for (let k = 1; k < pts.length; k += 1) if (t <= pts[k]) return xs[k - 1] + ((t - pts[k - 1]) / Math.max(1, pts[k] - pts[k - 1])) * (xs[k] - xs[k - 1]);
+      return x1;
+    };
+    const sansHeure = new Set(instants.map(i => Math.floor(i.t / 3600))).size === 1;
+    const s = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: "dessin axe-arcs d3-axe", role: "img", "aria-label": "L'axe du temps"});
+    s.appendChild(svg("line", {x1: x0 - 48, y1: yA, x2: x1 + 48, y2: yA, stroke: N, "stroke-width": 2.5}));
+    s.appendChild(svg("path", {d: `M${x1 + 48} ${yA} l-8 -5 v10 Z`, fill: N}));
+    // (Deux bonds côte à côte : leurs durées s'écartent l'une de l'autre si
+    // elles se toucheraient, « 29 min 33 s » et « 3 h 27 min 48 s ».)
+    // (Largeur prudente : la police large est plus large qu'Inter.)
+    const larg = tx => carte().typo(tx).length * 16 * 0.64;
+    const centres = arcs.map(({de, a}) => (X(instants[de].t) + X(instants[a].t)) / 2);
+    if (arcs.length === 2) {
+      const trop = (centres[0] + larg(arcs[0].texte) / 2 + 6) - (centres[1] - larg(arcs[1].texte) / 2);
+      if (trop > 0) {
+        centres[0] = Math.max(larg(arcs[0].texte) / 2 + 2, centres[0] - trop / 2);
+        centres[1] = Math.min(W - larg(arcs[1].texte) / 2 - 2, centres[1] + trop / 2);
+      }
+    }
+    arcs.forEach(({de, a, texte, vert}, j) => {
+      const xa = X(instants[de].t);
+      const xb = X(instants[a].t);
+      const haut = Math.min(20, 9 + Math.abs(xb - xa) * 0.13);
+      const c = vert ? VERT : BLEU;
+      s.appendChild(svg("path", {d: `M${xa.toFixed(1)} ${yA - 4} Q${((xa + xb) / 2).toFixed(1)} ${(yA - 4 - haut * 2).toFixed(1)} ${xb.toFixed(1)} ${yA - 4}`, fill: "none", stroke: c, "stroke-width": 2.6}));
+      s.appendChild(svg("path", {d: `M${xb.toFixed(1)} ${yA - 4} l-3 -10 l-6 5 Z`, fill: c}));
+      s.appendChild(svg("text", {x: centres[j].toFixed(1), y: (yA - 9 - haut).toFixed(1), "text-anchor": "middle", "font-size": 16, "font-weight": 900, fill: texte === "?" ? ROUGE : c}, carte().typo(texte)));
+    });
+    instants.forEach(({t, cache, gris, vert}) => {
+      const x = X(t);
+      s.appendChild(svg("line", {x1: x, y1: yA - (gris ? 6 : 8), x2: x, y2: yA + (gris ? 6 : 8), stroke: gris ? GRIS : N, "stroke-width": gris ? 2.2 : 2.5}));
+      const [l1, l2] = cache ? ["?", ""] : lignesInstant(t, sansHeure);
+      const c = cache ? ROUGE : gris ? "#6c8494" : vert ? VERT : N;
+      const a = {"text-anchor": "middle", "font-size": 17, "font-weight": gris ? 800 : 900, fill: c};
+      s.appendChild(svg("text", Object.assign({x, y: yA + 24}, a), l1));
+      if (l2) s.appendChild(svg("text", Object.assign({x, y: yA + 42}, a), l2));
+    });
+    zone.appendChild(s);
+    return s;
+  }
+  // On te montre : l'axe ; on le touche, les bonds par l'heure pile
+  // apparaissent en vert.
+  function axeSecMontre(zone, aide, fini) {
+    const boite = el("div", "dessin-boite");
+    zone.appendChild(boite);
+    let fait = false;
+    function dessiner() {
+      boite.textContent = "";
+      const s = axeSec(boite, fait ? aide.apres : aide.avant);
+      const somme = el("div", "somme");
+      if (!fait) {
+        s.setAttribute("tabindex", "0");
+        s.setAttribute("role", "button");
+        s.setAttribute("aria-label", "Touche l'axe du temps : les bonds par l'heure pile");
+        s.classList.add("a-toucher");
+        somme.appendChild(el("span", "touche", "touche l'axe du temps"));
+      }
+      boite.appendChild(somme);
+      s.addEventListener("click", toucher);
+      s.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    }
+    function toucher() {
+      if (fait) return;
+      fait = true;
+      dessiner();
+      fini();
+    }
+    dessiner();
+    return enChaine(toucher, () => !fait, 750);
+  }
+  // Q3 · la barre du document (S003 p. 11-12) : le tout au-dessus avec son
+  // accolade, les parts égales (« … » : des parts en pointillés), ce qu'on
+  // cherche dessous avec son accolade. `toutApres` : le tout réécrit dans
+  // la même unité quand on touche (On te montre). La correction : le tout,
+  // les parts ou le dessous en vert.
+  function barreQ3(zone, aide, fini = () => {}) {
+    const g = el("div", "q3-barre");
+    zone.appendChild(g);
+    let fait = !aide.touche;
+    function dessiner() {
+      g.textContent = "";
+      const haut = el("div", `q3-acc-h${aide.vertTout ? " verte" : ""}`);
+      haut.appendChild(el("span", "", carte().typo(fait && aide.toutApres ? aide.toutApres : aide.tout)));
+      g.appendChild(haut);
+      const ligne = el("div", "q3-parts");
+      aide.parts.forEach(p => {
+        const c = el("div", `q3-part${p === "…" ? " trous" : ""}${aide.partsVertes && p !== "…" ? " verte" : ""}${p === "" ? " vide" : ""}`, carte().typo(p || NB));
+        ligne.appendChild(c);
+      });
+      g.appendChild(ligne);
+      if (aide.dessous) {
+        const b = el("div", `q3-acc-b${aide.vertDessous ? " verte" : ""}`);
+        b.appendChild(el("span", "", carte().typo(aide.dessous)));
+        g.appendChild(b);
+      }
+      if (!fait) {
+        g.classList.add("a-toucher");
+        g.setAttribute("role", "button");
+        g.tabIndex = 0;
+        const t = el("div", "somme");
+        t.appendChild(el("span", "touche", "touche la barre"));
+        g.appendChild(t);
+      } else {
+        g.classList.remove("a-toucher");
+        g.removeAttribute("role");
+        g.removeAttribute("tabindex");
+      }
+    }
+    function toucher() {
+      if (fait) return;
+      fait = true;
+      dessiner();
+      fini();
+    }
+    g.addEventListener("click", toucher);
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    dessiner();
+    return aide.touche ? toucher : null;
+  }
+  // Q3 · le piège des étagères (S003 p. 12-13) : une planche, ses morceaux
+  // (« 2 m | 2 m »), le bout perdu hachuré en gris (« 1 m »). Dans On te
+  // montre, on touche la planche : les coupes apparaissent.
+  function plancheQ3(zone, aide, fini = () => {}) {
+    const g = el("div", "q3-barre");
+    zone.appendChild(g);
+    let fait = !aide.touche;
+    function dessiner() {
+      g.textContent = "";
+      const haut = el("div", "q3-acc-h");
+      haut.appendChild(el("span", "", carte().typo(aide.tout)));
+      g.appendChild(haut);
+      const plan = el("div", "q3-plan");
+      if (fait) {
+        aide.parts.forEach(p => plan.appendChild(el("div", "", carte().typo(p))));
+        const perdu = el("div", "perdu", carte().typo(aide.perdu));
+        plan.appendChild(perdu);
+        // (Le bout perdu garde la place de son texte : « 10 cm » était coupé.)
+        const L = aide.parts.length;
+        if (L >= 4 && Math.max(...aide.parts.map(p => String(p).length)) >= 5) plan.classList.add("serre");
+        [...plan.children].forEach((c, k) => { c.style.flex = k < L ? "1 1 0" : "0 0 auto"; if (k === L) c.style.padding = ".5rem .375rem"; });
+      } else {
+        const entiere = el("div", "entiere", NB);
+        plan.appendChild(entiere);
+      }
+      g.appendChild(plan);
+      if (!fait) {
+        g.classList.add("a-toucher");
+        g.setAttribute("role", "button");
+        g.tabIndex = 0;
+        const t = el("div", "somme");
+        t.appendChild(el("span", "touche", "touche la planche"));
+        g.appendChild(t);
+      } else {
+        g.classList.remove("a-toucher");
+        g.removeAttribute("role");
+        g.removeAttribute("tabindex");
+      }
+    }
+    function toucher() {
+      if (fait) return;
+      fait = true;
+      dessiner();
+      fini();
+    }
+    g.addEventListener("click", toucher);
+    g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    dessiner();
+    return aide.touche ? toucher : null;
+  }
+  // Q4 · la barre de S003 p. 4 (et de C6) : le tout au-dessus avec son
+  // accolade, n parts égales, les k prises en bleu pâle (à partir de
+  // `debut`), l'accolade dessous avec la fraction (ou « le reste ») et « ? ».
+  // `hachees` : les parts déjà prises par autre chose (le cocktail).
+  // mode : "outil" ; "correction" (les parts prises en vert, chaque part dit
+  // sa valeur quand il y a la place, l'accolade dit le total) ; "montre"
+  // (on touche : chaque part écrit sa valeur).
+  function barreQ4(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const {n, k} = aide;
+    const debut = aide.debut || 0;
+    const hachees = aide.hachees || [];
+    const W = 340;
+    const x0 = 14;
+    const x1 = 326;
+    const y0 = 33;
+    const h = 34;
+    const boite = el("div", "dessin-boite q4-boite");
+    // (La correction s'arrête sous le total : rien de vide dessous.)
+    const s = svg("svg", {viewBox: `0 0 ${W} ${mode === "correction" ? 110 : 118}`, class: `dessin q4-barre${mode === "montre" ? " a-toucher" : ""}`,
+      role: mode === "montre" ? "button" : "img", "aria-label": mode === "montre" ? "Touche la barre : chaque part écrit sa valeur" : `Une barre partagée en ${n} parts égales`});
+    // (« touche la barre » : seulement dans On te montre ; ailleurs, la
+    // ligne vide prenait 22 px sous la barre.)
+    const somme = el("div", "somme");
+    boite.appendChild(s);
+    if (mode === "montre") boite.appendChild(somme);
+    zone.appendChild(boite);
+    let ecrit = mode === "correction";
+    const vert = mode === "correction";
+    function dessiner() {
+      s.textContent = "";
+      s.appendChild(svg("path", {d: `M${x0} 27 v-6 h${x1 - x0} v6`, fill: "none", stroke: ENCRE, "stroke-width": 2}));
+      s.appendChild(svg("text", {x: (x0 + x1) / 2, y: 16, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: ENCRE}, carte().typo(aide.tout)));
+      const pas = (x1 - x0) / n;
+      // (La valeur d'une part, écrite dans chaque case quand elle a la place.)
+      // (Mesuré en gros plan : 6 parts et plus, la valeur tombait sous 12 px ;
+      // la ligne de la correction dit alors le partage.)
+      const taille = n <= 5 ? 17 : 0;
+      for (let i = 0; i < n; i += 1) {
+        const x = x0 + i * pas;
+        const prise = i >= debut && i < debut + k;
+        const hachee = hachees.includes(i);
+        s.appendChild(svg("rect", {x: x.toFixed(1), y: y0, width: pas.toFixed(1), height: h, fill: hachee ? "url(#q4-hach)" : prise ? (vert ? "#bfe6cc" : "#cfe2fb") : "#fff",
+          stroke: vert && prise ? VERT : BLEU, "stroke-width": 2.4}));
+        if (ecrit && taille && aide.valeur) s.appendChild(svg("text", {x: (x + pas / 2).toFixed(1), y: y0 + h / 2 + 6, "text-anchor": "middle", "font-size": taille, "font-weight": 900, fill: vert && prise ? VERT : BLEU}, carte().typo(aide.valeur)));
+      }
+      if (hachees.length) {
+        // (Correctif B3-3 : sous les parts hachurées, ce qu'elles sont, la
+        // fraction de l'énoncé — « 2⁄5 letchi » ; jamais la réponse.)
+        if (aide.hachuresFrac) {
+          const [hn, hd] = String(aide.hachuresFrac).split("⁄").map(Number);
+          const xh = x0 + (Math.min(...hachees) + Math.max(...hachees) + 1) * pas / 2;
+          // (Dans la correction, le dessin est moins haut : la fraction remonte.)
+          const yh = y0 + h + (mode === "correction" ? 21 : 28);
+          fracDessin(s, xh - 32, yh, hn, hd, {taille: 17, couleur: ENCRE});
+          s.appendChild(svg("text", {x: (xh - 14).toFixed(1), y: yh + 7, "text-anchor": "start", "font-size": 17, "font-weight": 800, fill: ENCRE}, aide.hachuresNom || ""));
+        }
+        const defs = svg("defs", {});
+        const p = svg("pattern", {id: "q4-hach", width: 6, height: 6, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)"});
+        p.appendChild(svg("rect", {width: 6, height: 6, fill: "#fff"}));
+        p.appendChild(svg("rect", {width: 2.4, height: 6, fill: "#c7d3dc"}));
+        defs.appendChild(p);
+        s.insertBefore(defs, s.firstChild);
+      }
+      const xa = x0 + debut * pas;
+      const xb = x0 + (debut + k) * pas;
+      const y = y0 + h + 6;
+      const c = vert ? VERT : BLEU;
+      s.appendChild(svg("path", {d: `M${(xa + 1).toFixed(1)} ${y} v7 h${(xb - xa - 2).toFixed(1)} v-7`, fill: "none", stroke: c, "stroke-width": 2}));
+      const xm = Math.min(Math.max((xa + xb) / 2, 60), W - 60);
+      if (vert || (ecrit && mode === "montre")) {
+        s.appendChild(svg("text", {x: xm.toFixed(1), y: y + 31, "text-anchor": "middle", "font-size": 19, "font-weight": 900, fill: c}, carte().typo(aide.total)));
+      } else if (aide.frac === "le reste") {
+        s.appendChild(svg("text", {x: (xm - 10).toFixed(1), y: y + 31, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: c}, "le reste :"));
+        s.appendChild(svg("text", {x: (xm + 44).toFixed(1), y: y + 33, "text-anchor": "middle", "font-size": 22, "font-weight": 900, fill: ROUGE}, "?"));
+      } else {
+        const [fn, fd] = String(aide.frac || `${k}⁄${n}`).split("⁄").map(Number);
+        fracDessin(s, xm - 24, y + 23, fn, fd, {taille: 17, couleur: c});
+        s.appendChild(svg("text", {x: (xm + 2).toFixed(1), y: y + 32, "text-anchor": "middle", "font-size": 18, "font-weight": 900, fill: c}, ":"));
+        s.appendChild(svg("text", {x: (xm + 22).toFixed(1), y: y + 34, "text-anchor": "middle", "font-size": 22, "font-weight": 900, fill: ROUGE}, "?"));
+      }
+      somme.textContent = "";
+      if (mode === "montre" && !ecrit) somme.appendChild(el("span", "touche", "touche la barre"));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const toucher = () => {
+      if (ecrit) return;
+      ecrit = true;
+      s.classList.remove("a-toucher");
+      s.setAttribute("role", "img");
+      s.setAttribute("aria-label", `Une barre partagée en ${n} parts égales`);
+      dessiner();
+      fini();
+    };
+    s.setAttribute("tabindex", "0");
+    s.addEventListener("click", toucher);
+    s.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return toucher;
+  }
+  // L'outil des étapes du lot B3-3.
+  function outilB33(zone, question) {
+    const rel = question.relation ? carte().typo(question.relation) : "";
+    if (question.outil === "aiguilles-d3") aiguillesD3(zone);
+    else if (question.outil === "barre-minute" || question.outil === "barre-jour") {
+      if (rel) zone.appendChild(el("div", "rel petite", rel));
+      barreMinute(zone, question.barreD3);
+    } else if (question.outil === "axe-sec") axeSec(zone, question.axeD3);
+    else if (question.outil === "schema-d3") {
+      const sc = question.schemaD3;
+      schema(zone, {tout: carte().typo(sc.tout), parts: sc.parts.map(t => carte().typo(t)), poids: sc.poids});
+    } else if (question.outil === "barre-q3") barreQ3(zone, question.barreQ3);
+    else if (question.outil === "barre-q4") barreQ4(zone, question.barreQ4);
+    if (question.noteOutil) zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+  }
+  // La correction des étapes du lot B3-3 : le dessin en vert (s'il y en a
+  // un), puis les lignes de calcul ; la dernière, la réponse en vert.
+  function correctionB33(zone, question, texteNoeud) {
+    const c = question.corrB33;
+    if (c && c.type === "barre-minute") barreMinute(zone, {n: c.n, plus: c.plus, quarts: c.quarts, vert: true});
+    else if (c && c.type === "axe") axeSec(zone, c);
+    else if (c && c.type === "horloge") {
+      // (Correctif B3-3 : la même grande horloge que la question, l'heure lue
+      // à sa droite — la correction reste basse.)
+      const d = horlogeSec(c.h, c.m, c.s, "L'horloge de la question");
+      d.classList.add("d3-lire-corr");
+      const l = el("div", "d3-corr-l");
+      l.appendChild(d);
+      zone.appendChild(l);
+      question.lignesB33.forEach(x => {
+        const t = el("div", "calcul-pb");
+        t.appendChild(el("span", "v", x[1]));
+        l.appendChild(t);
+      });
+      return;
+    } else if (c && c.type === "barre-q3") {
+      if (c.perdu) plancheQ3(zone, c);
+      else barreQ3(zone, c);
+    } else if (c && c.type === "barre-q4") barreQ4(zone, c, {mode: "correction"});
+    question.lignesB33.forEach((l, i) => {
+      const d = el("div", "calcul-pb b33");
+      if (Array.isArray(l)) {
+        const [avant, vert, apres] = l;
+        if (avant) d.appendChild(texteNoeud(avant));
+        d.appendChild(el("span", "v", vert));
+        if (apres) d.appendChild(texteNoeud(apres));
+      } else d.appendChild(texteNoeud(l));
+      // (Correctif B3-3 : la retenue des secondes, « 104 s = 1 min 44 s »,
+      // en note au bout d'une dernière ligne courte (« = 3 h 57 min 21 s ») ;
+      // sous la dernière ligne sinon.)
+      const der = i === question.lignesB33.length - 1;
+      if (question.noteCorrB33 && der && [].concat(l).join("").length <= 20) d.appendChild(el("span", "note note-r", carte().typo(question.noteCorrB33)));
+      zone.appendChild(d);
+      if (question.noteCorrB33 && der && [].concat(l).join("").length > 20) zone.appendChild(el("div", "note", carte().typo(question.noteCorrB33)));
+    });
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -3470,6 +4001,14 @@
     if (aide.type === "decoupe-a2") return decoupeA2(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "calcul-a2") return calculA2(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "droite-c9") return droiteC9(zone, Object.assign({milieu: true}, aide), {mode: "montre", fini: f});
+    // Lot B3-3 (D3, Q3, Q4) : la trotteuse, la barre de la minute, l'axe à
+    // la seconde, la barre du document, la planche, la barre qui se partage.
+    if (aide.type === "trotteuse") return trotteuse(zone, aide, f);
+    if (aide.type === "barre-minute") { const j = barreMinute(zone, aide, f); if (!j) f(); return j; }
+    if (aide.type === "axe-sec") return axeSecMontre(zone, aide, f);
+    if (aide.type === "barre-q3") { const j = barreQ3(zone, aide, f); if (!j) f(); return j; }
+    if (aide.type === "planche-q3") { const j = plancheQ3(zone, aide, f); if (!j) f(); return j; }
+    if (aide.type === "barre-q4") return barreQ4(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
     return null;
   }
@@ -3645,6 +4184,8 @@
     }
     // Lot B3-2 (A1, A2, C9).
     if (["carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(question.outil)) { outilB32(zone, question); return; }
+    // Lot B3-3 (D3, Q3, Q4).
+    if (["aiguilles-d3", "barre-minute", "barre-jour", "axe-sec", "schema-d3", "barre-q3", "barre-q4"].includes(question.outil)) { outilB33(zone, question); return; }
     // Lot B3-1 (R7) : le repère reporté ; le repère compté ; les arrondis.
     if (question.outil === "reporte" && question.reporte) {
       reporte(zone, Object.assign({note: question.noteOutil, eau: question.reporte.nom === "Le bassin"}, question.reporte));
@@ -3871,5 +4412,6 @@
   }
 
   return Object.freeze({tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
-    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9});
+    rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9,
+    trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33});
 });
