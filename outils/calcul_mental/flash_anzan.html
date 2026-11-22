@@ -508,7 +508,10 @@
     .fiche-grade .regles { margin: 16px auto 0; padding: 0; list-style: none; border: 2px solid var(--ink); border-radius: 14px; background: var(--papier); box-shadow: 0 4px 0 var(--papier-ombre); text-align: left; }
     .fiche-grade .regles li { display: flex; gap: 12px; align-items: center; min-height: 52px; padding: 6px 14px; border-bottom: 1px solid var(--papier-trait); font-weight: 800; }
     .fiche-grade .regles li:last-child { border-bottom: 0; }
-    .fiche-grade .regles b { flex: 0 0 auto; min-width: 84px; font-family: var(--serif); font-size: 1.35rem; text-align: center; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+    /* La colonne de gauche a la largeur du plus long de ses quatre textes
+       (--car : son nombre de caractères, posé par la page) : un exemple
+       large comme « 64 + 52 + 31 » ne décale plus sa ligne des trois autres. */
+    .fiche-grade .regles b { flex: 0 0 auto; min-width: max(84px, calc(var(--car, 0) * 1ch)); font-family: var(--serif); font-size: 1.35rem; text-align: center; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
     .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
     .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
     .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
@@ -705,7 +708,7 @@
 
     @media (max-width: 620px) {
       .gr-groupes { grid-template-columns: 1fr 1fr; }
-      .fiche-grade .regles b { min-width: 72px; }
+      .fiche-grade .regles b { min-width: max(72px, calc(var(--car, 0) * 1ch)); }
       .fiche-grade .fiche-boutons { grid-template-columns: 1fr 1fr; }
       .fiche-grade .fiche-boutons .primary { font-size: 1.05rem; }
       /* Au téléphone, la petite carte au-dessus des règles. */
@@ -2964,7 +2967,9 @@
         });
         const regles = $("fiche-regles");
         regles.replaceChildren();
-        CORE.reglesEtape(ficheEtape).forEach(([fort, texte]) => {
+        const lignes = CORE.reglesEtape(ficheEtape);
+        regles.style.setProperty("--car", String(Math.max(...lignes.map(([fort]) => fort.length))));
+        lignes.forEach(([fort, texte]) => {
           const li = document.createElement("li");
           const b = document.createElement("b");
           b.textContent = fort;
