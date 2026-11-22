@@ -1486,6 +1486,12 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 @media (max-height: 600px) {
   .zone .q3-barre.serre .q3-part { padding-top: .25rem; padding-bottom: .25rem; }
   .zone .q3-barre.serre .q3-acc-h::after, .zone .q3-barre.serre .q3-acc-b::before { height: .375rem; }
+  /* (B4-2 : encore un peu plus bas — la phrase sous la barre tombait à
+     13,3 px dans WebKit au petit iPhone.) */
+  .zone .q3-barre.serre .q3-part { padding-top: .125rem; padding-bottom: .125rem; }
+  .zone .q3-barre.serre .q3-acc-h::after { height: .25rem; margin-top: .0625rem; margin-bottom: .125rem; }
+  .zone .q3-barre.serre .q3-acc-b::before { height: .25rem; margin-top: .125rem; margin-bottom: .0625rem; }
+  .zone .q3-barre.serre .q3-acc-h, .zone .q3-barre.serre .q3-acc-b { line-height: 1.1; }
 }
 @media (min-width: 900px) and (min-aspect-ratio: 5/4) {
   .zone .dessin.a3-regroupe { height: min(8rem, 19vh); }
@@ -1497,4 +1503,72 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .q .v1-deux-q .dessin.v1-q { height: 5.5rem; }
   .zone .dessin.q5-rect { height: min(8rem, 19vh); }
   .reponse-bonne .dessin.q5-rect { height: min(5.5rem, 13vh); }
+}
+
+/* ================================= lot B4-2 (D4, D5, Q6)
+   D4 : la chaîne des paquets (l'outil, et On te montre avec les nombres
+   sous les cases), le calendrier de On te montre. D5 : la double droite en
+   quarts. Q6 : la frise des trajets, le tableau du covoiturage, l'horloge
+   du bus. Mesuré sur la maquette du B4-2a au petit iPhone : texte des
+   dessins à 14 px au moins. */
+/* (Lot B4-2c : 21 → 19 rem : plus large, la chaîne était plus haute et
+   l'outil tombait à 91 % aux téléphones de 412 et 390 px.) */
+.zone .dessin.d4-chaine { display: block; width: 100%; max-width: 19rem; height: auto; max-height: min(5rem, 15vh); }
+.zone .dessin.d4-chaine.avec-valeurs { max-height: min(6.75rem, 20vh); }
+.zone .dessin.d4-cal { display: block; width: auto; max-width: 100%; height: min(9.5rem, 27vh); max-height: none; }
+.dessin.d4-chaine.a-toucher, .dessin.d4-cal.a-toucher, .dessin.q6-frise.a-toucher { cursor: pointer; }
+/* (Lot B4-2c : sous le calendrier, « 25 jours = 3 × 7 jours + 4 jours » sur
+   une ligne : à 17 px en police large, la ligne passait à la ligne après
+   « + ».) */
+.zone.montre:has(.d4-cal) .apres { font-size: .9375rem; }
+/* (Lot B4-2c : la droite en quarts, la droite de D6 pour 0,1 h et la frise
+   moins larges : aux téléphones de 390 et 412 px, plus hautes, elles
+   faisaient tomber l'outil à 95-98 %.) */
+.zone .dessin.d5-quarts { max-width: 18.5rem; max-height: min(8rem, 22vh); }
+@media (max-width: 899px) and (min-height: 600px) {
+  .zone .dessin.droite-h.grand:not(.reponse-bonne *) { max-width: 18.5rem; }
+}
+.reponse-bonne .dessin.d5-quarts { max-height: min(6.5rem, 18vh); }
+.zone .dessin.q6-frise { display: block; width: 100%; max-width: 19.5rem; height: auto; max-height: min(8rem, 23vh); }
+.reponse-bonne .dessin.q6-frise { max-height: min(6.75rem, 19vh); }
+/* (Le tableau du covoiturage plus serré : lignes à 1,1, en-têtes à 14 px,
+   prénoms centrés.) */
+.q .horaire.covoit { line-height: 1.1; }
+/* (Lot B4-2, retour de Code : dans WebKit, « Départ » touchait la première
+   heure du tableau (boîtes de texte plus hautes que la ligne) : 3 px sous
+   l'en-tête.) */
+.q .horaire.covoit th { font-size: 1em; padding: 0 .1875rem .1875rem; }
+.q .horaire.covoit th.nom { background: #eef3f7; color: var(--ink); text-align: center; font-weight: 900; }
+.q .horaire.covoit td { text-align: center; padding: .0625rem .1875rem; }
+/* (Lot B4-2c : les cases moins larges et la consigne plus large : en police
+   large, « Arrivée avant 8 h 45 : qui part le plus tard ? » prenait cinq
+   lignes et l'outil tombait à 90 %.) */
+.q .covoit-l { display: flex; align-items: center; justify-content: center; gap: .375rem; }
+.q .covoit-l .consigne2 { flex: 1 1 0; min-width: 5.5rem; max-width: 11rem; text-align: left; font-size: .9375rem; line-height: 1.15; }
+/* (Lot B4-2c : l'horloge du bus est celle de D3 (les minutes graduées,
+   chiffres à 14 px au moins) ; elle ne grandit pas au téléphone haut comme
+   celle de D3 : la phrase et « min » sortaient de la question à 360 × 640.) */
+@media (max-width: 899px) {
+  .q .q6-q-l .dessin.d3-lire { width: min(6.75rem, 19.5vh); }
+}
+/* (Lot B4-2c : les cases de D4 restent sur une ligne au téléphone haut —
+   la grille de D3 les mettait sur deux lignes et coupait la question de
+   On te montre, « 609 h = … semaines … jours … h ».) */
+@media (max-width: 899px) and (min-height: 600px) {
+  .q .l1.d3-cases.d4-cases { display: flex; }
+}
+/* (Lot B4-2c : On te montre de Q6 sur grand écran, le tableau sous
+   l'énoncé : à 22 px, la question était coupée en haut et en bas.) */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .cadre[data-forme="seance"] .q > .horaire.covoit { font-size: 1rem; }
+}
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .zone .dessin.d4-chaine { max-width: 30rem; max-height: min(7rem, 17vh); }
+  .zone .dessin.d4-chaine.avec-valeurs { max-height: min(9.5rem, 22vh); }
+  .zone .dessin.d4-cal { height: min(13rem, 30vh); }
+  .zone .dessin.d5-quarts { max-width: 28rem; max-height: min(11rem, 24vh); }
+  .zone .dessin.q6-frise { max-width: 30rem; max-height: min(11rem, 25vh); }
+  .reponse-bonne .dessin.q6-frise, .reponse-bonne .dessin.d5-quarts { max-height: min(9rem, 20vh); }
+  .q .covoit-l { gap: 1.25rem; }
+  .q .covoit-l .consigne2 { max-width: 18rem; font-size: 1.375rem; }
 }

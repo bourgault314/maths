@@ -723,7 +723,9 @@ function controlerQuestion(q, ou) {
     if (q.forme === "qcm") assert.ok((q.choix.length >= 3 && q.choix.length <= 4) || q.donnees.type === "repere-comparer" || q.donnees.type === "comparer-mes"
       || q.donnees.type === "comparer-p5" || q.donnees.type === "comparer-p6" || (q.code === "A5" && q.donnees.sorte === "meme")
       // (Lot B3-1, R9 : le périmètre ou l'aire ; le gros qui n'est pas le plus lourd.)
-      || q.donnees.type === "perim-aire" || q.donnees.type === "piege");
+      || q.donnees.type === "perim-aire" || q.donnees.type === "piege"
+      // (Lot B4-2, D5 : « 1 h 30 min, est-ce 1,3 h ? », Oui · Non.)
+      || (q.donnees.type === "d5" && q.donnees.sorte === "piege"));
   }
 }
 
@@ -938,7 +940,9 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       C9: ["nombre", "phrase", "qcm", "deux-cases"], A1: ["nombre", "phrase", "qcm"], A2: ["nombre", "phrase", "qcm"],
       D3: ["nombre", "phrase", "deux-cases", "qcm"], Q3: ["nombre", "vrai-faux"], Q4: ["nombre", "qcm"],
       // Lot B4-1
-      A3: ["nombre", "phrase", "qcm"], V1: ["nombre", "qcm"], Q5: ["nombre", "vrai-faux"]}[code];
+      A3: ["nombre", "phrase", "qcm"], V1: ["nombre", "qcm"], Q5: ["nombre", "vrai-faux"],
+      // Lot B4-2
+      D4: ["nombre", "phrase", "deux-cases", "qcm"], D5: ["nombre", "phrase", "deux-cases", "qcm"], Q6: ["nombre", "deux-cases", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -3011,8 +3015,8 @@ test("lot B4-1 : A3, V1, Q5 — recalculés à part, l'outil sans la réponse, l
   assert.equal(CARTE.etape("Q5").nomCourt, "Périmètres et aires");
   assert.deepEqual(CARTE.etape("V1").reperes, [], "V1 : pas le dé à jouer comme repère de 1 cm³");
   ["A3", "V1", "Q5"].forEach(c => assert.doesNotMatch(JSON.stringify(CARTE.etape(c)), /tableau de conversion/i, `${c} : un tableau`));
-  // Le palier 4 reste caché : D4, D5, Q6 ne sont pas construites (B4-2).
-  assert.equal(CARTE.palierPret(4), false);
+  // (Lot B4-2 : D4, D5, Q6 construites, le palier 4 s'ouvre.)
+  assert.equal(CARTE.palierPret(4), true);
   // (B4-1c) Les corrections et les phrases revues après les premiers passages.
   const tous = [];
   for (let g = 1; g <= 200; g += 1) for (const usage of ["entraine", "valide"]) for (const code of ["V1", "Q5"]) tous.push(...G.serie(code, {usage, graine: g}));
@@ -3032,4 +3036,179 @@ test("lot B4-1 : A3, V1, Q5 — recalculés à part, l'outil sans la réponse, l
     }
     if (q.forme === "vrai-faux") Object.values(q.pourquoi).forEach(p => assert.notEqual(sp(p), sp(q.correction[0]), "le pourquoi redit la correction"));
   });
+});
+
+test("lot B4-2 : D4, D5, Q6 — recalculés à part, l'outil sans la réponse, les places, les pourquoi, l'écriture", () => {
+  const sp = t => String(t).replace(/[\u00a0\u202f\u2011]/g, x => (x === "\u2011" ? "-" : " "));
+  const echappe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const places = {};
+  const noter = (k, b) => { (places[k] = places[k] || new Set()).add(b); };
+  const sortes = {D4: {}, D5: {}, Q6: {}};
+  const reunion = new Set();
+  // Le recalcul, à part : les paquets d'une durée (de la plus petite unité
+  // vers la plus grande).
+  const TAILLES = {sj: [7], jh: [24], sjh: [7, 24], hms: [60, 60], am: [12], sa: [100], ms: [10], ma: [1000]};
+  const UNITES = {sj: ["semaines", "jours"], jh: ["jours", "h"], sjh: ["semaines", "jours", "h"], hms: ["h", "min", "s"], am: ["ans", "mois"], sa: ["siècles", "ans"],
+    ms: ["millénaires", "siècles"], ma: ["millénaires", "ans"]};
+  const enPaquets = (total, t) => { const r = []; let v = total; for (let k = t.length - 1; k >= 0; k -= 1) { r.unshift(v % t[k]); v = Math.floor(v / t[k]); } r.unshift(v); return r; };
+  const nb = x => Number(lire(String(x))) / 1000;
+  const hmT = m => (m >= 60 ? (m % 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m / 60} h`) : `${m} min`);
+  for (let g = 1; g <= 300; g += 1) {
+    for (const code of ["D4", "D5", "Q6"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        const serie = G.serie(code, {usage, graine: g});
+        if (usage === "valide" && code !== "D5") {
+          const vus = serie.map(q => q.modeleD4 || q.modeleQ6);
+          assert.equal(new Set(vus).size, vus.length, `${code} valide ${g} : un contexte deux fois (${vus})`);
+        }
+        serie.forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees;
+          const sorte = q.sorteD4 || q.sorteD5 || q.sorteQ6;
+          sortes[code][sorte] = (sortes[code][sorte] || 0) + 1;
+          if (/Cilaos|Piton|Grand Raid|cyclone|tamarinier|case créole|Car Jaune|Maïdo|maloya|Saint-Pierre|Saint-Denis|Saint-Paul/.test(sp(q.texte))) reunion.add(code);
+          // La dernière ligne de la correction : la réponse, en vert ; la
+          // correction écrite est celle qui s'affiche ; 44 signes au plus.
+          const der = q.lignesB33[q.lignesB33.length - 1];
+          assert.ok(Array.isArray(der), `${ou} : la dernière ligne`);
+          const rep = sp(q.reponseTexte);
+          if (!/^(Oui|Non)$/.test(rep)) assert.ok(sp(der[1]).includes(rep) || rep.includes(sp(der[1])), `${ou} : la réponse en vert « ${der[1]} » pour « ${rep} »`);
+          assert.equal(q.correction.join("|"), q.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l)).join("|"), `${ou} : la correction écrite`);
+          q.lignesB33.forEach(l => assert.ok(sp([].concat(l).join("")).length <= 44, `${ou} : une ligne trop longue « ${[].concat(l).join("")} »`));
+          // D4 : les paquets recomptés ; une case jamais vide de sens (« 1
+          // semaines », « 0 jours »).
+          if (code === "D4" && d.sorte === "paquets") {
+            const w = enPaquets(d.total, TAILLES[d.chaine]);
+            if (q.forme === "deux-cases") {
+              assert.deepEqual(q.reponse.map(Number), w, ou);
+              w.forEach((n, k) => assert.ok(n >= (["h", "min", "s", "mois"].includes(UNITES[d.chaine][k]) ? 1 : 2), `${ou} : ${n} ${UNITES[d.chaine][k]}`));
+            } else {
+              assert.equal(w[1], 0, ou);
+              assert.equal(Number(q.reponse), w[0], ou);
+            }
+          }
+          if (code === "D4" && d.sorte === "mult") {
+            const t = TAILLES[d.chaine];
+            const j = d.vals.length === 1 ? d.vals[0] * t[0] : d.vals[0] * t[0] + d.vals[1];
+            assert.equal(Number(q.reponse), d.chaine === "sjh" ? j * 24 : j, ou);
+          }
+          if (code === "D4" && d.sorte === "comparer") {
+            const t = TAILLES[d.chaine][0];
+            const attendu = d.petite === d.grande * t ? "Même durée" : null;
+            if (attendu) assert.equal(sp(q.choix[q.bon]), attendu, ou);
+            else assert.equal(sp(q.choix[q.bon]).startsWith(String(d.petite > d.grande * t ? d.petite : d.grande)), true, `${ou} : ${q.choix[q.bon]}`);
+            noter("D4 comparer", q.bon === 2 ? (q.choix[0] === q.choix[q.bon] ? 0 : 2) : q.bon);
+          }
+          if (code === "D4" && d.sorte === "choix") {
+            // Aucun autre choix ne vaut la bonne réponse.
+            const valeur = c => { const m = sp(c).match(/(\d+) \S+ (\d+)/); return Number(m[1]) * TAILLES[d.chaine][0] + Number(m[2]); };
+            q.choix.forEach((c, k) => { if (k !== q.bon) assert.notEqual(valeur(c), d.total, `${ou} : « ${c} » vaut la bonne réponse`); });
+            assert.equal(valeur(q.choix[q.bon]), d.total, ou);
+          }
+          // D5 : seulement les quarts et le dixième d'heure (S004 p. 10-11).
+          if (code === "D5" && d.x !== undefined) {
+            const c = d.x % 100;
+            assert.ok([10, 25, 50, 75].includes(c), `${ou} : ${d.x}`);
+            if (c === 10) assert.equal(d.x, 10, `${ou} : rien d'autre que 0,1 h`);
+            const m = (d.x * 3) / 5;
+            if (d.sorte === "dec" || d.sorte === "frac") assert.equal(Number(q.reponse), m, ou);
+            if (d.sorte === "total") assert.equal(Number(q.reponse), m, ou);
+            if (d.sorte === "hmin") assert.deepEqual(q.reponse.map(Number), [Math.floor(m / 60), m % 60], ou);
+            if (["inv", "invhm", "invtot"].includes(d.sorte)) assert.equal(nb(q.reponse), d.x / 100, ou);
+            if (d.sorte === "piege") { assert.equal(q.bon, d.juste ? 0 : 1, ou); noter("D5 piege", q.bon); }
+          }
+          // Q6 : les durées recalculées.
+          if (code === "Q6") {
+            if (d.sorte === "rapide") {
+              const ds = d.lignes.map(l => l[2] - l[1]);
+              const tri = ds.slice().sort((a, b) => a - b);
+              // (Des durées proches : la frise ne donne pas la réponse.)
+              assert.ok(tri[1] - tri[0] >= 5 && tri[2] - tri[1] >= 5 && tri[2] - tri[0] <= 15, `${ou} : ${ds}`);
+              assert.equal(ds[q.bon], tri[0], ou);
+              assert.deepEqual(q.choix, d.lignes.map(l => l[0]), `${ou} : les noms dans l'ordre du tableau`);
+              assert.ok(!q.friseQ6.trajets.some(t => t.length > 3), `${ou} : la frise sans durées`);
+            }
+            const ligneBon = d.lignes && q.choix ? d.lignes.find(l => l[0] === q.choix[q.bon]) : null;
+            if (d.sorte === "tot") assert.equal(ligneBon[2], Math.min(...d.lignes.map(l => l[2])), ou);
+            if (d.sorte === "cher") assert.equal(ligneBon[3], Math.min(...d.lignes.map(l => l[3])), ou);
+            if (d.sorte === "avant") {
+              const aTemps = d.lignes.filter(l => l[2] < d.limite);
+              assert.equal(aTemps.length, 2, ou);
+              assert.equal(ligneBon[1], Math.max(...aTemps.map(l => l[1])), ou);
+              const tard = d.lignes.find(l => l[2] >= d.limite);
+              assert.ok(tard[1] >= Math.max(...d.lignes.map(l => l[1])), `${ou} : le piège des départs`);
+            }
+            if (["rapide", "tot", "cher", "avant"].includes(d.sorte)) {
+              noter(`Q6 ${d.sorte}`, q.bon);
+              d.lignes.forEach(([, a, b]) => { assert.ok(a % 60 && b % 60 && Math.floor(b / 60) > Math.floor(a / 60), `${ou} : l'heure pile`); });
+            }
+            if (d.cherche === "duree") {
+              const m = d.arrivee - d.depart;
+              assert.equal(rep, hmT(m), ou);
+              assert.ok(Math.floor(d.arrivee / 60) > Math.floor(d.depart / 60), `${ou} : on passe une heure pile`);
+            }
+            if (d.cherche === "arrivee") {
+              assert.equal(d.arrivee, d.depart + d.duree, ou);
+              assert.deepEqual(q.reponse.map(Number), [Math.floor(d.arrivee / 60), d.arrivee % 60], ou);
+            }
+            if (d.sorte === "semaine") assert.deepEqual(q.reponse.map(Number), [Math.floor(d.total / 60), d.total % 60], ou);
+          }
+          if (q.forme === "qcm" && !["D4 comparer", "D5 piege"].some(k => k === `${code} ${sorte}`) && !/^Q6 (rapide|tot|cher|avant)$/.test(`${code} ${sorte}`)) noter(`${code} ${sorte}`, q.bon);
+          // L'outil, l'image et la note ne donnent jamais la réponse.
+          const outilT = [q.noteOutil || "", ...(q.image || []), ...(q.outilLignes || []),
+            q.chaineD4 ? [...q.chaineD4.unites, ...q.chaineD4.tailles].join(" | ") : "",
+            q.arcs ? q.arcs.arcs.map(a => a.texte).join(" | ") : ""].map(sp).join(" | ");
+          if (q.forme !== "qcm" && rep.length > 1) assert.doesNotMatch(outilT, new RegExp(`(^|[^\\d,])${echappe(rep)}([^\\d,]|$)`), `${ou} : l'aide « ${outilT} » donne « ${rep} »`);
+          if (q.chaineD4) assert.equal(q.chaineD4.total, null, `${ou} : la chaîne de l'outil sans nombres`);
+          if (q.droiteH && q.forme !== "qcm") assert.ok(!q.droiteH.quarts || q.droiteH.sens === "h>min" || q.droiteH.sansFraction, `${ou} : la fraction donne la réponse`);
+          // Au choix : un pourquoi de 31 signes au plus.
+          if (q.forme === "qcm") {
+            q.choix.forEach((c, k) => {
+              if (k === q.bon) return;
+              const v = G.verifier(q, k);
+              assert.ok(v.retour, `${ou} : « ${c} » sans pourquoi`);
+              assert.ok(v.retour.length <= 31, `${ou} : pourquoi trop long « ${v.retour} »`);
+              // (Lot B4-2c, leçon B4-1c : le pourquoi dit ce que fait le
+              // choix ; il ne redit pas une ligne de la correction.)
+              q.correction.forEach(l => assert.notEqual(sp(v.retour).replace(/\.$/, ""), sp(l).replace(/\.$/, ""), `${ou} : le pourquoi « ${v.retour} » redit la correction`));
+            });
+          }
+          // (Lot B4-2c : « Le chat d'Inès », jamais « de Inès ».)
+          assert.doesNotMatch(sp(q.texte), /\bde [AEIOUYÉÈÊÂÎÔ]/, `${ou} : « de » devant une voyelle`);
+          // Aucune espace normale devant « : ; ? ! ».
+          const m = q.morceaux || {};
+          const affiches = [q.texte, q.resume, q.noteOutil, m.phrase, m.avant, m.enonce, m.consigne, ...(q.correction || []), ...(q.image || []),
+            ...Object.values(q.pourquoi || {})].filter(t => typeof t === "string");
+          affiches.forEach(t => assert.doesNotMatch(t, / [:;?!]/, `${ou} : une espace normale devant la ponctuation « ${t} »`));
+          if (m.enonce && q.forme !== "qcm") assert.ok(m.deuxLignes && m.plancher === 14, `${ou} : l'énoncé sur deux lignes, jamais sous 14 px`);
+          ecriture(q.texte, ou);
+        });
+      }
+    }
+  }
+  // Toutes les sortes tombent.
+  ["fait", "mult", "paquets", "situation", "comparer", "choix"].forEach(k => assert.ok(sortes.D4[k] > 50, `D4 : ${k} ${sortes.D4[k] || 0}`));
+  ["dec", "frac", "inv", "hmin", "invhm", "total", "invtot", "piege", "fraction", "comparer"].forEach(k => assert.ok(sortes.D5[k] > 50, `D5 : ${k} ${sortes.D5[k] || 0}`));
+  ["rapide", "tot", "cher", "avant", "duree", "cinema", "semaine", "bus", "dans"].forEach(k => assert.ok(sortes.Q6[k] > 50, `Q6 : ${k} ${sortes.Q6[k] || 0}`));
+  assert.ok(reunion.has("D4") && reunion.has("D5") && reunion.has("Q6"), `La Réunion : ${[...reunion]}`);
+  // La bonne réponse à toutes les places.
+  Object.entries(places).forEach(([k, v]) => assert.deepEqual([...v].sort(), k === "D5 piege" ? [0, 1] : [0, 1, 2], `${k} : la bonne réponse aux places ${[...v]}`));
+  // Les erreurs neuves.
+  const tous = [];
+  for (let gr = 1; gr <= 200; gr += 1) for (const code of ["D4", "D5", "Q6"]) tous.push(...G.serie(code, {usage: "entraine", graine: gr}));
+  const trouve = f => tous.find(f);
+  const qs = trouve(q => q.code === "D4" && q.donnees.sorte === "paquets" && q.donnees.chaine === "sj" && q.forme === "deux-cases" && q.donnees.total < 70 && q.donnees.total % 10 < 7 && Math.floor(q.donnees.total / 10) >= 2);
+  assert.equal(sp(G.verifier(qs, [String(Math.floor(qs.donnees.total / 10)), String(qs.donnees.total % 10)]).retour), "1 semaine = 7 jours.", "la base 10");
+  const q25 = trouve(q => q.code === "D5" && q.donnees.sorte === "dec" && q.donnees.x === 75);
+  assert.equal(sp(G.verifier(q25, "75").retour), "0,75 h, ce n'est pas 75 min.");
+  const qhm = trouve(q => q.code === "D5" && q.donnees.sorte === "invhm" && q.donnees.x % 100 === 50);
+  assert.equal(sp(G.verifier(qhm, `${Math.floor(qhm.donnees.x / 100)},3`).retour), "30 min, ce n'est pas 0,3 h.");
+  const qc = trouve(q => q.code === "Q6" && q.donnees.sorte === "cinema" && q.donnees.duree >= 100 && q.donnees.duree < 120);
+  const lu100 = qc.donnees.depart + 60 + (qc.donnees.duree % 100);
+  assert.equal(sp(G.verifier(qc, [String(Math.floor(lu100 / 60)), String(lu100 % 60)]).retour), sp(`${qc.donnees.duree} min = 1 h ${qc.donnees.duree - 60} min.`));
+  // Les exemples de On te montre ; le palier 4 s'ouvre.
+  assert.deepEqual([...G.clesExemples("D4")], ["D4:p:sj:25", "D4:p:sjh:609", "D4:p:am:76"]);
+  assert.deepEqual([...G.clesExemples("Q6")], ["Q6:cinema:film:1060-1170", "Q6:rapide:400-465-6|430-505-5|485-555-6", "Q6:semaine:4x330"]);
+  assert.equal(CARTE.palierPret(4), true);
+  ["D4", "D5", "Q6"].forEach(c => { assert.ok(CARTE.etape(c).pret, c); assert.equal(CARTE.etape(c).apprends.length, 3, c); });
 });

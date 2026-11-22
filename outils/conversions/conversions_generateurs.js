@@ -11580,6 +11580,1168 @@
     };
   });
 
+  // ======================================================== palier 4 (lot B4-2)
+  // D4 « Jours, semaines, années, siècles », D5 « Les heures décimales
+  // usuelles », Q6 « Problèmes : horaires et durées ». Choix de Gwenaël du
+  // 22/11 (lot B4-2a, les trois recommandés) : D4, la chaîne des paquets
+  // (« semaines ← jours ← heures », la taille du paquet sur chaque flèche) ;
+  // D5, la double droite en quarts (¼, ½, ¾ au-dessus des décimaux), et pour
+  // 0,1 h la droite en dixièmes de D6 ; Q6, la frise des trajets pour
+  // comparer (des durées proches : la frise ne donne pas la réponse).
+  // Décidé par Claude (réversible) : On te montre de D4, le calendrier ; la
+  // correction de D4 écrit la division (S004 p. 6) ; le covoiturage de Q6 en
+  // trois trajets ; l'axe à arcs de Q10 pour le cinéma et pour une durée.
+  // S004 p. 6, 10-11, 17. Un outil ne donne jamais la réponse ; un pourquoi :
+  // 31 signes au plus ; une durée a toutes ses unités, sans trou.
+
+  // ------------------------------------ D4 · Jours, semaines, années, siècles
+  const ecD4 = n => ecrire(BigInt(n) * MILLE);
+  // Les chaînes : de la plus grande unité à la plus petite ; `t`, la taille
+  // de chaque paquet ; `s`, le singulier ; `art`, l'article du singulier.
+  const CHAINES_D4 = {
+    sj: {u: ["semaines", "jours"], s: ["semaine", "jour"], t: [7], art: ["Une", "Un"]},
+    jh: {u: ["jours", "h"], s: ["jour", "h"], t: [24], art: ["Un", ""]},
+    sjh: {u: ["semaines", "jours", "h"], s: ["semaine", "jour", "h"], t: [7, 24], art: ["Une", "Un", ""]},
+    hms: {u: ["h", "min", "s"], s: ["h", "min", "s"], t: [60, 60], art: ["", "", ""]},
+    am: {u: ["ans", "mois"], s: ["an", "mois"], t: [12], art: ["Un", ""]},
+    sa: {u: ["siècles", "ans"], s: ["siècle", "an"], t: [100], art: ["Un", "Un"]},
+    ms: {u: ["millénaires", "siècles"], s: ["millénaire", "siècle"], t: [10], art: ["Un", "Un"]},
+    ma: {u: ["millénaires", "ans"], s: ["millénaire", "an"], t: [1000], art: ["Un", "Un"]}
+  };
+  // (Les unités qui ne prennent pas de « s ».)
+  const INVARIABLES_D4 = ["h", "min", "s", "mois"];
+  const uD4 = (ch, k, n) => `${ecD4(n)}${NB}${n === 1 ? ch.s[k] : ch.u[k]}`;
+  const texteD4 = (ch, vals, depuis = 0) => vals.map((n, k) => uD4(ch, k + depuis, n)).join(NB);
+  // « 7 jours », « 24 h », « 1 000 ans » : la taille du paquet k.
+  const paquetD4 = (ch, k) => `${ecD4(ch.t[k])}${NB}${ch.u[k + 1]}`;
+  // « 1 semaine = 7 jours ».
+  const relD4 = (ch, k) => `1${NB}${ch.s[k]} = ${paquetD4(ch, k)}`;
+  // 609 h en [semaines, jours, h] : [3, 4, 9].
+  function enPaquetsD4(total, t) {
+    const r = [];
+    let v = total;
+    for (let k = t.length - 1; k >= 0; k -= 1) { r.unshift(v % t[k]); v = Math.floor(v / t[k]); }
+    r.unshift(v);
+    return r;
+  }
+  // (Une case écrit toujours un pluriel, « … semaines » : 2 au moins, sauf
+  // pour h, min, s et mois ; jamais 0, une durée sans trou.)
+  const bonsD4 = (ch, vals, depuis = 0) => vals.every((n, k) => n >= (INVARIABLES_D4.includes(ch.u[k + depuis]) ? 1 : 2));
+  // La chaîne de l'outil (les unités, les paquets ; jamais les nombres).
+  const chaineDe = (ch, total = null) => ({unites: ch.u.slice(), tailles: ch.t.slice(), total});
+  const noteChaineD4 = ch => (ch.t.length === 2 ? `Je fais des paquets de ${paquetD4(ch, 1)}, puis de ${paquetD4(ch, 0)}.`
+    : `Je fais des paquets de ${paquetD4(ch, 0)}.`);
+
+  // Les faits (Je valide, On te montre, au choix) : [clé, avant, réponse,
+  // unité, deux faux et leurs pourquoi, l'aide (jamais la réponse), le
+  // degré].
+  const FAITS_D4 = [
+    ["jour", "1 jour =", 24, "h", [[12, "12 h : une demi-journée."], [100, "100 h : plus de 4 jours."]], "De minuit à midi : 12 h.", 1],
+    ["semaine", "1 semaine =", 7, "jours", [[5, "5 jours : sans le week-end."], [10, "10 jours : plus d'une semaine."]], "Lundi, mardi… jusqu'à dimanche.", 1],
+    ["an", "1 an =", 12, "mois", [[10, "10 mois : moins d'un an."], [365, "365 : des jours, pas des mois."]], "De janvier à décembre.", 1],
+    ["siecle", "1 siècle =", 100, "ans", [[10, "10 ans : une décennie."], [1000, "1 000 ans : un millénaire."]], "Le 21e siècle : de 2001 à 2100.", 2],
+    ["millenaire", "1 millénaire =", 1000, "ans", [[100, "100 ans : un siècle."], [10000, "10 000 ans : 10 millénaires."]], "1 millénaire = 10 siècles.", 3],
+    ["bissextile", "Une année bissextile :", 366, "jours", [[365, "365 jours : une année normale."], [360, "360 jours : c'est trop peu."]], "Tous les 4 ans, février a 29 jours.", 3]
+  ];
+  const COMBIEN_D4 = {h: "d'heures", jours: "de jours", mois: "de mois", ans: "d'années"};
+  function faitD4(degre, rng, auChoix = false) {
+    const vivier = FAITS_D4.filter(f => f[6] === degre);
+    const [cle, avant, v, u, faux, aide] = choisir(rng, vivier.length ? vivier : FAITS_D4);
+    const R = `${ecD4(v)}${NB}${u}`;
+    // (L'année bissextile : toujours au choix. Sinon au choix une fois sur
+    // quatre, au pavé ou en phrase.)
+    if (cle === "bissextile" || (rng && rng() < 0.25)) auChoix = true;
+    const phrase = !auChoix && rng() < 0.4 && cle !== "millenaire";
+    const sujet = avant.replace(/ =$/, "");
+    const x = q({
+      code: "D4", degre, grandeur: "duree", forme: phrase ? "phrase" : "nombre", unite: u,
+      texte: phrase ? `Combien ${COMBIEN_D4[u]} dans ${sujet}${NB}? ${CASE}${NB}${u}` : `${avant} ${CASE}${NB}${u}`,
+      morceaux: phrase ? {phrase: `Combien ${COMBIEN_D4[u]} dans ${sujet}${NB}?`, apres: u} : {avant, apres: u},
+      reponse: String(v), reponseTexte: R, resume: `${sujet} = ${R}`,
+      outil: "lignes", outilLignes: [aide], outilPetit: true, noteOutil: "", image: [aide],
+      correction: [`${sujet} = ${R}`], lignesB33: [[avant.endsWith(":") ? `${avant} ` : `${sujet} = `, R, ""]], corrB33: null,
+      sorteD4: "fait", modeleD4: `fait-${cle}`,
+      donnees: {type: "d4", sorte: "fait", fait: cle, v, faux: faux.map(f => f[0])}, cle: `D4:f:${cle}`
+    });
+    if (!auChoix) return x;
+    const trois = melanger(rng, [v, faux[0][0], faux[1][0]]);
+    const choix = trois.map(n => `${ecD4(n)}${NB}${u}`);
+    const pourquoi = {};
+    trois.forEach((n, k) => { const f = faux.find(y => y[0] === n); if (f) pourquoi[k] = f[1]; });
+    return Object.assign(x, {forme: "qcm", texte: `${avant} ${CASE}`, morceaux: {phrase: `${avant} ${CASE}`, apres: "", sorte: "duree"},
+      choix, bon: trois.indexOf(v), pourquoi, cleBase: x.cle, cle: `${x.cle}:q`});
+  }
+
+  // Grande → petite (je multiplie). d1 : « 3 semaines = … jours » ; d2 :
+  // « 2 semaines 3 jours = … jours » ; d3 : « 2 semaines 3 jours = … h ».
+  const MULT_D4 = {1: ["sj", "jh", "am", "sa"], 2: ["sj", "jh", "am", "sa", "ma"], 3: ["sjh", "am", "sa"]};
+  const BORNES_MULT_D4 = {sj: [2, 9], jh: [2, 6], am: [2, 9], sa: [2, 9], ma: [2, 5], sjh: [1, 4]};
+  function multD4(degre, rng, {nom = null, vals = null, enonce = null, modele = null, avant: avantS = "Durée :"} = {}) {
+    nom = nom || choisir(rng, MULT_D4[degre]);
+    const ch = CHAINES_D4[nom];
+    if (!vals) {
+      const [a, b] = BORNES_MULT_D4[nom];
+      if (nom === "sjh") vals = [entre(rng, a, b), entre(rng, 1, 6)];
+      else if (degre === 1) vals = [entre(rng, a, b)];
+      else {
+        const t = ch.t[0];
+        const pas = t >= 100 ? (t === 1000 ? 100 : 5) : 1;
+        vals = [entre(rng, nom === "jh" ? 1 : a, b), entre(rng, 1, Math.floor((t - 1) / pas)) * pas];
+      }
+    }
+    // (sjh : de semaines et jours, vers les heures ; sinon vers l'unité 1.)
+    const vers = nom === "sjh" ? 2 : 1;
+    const t0 = ch.t[0];
+    const total1 = vals.length === 1 ? vals[0] * t0 : vals[0] * t0 + vals[1];
+    const total = nom === "sjh" ? total1 * ch.t[1] : total1;
+    const G = texteD4(ch, vals);
+    const R = uD4(ch, vers, total);
+    const uV = ch.u[vers];
+    let lignes;
+    let image;
+    if (nom === "sjh") {
+      lignes = [`${G} = ${uD4(ch, 1, total1)}`, [`${ecD4(total1)} × 24${NB}h = `, R, ""]];
+      image = [`1${NB}jour = 24${NB}h`, `${G} = ${CASE}${NB}jours`];
+    } else if (vals.length === 1) {
+      lignes = [[`${G} = ${vals[0]} × ${paquetD4(ch, 0)} = `, R, ""]];
+      image = [relD4(ch, 0), `${G} = ${vals[0]} × ${CASE}`];
+    } else {
+      const a = uD4(ch, 0, vals[0]);
+      const a1 = `${ecD4(vals[0] * t0)}${NB}${uV}`;
+      lignes = [vals[0] === 1 ? `${a} = ${a1}` : `${a} = ${vals[0]} × ${paquetD4(ch, 0)} = ${a1}`, [`${a1} + ${uD4(ch, 1, vals[1])} = `, R, ""]];
+      image = [relD4(ch, 0), `${a} = ${vals[0]} × ${CASE}`];
+    }
+    lignes = coupeD4(lignes);
+    const avant = enonce ? avantS : `${G} =`;
+    const texteFin = `${CASE}${NB}${uV}`;
+    const notes = {sjh: "D'abord tout en jours, puis en h.", jh: `Un jour : un paquet de 24${NB}h.`};
+    return q({
+      code: "D4", degre, grandeur: "duree", forme: "nombre", unite: uV,
+      texte: enonce ? `${enonce} ${avant} ${texteFin}` : `${avant} ${texteFin}`,
+      morceaux: enonce ? {enonce, avant, apres: uV} : {avant, apres: uV},
+      reponse: String(total), reponseTexte: R, resume: `${G} = ${R}`, relation: relD4(ch, 0),
+      outil: "chaine-d4", chaineD4: chaineDe(ch), noteOutil: notes[nom] || `${ch.art[0]} ${ch.s[0]} : un paquet de ${paquetD4(ch, 0)}.`,
+      image, correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: null,
+      sorteD4: enonce ? "situation" : "mult", modeleD4: modele || `mult-${nom}`,
+      donnees: {type: "d4", sorte: "mult", chaine: nom, vals, total, total1},
+      cle: `D4:m:${nom}:${vals.join("-")}${enonce ? `:${modele}` : ""}`
+    });
+  }
+
+  // (Lot B4-2c : une ligne de correction de plus de 36 signes se coupe
+  // avant son dernier « = » : « 20 siècles = 2 × 10 siècles » puis
+  // « = 2 millénaires ». Sur une ligne, la page la rapetissait à 12,8 px.)
+  // (Lot B4-2c : « Le chat d'Inès », pas « de Inès ».)
+  const elideD4 = t => t.replace(/\bde ([AEIOUYÉÈÊÂÎÔ])/g, "d'$1");
+  function coupeD4(lignes) {
+    const out = [];
+    lignes.forEach(l => {
+      const t = Array.isArray(l) ? l.join("") : l;
+      const avant = Array.isArray(l) ? l[0] : l;
+      const parts = avant.split(" = ");
+      if (t.length <= 36 || parts.length < (Array.isArray(l) ? 3 : 3)) { out.push(l); return; }
+      if (Array.isArray(l)) {
+        out.push(parts.slice(0, -2).concat(parts[parts.length - 2]).join(" = "));
+        out.push(["= ", l[1], l[2]]);
+      } else {
+        out.push(parts.slice(0, -1).join(" = "));
+        out.push(`= ${parts[parts.length - 1]}`);
+      }
+    });
+    return out;
+  }
+
+  // Petite → grande (je fais des paquets). d1 : « 21 jours = … semaines » ;
+  // d2 : « 25 jours = … semaines … jours » ; d3 : « 609 h = … semaines …
+  // jours … h », « 34 990 s = … h … min … s » (S004 p. 11).
+  const PAQUETS_D4 = {1: ["sj", "jh", "am", "sa", "ms"], 2: ["sj", "jh", "am", "sa"], 3: ["sjh", "hms", "sa", "am"]};
+  function tirerTotalD4(nom, degre, rng) {
+    const ch = CHAINES_D4[nom];
+    if (degre === 1) {
+      const n = entre(rng, 2, {sj: 9, jh: 6, am: 9, sa: 9, ms: 5}[nom]);
+      return n * ch.t[0];
+    }
+    if (nom === "sjh") return ((entre(rng, 2, 4) * 7) + entre(rng, 2, 6)) * 24 + entre(rng, 1, 23);
+    if (nom === "hms") return entre(rng, 2, 9) * 3600 + entre(rng, 1, 59) * 60 + entre(rng, 1, 59);
+    if (nom === "sj") return entre(rng, 2, degre === 3 ? 12 : 8) * 7 + entre(rng, 2, 6);
+    if (nom === "jh") return entre(rng, 2, 6) * 24 + entre(rng, 1, 23);
+    if (nom === "am") return entre(rng, 2, degre === 3 ? 15 : 9) * 12 + entre(rng, 1, 11);
+    // (Les siècles : des années de 5 en 5, au degré 3 plus de mille ans.)
+    return entre(rng, 2, degre === 3 ? 15 : 9) * 100 + entre(rng, 1, 19) * 5;
+  }
+  function paquetsD4(degre, rng, {nom = null, total = null, enonce = null, modele = null, avant: avantS = "Durée :"} = {}) {
+    nom = nom || choisir(rng, PAQUETS_D4[degre]);
+    const ch = CHAINES_D4[nom];
+    if (total === null) total = tirerTotalD4(nom, degre, rng);
+    const vals = enPaquetsD4(total, ch.t);
+    const n = ch.u.length;
+    const exact = n === 2 && vals[1] === 0;
+    if (!exact && !bonsD4(ch, vals)) return null;
+    if (exact && vals[0] < 2) return null;
+    const last = n - 1;
+    const G = `${ecD4(total)}${NB}${ch.u[last]}`;
+    const R = exact ? uD4(ch, 0, vals[0]) : texteD4(ch, vals);
+    let lignes;
+    let image;
+    if (exact) {
+      lignes = [[`${G} = ${vals[0]} × ${paquetD4(ch, 0)} = `, R, ""]];
+      image = [relD4(ch, 0), `${G} = ${CASE} × ${paquetD4(ch, 0)}`];
+    } else if (n === 2) {
+      lignes = [`${G} = ${vals[0]} × ${paquetD4(ch, 0)} + ${uD4(ch, 1, vals[1])}`, ["= ", R, ""]];
+      image = [relD4(ch, 0), `${G} = ${CASE} × ${paquetD4(ch, 0)} + ${CASE}${NB}${ch.u[1]}`];
+    } else {
+      // (Deux divisions, comme S004 p. 6 : « 609 h = 25 × 24 h + 9 h », puis
+      // « 25 jours = 3 × 7 jours + 4 jours ».)
+      const mid = Math.floor(total / ch.t[1]);
+      lignes = [`${G} = ${ecD4(mid)} × ${paquetD4(ch, 1)} + ${uD4(ch, 2, vals[2])}`,
+        `${uD4(ch, 1, mid)} = ${vals[0]} × ${paquetD4(ch, 0)} + ${uD4(ch, 1, vals[1])}`, ["= ", R, ""]];
+      image = [relD4(ch, 1), `${G} = ${CASE} × ${paquetD4(ch, 1)} + ${CASE}${NB}${ch.u[2]}`];
+    }
+    lignes = coupeD4(lignes);
+    const cases = exact ? null : ch.u.slice();
+    const avant = enonce ? avantS : `${G} =`;
+    const texteCases = cases ? cases.map(u => `${CASE}${NB}${u}`).join(" ") : `${CASE}${NB}${ch.u[0]}`;
+    const x = q({
+      code: "D4", degre, grandeur: "duree", forme: cases ? "deux-cases" : "nombre", unite: ch.u[last],
+      texte: enonce ? `${enonce} ${avant} ${texteCases}` : `${avant} ${texteCases}`,
+      morceaux: enonce ? (cases ? {enonce, avant, cases} : {enonce, avant, apres: ch.u[0]}) : (cases ? {avant, cases} : {avant, apres: ch.u[0]}),
+      reponse: cases ? vals.map(String) : String(vals[0]), reponseTexte: R, resume: `${G} = ${R}`, relation: relD4(ch, last - 1),
+      outil: "chaine-d4", chaineD4: chaineDe(ch), noteOutil: noteChaineD4(ch), image,
+      correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: null,
+      sorteD4: enonce ? "situation" : "paquets", modeleD4: modele || `paquets-${nom}`,
+      donnees: {type: "d4", sorte: "paquets", chaine: nom, total, vals, exact},
+      cle: `D4:p:${nom}:${total}${enonce ? `:${modele}` : ""}`
+    });
+    return x;
+  }
+
+  // « Le plus long : 76 mois ou 5 ans ? » (S004 p. 11) : A · B · « Même
+  // durée » (comme D6).
+  const COMPARER_D4 = {2: ["am", "sj", "jh"], 3: ["am", "jh", "sa"]};
+  function comparerD4(degre, rng) {
+    const nom = choisir(rng, COMPARER_D4[Math.max(2, degre)]);
+    const ch = CHAINES_D4[nom];
+    const t = ch.t[0];
+    const g = entre(rng, nom === "sa" ? 2 : 3, nom === "jh" ? 6 : 8);
+    // (Une fois sur cinq, la même durée ; sinon un écart de quelques unités,
+    // de part et d'autre.)
+    let p;
+    if (rng() < 0.2) p = g * t;
+    else {
+      const ecart = nom === "sa" ? entre(rng, 2, 9) * 10 : entre(rng, 1, nom === "sj" ? 5 : nom === "jh" ? 10 : 8);
+      p = g * t + (rng() < 0.5 ? ecart : -ecart);
+    }
+    if (p <= t) return null;
+    const vals = enPaquetsD4(p, ch.t);
+    if (vals[1] && !bonsD4(ch, vals)) return null;
+    if (!vals[1] && vals[0] < 2) return null;
+    const A = `${ecD4(p)}${NB}${ch.u[1]}`;
+    const B = uD4(ch, 0, g);
+    const conv = vals[1] ? texteD4(ch, vals) : uD4(ch, 0, vals[0]);
+    const aGauche = rng() < 0.5;
+    const MEME = "Même durée";
+    const choix = aGauche ? [A, B, MEME] : [B, A, MEME];
+    const gagnant = p === g * t ? MEME : p > g * t ? A : B;
+    const bon = choix.indexOf(gagnant);
+    const pourquoi = {};
+    // (Lot B4-2c, leçon B4-1c : le pourquoi dit ce que fait le choix, il ne
+    // redit pas la ligne de la correction.)
+    const ecartD4 = uD4(ch, 1, Math.abs(p - g * t));
+    choix.forEach((c, k) => {
+      if (k === bon) return;
+      pourquoi[k] = gagnant === MEME ? `Les deux font ${conv}.`
+        : c === MEME ? `Pas la même : ${ecartD4} d'écart.` : `${c} : ${ecartD4} de moins.`;
+    });
+    const phrase = `Le plus long : ${choix[0]} ou ${choix[1]}${NB}?`;
+    const lignes = [`${A} = ${conv}`, gagnant === MEME ? ["", MEME, ""] : ["Le plus long : ", gagnant, ""]];
+    return q({
+      code: "D4", degre, grandeur: "duree", forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "comparer"},
+      choix, bon, pourquoi, reponse: gagnant, reponseTexte: gagnant, unite: null,
+      resume: gagnant === MEME ? `${A} = ${B}` : `Le plus long : ${gagnant}`, relation: relD4(ch, 0),
+      outil: "chaine-d4", chaineD4: chaineDe(ch), noteOutil: "Je compare dans la même unité.",
+      image: [relD4(ch, 0), `${A} = ${CASE}`], correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: null,
+      sorteD4: "comparer", modeleD4: `comparer-${nom}`,
+      donnees: {type: "d4", sorte: "comparer", chaine: nom, petite: p, grande: g}, cle: `D4:c:${nom}:${p}:${g}`
+    });
+  }
+
+  // Au choix, le piège de la base 10 : « 25 jours = 2 semaines 5 jours »,
+  // « 76 mois = 7 ans 6 mois ».
+  function choixD4(degre, rng) {
+    const nom = choisir(rng, ["sj", "am"]);
+    const ch = CHAINES_D4[nom];
+    const t = ch.t[0];
+    const total = nom === "sj" ? entre(rng, 2, 8) * 7 + entre(rng, 2, 6) : entre(rng, 2, 9) * 12 + entre(rng, 1, 11);
+    const vals = enPaquetsD4(total, ch.t);
+    const dix = [Math.floor(total / 10), total % 10];
+    if (!bonsD4(ch, vals) || !bonsD4(ch, dix) || dix[1] >= t || (dix[0] === vals[0] && dix[1] === vals[1])) return null;
+    // (Le troisième : un paquet de trop dans le reste, « 3 semaines 5 jours ».)
+    const autre = [vals[0], vals[1] + 1];
+    if (autre[1] >= t || !bonsD4(ch, autre)) return null;
+    const bonne = texteD4(ch, vals);
+    const piege = texteD4(ch, dix);
+    const faux2 = texteD4(ch, autre);
+    const G = `${ecD4(total)}${NB}${ch.u[1]}`;
+    const choix = melanger(rng, [bonne, piege, faux2]);
+    const pourquoi = {};
+    choix.forEach((c, k) => {
+      if (c === piege) pourquoi[k] = `${relD4(ch, 0)}, pas 10.`;
+      else if (c === faux2) pourquoi[k] = `${faux2} : ${ecD4(total + 1)}${NB}${ch.u[1]}.`;
+    });
+    const phrase = `${G} = ${CASE}`;
+    const lignes = [`${G} = ${vals[0]} × ${paquetD4(ch, 0)} + ${uD4(ch, 1, vals[1])}`, ["= ", bonne, ""]];
+    return q({
+      code: "D4", degre, grandeur: "duree", forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "mots"},
+      choix, bon: choix.indexOf(bonne), pourquoi, reponse: bonne, reponseTexte: bonne, unite: null,
+      resume: `${G} = ${bonne}`, relation: relD4(ch, 0), outil: "chaine-d4", chaineD4: chaineDe(ch), noteOutil: noteChaineD4(ch),
+      image: [relD4(ch, 0), `${G} = ${CASE} × ${paquetD4(ch, 0)} + ${CASE}${NB}${ch.u[1]}`],
+      correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: null,
+      sorteD4: "choix", modeleD4: `choix-${nom}`,
+      donnees: {type: "d4", sorte: "choix", chaine: nom, total, vals}, cle: `D4:p:${nom}:${total}:q`, cleBase: `D4:p:${nom}:${total}`
+    });
+  }
+
+  // Des situations, de La Réunion et de tous les jours : [modèle, phrase
+  // ({X} la durée, {P} un prénom), chaîne, sens (m : vers l'unité plus
+  // petite, p : des paquets), [min, max, pas] (dans l'unité de la phrase),
+  // degré, la case].
+  const SITUATIONS_D4 = [
+    ["vacances", "Les grandes vacances durent {X}.", "sj", "m", [6, 9, 1], 2, "Durée :"],
+    ["conge", "Un congé dure {X}.", "sj", "m", [3, 5, 1], 2, "Durée :"],
+    ["abonnement", "Un abonnement de bus dure {X}.", "am", "m", [2, 3, 1], 2, "Durée :"],
+    ["cilaos", "Un séjour à Cilaos dure {X}.", "sj", "p", [16, 27, 1], 2, "Durée :"],
+    ["colonie", "La colonie de vacances dure {X}.", "sj", "p", [16, 27, 1], 2, "Durée :"],
+    ["chat", "Le chat de {P} a {X}.", "am", "p", [26, 70, 1], 2, "Âge :"],
+    ["bebe", "Un bébé a {X}.", "am", "p", [26, 35, 1], 2, "Âge :"],
+    ["eruption", "L'éruption du Piton de la Fournaise dure {X}.", "sj", "p", [16, 45, 1], 3, "Durée :"],
+    ["raid", "Au Grand Raid, {P} court pendant {X}.", "jh", "p", [40, 62, 1], 3, "Durée :"],
+    ["cyclone", "Au passage du cyclone, la pluie tombe {X}.", "jh", "p", [50, 70, 1], 3, "Durée :"],
+    ["tamarinier", "Ce tamarinier a {X}.", "sa", "p", [210, 390, 10], 3, "Âge :"],
+    ["case", "Cette case créole a {X}.", "sa", "p", [205, 260, 5], 3, "Âge :"]
+  ];
+  function situationD4(degre, rng) {
+    const vivier = SITUATIONS_D4.filter(s => s[5] === Math.max(2, degre));
+    const [modele, texte, nom, sens, [a, b, pas], , avant] = choisir(rng, vivier);
+    const ch = CHAINES_D4[nom];
+    const n = entre(rng, a, b, pas);
+    const P = choisir(rng, PRENOMS);
+    if (sens === "m") {
+      const enonce = elideD4(remplirQ2(texte, {P, X: uD4(ch, 0, n)}));
+      return multD4(1, rng, {nom, vals: [n], enonce, modele, avant});
+    }
+    if (n % ch.t[0] === 0) return null;
+    const enonce = elideD4(remplirQ2(texte, {P, X: `${ecD4(n)}${NB}${ch.u[1]}`}));
+    return paquetsD4(2, rng, {nom, total: n, enonce, modele, avant});
+  }
+
+  // Les erreurs de D4 au pavé (une ligne au petit téléphone, 31 signes au
+  // plus) : la base 10 ou 100 (« 25 jours = 2 semaines 5 jours »), l'autre
+  // sens, le reste oublié, un seul paquet fait.
+  function erreursD4(question, lu, lus) {
+    const d = question.donnees;
+    if (!d || d.type !== "d4") return null;
+    const v = lus ? lus.map(x => Number(x / MILLE)) : [Number(lu / MILLE)];
+    const egal = (...w) => v.length === w.length && v.every((x, k) => x === w[k]);
+    if (d.sorte === "fait") {
+      const k = d.faux.indexOf(v[0]);
+      const f = FAITS_D4.find(y => y[0] === d.fait);
+      return k >= 0 ? {erreur: 1, retour: f[4][k][1]} : null;
+    }
+    const ch = CHAINES_D4[d.chaine];
+    if (d.sorte === "mult") {
+      const t = ch.t[0];
+      const [a, b] = d.vals;
+      if (d.chaine === "sjh") {
+        if (egal(d.total1)) return {erreur: 2, retour: "Ça, ce sont des jours."};
+        if (egal(a * 7 * 24 + b)) return {erreur: 3, retour: `Et ${uD4(ch, 1, b)} en heures.`};
+        return null;
+      }
+      if (d.vals.length === 2 && egal(a * t)) return {erreur: 3, retour: `Et ${uD4(ch, 1, b)} en plus.`};
+      const faux = [10, 100].filter(f => f !== t).map(f => a * f + (b || 0));
+      if (d.vals.length === 2) faux.push(a * 10 + b, a * 100 + b);
+      if (faux.some(f => egal(f))) return {erreur: 1, retour: `${relD4(ch, 0)}.`};
+      if (egal(Math.floor(d.total1 / t)) || egal(a)) return {erreur: 4, retour: "Vers l'unité plus petite : ×."};
+      return null;
+    }
+    if (d.sorte === "paquets") {
+      const t = ch.t;
+      if (v.length === 1) {
+        if (egal(d.total * t[0])) return {erreur: 4, retour: "Je fais des paquets : je divise."};
+        if ([10, 100].filter(f => f !== t[0]).some(f => d.total % f === 0 && egal(d.total / f))) return {erreur: 1, retour: `${relD4(ch, 0)}.`};
+        return null;
+      }
+      if (v.length === 2) {
+        for (const f of [10, 100, 60, 24]) {
+          if (f === t[0]) continue;
+          const w = enPaquetsD4(d.total, [f]);
+          if (w[1] < t[0] && egal(...w)) return {erreur: 1, retour: `${relD4(ch, 0)}.`};
+        }
+        return null;
+      }
+      // (Trois cases : un seul paquet fait, ou une base fausse.)
+      if (v[0] === 0 && v[1] >= t[0]) return {erreur: 5, retour: `Encore des paquets de ${paquetD4(ch, 0)}.`};
+      for (const f of [10, 100, 60, 24]) {
+        if (f !== t[1] && egal(...enPaquetsD4(d.total, [t[0], f]))) return {erreur: 1, retour: `${relD4(ch, 1)}.`};
+        if (f !== t[0] && egal(...enPaquetsD4(d.total, [f, t[1]]))) return {erreur: 1, retour: `${relD4(ch, 0)}.`};
+      }
+      return null;
+    }
+    return null;
+  }
+
+  // Les places. Je valide : un fait, multiplier, des paquets ; le piège, une
+  // situation, comparer ; un fait du siècle ou du millénaire, 609 h,
+  // 34 990 s.
+  const PLACES_D4 = {
+    valide: ["fait", "mult", "paquets", "paquets", "choix", "situation", "comparer", "fait", "paquets", "situation|comparer"],
+    entraine: ["mult", "paquets", "mult", "paquets", "mult", "paquets",
+      "paquets", "mult", "situation", "paquets", "choix", "comparer", "mult", "paquets", "situation",
+      "paquets", "comparer", "situation", "choix", "paquets", "mult", "situation", "paquets", "comparer", "mult"],
+    test: ["paquets", "paquets", "comparer|choix", "situation"],
+    aide: ["mult", "paquets", "paquets"],
+    retour: ["paquets|mult", "comparer|situation"],
+    echauffement: ["paquets|mult"]
+  };
+  function tirerD4(rng, degre, sorte) {
+    for (let essai = 0; essai < 60; essai += 1) {
+      let x = null;
+      if (sorte === "fait") x = faitD4(degre, rng);
+      else if (sorte === "mult") x = multD4(degre, rng);
+      else if (sorte === "paquets") x = paquetsD4(degre, rng);
+      else if (sorte === "situation") x = situationD4(degre, rng);
+      else if (sorte === "comparer") x = comparerD4(degre, rng);
+      else if (sorte === "choix") x = choixD4(degre, rng);
+      if (x) return x;
+    }
+    return null;
+  }
+  ETAPES.D4 = {
+    // On te montre : 25 jours (le calendrier), 609 h, 76 mois.
+    clesExemples: ["D4:p:sj:25", "D4:p:sjh:609", "D4:p:am:76"],
+    formes(usage, rng) {
+      const p = PLACES_D4[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, {1: ["mult", "paquets"], 2: ["mult", "paquets", "situation", "comparer", "choix"],
+        3: ["paquets", "mult", "situation", "comparer"]}[degre]);
+      return tirerD4(rng, degre, sorte);
+    },
+    // (Dans Je valide : un même contexte une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleD4 === question.modeleD4);
+    },
+    erreurs(question, lu, lus) { return erreursD4(question, lu, lus); }
+  };
+
+  // ------------------------------------ D5 · Les heures décimales usuelles
+  // S004 p. 10-11 : ½ h = 0,5 h = 30 min ; ¼ h = 0,25 h = 15 min ; ¾ h =
+  // 0,75 h = 45 min ; 1⁄10 h = 0,1 h = 6 min ; dans les deux sens ;
+  // « 1 h 30 min, est-ce 1,3 h ? » (la version de 6e du piège de D6) ;
+  // 2 h 15 min = 2,25 h. Rien d'autre (0,2 h, 1,35 h : D6, palier 6). Une
+  // durée est un entier de centièmes d'heure, comme D6 (175 → 1,75 h).
+  const FRAC_D5 = {25: "¼", 50: "½", 75: "¾", 10: "1⁄10"};
+  const QUARTS_D5 = [25, 50, 75];
+  const decD5 = x => decH(x);
+  // La droite de l'outil et de la correction : les quarts (B4-2a), ou les
+  // dixièmes de D6 pour 0,1 h. `sansFraction` : la fraction de la
+  // graduation cherchée cachée (quand elle serait la réponse).
+  // (Pour 0,1 h, la droite de D6 avec ses nombres plus grands, `grand` : on
+  // n'y écrit que 0, 0,1, 0,5 et 1.)
+  const droiteD5 = (c, sens, sansFraction = false) => Object.assign({c, sens, haut: "h", bas: "min"}, c === 10 ? {grand: true} : {quarts: true},
+    sansFraction ? {sansFraction: true} : {});
+  // « ¼ h = 60 min ÷ 4 », « ¾ h = 3 × 15 min ».
+  const calculFracD5 = c => ({25: `60${NB}min ÷ 4`, 50: `60${NB}min ÷ 2`, 75: `3 × 15${NB}min`, 10: `60${NB}min ÷ 10`}[c]);
+  const tirerCD5 = (rng, avecDixieme) => choisir(rng, avecDixieme ? [25, 50, 75, 10] : QUARTS_D5);
+
+  // La question finie. spec : {sorte, degre, x (centièmes d'heure), …}.
+  function finirD5(spec) {
+    const {sorte, degre, x} = spec;
+    const h = Math.floor(x / 100);
+    const c = x % 100;
+    const m = minDe(c);
+    const total = minDe(x);
+    const base = {code: "D5", degre, grandeur: "duree", outil: "droite-h", relation: `1${NB}h = 60${NB}min`, sorteD5: sorte, modeleD5: spec.modele || sorte, corrB33: null};
+    let gauche;
+    let cases = null;
+    let apres;
+    let reponse;
+    let R;
+    let lignes;
+    let image;
+    let note;
+    let sens = "h>min";
+    let sansFraction = false;
+    if (sorte === "dec") {
+      gauche = decD5(x); apres = "min"; reponse = String(m); R = `${m}${NB}min`;
+      lignes = [[`${gauche} = ${FRAC_D5[c]}${NB}h = `, R, ""]];
+      image = [`1${NB}h = 60${NB}min`, `${gauche} = ${FRAC_D5[c]}${NB}h`];
+      note = `Je cherche ${gauche} sur la droite.`;
+    } else if (sorte === "frac") {
+      gauche = `${FRAC_D5[c]}${NB}h`; apres = "min"; reponse = String(m); R = `${m}${NB}min`;
+      lignes = [[`${gauche} = ${calculFracD5(c)} = `, R, ""]];
+      image = [`1${NB}h = 60${NB}min`, `${gauche} = ${calculFracD5(c)}`];
+      note = `Je cherche ${gauche} sur la droite.`;
+    } else if (sorte === "inv") {
+      gauche = `${m}${NB}min`; apres = "h"; reponse = brut(BigInt(x) * 10n); R = decD5(x); sens = "min>h"; sansFraction = true;
+      lignes = [[`${gauche} = ${FRAC_D5[c]}${NB}h = `, R, ""]];
+      image = [`1${NB}h = 60${NB}min`, `${gauche} = ${CASE} × 60${NB}min`];
+      note = `Je cherche ${gauche} sur la droite.`;
+    } else if (sorte === "hmin") {
+      gauche = decD5(x); cases = ["h", "min"]; reponse = [String(h), String(m)]; R = hm(h, m);
+      lignes = [[`${gauche} = ${h}${NB}h + ${decD5(c)} = `, R, ""]];
+      image = [`${gauche} = ${h}${NB}h + ${decD5(c)}`, `1${NB}h = 60${NB}min`];
+      note = "Je lis la partie décimale sur la droite.";
+    } else if (sorte === "invhm") {
+      gauche = hm(h, m); apres = "h"; reponse = brut(BigInt(x) * 10n); R = decD5(x); sens = "min>h"; sansFraction = true;
+      lignes = [[`${gauche} = ${h}${NB}h + ${FRAC_D5[c]}${NB}h = `, R, ""]];
+      image = [`${gauche} = ${h}${NB}h + ${m}${NB}min`, `1${NB}h = 60${NB}min`];
+      note = `${h}${NB}h, puis ${m}${NB}min sur la droite.`;
+    } else if (sorte === "total") {
+      gauche = decD5(x); apres = "min"; reponse = String(total); R = `${total}${NB}min`;
+      lignes = [[`${gauche} = ${h * 60}${NB}min + ${m}${NB}min = `, R, ""]];
+      image = [`${gauche} = ${h}${NB}h + ${decD5(c)}`, `1${NB}h = 60${NB}min`];
+      note = `${h}${NB}h = ${h * 60}${NB}min, puis la droite.`;
+    } else if (sorte === "invtot") {
+      gauche = `${total}${NB}min`; apres = "h"; reponse = brut(BigInt(x) * 10n); R = decD5(x); sens = "min>h"; sansFraction = true;
+      lignes = [`${gauche} = ${h * 60}${NB}min + ${m}${NB}min`, [`= ${h}${NB}h + ${FRAC_D5[c]}${NB}h = `, R, ""]];
+      image = [`1${NB}h = 60${NB}min`, `${gauche} = ${CASE}${NB}min + ${CASE}${NB}min`];
+      note = "D'abord des paquets de 60 min.";
+    } else return null;
+    const avant = spec.enonce ? spec.avant : `${gauche} =`;
+    const texteCases = cases ? `${CASE}${NB}h ${CASE}${NB}min` : `${CASE}${NB}${apres}`;
+    const phrase = spec.phrase;
+    let texte;
+    let morceaux;
+    if (spec.enonce) {
+      texte = `${spec.enonce} ${avant} ${texteCases}`;
+      morceaux = cases ? {enonce: spec.enonce, avant, cases} : {enonce: spec.enonce, avant, apres};
+    } else if (phrase) {
+      texte = `${phrase} ${texteCases}`;
+      morceaux = {phrase, apres};
+    } else {
+      texte = `${avant} ${texteCases}`;
+      morceaux = cases ? {avant, cases} : {avant, apres};
+    }
+    return q(Object.assign(base, {
+      forme: cases ? "deux-cases" : phrase ? "phrase" : "nombre", texte, morceaux, reponse, reponseTexte: R, unite: cases ? "min" : apres,
+      resume: `${gauche} = ${R}`, droiteH: droiteD5(c, sens, sansFraction), noteOutil: note, image,
+      correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes,
+      corrB33: Object.assign({type: "droite-h"}, droiteD5(c, sens)),
+      donnees: {type: "d5", sorte, x},
+      cle: `D5:${sorte}:${x}${spec.modele ? `:${spec.modele}` : ""}`
+    }));
+  }
+
+  // « 1 h 30 min, est-ce 1,3 h ? » : Oui · Non (la moitié des phrases sont
+  // justes). [la durée écrite, ce qu'on propose, juste ?, x].
+  function piegeD5(degre, rng) {
+    const juste = rng() < 0.5;
+    const sorte = rng() < 0.55 ? "hm" : "dec";
+    let A;
+    let B;
+    let x;
+    let vrai;
+    let faux;
+    if (sorte === "hm") {
+      const h = entre(rng, 1, 3);
+      const c = choisir(rng, QUARTS_D5);
+      x = h * 100 + c;
+      const m = minDe(c);
+      A = hm(h, m);
+      vrai = decD5(x);
+      // (Le faux : les minutes écrites après la virgule, « 1,3 h », « 1,15 h ».)
+      const lu = m % 10 === 0 ? `${h},${m / 10}` : `${h},${m}`;
+      B = juste ? vrai : `${lu}${NB}h`;
+      faux = `0,${m % 10 === 0 ? m / 10 : m}${NB}h, ce n'est pas ${m}${NB}min.`;
+    } else {
+      const c = choisir(rng, [10, 25, 50, 75]);
+      x = c;
+      A = decD5(c);
+      vrai = `${minDe(c)}${NB}min`;
+      const lu = c === 10 ? 10 : c === 50 ? 50 : c;
+      B = juste ? vrai : `${lu}${NB}min`;
+      faux = `${A}, ce n'est pas ${lu}${NB}min.`;
+    }
+    const choix = ["Oui", "Non"];
+    const bon = juste ? 0 : 1;
+    // (Juste : la partie décimale, « 45 min = 0,75 h » — 31 signes au plus.)
+    const c0 = x % 100;
+    const pourquoi = juste ? {1: sorte === "hm" ? `C'est juste : ${minDe(c0)}${NB}min = ${decD5(c0)}.` : `C'est juste : ${A} = ${vrai}.`} : {0: faux};
+    const phrase = `${A}, est-ce ${B}${NB}?`;
+    const c = x % 100;
+    const lignes = [[`${A} = `, vrai, ""]];
+    return q({
+      code: "D5", degre, grandeur: "duree", forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "mots"},
+      choix, bon, pourquoi, reponse: choix[bon], reponseTexte: choix[bon], unite: null, resume: `${A} = ${vrai}`,
+      outil: "droite-h", relation: `1${NB}h = 60${NB}min`, droiteH: droiteD5(c, "h>min"), noteOutil: "Une heure, c'est 60 min.",
+      image: [`1${NB}h = 60${NB}min`], correction: lignes.map(l => l.join("")), lignesB33: lignes,
+      corrB33: Object.assign({type: "droite-h"}, droiteD5(c, "h>min")), sorteD5: "piege", modeleD5: "piege",
+      donnees: {type: "d5", sorte: "piege", x, juste}, cle: `D5:piege:${sorte}:${x}:${juste ? "o" : "n"}`
+    });
+  }
+  // « 0,75 h = ? » : ¾ h · 75 min · ¼ h (la fraction écrite à côté du
+  // décimal).
+  function fractionD5(degre, rng) {
+    const c = choisir(rng, [25, 50, 75, 10]);
+    const dec = decD5(c);
+    const bonne = `${FRAC_D5[c]}${NB}h`;
+    const autreF = c === 25 ? "½" : "¼";
+    const fauxM = `${c}${NB}min`;
+    const fauxF = `${autreF}${NB}h`;
+    const choix = melanger(rng, [bonne, fauxM, fauxF]);
+    const pourquoi = {};
+    choix.forEach((t, k) => {
+      if (t === fauxM) pourquoi[k] = `${dec} = ${minDe(c)}${NB}min, pas ${c}.`;
+      else if (t === fauxF) pourquoi[k] = `${fauxF} = ${decD5(autreF === "½" ? 50 : 25)}.`;
+    });
+    const phrase = `${dec} = ${CASE}`;
+    const lignes = [[`${dec} = `, bonne, ` = ${minDe(c)}${NB}min`]];
+    return q({
+      code: "D5", degre, grandeur: "duree", forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "duree"},
+      choix, bon: choix.indexOf(bonne), pourquoi, reponse: bonne, reponseTexte: bonne, unite: "h", resume: `${dec} = ${bonne}`,
+      outil: "droite-h", relation: `1${NB}h = 60${NB}min`, droiteH: droiteD5(c, "h>min", true), noteOutil: `Je cherche ${dec} sur la droite.`,
+      image: [`1${NB}h = 60${NB}min`, `${dec} = ${CASE}${NB}min`], correction: lignes.map(l => l.join("")), lignesB33: lignes,
+      corrB33: Object.assign({type: "droite-h"}, droiteD5(c, "h>min")), sorteD5: "fraction", modeleD5: "fraction",
+      donnees: {type: "d5", sorte: "fraction", x: c}, cle: `D5:fraction:${c}`
+    });
+  }
+  // « Le plus long : 1,25 h ou 1 h 20 min ? » — souvent un piège (lire
+  // 0,25 h comme 25 min fait choisir 1,25 h) ; une fois sur cinq, la même
+  // durée.
+  function comparerD5(degre, rng) {
+    const h = entre(rng, 1, 3);
+    const c = choisir(rng, QUARTS_D5);
+    const x = h * 100 + c;
+    const md = minDe(c);
+    let m2;
+    const r = rng();
+    if (r < 0.2) m2 = md;
+    else if (r < 0.75) m2 = choisir(rng, {25: [20], 50: [35, 40, 45], 75: [50, 55]}[c]);
+    else { do { m2 = entre(rng, 1, 11) * 5; } while (Math.abs(m2 - md) < 5 || m2 === c); }
+    const A = decD5(x);
+    const B = hm(h, m2);
+    const MEME = "Même durée";
+    const aGauche = rng() < 0.5;
+    const choix = aGauche ? [A, B, MEME] : [B, A, MEME];
+    const gagnant = md === m2 ? MEME : md > m2 ? A : B;
+    const bon = choix.indexOf(gagnant);
+    const pourquoi = {};
+    // (Lot B4-2c : le pourquoi dit ce que fait le choix.)
+    const ecartD5 = `${Math.abs(md - m2)}${NB}min`;
+    choix.forEach((t, k) => {
+      if (k === bon) return;
+      pourquoi[k] = gagnant === MEME ? `Les deux font ${hm(h, md)}.`
+        : t === MEME ? `Pas la même : ${ecartD5} d'écart.` : `${t} : ${ecartD5} de moins.`;
+    });
+    const phrase = `Le plus long : ${choix[0]} ou ${choix[1]}${NB}?`;
+    const lignes = [`${A} = ${hm(h, md)}`, gagnant === MEME ? ["", MEME, ""] : ["Le plus long : ", gagnant, ""]];
+    return q({
+      code: "D5", degre, grandeur: "duree", forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "comparer"},
+      choix, bon, pourquoi, reponse: gagnant, reponseTexte: gagnant, unite: null,
+      resume: gagnant === MEME ? `${A} = ${B}` : `Le plus long : ${gagnant}`,
+      outil: "droite-h", relation: `1${NB}h = 60${NB}min`, droiteH: droiteD5(c, "h>min"), noteOutil: "Je compare dans la même unité.",
+      image: [`${A} = ${h}${NB}h + ${decD5(c)}`], correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes,
+      corrB33: Object.assign({type: "droite-h"}, droiteD5(c, "h>min")), sorteD5: "comparer", modeleD5: "comparer",
+      donnees: {type: "d5", sorte: "comparer", x, m: h * 60 + m2}, cle: `D5:cmp:${x}:${m2}`
+    });
+  }
+  // Des situations : [modèle, phrase ({P}, {D} la durée), sorte, heures min,
+  // max, la case].
+  const SITUATIONS_D5 = [
+    ["film", "Le film dure {D}.", "hmin", 1, 2, "Durée :"],
+    ["car", "Le trajet en Car Jaune dure {D}.", "hmin", 1, 2, "Durée :"],
+    ["maido", "La randonnée au Maïdo dure {D}.", "hmin", 2, 4, "Durée :"],
+    ["cari", "Le cari cuit {D}.", "frac", 0, 0, "Durée :"],
+    ["sieste", "{P} fait une sieste de {D}.", "frac", 0, 0, "Durée :"],
+    ["piscine", "La séance de piscine dure {D}.", "invhm", 1, 1, "Durée :"],
+    ["match", "Le match de basket dure {D}.", "invhm", 1, 2, "Durée :"]
+  ];
+  function situationD5(degre, rng) {
+    const [modele, texte, sorte, a, b, avant] = choisir(rng, SITUATIONS_D5);
+    const c = choisir(rng, QUARTS_D5);
+    const h = entre(rng, a, b);
+    const x = h * 100 + c;
+    const D = sorte === "hmin" ? decD5(x) : sorte === "frac" ? `${FRAC_D5[c]}${NB}h` : hm(h, minDe(c));
+    const enonce = remplirQ2(texte, {P: choisir(rng, PRENOMS), D});
+    return finirD5({sorte, degre, x, enonce, avant, modele});
+  }
+
+  function tirerD5Brut(rng, degre, sorte) {
+    if (sorte === "dec" || sorte === "frac" || sorte === "inv") {
+      const x = tirerCD5(rng, true);
+      // (Au pavé ou en phrase : « Combien de minutes dans 0,75 h ? ».)
+      const phrase = sorte === "dec" && rng() < 0.35 ? `Combien de minutes dans ${decD5(x)}${NB}?` : null;
+      return finirD5({sorte, degre, x, phrase});
+    }
+    if (sorte === "hmin" || sorte === "invhm") return finirD5({sorte, degre, x: entre(rng, 1, 4) * 100 + tirerCD5(rng, false)});
+    if (sorte === "total" || sorte === "invtot") return finirD5({sorte, degre, x: entre(rng, 1, 3) * 100 + tirerCD5(rng, false)});
+    if (sorte === "piege") return piegeD5(degre, rng);
+    if (sorte === "fraction") return fractionD5(degre, rng);
+    if (sorte === "comparer") return comparerD5(degre, rng);
+    if (sorte === "situation") return situationD5(degre, rng);
+    return null;
+  }
+  const SORTES_D5 = {1: ["dec", "frac", "inv"], 2: ["hmin", "invhm", "piege", "fraction", "inv"], 3: ["total", "invtot", "comparer", "situation", "hmin", "invhm"]};
+  const PLACES_D5 = {
+    valide: ["dec", "frac", "inv", "hmin", "piege", "invhm", "fraction", "total", "comparer", "situation|invtot"],
+    entraine: ["dec", "frac", "inv", "dec", "inv", "frac",
+      "hmin", "invhm", "piege", "hmin", "fraction", "inv", "invhm", "situation", "piege",
+      "total", "invtot", "comparer", "hmin", "situation", "invhm", "piege", "invtot", "comparer", "total"],
+    test: ["hmin", "invhm", "piege|comparer", "total|invtot"],
+    aide: ["dec", "hmin", "invhm"],
+    retour: ["hmin|invhm", "piege|inv"],
+    echauffement: ["hmin|invhm"]
+  };
+  function tirerD5(rng, degre, forme) {
+    const sorte = forme || choisir(rng, SORTES_D5[degre]);
+    for (let essai = 0; essai < 40; essai += 1) {
+      const x = tirerD5Brut(rng, degre, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+  // Les erreurs de D5 au pavé (31 signes au plus) : les chiffres de la
+  // partie décimale lus comme des minutes (« 0,25 h = 25 min », « 1 h 45 min
+  // = 1,45 h »), diviser par 100.
+  function erreursD5(question, lu, lus) {
+    const d = question.donnees;
+    if (!d || d.type !== "d5") return null;
+    const v = lus ? lus.map(y => Number(y) / 1000) : [Number(lu) / 1000];
+    const x = d.x;
+    const h = Math.floor(x / 100);
+    const c = x % 100;
+    const m = minDe(c);
+    const pres = (a, b) => Math.abs(a - b) < 1e-9;
+    const pasMin = (n) => ({erreur: 1, retour: `${decD5(c)}, ce n'est pas ${n}${NB}min.`});
+    const pasDec = () => ({erreur: 2, retour: `${m}${NB}min, ce n'est pas ${decD5(m)}.`});
+    if (d.sorte === "dec") {
+      if (pres(v[0], c) && c !== m) return pasMin(c);
+      if (c % 10 === 0 && pres(v[0], c / 10)) return pasMin(c / 10);
+      return null;
+    }
+    if (d.sorte === "frac") {
+      if (pres(v[0], c) && c !== m) return {erreur: 1, retour: `${FRAC_D5[c]}${NB}h = ${calculFracD5(c)}.`};
+      return null;
+    }
+    if (d.sorte === "inv") {
+      if (pres(v[0], m / 100)) return pasDec();
+      if (pres(v[0], m * 60)) return {erreur: 3, retour: "Vers les heures : je divise."};
+      return null;
+    }
+    if (d.sorte === "hmin") {
+      if (v.length === 2 && v[0] === h && v[1] === c && c !== m) return {erreur: 1, retour: `1${NB}h = 60${NB}min, pas 100${NB}min.`};
+      if (v.length === 2 && v[0] === h && c % 10 === 0 && v[1] === c / 10) return pasMin(c / 10);
+      return null;
+    }
+    if (d.sorte === "invhm") {
+      if (pres(v[0], h + m / 100)) return pasDec();
+      if (pres(v[0], h * 60 + m)) return {erreur: 4, retour: "La réponse est en heures."};
+      return null;
+    }
+    if (d.sorte === "total") {
+      if (pres(v[0], h * 100 + c)) return {erreur: 1, retour: `1${NB}h = 60${NB}min, pas 100${NB}min.`};
+      if (pres(v[0], h * 60 + c) && c !== m) return pasMin(c);
+      return null;
+    }
+    if (d.sorte === "invtot") {
+      const M = minDe(x);
+      if (pres(v[0], M / 100)) return {erreur: 2, retour: "Je divise par 60, pas par 100."};
+      if (pres(v[0], h + m / 100)) return pasDec();
+      return null;
+    }
+    return null;
+  }
+  ETAPES.D5 = {
+    // On te montre : 0,25 h (la droite en quarts), 0,1 h (la droite en
+    // dixièmes de D6), 1 h 45 min = 1,75 h.
+    clesExemples: ["D5:dec:25", "D5:dec:10", "D5:invhm:175"],
+    // (Les exemples sont les faits à savoir : ¼ h, 1⁄10 h ; Je valide doit
+    // pouvoir les demander.)
+    exclureExemples: false,
+    tirer(rng, degre, i, usage, forme) { return tirerD5(rng, degre, forme); },
+    formes(usage, rng) {
+      const p = PLACES_D5[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans Je valide : une même sorte de choix ou une même situation une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      if (!["situation", "piege", "fraction", "comparer"].includes(question.sorteD5) && !question.morceaux.enonce) return true;
+      return !serie.some(x => x.modeleD5 === question.modeleD5);
+    },
+    erreurs(question, lu, lus) { return erreursD5(question, lu, lus); }
+  };
+
+  // ------------------------------------ Q6 · Problèmes : horaires et durées
+  // S004 p. 10 : le cinéma (17 h 40, un film de 110 min), la durée des
+  // cours de la semaine, les bus (l'horloge : le prochain bus, dans combien
+  // de temps ; arriver dans 12 minutes) ; p. 17 : le tableau de
+  // covoiturage, comparer selon le critère. Les instants sont des minutes
+  // depuis minuit, comme Q10 ; une durée passe toujours une heure pile.
+  // Le covoiturage (décidé par Claude, réversible) : trois trajets vrais
+  // (vers Saint‑Pierre : 55 à 95 min selon les bouchons ; vers Saint‑Denis
+  // par la route du Littoral ; vers Saint‑Paul), des prix de 3 à 8 €.
+  const COVOIT_Q6 = [
+    ["Saint-Pierre", 55, 95, 5, 8],
+    ["Saint-Denis", 50, 90, 5, 8],
+    ["Saint-Paul", 35, 60, 3, 6]
+  ];
+  const NOMS_Q6 = ["Kévin", "Maëva", "Inès", "Noa", "Enzo", "Lina", "Rayan", "Jade", "Théo", "Naïma", "Sacha", "Kenzo"];
+  // Trois trajets : [nom, départ, arrivée, prix]. Des durées proches (des
+  // écarts de 5 ou 10 min, 15 au plus : la frise ne donne pas la réponse),
+  // toutes différentes ; chaque trajet passe une heure pile ; des minutes
+  // de 5 en 5.
+  function trajetsQ6(rng) {
+    const [vers, dMin, dMax, pMin, pMax] = choisir(rng, COVOIT_Q6);
+    const noms = melanger(rng, NOMS_Q6).slice(0, 3);
+    const d0 = entre(rng, Math.ceil(dMin / 5), Math.floor((dMax - 15) / 5)) * 5;
+    const durees = melanger(rng, [d0, d0 + choisir(rng, [5, 10]), 0]);
+    const iz = durees.indexOf(0);
+    durees[iz] = Math.max(...durees) + 5;
+    let dep = entre(rng, 74, 88) * 5;
+    const lignes = [];
+    for (let k = 0; k < 3; k += 1) {
+      const a = dep + durees[k];
+      lignes.push([noms[k], dep, a, entre(rng, pMin, pMax)]);
+      dep += entre(rng, 2, 6) * 5;
+    }
+    if (lignes.some(([, a, b]) => a % 60 === 0 || b % 60 === 0 || pileAvant(b) === pileAvant(a) || (b - a) % 60 === 0)) return null;
+    return {vers, lignes};
+  }
+  const dureeQ6 = l => l[2] - l[1];
+  // La question d'un tableau : l'énoncé (le titre), le tableau, la consigne,
+  // les trois noms au choix (dans l'ordre du tableau).
+  function covoitQ6(degre, rng, sorte) {
+    const tr = trajetsQ6(rng);
+    if (!tr) return null;
+    const {vers, lignes} = tr;
+    const enonce = `Covoiturage vers ${vers} :`;
+    const support = {type: "covoit", lignes};
+    const noms = lignes.map(l => l[0]);
+    const base = {code: "Q6", degre, grandeur: "duree", relation: `1${NB}h = 60${NB}min`, corrB33: null, sorteQ6: sorte, modeleQ6: `covoit-${sorte}`};
+    const frise = {trajets: lignes.map(([n, a, b]) => [n, a, b])};
+    if (sorte === "rapide" || sorte === "tot" || sorte === "cher" || sorte === "avant") {
+      let bon;
+      let consigne;
+      let pourquoi = {};
+      let lignesC;
+      let outil = "frise-q6";
+      let noteOutil = "Je calcule chaque durée par l'heure pile.";
+      let image = [`1${NB}h = 60${NB}min`, "Je calcule chaque durée."];
+      let limite = null;
+      if (sorte === "rapide") {
+        const d = lignes.map(dureeQ6);
+        bon = d.indexOf(Math.min(...d));
+        consigne = "Quel trajet est le plus rapide ?";
+        lignes.forEach((l, k) => { if (k !== bon) pourquoi[k] = `${l[0]} : ${dureeTexte(d[k])}.`; });
+        lignesC = [["Le plus rapide : ", `${noms[bon]}, ${dureeTexte(d[bon])}`, ""]];
+      } else if (sorte === "tot") {
+        const a = lignes.map(l => l[2]);
+        bon = a.indexOf(Math.min(...a));
+        if (a.filter(t => t === a[bon]).length > 1) return null;
+        consigne = "Qui arrive le plus tôt ?";
+        lignes.forEach((l, k) => { if (k !== bon) pourquoi[k] = `${l[0]} arrive à ${heureTexte(l[2])}.`; });
+        lignesC = [["Le plus tôt : ", `${noms[bon]}, ${heureTexte(a[bon])}`, ""]];
+        outil = "lignes"; noteOutil = ""; image = ["Je compare les heures d'arrivée."];
+      } else if (sorte === "cher") {
+        const p = lignes.map(l => l[3]);
+        bon = p.indexOf(Math.min(...p));
+        if (p.filter(t => t === p[bon]).length > 1) return null;
+        consigne = "Quel trajet est le moins cher ?";
+        lignes.forEach((l, k) => { if (k !== bon) pourquoi[k] = `${l[0]} : ${l[3]}${NB}€.`; });
+        lignesC = [["Le moins cher : ", `${noms[bon]}, ${p[bon]}${NB}€`, ""]];
+        outil = "lignes"; noteOutil = ""; image = ["Je compare les prix."];
+      } else {
+        // « Avant 8 h 30 : qui part le plus tard ? » — deux trajets arrivent
+        // à temps ; celui qui part le plus tard de tous arrive trop tard (le
+        // piège : lire seulement les départs).
+        const ordre = lignes.map((l, k) => k).sort((i, j) => lignes[i][2] - lignes[j][2]);
+        const [i1, i2, i3] = ordre;
+        if (lignes[i3][1] < Math.max(lignes[i1][1], lignes[i2][1])) return null;
+        if (lignes[i2][2] % 5 || lignes[i3][2] - lignes[i2][2] < 10) return null;
+        limite = Math.ceil((lignes[i2][2] + 1) / 5) * 5;
+        if (limite >= lignes[i3][2] || limite % 60 === 0) return null;
+        bon = lignes[i1][1] > lignes[i2][1] ? i1 : i2;
+        // (Sans prénom : à côté du tableau, la consigne tient en quatre
+        // lignes au petit iPhone.)
+        consigne = `Arrivée avant ${heureTexte(limite)} : qui part le plus tard ?`;
+        lignes.forEach((l, k) => {
+          if (k === bon) return;
+          pourquoi[k] = k === i3 ? `${l[0]} arrive à ${heureTexte(l[2])}.` : `${l[0]} part à ${heureTexte(l[1])}.`;
+        });
+        // (Une ligne : la frise montre l'heure limite ; le pourquoi dit
+        // l'arrivée de celui qui part le plus tard.)
+        lignesC = [["", `${noms[bon]}, départ à ${heureTexte(lignes[bon][1])}`, ""]];
+        noteOutil = `Qui arrive avant ${heureTexte(limite)} ?`;
+        image = [`Arrivée avant ${heureTexte(limite)}`, "Puis le départ le plus tard."];
+        Object.assign(frise, {limite});
+      }
+      const corr = sorte === "rapide" ? Object.assign({type: "frise-q6", vert: true}, frise)
+        : sorte === "avant" ? Object.assign({type: "frise-q6", vert: true, sansDurees: true, bon}, frise) : null;
+      // (Les noms au choix dans l'ordre du tableau ; pour « le plus tôt » et
+      // « avant 8 h 30 », mélangés : rangés par départ, la bonne réponse
+      // n'était jamais la dernière.)
+      let choix = noms.slice();
+      if (sorte === "tot" || sorte === "avant") {
+        choix = melanger(rng, noms);
+        const p2 = {};
+        Object.keys(pourquoi).forEach(k => { p2[choix.indexOf(noms[k])] = pourquoi[k]; });
+        pourquoi = p2;
+      }
+      const bonNom = noms[bon];
+      return q(Object.assign(base, {
+        forme: "qcm", texte: `${enonce} ${consigne}`, morceaux: {enonce, support, consigne, sorte: "nom"},
+        choix, bon: choix.indexOf(bonNom), pourquoi, reponse: bonNom, reponseTexte: bonNom, unite: null,
+        resume: lignesC[lignesC.length - 1].join(""), outil, friseQ6: outil === "frise-q6" ? frise : null,
+        outilLignes: outil === "lignes" ? image : null, outilPetit: true, noteOutil, image,
+        correction: lignesC.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignesC, corrB33: corr,
+        donnees: {type: "q6", sorte, lignes, limite},
+        cle: `Q6:${sorte}:${lignes.map(l => l.slice(1).join("-")).join("|")}`
+      }));
+    }
+    // La durée d'un trajet : l'axe à arcs de Q10, par l'heure pile. (Sans le
+    // tableau : avec lui, la question la plus haute de la série faisait
+    // tomber l'outil de toutes les questions à 75 % au petit iPhone.)
+    const k = entre(rng, 0, 2);
+    const [nom, dep, arr] = lignes[k];
+    const d = arr - dep;
+    const enonceD = `${nom} part à ${heureTexte(dep)} en covoiturage et arrive à ${heureTexte(arr)}.`;
+    return finirDureeQ6(Object.assign(base, {sorteQ6: "duree", modeleQ6: "covoit-duree"}), {enonce: enonceD, avant: "Durée du trajet :", dep, arr, d,
+      donnees: {type: "q6", sorte: "duree", lignes, k, depart: dep, arrivee: arr}, cle: `Q6:duree:${dep}-${arr}:${k}`});
+  }
+  // Une durée entre deux heures (le trajet, le bus) : la réponse en
+  // minutes, ou en heures et minutes ; l'axe de Q10, la correction par les
+  // bonds de l'heure pile.
+  function finirDureeQ6(base, {enonce, support = null, avant, dep, arr, d, donnees, cle, phrase = null, horloge = null}) {
+    const cases = d >= 60 ? ["h", "min"] : null;
+    const R = dureeTexte(d);
+    const p = bondsQ10(dep, arr);
+    const somme = p.slice(1).map((t, j) => arcQ10(t - p[j])).join(" + ");
+    const lignes = [[`${somme} = `, R, ""]];
+    const arcs = {instants: [{t: dep}, {t: arr}], arcs: [{de: 0, a: 1, texte: "?"}], piles: true};
+    const arcsCorr = {instants: p.map(t => ({t})), arcs: p.slice(1).map((t, j) => ({de: j, a: j + 1, texte: arcQ10(t - p[j]), vert: true}))};
+    const texteCases = cases ? `${CASE}${NB}h ${CASE}${NB}min` : `${CASE}${NB}min`;
+    let morceaux;
+    if (horloge) morceaux = {horlogeQ6: horloge, phrase, apres: "min"};
+    else morceaux = cases ? {enonce, avant, cases} : {enonce, avant, apres: "min"};
+    if (support) morceaux.support = support;
+    return q(Object.assign(base, {
+      forme: cases ? "deux-cases" : "nombre", texte: `${horloge ? phrase : `${enonce} ${avant}`} ${texteCases}`, morceaux,
+      reponse: cases ? [String(Math.floor(d / 60)), String(d % 60)] : String(d), reponseTexte: R, unite: "min",
+      resume: `${horloge ? "Durée :" : avant} ${R}`, outil: "axe-arcs", arcs, noteOutil: "Je passe par l'heure pile.",
+      image: [`1${NB}h = 60${NB}min`, `De ${heureTexte(dep)} à ${heureTexte(pileApres(dep))} : ${CASE}`],
+      correction: lignes.map(l => l.join("")), lignesB33: lignes, corrB33: Object.assign({type: "arcs"}, arcsCorr),
+      donnees: Object.assign({cherche: "duree"}, donnees), cle
+    }));
+  }
+  // Le cinéma (S004 p. 10 : 17 h 40 et 110 min) : la durée en minutes, à
+  // écrire d'abord en heures et minutes ; l'heure de fin. [modèle, phrase
+  // ({D} le début, {d} la durée en minutes, {P}), durée min, max, début au
+  // plus tôt, au plus tard].
+  const CINEMA_Q6 = [
+    ["film", "Le film commence à {D} et dure {d}.", 95, 150, 810, 1250],
+    ["dessin", "Le dessin animé commence à {D} et dure {d}.", 75, 105, 820, 1100],
+    ["maloya", "Le concert de maloya commence à {D} et dure {d}.", 80, 140, 1110, 1260],
+    ["rando", "{P} part en randonnée à {D} pour {d} de marche.", 100, 170, 420, 600]
+  ];
+  function cinemaQ6(degre, rng) {
+    const [modele, texte, a, b, t0, t1] = choisir(rng, CINEMA_Q6);
+    const d = entre(rng, Math.ceil(a / 5), Math.floor(b / 5)) * 5;
+    const dep = entre(rng, Math.ceil(t0 / 5), Math.floor(t1 / 5)) * 5;
+    const arr = dep + d;
+    if (d % 60 === 0 || dep % 60 === 0 || arr % 60 === 0 || d < 61) return null;
+    // (Degré 3 : les minutes débordent, 17 h 40 + 1 h 50 min ; degré 1 :
+    // non, 13 h 10 + 1 h 35 min.)
+    const deborde = (dep % 60) + (d % 60) > 60;
+    if (degre === 3 ? !deborde : degre === 1 && deborde) return null;
+    const enonce = remplirQ2(texte, {P: choisir(rng, PRENOMS), D: heureTexte(dep), d: `${d}${NB}min`});
+    const avant = modele === "rando" ? "Arrivée :" : "Fin :";
+    const R = heureTexte(arr);
+    const hmD = dureeTexte(d);
+    const lignes = [`${d}${NB}min = ${hmD}`, [`${heureTexte(dep)} + ${hmD} = `, R, ""]];
+    const p = bondsQ10(dep, arr);
+    const arcs = {instants: [{t: dep}, {t: arr, cache: true}], arcs: [{de: 0, a: 1, texte: `${d}${NB}min`}], piles: true};
+    const corr = {type: "arcs", instants: p.map((t, j) => ({t, vert: j === p.length - 1})), arcs: p.slice(1).map((t, j) => ({de: j, a: j + 1, texte: arcQ10(t - p[j]), vert: true}))};
+    return q({
+      code: "Q6", degre, grandeur: "duree", forme: "deux-cases", texte: `${enonce} ${avant} ${CASE}${NB}h ${CASE}`,
+      morceaux: {enonce, avant, cases: ["h", ""]}, reponse: [String(Math.floor(arr / 60)), String(arr % 60)], reponseTexte: R, unite: "h",
+      resume: `${avant} ${R}`, relation: `1${NB}h = 60${NB}min`, outil: "axe-arcs", arcs,
+      noteOutil: `D'abord : ${d}${NB}min = ${CASE}${NB}h ${CASE}${NB}min.`, image: [`1${NB}h = 60${NB}min`, `${d}${NB}min = 60${NB}min + ${CASE}${NB}min`],
+      correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: corr,
+      sorteQ6: "cinema", modeleQ6: `cinema-${modele}`,
+      donnees: {type: "q6", sorte: "cinema", cherche: "arrivee", depart: dep, arrivee: arr, duree: d}, cle: `Q6:cinema:${modele}:${dep}-${arr}`
+    });
+  }
+  // La durée des cours de la semaine (S004 p. 10) : « 5 h 30 min par jour,
+  // 4 jours » ; la retenue des minutes (« 120 min = 2 h »).
+  function semaineQ6(degre, rng) {
+    const h = entre(rng, 4, 6);
+    const m = choisir(rng, [15, 20, 30, 40, 45, 50]);
+    const n = choisir(rng, [4, 5]);
+    const mm = n * m;
+    if (mm % 60 === 0 || mm < 60) return null;
+    const total = n * (h * 60 + m);
+    const P = choisir(rng, PRENOMS);
+    const enonce = `${P} a ${hm(h, m)} de cours par jour, ${n} jours par semaine.`;
+    const avant = "Par semaine :";
+    const R = dureeTexte(total);
+    const lignes = [`${n} × ${hm(h, m)} = ${n * h}${NB}h${NB}${mm}${NB}min`, ["= ", R, ""]];
+    return q({
+      code: "Q6", degre, grandeur: "duree", forme: "deux-cases", texte: `${enonce} ${avant} ${CASE}${NB}h ${CASE}${NB}min`,
+      morceaux: {enonce, avant, cases: ["h", "min"]}, reponse: [String(Math.floor(total / 60)), String(total % 60)], reponseTexte: R, unite: "min",
+      resume: `${avant} ${R}`, relation: `1${NB}h = 60${NB}min`, outil: "lignes",
+      outilLignes: [`${n} × ${h}${NB}h = ${CASE}${NB}h`, `${n} × ${m}${NB}min = ${CASE}${NB}min`], outilPetit: true, noteOutil: `Puis 60${NB}min = 1${NB}h.`,
+      image: [`${n} × ${h}${NB}h = ${CASE}${NB}h`, `${n} × ${m}${NB}min = ${CASE}${NB}min`],
+      correction: lignes.map(l => (Array.isArray(l) ? l.join("") : l)), lignesB33: lignes, corrB33: null,
+      noteCorrB33: `${mm}${NB}min = ${dureeTexte(mm)}`,
+      sorteQ6: "semaine", modeleQ6: "semaine",
+      donnees: {type: "q6", sorte: "semaine", h, m, n, total}, cle: `Q6:semaine:${n}x${h * 60 + m}`
+    });
+  }
+  // Les bus (S004 p. 10) : l'heure sur l'horloge (jamais avec un tableau à
+  // côté) ; le prochain bus, dans combien de temps ? ; arriver dans 25 min,
+  // à quelle heure ?
+  function busQ6(degre, rng, sorte) {
+    // (Lot B4-2c : « dans » le matin seulement — l'horloge ne dit pas
+    // l'après-midi, et la réponse « 16 h 35 » se lisait « 4 h 35 ».)
+    const maintenant = entre(rng, 6 * 60 + 35, (sorte === "dans" ? 11 : 18) * 60 + 55);
+    if (maintenant % 60 < 35 || maintenant % 5 === 0 && rng() < 0.6) return null;
+    if (sorte === "dans" && maintenant + 40 >= 12 * 60) return null;
+    const ecart = entre(rng, 8, 40);
+    const plus = maintenant + ecart;
+    if (plus % 60 === 0 || pileAvant(plus) === pileAvant(maintenant)) return null;
+    const hh = Math.floor(maintenant / 60);
+    const horloge = {h: hh % 12 || 12, m: maintenant % 60};
+    if (sorte === "bus") {
+      const phrase = `Le bus passe à ${heureTexte(plus)}. Dans combien de temps${NB}?`;
+      const x = finirDureeQ6({code: "Q6", degre, grandeur: "duree", relation: `1${NB}h = 60${NB}min`, corrB33: null, sorteQ6: "bus", modeleQ6: "bus"},
+        {phrase, horloge, dep: maintenant, arr: plus, d: ecart, donnees: {type: "q6", sorte: "bus", depart: maintenant, arrivee: plus}, cle: `Q6:bus:${maintenant}-${plus}`});
+      return x;
+    }
+    // (« dans » : à quelle heure ? — la réponse en deux cases.)
+    const P = choisir(rng, PRENOMS);
+    const phrase = `${P} arrive dans ${ecart}${NB}min. À quelle heure${NB}?`;
+    const R = heureTexte(plus);
+    const p = bondsQ10(maintenant, plus);
+    const lignes = [[`${heureTexte(maintenant)} + ${ecart}${NB}min = `, R, ""]];
+    return q({
+      code: "Q6", degre, grandeur: "duree", forme: "deux-cases", texte: `${phrase} ${CASE}${NB}h ${CASE}`,
+      morceaux: {horlogeQ6: horloge, phrase, cases: ["h", ""]}, reponse: [String(Math.floor(plus / 60)), String(plus % 60)], reponseTexte: R, unite: "h",
+      resume: `Arrivée : ${R}`, relation: `1${NB}h = 60${NB}min`, outil: "axe-arcs",
+      arcs: {instants: [{t: maintenant}, {t: plus, cache: true}], arcs: [{de: 0, a: 1, texte: `${ecart}${NB}min`}], piles: true},
+      noteOutil: "Je passe par l'heure pile.", image: [`1${NB}h = 60${NB}min`, `${heureTexte(maintenant)} + ${pileApres(maintenant) - maintenant}${NB}min = ${heureTexte(pileApres(maintenant))}`],
+      correction: lignes.map(l => l.join("")), lignesB33: lignes,
+      corrB33: {type: "arcs", instants: p.map((t, j) => ({t, vert: j === p.length - 1})), arcs: p.slice(1).map((t, j) => ({de: j, a: j + 1, texte: arcQ10(t - p[j]), vert: true}))},
+      sorteQ6: "dans", modeleQ6: "dans",
+      donnees: {type: "q6", sorte: "dans", cherche: "arrivee", depart: maintenant, arrivee: plus, duree: ecart}, cle: `Q6:dans:${maintenant}-${plus}`
+    });
+  }
+
+  // Les erreurs de Q6 au pavé (31 signes au plus) : la base 100, une heure
+  // de trop ou de moins, les minutes qui débordent, 110 min lu 1 h 10 min.
+  function erreursQ6(question, lu, lus) {
+    const d = question.donnees;
+    if (!d || d.type !== "q6") return null;
+    const v = lus ? lus.map(x => Number(x / MILLE)) : [Number(lu / MILLE)];
+    const t = v.length === 2 ? v[0] * 60 + v[1] : v[0];
+    const cent = x => Math.floor(x / 60) * 100 + (x % 60);
+    if (d.cherche === "duree") {
+      const duree = d.arrivee - d.depart;
+      const c = cent(d.arrivee) - cent(d.depart);
+      if ((v.length === 1 && v[0] === c) || (v.length === 2 && v[0] === Math.floor(c / 100) && v[1] === c % 100)) return {erreur: 1, retour: `1${NB}h = 60${NB}min, pas 100${NB}min.`};
+      if (v.every((x, k) => !k || x < 60) && Math.abs(t - duree) === 60) return {erreur: 2, retour: "Compte bien les heures."};
+      return null;
+    }
+    if (d.cherche === "arrivee") {
+      const mm = (d.depart % 60) + (d.duree % 60);
+      const hh = Math.floor(d.depart / 60) + Math.floor(d.duree / 60);
+      if (v.length === 2 && mm >= 60 && v[0] === hh && v[1] === mm) return {erreur: 3, retour: `${mm}${NB}min = ${dureeTexte(mm)}.`};
+      // (110 min lu 1 h 10 min.)
+      if (d.sorte === "cinema" && d.duree >= 100) {
+        const lu100 = d.depart + Math.floor(d.duree / 100) * 60 + (d.duree % 100);
+        if (v.length === 2 && v[1] < 60 && t === lu100) return {erreur: 4, retour: `${d.duree}${NB}min = ${dureeTexte(d.duree)}.`};
+      }
+      if (v.length === 2 && v[1] < 60 && Math.abs(t - d.arrivee) === 60) return {erreur: 2, retour: "Compte bien les heures."};
+      return null;
+    }
+    if (d.sorte === "semaine") {
+      const mm = d.n * d.m;
+      if (v.length === 2 && v[0] === d.n * d.h && v[1] === mm) return {erreur: 3, retour: `${mm}${NB}min = ${dureeTexte(mm)}.`};
+      if (v.length === 2 && v[0] === d.n * d.h && v[1] === d.m) return {erreur: 5, retour: `Et ${d.n} × ${d.m}${NB}min${NB}?`};
+      if (v.length === 2 && v[0] === d.h && v[1] === d.m) return {erreur: 5, retour: `Ça, c'est un seul jour.`};
+      return null;
+    }
+    return null;
+  }
+
+  // Les places. Je valide : le cinéma, le plus tôt, le bus ; le plus rapide
+  // (la frise), la durée d'un trajet, la semaine, le moins cher ; « avant
+  // 8 h 30 », le cinéma qui déborde, « il arrive dans 25 min ».
+  const PLACES_Q6 = {
+    valide: ["cinema", "tot", "bus", "rapide", "duree", "semaine", "cher", "avant", "cinema", "dans"],
+    entraine: ["tot", "bus", "cinema", "cher", "bus", "tot",
+      "rapide", "duree", "semaine", "cinema", "rapide", "dans", "duree", "cher", "semaine",
+      "avant", "rapide", "cinema", "duree", "semaine", "avant", "dans", "cinema", "rapide", "duree"],
+    test: ["rapide", "duree", "avant|cinema", "semaine"],
+    aide: ["cinema", "rapide", "duree"],
+    retour: ["rapide|duree", "cinema|semaine"],
+    echauffement: ["rapide|cinema"]
+  };
+  function tirerQ6(rng, degre, forme) {
+    const sorte = forme || choisir(rng, {1: ["tot", "bus", "cinema", "cher"], 2: ["rapide", "duree", "semaine", "dans", "cinema"], 3: ["avant", "rapide", "cinema", "duree"]}[degre]);
+    for (let essai = 0; essai < 80; essai += 1) {
+      let x = null;
+      if (["rapide", "tot", "cher", "avant", "duree"].includes(sorte)) x = covoitQ6(degre, rng, sorte);
+      else if (sorte === "cinema") x = cinemaQ6(degre, rng);
+      else if (sorte === "semaine") x = semaineQ6(degre, rng);
+      else if (sorte === "bus" || sorte === "dans") x = busQ6(degre, rng, sorte);
+      if (x) return x;
+    }
+    return null;
+  }
+  ETAPES.Q6 = {
+    // On te montre : le cinéma (17 h 40 + 110 min), le plus rapide des trois
+    // trajets, la semaine de cours de Noa.
+    clesExemples: ["Q6:cinema:film:1060-1170", "Q6:rapide:400-465-6|430-505-5|485-555-6", "Q6:semaine:4x330"],
+    tirer(rng, degre, i, usage, forme) { return tirerQ6(rng, degre, forme); },
+    formes(usage, rng) {
+      const p = PLACES_Q6[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    // (Dans Je valide : un même contexte une fois.)
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ6 === question.modeleQ6);
+    },
+    erreurs(question, lu, lus) { return erreursQ6(question, lu, lus); }
+  };
+
+  // (Comme aux lots B3-3 et B4-1) la ligne de la case, l'énoncé sur deux
+  // lignes au plus, jamais sous 14 px ; les textes neufs par CARTE.typo.
+  ["D4", "D5", "Q6"].forEach(code => {
+    const tirer = ETAPES[code].tirer;
+    ETAPES[code].tirer = (...args) => {
+      const x = tirer(...args);
+      if (!x) return x;
+      x.degre = args[1];
+      if (x.morceaux && x.morceaux.horlogeQ6) return typoB33(x);
+      const y = typoB33(ligneB33(x));
+      // (D4 au choix : « 3 semaines 6 jours » passe à la ligne dans son
+      // bouton entre les deux unités, jamais entre un nombre et son unité ;
+      // sur une ligne, la rangée sortait de l'écran.)
+      if (y.sorteD4 === "choix") y.choix = y.choix.map(t => t.replace(/(semaines?|ans?)\u00a0(?=\d)/, "$1 "));
+      return y;
+    };
+  });
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {

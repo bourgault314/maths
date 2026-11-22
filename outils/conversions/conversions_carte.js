@@ -60,7 +60,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?|morceaux|étagères|planches?|verres?|barquettes|tours|longueurs|tronçons|sachets|sacs|seaux|doses|parts|parties|coupons|fois";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans?|mois|siècles?|millénaires?|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?|morceaux|étagères|planches?|verres?|barquettes|tours|longueurs|tronçons|sachets|sacs|seaux|doses|parts|parties|coupons|fois";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -77,6 +77,9 @@
     // (Lot B3-3 : à la seconde, « 12 min 15 s » ne se coupe pas non plus.)
     t = t.replace(new RegExp(`(\\d${INSECABLE}min) (?=\\d+${INSECABLE}s(?![\\wÀ-ÿ]))`, "g"), `$1${INSECABLE}`);
     t = t.replace(new RegExp(`(\\d${INSECABLE}jours) (?=\\d+${INSECABLE}h(?![\\wÀ-ÿ]))`, "g"), `$1${INSECABLE}`);
+    // (Lot B4-2 : « 3 semaines 4 jours 9 h », « 6 ans 4 mois », « 2 siècles
+    // 30 ans » ne se coupent pas non plus.)
+    t = t.replace(new RegExp(`(\\d${INSECABLE}(?:semaines?|jours?|ans?|mois|siècles?|millénaires?)) (?=\\d+${INSECABLE}(?:semaines?|jours?|h|ans?|mois|siècles?)(?![\\wÀ-ÿ]))`, "g"), `$1${INSECABLE}`);
     // (Lot B6-2 : « 3 × 10⁻⁶ L » ne se coupe pas : ni après l'exposant, ni
     // autour du « × » devant une puissance de 10.)
     t = t.replace(new RegExp(`([⁰¹²³⁴⁵⁶⁷⁸⁹]) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g"), `$1${INSECABLE}`);
@@ -1000,6 +1003,92 @@
           apres: ["25 × 400 m = 10 000 m", "= 10 km"]}
       ],
       retenir: "J'écris toutes les mesures dans la même unité avant de calculer.\nPérimètre : je fais le tour. Aire d'un rectangle : longueur × largeur.\nJe contrôle avec un ordre de grandeur : 3,7 dm × 2,9 dm, environ 4 × 3 = 12 dm².",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 4 (lot B4-2)
+    // D4 « Jours, semaines, années, siècles » (S004 p. 6 et 10-11 : 609 h =
+    // 3 semaines 4 jours 9 h, par la division euclidienne ; 34 990 s ;
+    // « 76 mois ou 5 ans » ; l'année bissextile, le siècle, le millénaire).
+    // Choix de Gwenaël du 22/11 (B4-2a) : la chaîne des paquets ; On te
+    // montre, le calendrier (décidé par Claude, réversible).
+    D4: {
+      pret: true,
+      aide: {outil: "chaine-d4", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "25 jours =", cases: ["semaines", "jours"], reponse: ["3", "4"]},
+          consigne: "Touche le calendrier :\nune semaine de plus.",
+          aide: {type: "calendrier-d4", jours: 25},
+          apres: ["25 jours = 3 × 7 jours + 4 jours", "= 3 semaines 4 jours"]},
+        {etiquette: "Je calcule", question: {avant: "609 h =", cases: ["semaines", "jours", "h"], reponse: ["3", "4", "9"]},
+          consigne: "Touche la chaîne : des paquets\nde 24 h, puis de 7 jours.",
+          aide: {type: "chaine-d4", unites: ["semaines", "jours", "h"], tailles: [7, 24], total: 609},
+          apres: ["609 h = 25 × 24 h + 9 h", "25 jours = 3 × 7 jours + 4 jours"]},
+        {etiquette: "Je compare", question: {avant: "76 mois =", cases: ["ans", "mois"], reponse: ["6", "4"]},
+          consigne: "Touche la chaîne : des paquets\nde 12 mois.",
+          aide: {type: "chaine-d4", unites: ["ans", "mois"], tailles: [12], total: 76},
+          apres: ["76 mois = 6 × 12 mois + 4 mois", "6 ans 4 mois : plus que 5 ans."]}
+      ],
+      retenir: "1 jour = 24 h ; 1 semaine = 7 jours ; 1 an = 12 mois ; 1 siècle = 100 ans ; 1 millénaire = 1 000 ans.\nUne année bissextile a 366 jours.\nJe fais des paquets : 25 jours = 3 × 7 jours + 4 jours.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 jour = 24 h", "1 semaine = 7 jours", "1 an = 12 mois", "1 siècle = 100 ans", "1 millénaire = 1 000 ans", "1 millénaire = 10 siècles"],
+      reperes: []
+    },
+    // D5 « Les heures décimales usuelles » (S004 p. 10-11 : ½ h = 0,5 h =
+    // 30 min, ¼ h, ¾ h, 1⁄10 h = 6 min ; « les écritures sexagésimale et
+    // décimale »). La version de 6e de D6. Choix de Gwenaël du 22/11
+    // (B4-2a) : la double droite en quarts ; pour 0,1 h, la droite en
+    // dixièmes de D6.
+    D5: {
+      pret: true,
+      aide: {outil: "droite-h", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "0,25 h =", reponse: "15", apres: "min"},
+          consigne: "Touche la droite :\nune heure en quatre quarts.",
+          aide: {type: "droite-h", c: 25, quarts: true, sens: "h>min", haut: "h", bas: "min"},
+          apres: ["0,25 h = ¼ h = 60 min ÷ 4", "= 15 min"]},
+        {etiquette: "Je vois", question: {avant: "0,1 h =", reponse: "6", apres: "min"},
+          consigne: "Touche la droite :\nune heure en dix dixièmes.",
+          aide: {type: "droite-h", c: 10, sens: "h>min", haut: "h", bas: "min", grand: true},
+          apres: ["0,1 h = 1⁄10 h = 60 min ÷ 10", "= 6 min"]},
+        {etiquette: "Je vérifie", question: {avant: "1 h 45 min =", reponse: "1,75", apres: "h"},
+          relation: ["1 h 45 min = 1 h + 45 min", "45 min = ¾ h = 0,75 h"],
+          aide: {type: "droite-h", c: 75, quarts: true, sens: "min>h", haut: "h", bas: "min"},
+          apres: ["1 h + 0,75 h", "= 1,75 h"],
+          legende: "Pas 1,45 h : une heure, c'est 60 min."}
+      ],
+      retenir: "½ h = 0,5 h = 30 min ; ¼ h = 0,25 h = 15 min ; ¾ h = 0,75 h = 45 min ; 1⁄10 h = 0,1 h = 6 min.\n1 h 30 min = 1,5 h, pas 1,3 h : une heure, c'est 60 min, pas 100.\n2 h 15 min = 2,25 h.",
+      titreRelations: "Des exemples à connaître",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["0,5 h = 30 min", "0,25 h = 15 min", "0,75 h = 45 min", "0,1 h = 6 min", "1 h 30 min = 1,5 h", "2 h 15 min = 2,25 h"],
+      reperes: []
+    },
+    // Q6 « Problèmes : horaires et durées » (S004 p. 10 et 17 : le cinéma de
+    // 17 h 40 + 110 min, la durée des cours de la semaine, les bus, le
+    // tableau de covoiturage). Choix de Gwenaël du 22/11 (B4-2a) : la frise
+    // des trajets pour comparer ; l'axe à arcs de Q10 pour une durée.
+    Q6: {
+      pret: true,
+      aide: {outil: "frise-q6", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Le film commence à 17 h 40 et dure 110 min.", avant: "Fin :", reponse: "19 h 30", apres: ""},
+          consigne: "110 min = 1 h 50 min.\nTouche l'axe : je passe par l'heure pile.",
+          aide: {type: "arcs",
+            avant: {instants: [{t: 1060}, {t: 1170, cache: true}], arcs: [{de: 0, a: 1, texte: "1 h 50 min"}], piles: true},
+            apres: {instants: [{t: 1060}, {t: 1080}, {t: 1140}, {t: 1170, vert: true}], arcs: [{de: 0, a: 1, texte: "20 min", vert: true}, {de: 1, a: 2, texte: "1 h", vert: true}, {de: 2, a: 3, texte: "30 min", vert: true}]}},
+          apres: ["17 h 40 + 1 h 50 min", "= 19 h 30"]},
+        {etiquette: "Je compare", question: {enonce: "Covoiturage vers Saint-Pierre :", support: {type: "covoit", lignes: [["Kévin", 400, 465, 6], ["Maëva", 430, 505, 5], ["Inès", 485, 555, 6]]},
+          avant: "Le plus rapide :", reponse: "Kévin", apres: ""},
+          consigne: "Touche la frise : la durée\nde chaque trajet.",
+          aide: {type: "frise-q6", trajets: [["Kévin", 400, 465], ["Maëva", 430, 505], ["Inès", 485, 555]]},
+          apres: ["1 h 5 min < 1 h 10 min < 1 h 15 min", "= Kévin"]},
+        {etiquette: "Je calcule", question: {enonce: "Noa a 5 h 30 min de cours par jour, 4 jours par semaine.", avant: "Par semaine :", reponse: "22", apres: "h"},
+          relation: ["4 × 5 h = 20 h", "4 × 30 min = 120 min = 2 h"],
+          aide: {type: "phrase", lignes: ["20 h + 2 h"]},
+          apres: ["4 × 5 h 30 min = 20 h 120 min", "= 22 h"]}
+      ],
+      retenir: "Pour une durée, je passe par l'heure pile : de 6 h 40 à 7 h 45, c'est 20 min + 45 min = 1 h 5 min.\nPour comparer des trajets, je calcule la durée de chacun.\n110 min = 1 h 50 min, donc 17 h 40 + 110 min = 19 h 30.",
       cahier: "Je recopie cela dans mon cahier.",
       reperes: []
     },

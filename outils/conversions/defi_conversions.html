@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261122-b41">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261122-b42">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261122-b41"></script>
-  <script src="./conversions_generateurs.js?v=20261122-b41"></script>
+  <script src="./conversions_carte.js?v=20261122-b42"></script>
+  <script src="./conversions_generateurs.js?v=20261122-b42"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261122-b41"></script>
+  <script src="./defi_conversions_aides.js?v=20261122-b42"></script>
   <script>
   (function () {
     "use strict";
@@ -834,6 +834,9 @@
       // La règle à lire (lot 3b-2) : l'objet posé sur la règle, sous la phrase.
       const regle = () => { if (m.regle) qEl.appendChild(AIDES.regle(m.regle)); };
       const deuxCases = l => {
+        // (Lot B4-2c : les cases de D4 comme celles de D3, plus étroites :
+        // « … semaines … jours » sortait de la question des deux côtés.)
+        if (question.code === "D4") l.classList.add("d3-cases", "d4-cases");
         m.cases.forEach((u, i) => {
           l.appendChild(nouvelleCase(i, true));
           if (u) l.appendChild(el("span", "", u));
@@ -923,7 +926,13 @@
       }
       if (question.forme === "qcm" || question.forme === "vrai-faux") {
         if (m.enonce) qEl.appendChild(el("div", "enonce", m.enonce));
-        if (m.support) tableauQ10(qEl, m.support);
+        // Lot B4-2 (Q6) : le tableau du covoiturage et la consigne côte à
+        // côte (la question reste basse : l'outil tient dessous).
+        if (m.support && m.support.type === "covoit" && m.consigne) {
+          const l = el("div", "covoit-l");
+          l.append(AIDES.supportQ10(m.support), el("div", "consigne2", m.consigne));
+          qEl.appendChild(l);
+        } else if (m.support) tableauQ10(qEl, m.support);
         if (m.proposition) qEl.appendChild(el("div", "prop", m.proposition));
         // L'horloge à lire (lot 3b-3) : l'horloge à gauche de la phrase, sur
         // une seule ligne (la question reste basse).
@@ -933,7 +942,7 @@
           qEl.appendChild(l);
         } else if (m.phrase) qEl.appendChild(el("div", "phrase-t", m.phrase));
         regle();
-        if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
+        if (m.consigne && !qEl.querySelector(".covoit-l")) qEl.appendChild(el("div", "consigne2", m.consigne));
         if (question.forme === "vrai-faux") qEl.appendChild(el("div", "consigne2", T("Est-ce vraisemblable ?")));
       } else if (question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") {
         // Lot A2 bis : relier, ranger. La consigne ; les objets et les
@@ -941,6 +950,17 @@
         // est égal à… », ses quatre cartes aussi.)
         qEl.appendChild(el("div", "phrase-t", m.phrase));
         if (m.consigne) qEl.appendChild(el("div", "consigne2", m.consigne));
+      } else if (m.horlogeQ6) {
+        // Lot B4-2 (Q6, S004 p. 10) : l'heure sur l'horloge à gauche ; à
+        // droite, la phrase, puis la case (ou les deux cases).
+        const l = el("div", "d3-q-l q6-q-l");
+        const droite = el("div", "d3-droite");
+        const l1 = el("div", "l1");
+        if (m.cases) deuxCases(l1);
+        else l1.append(nouvelleCase(0), el("span", "", m.apres));
+        droite.append(el("div", "phrase-t", m.phrase), l1);
+        l.append(AIDES.horlogeQ6(m.horlogeQ6.h, m.horlogeQ6.m), droite);
+        qEl.appendChild(l);
       } else if (m.horlogeD3) {
         // Lot B3-3 (D3, S003 p. 18) : lire l'heure à la seconde ; l'horloge à
         // trois aiguilles à gauche ; à droite, la phrase puis les trois cases
@@ -1241,7 +1261,7 @@
         // (Correctif B3-3 : trois durées côte à côte, « 52 min 24 s », sortaient
         // du cadre au téléphone ; une durée ne se coupe pas : la réponse se fait
         // un peu plus petite dans son bouton, jamais sous 14 px.)
-        if (["D3", "Q3", "Q4"].includes(question.code) && !choixEl.classList.contains("mots")) {
+        if (["D3", "Q3", "Q4", "D4", "D5", "Q6"].includes(question.code) && !choixEl.classList.contains("mots")) {
           choixEl.classList.add("ajuste");
           choixEl.querySelectorAll("button").forEach(b => {
             const taille = parseFloat(getComputedStyle(b).fontSize);
@@ -1606,13 +1626,28 @@
       const temps = () => {
         const ex = etape.apprends[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `${i + 1} / ${n}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
-          retour, hauteur: ex.question.enonce ? 160 : (ex.question.avant || "").length > 14 ? 112 : 70, zone: "montre"});
+          retour, hauteur: ex.question.support ? 176 : ex.question.enonce ? 160 : ex.question.cases || (ex.question.avant || "").length > 14 ? 112 : 70, zone: "montre"});
         ui.bas.remove();
         // La question, sa case remplie quand le geste est fait.
         const q = ui.q;
         let caseEl = null;
+        let casesEl = null;
         let ajusterLigne = null;
-        if (ex.question.vraisemblable) {
+        if (ex.question.cases) {
+          // (Lot B4-2, D4 : « 25 jours = » au-dessus de deux ou trois cases,
+          // « … semaines … jours », comme dans À toi.)
+          q.classList.toggle("trois", ex.question.cases.length === 3);
+          q.classList.add("long");
+          q.appendChild(el("div", "phrase-t", ex.question.avant));
+          const l = el("div", code === "D4" ? "l1 d3-cases d4-cases" : "l1");
+          casesEl = ex.question.cases.map(u => {
+            const c = el("span", "case petite", "");
+            l.append(c);
+            if (u) l.appendChild(el("span", "", u));
+            return c;
+          });
+          q.appendChild(l);
+        } else if (ex.question.vraisemblable) {
           q.appendChild(el("div", "enonce", ex.question.enonce));
         } else if (ex.question.exposant) {
           // (Lot B6-2, P6 : la case de l'exposant, levée au-dessus du 10.)
@@ -1622,6 +1657,8 @@
           serrerLigne(q, l);
         } else {
           if (ex.question.enonce) q.appendChild(el("div", "enonce", ex.question.enonce));
+          // (Lot B4-2, Q6 : le tableau du covoiturage sous l'énoncé.)
+          if (ex.question.support) tableauQ10(q, ex.question.support);
           const l = el("div", "l1");
           caseEl = el("span", "case", "");
           // Une phrase longue sur sa ligne, la case dessous (rien ne déborde).
@@ -1667,6 +1704,7 @@
         const fini = () => {
           geste = true;
           if (caseEl) { caseEl.textContent = ex.question.reponse; caseEl.className = `case${ex.question.exposant ? " exp" : ""} vert`; dansLaCase(caseEl); }
+          if (casesEl) casesEl.forEach((c, k) => { c.textContent = ex.question.reponse[k]; c.className = "case petite vert"; dansLaCase(c); });
           if (ajusterLigne) ajusterLigne();
           if (ex.apres && !ui.zone.querySelector(".apres")) {
             // La somme qui s'est construite laisse sa place à l'écriture finale.
