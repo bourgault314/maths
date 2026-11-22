@@ -40,7 +40,8 @@ test("la carte v4 : 54 étapes, codes et rangs figés, paliers 10/16/9/6/8/5 vus
   // Lot 3b : les deux ajouts de la carte v4, rangs 53 et 54.
   assert.deepEqual(["C9", "Q11"].map(c => CARTE.etape(c).rang), [53, 54]);
   assert.deepEqual(["C9", "Q11"].map(c => CARTE.etape(c).palier), [3, 5]);
-  assert.ok(!CARTE.etape("C9").pret && !CARTE.etape("Q11").pret, "pas encore construites (B3, B5)");
+  // (Lot B3-2 : C9 construite ; le palier 3 reste caché tant que D3, Q3, Q4 ne le sont pas.)
+  assert.ok(CARTE.etape("C9").pret && !CARTE.etape("Q11").pret, "C9 construite (B3-2), Q11 pas encore (B5)");
   // Lot A2 bis : E1 et D7 ne sont plus cachées. Elles prennent leur place
   // dans leur famille (Convertir, Durées), après les étapes déjà en ligne.
   assert.deepEqual(CARTE.ETAPES.filter(e => e.cachee).map(e => e.code), []);

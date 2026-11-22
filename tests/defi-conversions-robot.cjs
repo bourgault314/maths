@@ -616,7 +616,10 @@ async function faireLeGeste(page, aide) {
       const a = page.locator(`.zone .pa-fig.a-toucher[data-cle="${aide.bonne}"]`);
       if (!(await a.count())) return ["pas de jardin à toucher"];
       await appuyer(page, a.first());
-    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v", "bande-p", "tableau-p", "reporte"].includes(aide.type)) {
+    } else if (["echange", "pieces", "etiquette", "horloges", "axe", "arcs", "barre2", "droite2", "aire-compter", "aire-superposer", "droite-h", "etapes-v", "bande-p", "tableau-p", "reporte",
+      // Lot B3-2 (A1, A2, C9) : le carré (une rangée par toucher, jusqu'à ce
+      // qu'il ne reste rien à toucher), le découpage, le calcul, la droite.
+      "carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
