@@ -1348,10 +1348,10 @@ test("étapes : la liste dit ce que chaque grade travaille, et l'étape à tente
   assert.match(regles, /2 \+ 5par exemple : sans complément ni retenue/);
   assert.match(regles, /4 spour voir les nombres d’un calcul/);
   assert.match(regles, /7\/10bonnes réponses sur 10 calculs pour réussir l’étape/);
-  // Les quatre lignes s'alignent : la colonne de gauche prend la largeur du plus long de ses textes (« 2 + 5 »).
-  assert.equal(p.$("fiche-regles").style.getPropertyValue("--car"), "5");
-  assert.match(PAGE, /\.fiche-grade \.regles b \{ flex: 0 0 auto; min-width: max\(84px, calc\(var\(--car, 0\) \* 1ch\)\);/);
-  assert.match(PAGE, /\.fiche-grade \.regles b \{ min-width: max\(72px, calc\(var\(--car, 0\) \* 1ch\)\); \}/);
+  // Les quatre lignes s'alignent : une grille à deux colonnes, chaque ligne a ses deux cases (le nombre, le texte).
+  assert.deepEqual(p.$("fiche-regles").children.map(li => li.children.map(c => c.tagName)), [["B", "SPAN"], ["B", "SPAN"], ["B", "SPAN"], ["B", "SPAN"]]);
+  assert.match(PAGE, /\.fiche-grade \.regles \{[^}]*display: grid; grid-template-columns: auto 1fr; grid-auto-rows: minmax\(52px, auto\); \}\n    \.fiche-grade \.regles li \{ display: contents;/);
+  assert.doesNotMatch(PAGE, /--car[,)"]/, "plus de largeur estimée en caractères : le navigateur mesure");
   // Une étape fermée ne s'ouvre pas : la fiche ne change pas.
   deux.click();
   assert.equal(onglets(p)[0].getAttribute("aria-pressed"), "true");

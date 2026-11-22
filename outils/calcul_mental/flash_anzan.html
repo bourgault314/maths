@@ -505,13 +505,15 @@
       font-weight: 950; box-shadow: 0 4px 0 #043f8c; white-space: nowrap; }
     .fiche-grade { width: 100%; max-width: calc(560px + 2 * var(--corps-cote)); margin: 0 auto; padding: 18px var(--corps-cote) 26px; text-align: center; }
     .fiche-grade .niv { margin: 0; color: var(--muted); font-family: var(--serif); font-style: italic; font-weight: 700; font-size: .95rem; }
-    .fiche-grade .regles { margin: 16px auto 0; padding: 0; list-style: none; border: 2px solid var(--ink); border-radius: 14px; background: var(--papier); box-shadow: 0 4px 0 var(--papier-ombre); text-align: left; }
-    .fiche-grade .regles li { display: flex; gap: 12px; align-items: center; min-height: 52px; padding: 6px 14px; border-bottom: 1px solid var(--papier-trait); font-weight: 800; }
-    .fiche-grade .regles li:last-child { border-bottom: 0; }
-    /* La colonne de gauche a la largeur du plus long de ses quatre textes
-       (--car : son nombre de caractères, posé par la page) : un exemple
-       large comme « 64 + 52 + 31 » ne décale plus sa ligne des trois autres. */
-    .fiche-grade .regles b { flex: 0 0 auto; min-width: max(84px, calc(var(--car, 0) * 1ch)); font-family: var(--serif); font-size: 1.35rem; text-align: center; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
+    /* Les quatre lignes de la fiche : une grille à deux colonnes. La colonne
+       de gauche prend la largeur du plus large de ses textes, mesurée par le
+       navigateur — un exemple large comme « 64 + 52 + 31 » ne décale plus sa
+       ligne des trois autres, quelle que soit la police de l'appareil. */
+    .fiche-grade .regles { margin: 16px auto 0; padding: 0; list-style: none; border: 2px solid var(--ink); border-radius: 14px; background: var(--papier); box-shadow: 0 4px 0 var(--papier-ombre); text-align: left; display: grid; grid-template-columns: auto 1fr; grid-auto-rows: minmax(52px, auto); }
+    .fiche-grade .regles li { display: contents; font-weight: 800; }
+    .fiche-grade .regles li > * { display: flex; align-items: center; padding: 6px 14px 6px 6px; border-bottom: 1px solid var(--papier-trait); }
+    .fiche-grade .regles li:last-child > * { border-bottom: 0; }
+    .fiche-grade .regles b { justify-content: center; min-width: 104px; padding: 6px 6px 6px 14px; font-family: var(--serif); font-size: 1.35rem; font-variant-numeric: lining-nums tabular-nums; white-space: nowrap; }
     .fiche-grade .fiche-boutons { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 20px; }
     .fiche-grade .fiche-boutons .primary, .fiche-grade .fiche-boutons .secondary { min-height: 58px; border-radius: 16px; }
     .fiche-grade .fiche-boutons .primary { font-size: 1.2rem; }
@@ -708,7 +710,7 @@
 
     @media (max-width: 620px) {
       .gr-groupes { grid-template-columns: 1fr 1fr; }
-      .fiche-grade .regles b { min-width: max(72px, calc(var(--car, 0) * 1ch)); }
+      .fiche-grade .regles b { min-width: 92px; }
       .fiche-grade .fiche-boutons { grid-template-columns: 1fr 1fr; }
       .fiche-grade .fiche-boutons .primary { font-size: 1.05rem; }
       /* Au téléphone, la petite carte au-dessus des règles. */
@@ -2967,13 +2969,14 @@
         });
         const regles = $("fiche-regles");
         regles.replaceChildren();
-        const lignes = CORE.reglesEtape(ficheEtape);
-        regles.style.setProperty("--car", String(Math.max(...lignes.map(([fort]) => fort.length))));
-        lignes.forEach(([fort, texte]) => {
+        CORE.reglesEtape(ficheEtape).forEach(([fort, texte]) => {
           const li = document.createElement("li");
           const b = document.createElement("b");
           b.textContent = fort;
-          li.append(b, document.createTextNode(texte));
+          // Le texte dans sa propre case : les deux colonnes de la grille.
+          const span = document.createElement("span");
+          span.textContent = texte;
+          li.append(b, span);
           regles.append(li);
         });
         // « Je tente ▶ » (choix du 07/11/2026 : « on n'est pas en mode examen »).
