@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261122-b42">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261122-b51">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261122-b42"></script>
-  <script src="./conversions_generateurs.js?v=20261122-b42"></script>
+  <script src="./conversions_carte.js?v=20261122-b51"></script>
+  <script src="./conversions_generateurs.js?v=20261122-b51"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261122-b42"></script>
+  <script src="./defi_conversions_aides.js?v=20261122-b51"></script>
   <script>
   (function () {
     "use strict";
@@ -1851,7 +1851,7 @@
     // Seulement pour les étapes du lot B3-2 : sur main, les autres étapes
     // gardent leur zone (E1 : « Je prévois » à 84 % au petit iPhone et 73 %
     // au petit Android, déjà sur main, mesuré : à reprendre à la revue C1).
-    const PREVOIS_MESURE = new Set(["C9", "A1", "A2", "A3"]);
+    const PREVOIS_MESURE = new Set(["C9", "A1", "A2", "A3", "A4", "V2"]);
     function prevoisMesure(zone, qn) {
       const sens = G.sensDe(qn);
       if (!sens) return;

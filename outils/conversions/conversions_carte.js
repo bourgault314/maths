@@ -60,7 +60,7 @@
 
   const FINE = " ";
   const INSECABLE = " ";
-  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ans?|mois|siècles?|millénaires?|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?|morceaux|étagères|planches?|verres?|barquettes|tours|longueurs|tronçons|sachets|sacs|seaux|doses|parts|parties|coupons|fois";
+  const UNITES_TEXTE = "centimes?|carreaux?|c|km|hm|dam|dm|cm|mm|m|kg|hg|dag|dg|cg|mg|g|t|hL|daL|dL|cL|mL|L|min|h|s|km²|m²|dm²|cm²|mm²|m³|dm³|cm³|ko|Mo|Go|o|Mm|µm|nm|µg|ng|µL|kW|MW|GW|W|km/h|m/s|m/min|ha|ans?|mois|siècles?|millénaires?|jours?|semaines?|étapes?|repères?|questions?|justes|erreurs?|fois|sur|(?:kilo|hecto|déca|déci|centi|milli)?(?:mètres?|grammes?|litres?)|€|bouteilles|virus|chansons|photos|pouces?|milles?|morceaux|étagères|planches?|verres?|barquettes|tours|longueurs|tronçons|sachets|sacs|seaux|doses|parts|parties|coupons|fois";
   const RE_MILLIERS = /(\d) (?=\d{3}(?!\d))/g;
   const RE_UNITE = new RegExp(`(\\d) (?=(?:${UNITES_TEXTE})(?![\\wÀ-ÿ²³]))`, "g");
 
@@ -71,6 +71,8 @@
     let t = texte;
     for (let i = 0; i < 3; i += 1) t = t.replace(RE_MILLIERS, `$1${FINE}`);
     t = t.replace(RE_UNITE, `$1${INSECABLE}`);
+    // (Lot B5-1 : l'are, « 6,5 a », mais pas « une feuille A4 a une aire ».)
+    t = t.replace(/(^|[^\wÀ-ÿ\d,])(\d+(?:,\d+)?) a(?![\wÀ-ÿ²³'’])/g, `$1$2${INSECABLE}a`);
     // (Lot B2-3b-2 : une heure ou une durée ne se coupe pas entre « h » et
     // les minutes : « 10 h 40 », « 1 h 10 min ».)
     t = t.replace(new RegExp(`(\\d${INSECABLE}h) (?=\\d)`, "g"), `$1${INSECABLE}`);
@@ -260,7 +262,9 @@
     {code: "c5", grandeur: "contenance", etape: "R5", objet: "Un verre", valeur: "environ 20 cL", debut: "Un verre contient environ", nombre: "20", unite: "cL", fin: ""},
     {code: "a6", grandeur: "aire", etape: "R8", objet: "L'ongle de mon pouce", valeur: "environ 1 cm²", debut: "L'ongle de mon pouce a une aire d'environ", nombre: "1", unite: "cm²", fin: ""},
     {code: "a7", grandeur: "aire", etape: "R8", objet: "La paume de ma main", valeur: "environ 1 dm²", debut: "La paume de ma main a une aire d'environ", nombre: "1", unite: "dm²", fin: ""},
-    {code: "v5", grandeur: "volume", etape: "V1", objet: "Un dé à jouer", valeur: "environ 1 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "1", unite: "cm³", fin: ""},
+    // (Lot B5-1 : un dé à jouer fait environ 1,6 cm de côté, environ 4 cm³ —
+    // vu au lot B4-1 ; il sert de repère à côté du petit cube, dans l'outil de R10.)
+    {code: "v5", grandeur: "volume", etape: "V1", objet: "Un dé à jouer", valeur: "environ 4 cm³", debut: "Un dé à jouer a un volume d'environ", nombre: "4", unite: "cm³", fin: ""},
     // Lot B1-1 (carte v4 : le repère personnel, la ramette, S438-S439 ; le
     // programme de CM1 : « estimer la contenance d'une bouteille, d'un
     // arrosoir ») : la planche 7, dessinée le 15/11.
@@ -1090,6 +1094,118 @@
       ],
       retenir: "Pour une durée, je passe par l'heure pile : de 6 h 40 à 7 h 45, c'est 20 min + 45 min = 1 h 5 min.\nPour comparer des trajets, je calcule la durée de chacun.\n110 min = 1 h 50 min, donc 17 h 40 + 110 min = 19 h 30.",
       cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // ============================================ palier 5 (lot B5-1)
+    // A4 « Toutes les unités d'aire » (S097 p. 10 : connaître les unités
+    // d'aire et de volume ; S186 : 1 m² = 10 dm × 10 dm = 100 dm² ; carte
+    // v4 : l'are et l'hectare). Choix de Gwenaël du 22/11 (B5-1a) : son
+    // tableau des aires quand on saute une unité ou plus, le calcul « × 100 »
+    // entre deux unités voisines.
+    A4: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 cm² =", reponse: "100", apres: "mm²"},
+          consigne: "Le carré de 1 cm de côté, agrandi :\n10 mm sur 10 mm. Touche le carré.",
+          aide: {type: "carre-a1", cote: "10 mm", petite: "mm²", rel: "1 cm = 10 mm", grande: "cm²"},
+          apres: ["1 cm² = 10 mm × 10 mm", "= 100 mm²"],
+          legende: "Deux unités voisines : × 100.\n4 cm² = 4 × 100 mm² = 400 mm²."},
+        {etiquette: "Je glisse", question: {avant: "3,5 m² =", reponse: "35 000", apres: "cm²"},
+          consigne: "On saute une unité : le tableau des aires.\nDeux cases par unité.",
+          aide: {type: "glisse-unite", grandeur: "aire", nombre: "3,5", de: "m²", vers: "cm²", pale: false, aires: true,
+            colonnes: ["", "dam²", "", "m²", "", "dm²", "", "cm²", "", "mm²"]},
+          apres: ["1 m² = 10 000 cm²", "3,5 m² = 35 000 cm²"]},
+        {etiquette: "L'hectare", question: {avant: "2,5 ha =", reponse: "25 000", apres: "m²"},
+          consigne: "1 ha : un carré de 100 m de côté.\nDans le tableau, ha est sous hm².",
+          aide: {type: "glisse-unite", grandeur: "aire", nombre: "2,5", de: "hm²", vers: "m²", pale: false, aires: true, sous: {"hm²": "ha", "dam²": "a"},
+            colonnes: ["", "km²", "", "hm²", "", "dam²", "", "m²", "", "dm²"]},
+          apres: ["1 ha = 10 000 m²", "2,5 ha = 25 000 m²"],
+          legende: "Un terrain de foot : environ 0,7 ha."}
+      ],
+      retenir: "Deux unités d'aire voisines : × 100 ou ÷ 100 (un carré de 10 × 10).\nQuand je saute une unité : le tableau des aires, deux cases par unité.\nPour ranger des aires, je les écris dans la même unité.",
+      titreRelations: "À connaître par cœur",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 cm² = 100 mm²", "1 m² = 10 000 cm²", "1 a = 100 m²", "1 ha = 10 000 m²", "1 km² = 100 ha", "4 cm² = 400 mm²"],
+      reperes: []
+    },
+    // R10 « Mes repères de volume » (carte v4 : le petit cube 1 cm³, la
+    // brique 1 dm³, la cuve 1 m³, la piscine 2 500 m³ ; la boîte à
+    // chaussures, le coffre, le camion), au modèle de « Mes repères d'aire ».
+    R10: {
+      pret: true,
+      aide: {outil: "reperes-unites", image: "reperes-unites"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "Le petit cube unité a un volume de", reponse: "1", apres: "cm³"},
+          consigne: "Un cube de 1 cm de côté :\nson volume est 1 centimètre cube.",
+          aide: {type: "repere", repere: "v1"}, legende: "Un dé à jouer : environ 4 cm³."},
+        {etiquette: "Je vois", question: {avant: "Une brique de lait a un volume de", reponse: "1", apres: "dm³"},
+          consigne: "Un cube de 1 dm de côté : 1 décimètre cube.\nLa brique de 1 L a ce volume.",
+          aide: {type: "repere", repere: "v2"}, legende: "Une boîte à chaussures : environ 8 dm³."},
+        {etiquette: "Je vois", question: {avant: "Une cuve de 1 000 L a un volume de", reponse: "1", apres: "m³"},
+          consigne: "Un cube de 1 m de côté : 1 mètre cube.\nLa cuve d'eau de pluie a ce volume.",
+          aide: {type: "repere", repere: "v3"}, legende: "La benne d'un camion : environ 15 m³.\nUne piscine olympique : 2 500 m³."}
+      ],
+      retenir: "",
+      cahier: "Je les note dans mon cahier et je les apprends par cœur.",
+      reperes: ["v1", "v2", "v3", "v4"]
+    },
+    // V2 « 1 dm³ = 1 000 cm³ » (S096 : connaître le cube de 10 ; carte v4 :
+    // la décomposition 10 plaques → 100 barres → 1 000 cubes du module des
+    // volumes de Gwenaël). Choix de Gwenaël du 22/11 (B5-1a) : le cube
+    // s'ouvre en trois touches.
+    V2: {
+      pret: true,
+      aide: {outil: "dm3-v2", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 dm³ =", reponse: "1 000", apres: "cm³"},
+          consigne: "Touche : le cube de 1 dm de côté s'ouvre.",
+          aide: {type: "dm3-v2", grande: "dm³"},
+          apres: ["10 × 10 × 10 = 10³", "= 1 000 cm³"],
+          legende: "1 dm = 10 cm : 10 plaques de 100 cm³."},
+        {etiquette: "Je calcule", question: {avant: "3 dm³ =", reponse: "3 000", apres: "cm³"},
+          consigne: "En cm³, un nombre 1 000 fois plus grand.\nTouche le calcul.",
+          aide: {type: "calcul-a3", gauche: "3 dm³", nombre: "3", op: "×", facteur: "1 000", unite: "cm³"},
+          apres: ["3 × 1 000 = 3 000", "3 dm³ = 3 000 cm³"],
+          legende: "Vers plus grand : ÷ 1 000.\n4 500 cm³ = 4,5 dm³."},
+        {etiquette: "Le mètre cube", question: {avant: "1 m³ =", reponse: "1 000", apres: "dm³"},
+          consigne: "Le cube de 1 m de côté s'ouvre pareil :\n1 m = 10 dm.",
+          aide: {type: "dm3-v2", grande: "m³"},
+          apres: ["10 × 10 × 10", "= 1 000 dm³"]}
+      ],
+      retenir: "Le cube de 1 dm de côté : 10 plaques de 10 barres de 10 cubes de 1 cm³ (10³ = 1 000).\nVers une unité plus petite : × 1 000 ; vers une plus grande : ÷ 1 000.",
+      titreRelations: "À connaître par cœur",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 dm³ = 1 000 cm³", "1 m³ = 1 000 dm³", "10³ = 1 000", "3 dm³ = 3 000 cm³", "500 cm³ = 0,5 dm³"],
+      reperes: []
+    },
+    // V3 « Volume et contenance » (S097 p. 24 : 1 L = 1 dm³ ; carte v4 :
+    // « 1 L = 1 m³ ? », 3,57 L en cm³, 33 cL en cm³ ; l'eau). Choix de
+    // Gwenaël du 22/11 (B5-1a) : l'outil, les trois ponts ; On te montre,
+    // la brique qu'on verse dans le cube.
+    V3: {
+      pret: true,
+      aide: {outil: "ponts-v3", image: "relation"},
+      apprends: [
+        {etiquette: "Je vois", question: {avant: "1 dm³ =", reponse: "1", apres: "L"},
+          consigne: "Touche la brique : je verse 1 L\ndans le cube de 1 dm de côté.",
+          aide: {type: "remplir-v3"},
+          apres: ["Le cube est plein :", "1 dm³ = 1 L"],
+          legende: "1 mL = 1 cm³ ; 1 m³ = 1 000 L."},
+        {etiquette: "Je passe par les mL", question: {avant: "33 cL =", reponse: "330", apres: "cm³"},
+          consigne: "1 mL = 1 cm³ : j'écris d'abord en mL.",
+          aide: {type: "ponts-v3"},
+          apres: ["33 cL = 330 mL", "= 330 cm³"],
+          legende: "Attention : 1 L, ce n'est pas 1 m³.\n1 m³ = 1 000 L."},
+        {etiquette: "L'eau", question: {avant: "1 L d'eau pèse", reponse: "1", apres: "kg"},
+          consigne: "1 L d'eau pèse 1 kg.\nDonc 1 mL d'eau : 1 g ; 1 m³ d'eau : 1 t.",
+          aide: {type: "repere", repere: "m8"},
+          legende: "1 m³ = 1 000 L : 1 000 kg = 1 t."}
+      ],
+      retenir: "1 L = 1 dm³ ; 1 mL = 1 cm³ ; 1 m³ = 1 000 L (pas 1 L = 1 m³).\nDes cL aux cm³, je passe par les mL : 33 cL = 330 mL = 330 cm³.",
+      titreRelations: "À connaître par cœur",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "1 mL d'eau : 1 g", "1 L d'eau : 1 kg", "1 m³ d'eau : 1 t"],
       reperes: []
     },
     // ============================================ palier 2 (lot B1-2)

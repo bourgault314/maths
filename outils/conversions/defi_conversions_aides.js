@@ -1140,10 +1140,16 @@
   // hors programme du palier sont en pâle. Les zéros remplissent les colonnes
   // entre les chiffres et la poignée, comme chez lui. Il n'écrit jamais la
   // mesure trouvée : c'est l'élève qui lit les chiffres.
-  const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"]};
+  const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"],
+    // (Lot B5-1 : le tableau des aires, l'orange de l'exerciseur de Gwenaël.)
+    aire: ["#f59e0b", "#b77207"]};
   // `colonnes` (lot B1-2) : les colonnes du palier 2 (les masses du
   // kilogramme au milligramme, la tonne devant quand elle est en jeu).
-  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false, colonnes: lesColonnes = null}, arrivee = () => {}) {
+  // `aires` (lot B5-1, le tableau des aires de Gwenaël en 5e) : deux cases par
+  // unité ; la colonne sans nom avant chaque unité est celle de ses dizaines,
+  // l'unité s'écrit dans une case qui couvre les deux (son nom au-dessus du
+  // chiffre des unités) ; `sous` : l'hectare et l'are sous hm² et dam².
+  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false, colonnes: lesColonnes = null, aires = false, sous = null}, arrivee = () => {}) {
     const G = gen();
     const [entier, decimales = ""] = String(valeur).replace(/\s/g, "").replace(".", ",").split(",");
     const avant = entier.replace(/\D/g, "").replace(/^0+(?=\d)/, "").split("");
@@ -1152,8 +1158,11 @@
     // Des colonnes sans nom à gauche (ou à droite) si le nombre en a besoin.
     const iDe0 = colonnes.indexOf(de);
     const manqueG = Math.max(0, avant.length - 1 - iDe0);
-    const manqueD = Math.max(0, apres.length - (colonnes.length - 1 - iDe0));
-    colonnes = Array(manqueG).fill("").concat(colonnes, Array(manqueD).fill(""));
+    let manqueD = Math.max(0, apres.length - (colonnes.length - 1 - iDe0));
+    // (Le tableau des aires s'élargit par unité entière : deux cases.)
+    const manqueG2 = aires ? manqueG + (manqueG % 2) : manqueG;
+    if (aires) manqueD += manqueD % 2;
+    colonnes = Array(manqueG2).fill("").concat(colonnes, Array(manqueD).fill(""));
     const n = colonnes.length;
     const iDe = colonnes.indexOf(de);
     const iVers = colonnes.indexOf(vers);
@@ -1168,7 +1177,7 @@
     let fini = false;
     const [acc, accF] = THEMES_GLISSE[grandeur] || THEMES_GLISSE.longueur;
 
-    const boite = el("div", `gu2${fige ? " fige" : ""}`);
+    const boite = el("div", `gu2${fige ? " fige" : ""}${aires ? " aires" : ""}`);
     boite.style.setProperty("--acc", acc);
     boite.style.setProperty("--acc-f", accF);
     boite.style.setProperty("--n", String(n));
@@ -1195,6 +1204,11 @@
       const b = el("button", u ? "" : "sans-nom");
       b.type = "button";
       b.appendChild(el("span", "", u || NB));
+      // (Le tableau des aires : la case de l'unité couvre ses deux colonnes.)
+      if (aires && u) {
+        b.style.gridColumn = `${Math.max(1, i)} / span ${i > 0 ? 2 : 1}`;
+        if (sous && sous[u]) b.appendChild(el("small", "gu2-sous", sous[u]));
+      }
       if (!u) { b.disabled = true; b.setAttribute("aria-hidden", "true"); b.tabIndex = -1; }
       else {
         b.setAttribute("aria-label", `Mettre l'unité sur ${u}`);
@@ -1439,9 +1453,14 @@
     // Lot B3-1 (R8) : les repères d'aire du CM2.
     "cm²": [["a6", "1 cm² : l'ongle de mon pouce"], ["a1", "1 cm² : un carreau de 1 cm de côté"]],
     "dm²": [["a7", "1 dm² : la paume de ma main"], ["a2", "une feuille A4 : environ 6 dm²"]],
-    "m²": [["a3", "1 m² : une affiche A0"], ["a4", "un terrain de foot : environ 7 000 m²"]]
+    "m²": [["a3", "1 m² : une affiche A0"], ["a4", "un terrain de foot : environ 7 000 m²"]],
+    // Lot B5-1 (R10) : les repères de volume.
+    "cm³": [["v1", "1 cm³ : le petit cube unité"], ["v5", "un dé à jouer : environ 4 cm³"]],
+    "dm³": [["v2", "1 dm³ : une brique de lait de 1 L"], ["c7", "une bouteille d'eau : 1,5 L = 1,5 dm³"]],
+    "m³": [["v3", "1 m³ : une cuve de 1 000 L"], ["v4", "une piscine olympique : 2 500 m³"]]
   };
-  const ORDRE_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"], aire: ["cm²", "dm²", "m²"]};
+  const ORDRE_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"], aire: ["cm²", "dm²", "m²"],
+    volume: ["cm³", "dm³", "m³"]};
   // Les lignes de la liste des unités au palier 2 : [{unite, repere, texte}].
   function referencesUnites2(question) {
     const C = carte();
@@ -3948,6 +3967,9 @@
     else if (c && c.type === "droite-h") droiteHeures(zone, c, {mode: "correction"});
     else if (c && c.type === "arcs") axeArcs(zone, c);
     else if (c && c.type === "frise-q6") friseQ6(zone, c, {mode: "correction"});
+    // Lot B5-1 (V2, V3) : le cube ouvert, les ponts, en vert.
+    else if (c && c.type === "dm3-v2") dm3V2(zone, c, {mode: "correction"});
+    else if (c && c.type === "ponts-v3") pontsV3(zone, {vert: true});
     question.lignesB33.forEach((l, i) => {
       const d = el("div", "calcul-pb b33");
       if (Array.isArray(l)) {
@@ -4619,6 +4641,214 @@
     if (question.noteOutil) zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
   }
 
+
+  // ======================================================= lot B5-1 (palier 5)
+  // A4 « Toutes les unités d'aire », V2 « 1 dm³ = 1 000 cm³ », V3 « Volume
+  // et contenance ». Choix de Gwenaël du 22/11 (lot B5-1a) : le tableau des
+  // aires (le glisse-unité à deux cases par unité, `aires`), le décimètre
+  // cube qui s'ouvre (V2), les trois ponts (V3). Aucun dessin ne donne la
+  // réponse : le cube de l'outil n'écrit pas « 10 plaques » (On te montre et
+  // la correction l'écrivent), les ponts disent les relations, pas le calcul.
+  const K_B51 = 0.6 * Math.SQRT1_2;
+  const ptsB51 = arr => arr.map(p => p.map(v => v.toFixed(2)).join(",")).join(" ");
+  const BLANC_B51 = ["#ffffff", "#eaf1f8", "#c3d3e3"];
+  const TURQ_B51 = ["#8fdcd6", "#c9efec", "#5fc4bc"];
+  const ORANGE_B51 = ["#ffd9b0", "#ffe9d1", "#f7b979"];
+  const VERTS_B51 = ["#cdeed8", "#e9f8ee", "#9fd9b4"];
+  // Un pavé en perspective cavalière, quadrillé en cubes d'arête 1.
+  // b = [x, y, z, dx, dy, dz] en arêtes ; `vide` : sa place, en pointillé.
+  function paveB51(g, P, b, {couleurs, trait = N, grille = true, ep = 1.2, vide = false}) {
+    const [x, y, z, dx, dy, dz] = b;
+    const [f, t, d] = vide ? ["none", "none", "none"] : couleurs;
+    const a1 = {stroke: vide ? "#9db3c8" : trait, "stroke-width": vide ? 1 : ep, "stroke-linejoin": "round"};
+    if (vide) a1["stroke-dasharray"] = "3 2";
+    const A = P(x, y, z), B = P(x + dx, y, z), C = P(x + dx, y, z + dz), D = P(x, y, z + dz);
+    const Bp = P(x + dx, y + dy, z), Cp = P(x + dx, y + dy, z + dz), Dp = P(x, y + dy, z + dz);
+    g.appendChild(svg("polygon", Object.assign({points: ptsB51([D, C, Cp, Dp]), fill: t}, a1)));
+    g.appendChild(svg("polygon", Object.assign({points: ptsB51([B, Bp, Cp, C]), fill: d}, a1)));
+    g.appendChild(svg("polygon", Object.assign({points: ptsB51([A, B, C, D]), fill: f}, a1)));
+    if (!grille || vide) return;
+    const l = (p, q) => g.appendChild(svg("line", {x1: p[0].toFixed(2), y1: p[1].toFixed(2), x2: q[0].toFixed(2), y2: q[1].toFixed(2), stroke: trait, "stroke-width": 0.55, opacity: 0.75}));
+    for (let i = 1; i < dx; i += 1) { l(P(x + i, y, z), P(x + i, y, z + dz)); l(P(x + i, y, z + dz), P(x + i, y + dy, z + dz)); }
+    for (let j = 1; j < dz; j += 1) { l(P(x, y, z + j), P(x + dx, y, z + j)); l(P(x + dx, y, z + j), P(x + dx, y + dy, z + j)); }
+    for (let j = 1; j < dy; j += 1) { l(P(x, y + j, z + dz), P(x + dx, y + j, z + dz)); l(P(x + dx, y + j, z), P(x + dx, y + j, z + dz)); }
+  }
+  // V2 · le cube qui s'ouvre (le module « Unités de volume en 3D » de
+  // Gwenaël) : etat 0 le cube entier ; 1 dix plaques ; 2 la plaque du
+  // dessus sort à droite, en dix barres ; 3 une barre sort dessous, en dix
+  // cubes. La place finale est prise dès le début (rien ne bouge).
+  // `nombres` : « 10 plaques », « 10 barres », « 10 cubes » écrits dessous
+  // (On te montre, la correction) ; sinon le dessin seul (l'outil, l'élève
+  // compte).
+  function svgDm3({etat = 0, vert = false, nombres = false, grande = "dm³", classe = "dessin v2-dm3"} = {}) {
+    const a = 9, gz = 0.32, gx = 0.42;
+    const dyk = 10 * K_B51;
+    const largG = 10 + dyk, largD = (10 + 9 * gx) + dyk, ecart = 3.2;
+    const W = (largG + ecart + largD) * a + 8;
+    const H = (10 + 9 * gz + dyk + 3.2) * a + 8;
+    const s = svg("svg", {viewBox: `0 0 ${W.toFixed(0)} ${H.toFixed(0)}`, class: classe, role: "img",
+      "aria-label": carte().typo(etat === 0 ? `Un cube de 1 ${grande}` : `Le cube de 1 ${grande} ouvert : des plaques, des barres, des cubes`)});
+    const g = svg("g", {});
+    s.appendChild(g);
+    const x0 = 4, ybas = H - 4 - 2.6 * a;
+    const P = (x, y, z) => [x0 + a * x + K_B51 * a * y, ybas - a * z - K_B51 * a * y];
+    const coul = vert ? VERTS_B51 : BLANC_B51;
+    const tr = vert ? VERT : N;
+    const ecrit = (xu, t) => s.appendChild(svg("text", {x: (x0 + xu * a).toFixed(1), y: (H - 5).toFixed(1), "text-anchor": "middle", "font-size": 18, "font-weight": 900, fill: tr}, carte().typo(t)));
+    if (etat === 0) {
+      paveB51(g, P, [0, 0, 0, 10, 10, 10], {couleurs: coul, trait: tr});
+      if (nombres) ecrit(largG / 2, `1 ${grande}`);
+      return s;
+    }
+    const nPl = etat >= 2 ? 9 : 10;
+    for (let l = 0; l < nPl; l += 1) paveB51(g, P, [0, 0, l * (1 + gz), 10, 10, 1], {couleurs: coul, trait: tr});
+    if (nPl === 9) paveB51(g, P, [0, 0, 9 * (1 + gz), 10, 10, 1], {vide: true});
+    if (nombres) ecrit(largG / 2, "10 plaques");
+    if (etat < 2) return s;
+    const xd = largG + ecart, zd = 10 + 9 * gz - 1 - 4.2;
+    for (let i = 0; i < 10; i += 1) {
+      if (etat >= 3 && i === 0) { paveB51(g, P, [xd, 0, zd, 1, 10, 1], {vide: true}); continue; }
+      paveB51(g, P, [xd + i * (1 + gx), 0, zd, 1, 10, 1], {couleurs: vert ? VERTS_B51 : TURQ_B51, trait: tr});
+    }
+    if (nombres) s.appendChild(svg("text", {x: (x0 + (xd + largD / 2) * a).toFixed(1), y: (ybas - (zd + 1 + dyk) * a - 8).toFixed(1), "text-anchor": "middle", "font-size": 18, "font-weight": 900, fill: tr}, "10 barres"));
+    if (etat < 3) return s;
+    for (let i = 0; i < 10; i += 1) paveB51(g, P, [xd + i * (1 + gx), 0, 0, 1, 1, 1], {couleurs: vert ? VERTS_B51 : ORANGE_B51, trait: tr});
+    if (nombres) ecrit(xd + (10 + 9 * gx) / 2, "10 cubes");
+    return s;
+  }
+  // "outil", "montre" : trois touches ; "image" : déjà ouvert ; "correction" :
+  // ouvert, en vert, les nombres écrits. `note` : la note de l'outil (elle
+  // change à chaque touche).
+  function dm3V2(zone, aide, {mode = "outil", fini = () => {}, note = null} = {}) {
+    const touche = mode === "outil" || mode === "montre";
+    const boite = el("div", "dessin-boite v2-boite");
+    zone.appendChild(boite);
+    let etat = touche ? 0 : 3;
+    let dessin = null;
+    const notes = ["Touche : le cube s'ouvre.", "Touche : une plaque s'ouvre.", "Touche : une barre s'ouvre.", ""];
+    // (Les nombres s'écrivent sous le dessin, à la taille d'une note : dans
+    // le dessin, « 10 plaques » faisait 9 px au petit iPhone. On te montre
+    // les dit, une touche après l'autre ; l'outil, non : l'élève compte.)
+    const g = aide.grande || "dm³";
+    const p = g === "m³" ? "dm³" : "cm³";
+    const dits = [`Le cube de 1 ${g}.`, `10 plaques de 100 ${p}.`, `Une plaque : 10 barres de 10 ${p}.`, `Une barre : 10 cubes de 1 ${p}.`];
+    const dit = mode === "montre" ? el("div", "note v2-dit", "") : null;
+    if (dit) zone.appendChild(dit);
+    function dessiner() {
+      const nouveau = svgDm3({etat, vert: mode === "correction", nombres: false,
+        grande: g, classe: `dessin v2-dm3${touche && etat < 3 ? " a-toucher" : ""}`});
+      if (dit) dit.textContent = carte().typo(dits[etat]);
+      if (touche && etat < 3) {
+        nouveau.setAttribute("role", "button");
+        nouveau.setAttribute("tabindex", "0");
+        nouveau.addEventListener("click", toucher);
+        nouveau.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+      }
+      if (dessin) dessin.replaceWith(nouveau); else boite.appendChild(nouveau);
+      dessin = nouveau;
+      if (note && mode === "outil") note.textContent = carte().typo(notes[etat] || "");
+    }
+    function toucher() {
+      if (etat >= 3) return;
+      etat += 1;
+      dessiner();
+      if (etat >= 3) fini();
+    }
+    dessiner();
+    if (!touche) { if (mode === "montre") fini(); return null; }
+    return enChaine(toucher, () => etat < 3, 700);
+  }
+  // V3 · les trois ponts : une ligne par pont, le repère dessiné, l'égalité.
+  const PONTS_V3 = [["v1", "1 cm³", "1 mL", "Le petit cube unité"], ["v2", "1 dm³", "1 L", "Une brique de lait"], ["v3", "1 m³", "1 000 L", "Une cuve de 1 000 L"]];
+  function pontsV3(zone, {vert = false} = {}) {
+    const b = el("div", `v3-ponts${vert ? " vert" : ""}`);
+    PONTS_V3.forEach(([code, v, c, titre]) => {
+      const l = el("div", "v3-pont");
+      const ill = imageRepere(code, "v3-img");
+      ill.setAttribute("title", titre);
+      const t = el("span", "v3-eg");
+      t.append(el("b", "", carte().typo(v)), texteNoeudA(" = "), el("b", "c", carte().typo(c)));
+      l.append(ill, t);
+      b.appendChild(l);
+    });
+    zone.appendChild(b);
+    return b;
+  }
+  // V3 · le cube de 1 dm qu'on remplit avec la brique de 1 L. "outil",
+  // "montre" : un toucher verse la brique ; "image", "correction" : plein.
+  function svgRemplir({niveau = 1, vert = false, classe = "dessin v3-remplir"} = {}) {
+    const a = 11, W = 10 * a + 10 * K_B51 * a + 110, H = 10 * a + 10 * K_B51 * a + 40;
+    const s = svg("svg", {viewBox: `0 0 ${W.toFixed(0)} ${H.toFixed(0)}`, class: classe, role: "img",
+      "aria-label": carte().typo(niveau >= 1 ? "La brique de 1 L a rempli le cube de 1 dm de côté" : "Une brique de 1 L et un cube vide de 1 dm de côté")});
+    const x0 = 100, ybas = H - 32;
+    const P = (x, y, z) => [x0 + a * x + K_B51 * a * y, ybas - a * z - K_B51 * a * y];
+    const tr = vert ? VERT : N;
+    const trait = (p, q, pt) => s.appendChild(svg("line", {x1: p[0].toFixed(1), y1: p[1].toFixed(1), x2: q[0].toFixed(1), y2: q[1].toFixed(1), stroke: tr, "stroke-width": 1.6, "stroke-dasharray": pt ? "3 3" : "none"}));
+    trait(P(0, 10, 0), P(10, 10, 0), true); trait(P(0, 10, 0), P(0, 10, 10), true); trait(P(0, 0, 0), P(0, 10, 0), true);
+    const z = 10 * niveau;
+    if (niveau > 0) {
+      s.appendChild(svg("polygon", {points: ptsB51([P(10, 0, 0), P(10, 10, 0), P(10, 10, z), P(10, 0, z)]), fill: vert ? "#9fd9b4" : "#8fc6ea"}));
+      s.appendChild(svg("polygon", {points: ptsB51([P(0, 0, z), P(10, 0, z), P(10, 10, z), P(0, 10, z)]), fill: vert ? "#e9f8ee" : "#d6edfb"}));
+      s.appendChild(svg("polygon", {points: ptsB51([P(0, 0, 0), P(10, 0, 0), P(10, 0, z), P(0, 0, z)]), fill: vert ? "#cdeed8" : "#b9def5"}));
+    }
+    [[P(0, 0, 0), P(10, 0, 0)], [P(10, 0, 0), P(10, 0, 10)], [P(10, 0, 10), P(0, 0, 10)], [P(0, 0, 10), P(0, 0, 0)],
+      [P(10, 0, 0), P(10, 10, 0)], [P(10, 10, 0), P(10, 10, 10)], [P(10, 0, 10), P(10, 10, 10)], [P(0, 0, 10), P(0, 10, 10)], [P(0, 10, 10), P(10, 10, 10)]]
+      .forEach(([p, q]) => trait(p, q, false));
+    const [ax, ay] = P(0, 0, 0), [bx] = P(10, 0, 0);
+    s.appendChild(svg("text", {x: ((ax + bx) / 2).toFixed(1), y: (ay + 26).toFixed(1), "text-anchor": "middle", "font-size": 24, "font-weight": 900, fill: tr}, carte().typo("10 cm")));
+    const brique = svg("image", {href: "./conversions-reperes/c3.webp", x: 4, y: (ybas - 94).toFixed(1), width: 64, height: 96, opacity: niveau >= 1 ? 0.35 : 1, preserveAspectRatio: "xMidYMid meet"});
+    s.appendChild(brique);
+    s.appendChild(svg("text", {x: 36, y: (ybas + 26).toFixed(1), "text-anchor": "middle", "font-size": 24, "font-weight": 900, fill: tr}, carte().typo("1 L")));
+    return s;
+  }
+  function remplirV3(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const touche = mode === "outil" || mode === "montre";
+    const boite = el("div", "dessin-boite v3-boite");
+    zone.appendChild(boite);
+    let niveau = touche ? 0 : 1;
+    let dessin = null;
+    let anime = null;
+    function dessiner() {
+      const nouveau = svgRemplir({niveau, vert: mode === "correction", classe: `dessin v3-remplir${touche && niveau === 0 ? " a-toucher" : ""}`});
+      if (touche && niveau === 0) {
+        nouveau.setAttribute("role", "button");
+        nouveau.setAttribute("tabindex", "0");
+        nouveau.addEventListener("click", toucher);
+        nouveau.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+      }
+      if (dessin) dessin.replaceWith(nouveau); else boite.appendChild(nouveau);
+      dessin = nouveau;
+    }
+    function toucher() {
+      if (niveau > 0 || anime) return;
+      // (L'eau monte en dix pas : le cube se remplit, la brique se vide.)
+      let k = 0;
+      anime = root.setInterval(() => {
+        k += 1;
+        niveau = Math.min(1, k / 10);
+        if (!boite.isConnected) { root.clearInterval(anime); return; }
+        dessiner();
+        if (k >= 10) { root.clearInterval(anime); fini(); }
+      }, 60);
+    }
+    dessiner();
+    if (!touche) { if (mode === "montre") fini(); return null; }
+    return toucher;
+  }
+  // L'outil des étapes du lot B5-1.
+  function outilB51(zone, question) {
+    const note = el("div", "note", carte().typo(question.noteOutil || ""));
+    if (question.outil === "dm3-v2") {
+      if (question.relationOutil) zone.appendChild(el("div", "rel petite", carte().typo(question.relationOutil)));
+      dm3V2(zone, question.dm3V2 || {}, {note});
+      zone.appendChild(note);
+      return;
+    }
+    if (question.outil === "ponts-v3") pontsV3(zone);
+    else if (question.outil === "remplir-v3") remplirV3(zone, {});
+    if (question.noteOutil) zone.appendChild(note);
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -4651,7 +4881,7 @@
     if (aide.type === "glisse-nombre") return glisseNombre(zone, aide, f);
     if (aide.type === "glisse-unite") {
       const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers, pale: aide.pale !== false,
-        colonnes: aide.colonnes || null}, f);
+        colonnes: aide.colonnes || null, aires: Boolean(aide.aires), sous: aide.sous || null}, f);
       return () => g.animer(aide.vers);
     }
     // Lot B1-2
@@ -4712,6 +4942,10 @@
     if (aide.type === "calendrier-d4") return calendrierD4(zone, aide, f);
     if (aide.type === "frise-q6") return friseQ6(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "grandeurs") { grandeurs(zone, {bonne: aide.bonne, aire: aide.aire}); f(); }
+    // Lot B5-1 (V2, V3) : le cube qui s'ouvre, la brique qu'on verse, les ponts.
+    if (aide.type === "dm3-v2") return dm3V2(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "remplir-v3") return remplirV3(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "ponts-v3") { pontsV3(zone); f(); return null; }
     return null;
   }
   // La correction après une erreur (lot A2 ter, comme le glisse-unité animé
@@ -4722,7 +4956,7 @@
   function correctionGlisse(zone, question, {ensuite = () => {}, phrase = false} = {}) {
     const g = question.glisse;
     if (!g) return false;
-    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true, pale: g.pale !== false, colonnes: g.colonnes || null});
+    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null});
     // Lot 3b-2 : la phrase que le glisse-unité accompagne.
     if (phrase && g.phrase) {
       const n = el("div", "note phrase-glisse", carte().typo(g.phrase));
@@ -4834,7 +5068,7 @@
     if (question.outil === "glisse-unite" && (question.glisse || question.glisseOutil)) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
       const g = question.glisse || question.glisseOutil;
-      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null}, fini);
+      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       // (Lot B2-2b-2, C8 : la mesure qui ne se convertit pas, « Puis
       // j'enlève 25 cL. », « Puis je l'enlève de 3 kg. ».)
@@ -4888,6 +5122,8 @@
     if (["carre-a1", "decoupe-a2", "calcul-a2", "droite-c9"].includes(question.outil)) { outilB32(zone, question); return; }
     // Lot B4-2 (D4, Q6).
     if (["chaine-d4", "frise-q6"].includes(question.outil)) { outilB42(zone, question); return; }
+    // Lot B5-1 (V2, V3).
+    if (["dm3-v2", "ponts-v3", "remplir-v3"].includes(question.outil)) { outilB51(zone, question); return; }
     // Lot B4-1 (A3, V1, Q5).
     if (["regroupe-a3", "calcul-a3", "cubes-v1", "deux-v1", "rect-q5"].includes(question.outil)) { outilB41(zone, question); return; }
     // Lot B3-3 (D3, Q3, Q4).
@@ -5127,5 +5363,6 @@
   return Object.freeze({chaineD4, calendrierD4, friseQ6, droiteQuartsD5, horlogeQ6, tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9,
     trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33,
-    regroupeA3, calculA3, cubesV1, cubesQuestion, deuxV1, rectQ5});
+    regroupeA3, calculA3, cubesV1, cubesQuestion, deuxV1, rectQ5,
+    svgDm3, dm3V2, pontsV3, svgRemplir, remplirV3});
 });
