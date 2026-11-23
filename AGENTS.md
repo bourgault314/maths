@@ -453,6 +453,9 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
   `etapeColonne`), pas son numéro. Une fois en ligne, on n'insère donc plus
   d'étape au milieu d'une liste (tous les rangs gardés se décaleraient) : une
   étape nouvelle s'ajoute à la fin, ou le lot dit comment les rangs migrent.
+  **Des élèves ont des grades depuis le 23/11/2026** : un test garde
+  l'empreinte des 91 étapes en ligne (numéro, grade, rang, seuil, format) ;
+  la changer, c'est d'abord écrire et tester la conversion des rangs.
   Un rang plus grand que la liste est ramené à sa dernière étape, jamais à 0.
 - Une séance d'étape porte son numéro dans le champ « temps » ; un passage a
   10 calculs, « M'entraîner » 5 (la moitié du plan, corrigé après chaque
@@ -460,10 +463,16 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
   grille (1 … 53, clés `gradeReussi` et `gradeColonne`) est ignorée sans erreur.
 - **Le tirage** : chaque étape a un plan de profils (`PROFILS`). Un profil tire
   des nombres au hasard parmi tous ceux de sa largeur jusqu'au premier calcul
-  qui convient ; il ne fabrique jamais un calcul. Quatre règles d'affichage
+  qui convient ; il ne fabrique jamais un calcul. Six règles d'affichage
   seulement : jamais deux fois le même nombre de suite, jamais deux fois le
-  même calcul dans un passage, jamais « 9 + 8 − 9 » à trois nombres, et en
-  Colonne chaque sous-total vaut au moins 1. Ce que le barème ne disait pas
+  même calcul dans un passage, jamais « 9 + 8 − 9 » à trois nombres, en
+  Colonne chaque sous-total vaut au moins 1, et depuis le 23/11/2026 : avec
+  des nombres d'un chiffre, jamais un nombre ajouté ET retranché dans le même
+  calcul ; au plus « seuil − 1 » fois le même résultat dans un passage (6 au
+  Flash, 7 en Colonne : répondre toujours pareil ne réussit jamais).
+- Un Flash interrompu (onglet caché) reprend par `CORE.remplacerCalcul` : à
+  une étape, un autre calcul **du même profil**, hors du passage ; la page ne
+  tire jamais un calcul libre pendant une étape. Ce que le barème ne disait pas
   est écrit dans `_sources/anzan-bareme/PRECISIONS.md`. Les gestes
   viennent du modèle du barème (`_sources/anzan-bareme/soroban.py`, porté dans
   `gestes`).

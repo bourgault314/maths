@@ -1863,3 +1863,53 @@ test("Colonne, étape chronométrée : quitter le passage arrête le chrono ; «
   assert.equal(q.$("chrono").hidden, false);
   assert.equal(q.$("chrono-global").hidden, true);
 });
+
+// Correctif du 23/11/2026 : à une étape d'un grade, un Flash interrompu par un
+// onglet caché reprenait avec un tirage LIBRE (« 1 + 9 + 6 » au 20e kyu, qui
+// promet des gestes sans retenue). Il reprend avec un autre calcul de l'étape.
+test("étapes : onglet caché pendant un Flash du 20e kyu, étape 2 → un autre calcul de l'étape (gestes directs, total jusqu'à 9, pas un calcul du passage), un nouveau décompte, et c'est lui qui est corrigé", () => {
+  const rng = CORE.mulberry32((0.5 * 4294967296) >>> 0);
+  const reglages = CORE.reglagesEtape(102, "bip", 10);
+  const passage = CORE.tirerSeance(reglages, rng);
+  const p = ouvrirGrades(caseEtapes(1));
+  p.$("grades-liste").querySelector('[data-grade="1"]').click();
+  p.$("fiche-passer").click();
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 10");
+  // Le premier nombre est à l'écran : l'onglet est caché, puis revient.
+  p.avancer(AVANT_LE_3 + 3 * 800 + 150);
+  assert.equal(p.$("nombre").textContent, String(passage[0].termes[0].valeur));
+  p.cacherOnglet(true);
+  p.avancer(5000);
+  p.cacherOnglet(false);
+  const attendu = CORE.remplacerCalcul(reglages, passage, 0, rng)[0];
+  const cle = c => c.termes.map(t => t.valeur).join("+");
+  assert.ok(!passage.some(c => cle(c) === cle(attendu)), "pas un calcul du passage");
+  assert.equal(attendu.termes.length, 3);
+  assert.ok(attendu.termes.every(t => t.signe === 1 && t.valeur <= 9) && attendu.total <= 9, `${cle(attendu)} : trois nombres d'un chiffre, sans retenue`);
+  assert.equal(CORE.analyser(attendu.termes).retenues, 0);
+  // Un nouveau décompte, puis les trois nombres du remplaçant, rien d'autre.
+  assert.equal(p.$("decompte").hidden, false);
+  assert.equal(p.$("compte").textContent, "Calcul 1\u00a0/ 10", "rien n'est compté");
+  const vus = relever(p, dureeEtape(102));
+  assert.deepEqual(vus.map(v => v.texte), attendu.termes.map(t => String(t.valeur)));
+  // La réponse du remplaçant est la bonne ; le passage continue avec le calcul 2 prévu.
+  assert.equal(p.$("zone-rep").hidden, false);
+  p.taper(attendu.total);
+  p.touche("Enter", p.$("valider"));
+  assert.equal(p.$("compte").textContent, "Calcul 2\u00a0/ 10");
+  const suite = relever(p, dureeEtape(102));
+  assert.deepEqual(suite.map(v => v.texte), passage[1].termes.map(t => String(t.valeur)), "les autres calculs du passage n'ont pas changé");
+  for (let i = 1; i < 10; i += 1) {
+    if (i > 1) p.avancer(dureeEtape(102));
+    p.taper(passage[i].total);
+    p.touche("Enter", p.$("valider"));
+  }
+  assert.equal(p.vue(), "vue-fin");
+  assert.match(p.$("fin-grade-score").textContent, /^10\/10$/, "le calcul remplacé est compté juste avec SA réponse");
+  assert.equal(p.$("fin-grade-titre").textContent, "Grade réussi !");
+});
+
+test("étapes : la page ne tire plus jamais un calcul libre pendant une séance — la reprise passe par CORE.remplacerCalcul", () => {
+  assert.match(PAGE, /seance\.calculs = CORE\.remplacerCalcul\(seance\.reglages, seance\.calculs, seance\.index, rng\);/);
+  assert.doesNotMatch(PAGE, /CORE\.tirerCalcul\(/);
+});

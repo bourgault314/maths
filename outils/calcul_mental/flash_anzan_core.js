@@ -852,6 +852,11 @@
   // par profil, qu'au moins un tirage sur deux cents convient : la borne
   // ESSAIS_MAX n'est jamais approchée.
   const ESSAIS_MAX = 100000;
+  // Un même nombre est-il ajouté à un endroit et retranché à un autre ?
+  function seSimplifie(termes) {
+    const ajoutes = new Set(termes.filter(t => t.signe > 0).map(t => t.valeur));
+    return termes.some(t => t.signe < 0 && ajoutes.has(t.valeur));
+  }
   function tirerProfil(profil, rng) {
     if (profil.choix) return tirerProfil(profil.choix[Math.floor(rng() * profil.choix.length)], rng);
     for (let essai = 0; essai < ESSAIS_MAX; essai += 1) {
@@ -868,6 +873,13 @@
       // (la réponse se lit sans calculer ; un calcul sur cinq à certaines
       // étapes de la Colonne avant cette règle, mesuré le 22/11/2026).
       if (termes.length === 3 && termes[2].valeur === termes[0].valeur && termes[2].signe !== termes[0].signe) continue;
+      // Nombres d'un chiffre : jamais un nombre ajouté ET retranché dans le
+      // même calcul. En Colonne tout est écrit d'un coup : « 9 + 8 + 7 − 9 −
+      // 8 + 4 − 1 » se lisait « 7 + 4 − 1 » sans poser un seul geste (deux
+      // calculs sur trois à sept nombres, quatre sur dix à cinq nombres,
+      // mesuré le 23/11/2026 ; choix de Gwenaël). Dès deux chiffres, le
+      // hasard n'en donne presque plus (0 à 4 %) : rien n'y est imposé.
+      if (profil.l.every(largeur => largeur === 1) && seSimplifie(termes)) continue;
       // Le boulier ne reste jamais vide en cours de calcul : chaque
       // sous-total vaut au moins 1 (le barème ; relecture Codex du 22/11/2026).
       let sousTotal = 0;
@@ -914,14 +926,41 @@
   }
   const REDITES_MAX = 200;
   const cleDuCalcul = calcul => calcul.termes.map(t => (t.signe < 0 ? "-" : "+") + t.valeur).join("");
+  // Jamais assez de fois le même résultat pour réussir en répondant toujours
+  // pareil : au plus « seuil − 1 » calculs d'un passage ont le même total (6
+  // au Flash, 7 en Colonne ; 3 et 4 sur les 5 calculs d'un entraînement). Au
+  // 20e kyu, étape 2, 14 des 23 calculs possibles valent 9 : avant cette
+  // règle, répondre « 9 » dix fois suffisait dans un passage sur trois
+  // (mesuré le 23/11/2026). Aux autres étapes elle ne joue presque jamais.
+  const plafondDuTotal = (e, combien) => Math.ceil(combien * (e.seuil - 1) / GRADE_CALCULS);
+  // Le profil d'où vient chaque calcul d'un passage : remplacerCalcul en a
+  // besoin pour retirer un calcul DU MÊME GENRE. Hors du calcul lui-même,
+  // pour que rien ne change dans ce que la page lit ou enregistre.
+  const PROFIL_DU_CALCUL = new WeakMap();
+  // Les calculs déjà interrompus à la place d'un calcul (un Flash coupé deux
+  // fois ne revient pas au premier calcul, déjà vu en partie).
+  const DEJA_INTERROMPUS = new WeakMap();
   // Les calculs d'un passage (10) ou d'un entraînement (5) à une étape.
   function tirerEtape(numero, rng, calculs) {
     const e = etape(numero);
     if (!e) return [];
     const combien = calculs === 5 ? 5 : GRADE_CALCULS;
+    const plafond = plafondDuTotal(e, combien);
+    const totaux = new Map();
+    const compter = calcul => totaux.set(calcul.total, (totaux.get(calcul.total) || 0) + 1);
+    const trop = calcul => (totaux.get(calcul.total) || 0) >= plafond;
     if (e.dix) {
-      return melanger(DIX[e.dix].slice(), rng).slice(0, combien)
-        .map(([x, y]) => ({termes: [{signe: 1, valeur: x}, {signe: 1, valeur: y}], total: x + y}));
+      // Les dix, dans le désordre. À 5 calculs : les cinq premiers que le
+      // plafond des résultats identiques laisse passer (quatre des dix
+      // compléments à 5 valent 5).
+      const passage = [];
+      melanger(DIX[e.dix].slice(), rng).forEach(([x, y]) => {
+        const calcul = {termes: [{signe: 1, valeur: x}, {signe: 1, valeur: y}], total: x + y};
+        if (passage.length >= combien || trop(calcul)) return;
+        compter(calcul);
+        passage.push(calcul);
+      });
+      return passage;
     }
     // Jamais deux fois le même calcul dans un passage. Aux premières étapes
     // il n'existe que 23 à 32 calculs possibles : sans cette règle, neuf
@@ -932,10 +971,13 @@
     // hasard elle est hors d'atteinte (au pire 9 chances sur 23 de retomber
     // sur un calcul déjà posé, deux cents fois de suite).
     const vus = new Set();
+    const refuse = calcul => vus.has(cleDuCalcul(calcul)) || trop(calcul);
     return profilsDuPassage(e, combien, rng).map(profil => {
       let calcul = tirerProfil(profil, rng);
-      for (let essai = 0; essai < REDITES_MAX && vus.has(cleDuCalcul(calcul)); essai += 1) calcul = tirerProfil(profil, rng);
+      for (let essai = 0; essai < REDITES_MAX && refuse(calcul); essai += 1) calcul = tirerProfil(profil, rng);
       vus.add(cleDuCalcul(calcul));
+      compter(calcul);
+      PROFIL_DU_CALCUL.set(calcul, profil);
       return calcul;
     });
   }
@@ -943,6 +985,63 @@
   function tirerSeance(reglages, rng) {
     if (reglages && etape(reglages.etape)) return tirerEtape(reglages.etape, rng, reglages.calculs);
     return Array.from({length: reglages.calculs}, () => tirerCalcul(reglages, rng));
+  }
+
+  // Un Flash interrompu (onglet caché) reprend avec un AUTRE calcul : l'élève
+  // en a vu une partie. Rend la suite des calculs où celui de la place
+  // « index » est remplacé, les autres étant les mêmes objets.
+  //  - Séance libre : un nouveau tirage libre, comme toujours.
+  //  - Étape d'un grade : un calcul du MÊME profil (les gestes promis par
+  //    l'étape), jamais un calcul du passage, et le plafond des résultats
+  //    identiques tient. Avant le 23/11/2026 c'était un tirage libre : « 1 +
+  //    9 + 6 » pouvait sortir au 20e kyu, qui promet des gestes sans retenue
+  //    (relecture du 23/11/2026).
+  //  - Étape « les dix » : un des dix calculs pas encore dans le passage
+  //    (entraînement à 5) ; s'ils y sont tous, le calcul interrompu change de
+  //    place avec un calcul pas encore montré ; au dernier, il est rejoué.
+  //  - Rien de mieux à proposer (filet) : le même calcul est rejoué.
+  function remplacerCalcul(reglages, calculs, index, rng) {
+    const suite = calculs.slice();
+    const ancien = suite[index];
+    const e = reglages && etape(reglages.etape);
+    if (!e) {
+      suite[index] = tirerCalcul(reglages, rng);
+      return suite;
+    }
+    if (!ancien) return suite;
+    const interrompus = (DEJA_INTERROMPUS.get(ancien) || []).concat([cleDuCalcul(ancien)]);
+    const vus = new Set(suite.map(cleDuCalcul).concat(interrompus));
+    const totaux = new Map();
+    suite.forEach((calcul, i) => { if (i !== index) totaux.set(calcul.total, (totaux.get(calcul.total) || 0) + 1); });
+    const plafond = plafondDuTotal(e, suite.length);
+    const refuse = calcul => vus.has(cleDuCalcul(calcul)) || (totaux.get(calcul.total) || 0) >= plafond;
+    if (e.dix) {
+      const libres = DIX[e.dix]
+        .map(([x, y]) => ({termes: [{signe: 1, valeur: x}, {signe: 1, valeur: y}], total: x + y}))
+        .filter(calcul => !refuse(calcul));
+      if (libres.length) suite[index] = libres[Math.floor(rng() * libres.length)];
+      else if (index < suite.length - 1) {
+        const autre = index + 1 + Math.floor(rng() * (suite.length - 1 - index));
+        suite[index] = suite[autre];
+        suite[autre] = ancien;
+      }
+      return suite;
+    }
+    const profil = PROFIL_DU_CALCUL.get(ancien);
+    if (!profil) return suite;
+    try {
+      for (let essai = 0; essai < REDITES_MAX; essai += 1) {
+        const calcul = tirerProfil(profil, rng);
+        if (refuse(calcul)) continue;
+        PROFIL_DU_CALCUL.set(calcul, profil);
+        DEJA_INTERROMPUS.set(calcul, interrompus);
+        suite[index] = calcul;
+        break;
+      }
+    } catch (erreur) {
+      // Un hasard qui ne donne rien : le même calcul est rejoué.
+    }
+    return suite;
   }
 
   // ---------------------------------------------------------------------
@@ -1159,6 +1258,7 @@
     nombreDeChiffres,
     tirerCalcul,
     tirerSeance,
+    remplacerCalcul,
     coupure,
     etatAuTemps,
     secondes,

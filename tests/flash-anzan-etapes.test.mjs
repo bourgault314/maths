@@ -551,11 +551,17 @@ test("« M'entraîner » en 5 calculs = la moitié du plan, dans le désordre", 
 // ----------------------------------------------------------------- le hasard
 
 // Les règles d'affichage du tirage, récrites ici sans le moteur : jamais deux fois le même nombre de suite, jamais
-// « 9 + 8 − 9 » à trois nombres, et un boulier jamais vide en cours de calcul (chaque sous-total vaut au moins 1).
+// « 9 + 8 − 9 » à trois nombres, jamais un nombre ajouté puis retranché quand les nombres ont un chiffre, et un
+// boulier jamais vide en cours de calcul (chaque sous-total vaut au moins 1).
+// Un même nombre ajouté à un endroit et retranché à un autre (« 9 + 8 + 7 − 9 − 8 » se lit « 7 »).
+function seSimplifie(c) {
+  return c.termes.some(x => x.signe < 0 && c.termes.some(y => y.signe > 0 && y.valeur === x.valeur));
+}
 function affichable(c) {
   const t = c.termes;
   if (t.some((x, i) => i > 0 && x.valeur === t[i - 1].valeur)) return false;
   if (t.length === 3 && t[2].valeur === t[0].valeur && t[2].signe !== t[0].signe) return false;
+  if (t.every(x => x.valeur <= 9) && seSimplifie(c)) return false; // nombres d'un chiffre : rien d'ajouté puis retranché
   let s = 0;
   return t.every(x => { s += x.signe * x.valeur; return s >= 1; });
 }
@@ -836,4 +842,179 @@ test("un hasard truqué ne bloque jamais le tirage : il s'arrête, par une erreu
   const passage = CORE.tirerEtape(101, alterne, 10);
   assert.equal(passage.length, 10);
   assert.ok(passage.every(c => GARANTIES.F01.chaque(c)));
+});
+
+// ---------------------------------------------------------------------------
+// Correctif du 23/11/2026 (seconde relecture, sur la version en ligne) :
+// les annulations en Colonne, « toujours 9 », la reprise d'un Flash interrompu.
+// ---------------------------------------------------------------------------
+const cleDe = c => c.termes.map(t => (t.signe < 0 ? "-" : "+") + t.valeur).join("");
+const leMemeTotalAuPlus = passage => Math.max(...Object.values(passage.reduce((n, c) => { n[c.total] = (n[c.total] || 0) + 1; return n; }, {})));
+
+test("nombres d'un chiffre : jamais un nombre ajouté puis retranché dans le même calcul (« 9 + 8 + 7 − 9 − 8 + 4 − 1 » se lisait « 7 + 4 − 1 ») — et rien d'imposé dès deux chiffres", () => {
+  const rng = CORE.mulberry32(2311);
+  const unChiffre = CORE.ETAPES_COLONNE.filter(e => e.chiffresMax === 1);
+  assert.deepEqual(unChiffre.map(e => e.code), ["C01", "C02", "C03", "C04", "C05", "C06", "C07", "C08", "C09"]);
+  for (const e of unChiffre) {
+    const vus = new Set();
+    for (const calculs of [10, 5]) {
+      for (let k = 0; k < PASSAGES; k += 1) {
+        CORE.tirerEtape(e.numero, rng, calculs).forEach(c => {
+          vus.add(cleDe(c));
+          assert.equal(seSimplifie(c), false, `${e.code} : ${ecrire(c)}`);
+        });
+      }
+    }
+    // Les quatre étapes où le hasard en donnait (4 à 7 calculs sur 10) gardent des milliers de calculs différents.
+    if (e.nombres >= 5) assert.ok(vus.size >= 1500, `${e.code} : ${vus.size} calculs différents`);
+  }
+  // Le Flash n'a que des additions : la règle n'y retire rien (les comptes des calculs possibles sont inchangés, test des doublons).
+  // À deux chiffres et plus, le hasard reste entier : les rares annulations (≈ 4 % à cinq nombres de 2 chiffres) sortent encore.
+  let annulations = 0;
+  for (let k = 0; k < PASSAGES; k += 1) annulations += CORE.tirerEtape(etapeDe("C15").numero, rng, 10).filter(seSimplifie).length;
+  assert.ok(annulations >= 30 && annulations <= 300, `C15 : ${annulations} calculs sur 3 000 où un nombre s'annule (le hasard, pas une règle)`);
+});
+
+test("répondre toujours pareil ne réussit jamais : au plus 6 fois le même résultat dans un passage du Flash, 7 en Colonne (3 et 4 à l'entraînement) — 300 passages par étape", () => {
+  const rng = CORE.mulberry32(979);
+  for (const e of CORE.ETAPES) {
+    assert.equal(e.seuil, e.colonne ? 8 : 7);
+    for (let k = 0; k < PASSAGES; k += 1) {
+      const passage = CORE.tirerEtape(e.numero, rng, 10);
+      assert.ok(leMemeTotalAuPlus(passage) <= e.seuil - 1, `${e.code} : ${passage.map(c => c.total).join(" ")}`);
+      const cinq = CORE.tirerEtape(e.numero, rng, 5);
+      assert.ok(leMemeTotalAuPlus(cinq) <= (e.colonne ? 4 : 3), `${e.code}, entraînement : ${cinq.map(c => c.total).join(" ")}`);
+    }
+  }
+  // 20e kyu, étape 2 : 14 des 23 calculs possibles valent 9. Le 9 reste le résultat le plus fréquent (il n'est pas
+  // chassé), mais « 9 » dix fois ne suffit plus jamais — avant la règle, un passage sur trois.
+  const possibles = new Map();
+  let neufs = 0;
+  let pleins = 0;
+  for (let k = 0; k < 2000; k += 1) {
+    const passage = CORE.tirerEtape(102, rng, 10);
+    passage.forEach(c => possibles.set(cleDe(c), c.total));
+    const n = passage.filter(c => c.total === 9).length;
+    neufs += n;
+    if (n === 6) pleins += 1;
+    assert.ok(n <= 6);
+  }
+  assert.equal(possibles.size, 23, "les 23 calculs possibles sortent toujours tous");
+  assert.equal([...possibles.values()].filter(t => t === 9).length, 14);
+  assert.ok(neufs / 2000 >= 5 && pleins >= 400, `en moyenne ${neufs / 2000} calculs sur 10 valent 9 ; ${pleins} passages sur 2 000 en ont 6`);
+});
+
+test("reprise d'un Flash interrompu, à une étape : un AUTRE calcul du même genre — la garantie de l'étape tient, aucun calcul du passage n'est reposé, le plan des dix et le plafond tiennent (chaque étape, chaque place)", () => {
+  const rng = CORE.mulberry32(4711);
+  for (const e of CORE.ETAPES.filter(x => !x.dix)) {
+    const garantie = GARANTIES[e.code];
+    const reglages = CORE.reglagesEtape(e.numero, "bip", 10);
+    for (let k = 0; k < 12; k += 1) {
+      const passage = CORE.tirerSeance(reglages, rng);
+      const avant = passage.slice();
+      for (let index = 0; index < 10; index += 1) {
+        const suite = CORE.remplacerCalcul(reglages, passage, index, rng);
+        assert.deepEqual(passage, avant, "la suite reçue n'est pas touchée");
+        assert.equal(suite.length, 10);
+        suite.forEach((c, i) => { if (i !== index) assert.equal(c, passage[i], `${e.code} : les autres calculs sont les mêmes`); });
+        const neuf = suite[index];
+        const texte = `${e.code}, place ${index + 1} : ${ecrire(passage[index])} → ${ecrire(neuf)}`;
+        assert.ok(!passage.some(c => cleDe(c) === cleDe(neuf)), `${texte} : déjà dans le passage`);
+        assert.equal(neuf.termes.length, e.nombres, texte);
+        assert.equal(neuf.total, neuf.termes.reduce((s, t) => s + t.signe * t.valeur, 0), texte);
+        assert.ok(affichable(neuf), texte);
+        assert.ok(garantie.chaque(neuf), `${texte} : ne tient pas ce que ${e.code} annonce`);
+        if (garantie.passage) assert.deepEqual(garantie.passage(suite), garantie.attendu, `${texte} : le plan des dix calculs`);
+        assert.ok(leMemeTotalAuPlus(suite) <= e.seuil - 1, `${texte} : ${suite.map(c => c.total).join(" ")}`);
+        // Interrompu une seconde fois : le remplaçant se remplace lui aussi, toujours dans la garantie.
+        const encore = CORE.remplacerCalcul(reglages, suite, index, rng)[index];
+        assert.ok(garantie.chaque(encore) && cleDe(encore) !== cleDe(neuf) && !passage.some(c => cleDe(c) === cleDe(encore)), `${texte} → ${ecrire(encore)}`);
+      }
+    }
+    // « M'entraîner » en 5 calculs : pareil.
+    const cinq = CORE.reglagesEtape(e.numero, "bip", 5);
+    const court = CORE.tirerSeance(cinq, rng);
+    const suite = CORE.remplacerCalcul(cinq, court, 2, rng);
+    assert.equal(suite.length, 5);
+    assert.ok(garantie.chaque(suite[2]) && !court.some(c => cleDe(c) === cleDe(suite[2])), `${e.code}, entraînement : ${ecrire(suite[2])}`);
+  }
+});
+
+test("reprise au 20e kyu, étape 2 : plus jamais « 1 + 9 + 6 » — trois nombres d'un chiffre posés par gestes directs, total jusqu'à 9 (2 000 reprises)", () => {
+  const rng = CORE.mulberry32(196);
+  const reglages = CORE.reglagesEtape(102, "bip", 10);
+  for (let k = 0; k < 200; k += 1) {
+    const passage = CORE.tirerSeance(reglages, rng);
+    for (let index = 0; index < 10; index += 1) {
+      const neuf = CORE.remplacerCalcul(reglages, passage, index, rng)[index];
+      assert.ok(neuf.total <= 9 && pose(neuf.termes).retenues === 0, ecrire(neuf));
+      assert.ok(parmi(neuf, "D"), `${ecrire(neuf)} : des gestes directs seulement`);
+    }
+  }
+});
+
+test("reprise aux deux étapes « les dix » : à 10 calculs, le calcul interrompu change de place avec un calcul pas encore montré (au dernier, il est rejoué) ; à 5, un des dix pas encore posés", () => {
+  const rng = CORE.mulberry32(1010);
+  for (const e of CORE.ETAPES.filter(x => x.dix)) {
+    const dix = CORE.DIX[e.dix].map(([x, y]) => `+${x}+${y}`).sort();
+    const reglages = CORE.reglagesEtape(e.numero, "bip", 10);
+    for (let k = 0; k < 40; k += 1) {
+      const passage = CORE.tirerSeance(reglages, rng);
+      for (let index = 0; index < 10; index += 1) {
+        const suite = CORE.remplacerCalcul(reglages, passage, index, rng);
+        assert.deepEqual(suite.map(cleDe).sort(), dix, `${e.code} : toujours les dix calculs, chacun une fois`);
+        assert.deepEqual(suite.slice(0, index), passage.slice(0, index), "les calculs déjà faits ne bougent pas");
+        if (index < 9) {
+          assert.notEqual(suite[index], passage[index], `${e.code}, place ${index + 1} : un autre calcul`);
+          assert.ok(passage.indexOf(suite[index]) > index, "il vient de la suite, pas des calculs déjà faits");
+        } else assert.equal(suite[9], passage[9], "le dernier ne peut qu'être rejoué");
+      }
+    }
+    const cinq = CORE.reglagesEtape(e.numero, "bip", 5);
+    for (let k = 0; k < 40; k += 1) {
+      const court = CORE.tirerSeance(cinq, rng);
+      const suite = CORE.remplacerCalcul(cinq, court, 1, rng);
+      assert.ok(dix.includes(cleDe(suite[1])) && !court.some(c => cleDe(c) === cleDe(suite[1])), `${e.code}, entraînement : ${ecrire(suite[1])}`);
+      assert.equal(new Set(suite.map(cleDe)).size, 5);
+    }
+  }
+});
+
+test("reprise : la séance libre tire comme avant (un tirage libre, à graine donnée) ; un calcul venu d'ailleurs ou un hasard truqué ne bloquent rien — le même calcul est rejoué", () => {
+  const libre = CORE.normaliser("flash", {operations: "plusmoins", chiffresMin: 2, chiffresMax: 3, nombres: 4, temps: 5, calculs: 5, son: "bip"});
+  const a = CORE.mulberry32(5);
+  const b = CORE.mulberry32(5);
+  const seance = CORE.tirerSeance(libre, a);
+  CORE.tirerSeance(libre, b);
+  const suite = CORE.remplacerCalcul(libre, seance, 3, a);
+  assert.deepEqual(suite[3], CORE.tirerCalcul(libre, b), "le même tirage libre qu'avant le correctif");
+  suite.forEach((c, i) => { if (i !== 3) assert.equal(c, seance[i]); });
+  // Un calcul qui ne vient pas du tirage de l'étape (aucun profil connu) : rejoué tel quel.
+  const reglages = CORE.reglagesEtape(102, "bip", 10);
+  const passage = CORE.tirerSeance(reglages, a);
+  const intrus = {termes: plus([1, 2, 5]), total: 8};
+  const avecIntrus = passage.slice();
+  avecIntrus[4] = intrus;
+  assert.equal(CORE.remplacerCalcul(reglages, avecIntrus, 4, a)[4], intrus);
+  // Un hasard truqué (toujours le même nombre) : aucun autre calcul possible, pas d'erreur, pas de boucle.
+  for (const numero of [101, 102, 125, 140, 165]) {
+    const r = CORE.reglagesEtape(numero, "bip", 10);
+    const p = CORE.tirerSeance(r, a);
+    assert.equal(CORE.remplacerCalcul(r, p, 0, () => 0)[0], p[0], `étape ${numero}`);
+    assert.equal(CORE.remplacerCalcul(r, p, 0, () => 0.999999)[0], p[0], `étape ${numero}`);
+  }
+  // Une place qui n'existe pas : rien ne change.
+  assert.deepEqual(CORE.remplacerCalcul(reglages, passage, 12, a), passage);
+});
+
+// Des élèves ont des grades (23/11/2026). Le parcours garde le RANG de la plus haute étape réussie : glisser une
+// étape au milieu, en retirer une ou changer son seuil décalerait ce qu'ils ont gagné. Cette empreinte porte sur
+// les 91 étapes en ligne (101 à 165, 201 à 226) ; des étapes ajoutées APRÈS (les dan de la Colonne) ne la changent
+// pas. La changer = écrire d'abord la conversion des rangs enregistrés, et la tester.
+test("les 91 étapes en ligne gardent leur numéro, leur grade, leur rang et leur seuil : rien de ce qu'un élève a validé ne peut bouger sans conversion", async () => {
+  const {createHash} = await import("node:crypto");
+  const enLigne = CORE.ETAPES.filter(e => (e.numero >= 101 && e.numero <= 165) || (e.numero >= 201 && e.numero <= 226));
+  assert.equal(enLigne.length, 91);
+  const lignes = enLigne.map(e => [e.numero, e.code, e.grade, e.rang, e.sur, e.seuil, e.chrono, e.nombres, e.chiffresMin, e.chiffresMax, e.dixiemes].join(" "));
+  assert.equal(createHash("sha256").update(lignes.join("\n")).digest("hex"), "3fc084b3e8226d1afeb0839b661e5928c06a029bbbc79b23e5e3c4346b673cf6");
 });
