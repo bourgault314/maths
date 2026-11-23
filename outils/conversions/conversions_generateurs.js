@@ -153,7 +153,9 @@
     longueur: {Mm: 6, km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9},
     masse: {t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3, "µg": -6, ng: -9},
     contenance: {hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6},
-    aire: {"km²": 6, "m²": 0, "dm²": -2, "cm²": -4, "mm²": -6},
+    // (Lot B5-1 : hm² et dam² pour le tableau des aires de 5e, l'hectare et
+    // l'are à leur place.)
+    aire: {"km²": 6, "hm²": 4, ha: 4, "dam²": 2, a: 2, "m²": 0, "dm²": -2, "cm²": -4, "mm²": -6},
     volume: {"m³": 0, "dm³": -3, "cm³": -6},
     octet: {o: 0, ko: 3, Mo: 6, Go: 9},
     puissance: {W: 0, kW: 3, MW: 6, GW: 9},
@@ -194,7 +196,9 @@
     Go: "gigaoctets", Mo: "mégaoctets", ko: "kilooctets", o: "octets", "µm": "micromètres", nm: "nanomètres", Mm: "mégamètres",
     "µg": "microgrammes", ng: "nanogrammes", "µL": "microlitres", W: "watts", kW: "kilowatts", MW: "mégawatts", GW: "gigawatts",
     // Lot B3-2 : les aires du CM2.
-    "cm²": "centimètres carrés", "dm²": "décimètres carrés", "m²": "mètres carrés"
+    "cm²": "centimètres carrés", "dm²": "décimètres carrés", "m²": "mètres carrés",
+    // Lot B5-1 : les aires de 5e.
+    "mm²": "millimètres carrés", "km²": "kilomètres carrés", ha: "hectares", a: "ares", "hm²": "hectomètres carrés", "dam²": "décamètres carrés"
   };
 
   function grandeurDe(unite) {
@@ -2448,7 +2452,9 @@
   // dans les unités de longueur.)
   const ORDRE_UNITES_2 = {longueur: ["mm", "cm", "dm", "m", "km"], masse: ["mg", "g", "kg", "t"], contenance: ["mL", "cL", "dL", "L"],
     // (Lot B3-1 : « Mes repères d'aire » au même modèle, les unités du CM2.)
-    aire: ["cm²", "dm²", "m²"]};
+    aire: ["cm²", "dm²", "m²"],
+    // (Lot B5-1 : « Mes repères de volume ».)
+    volume: ["cm³", "dm³", "m³"]};
   // Le nom court d'un repère, sous son dessin, au téléphone (relier, l'objet
   // à trouver) : deux lignes au plus.
   const COURTS_2 = {l1: "La plus petite graduation", l2: "Une pièce de 1 centime", l5: "Un tour de piste", l6: "Le viaduc du Littoral",
@@ -2457,7 +2463,9 @@
     // Lot R1-refonte
     l13: "La poignée de la porte", l14: "10 terrains de foot", l15: "Ma main", m6: "Une petite voiture",
     // Lot B3-1
-    a1: "Un carreau de 1 cm", a6: "L'ongle du pouce", a7: "La paume de ma main", a3: "Une affiche A0", a4: "Un terrain de foot"};
+    a1: "Un carreau de 1 cm", a6: "L'ongle du pouce", a7: "La paume de ma main", a3: "Une affiche A0", a4: "Un terrain de foot",
+    // Lot B5-1
+    v1: "Le petit cube unité", v2: "Une brique de lait", v3: "Une cuve d'eau de pluie", v4: "Une piscine olympique"};
   // (Gardés une fois calculés : les séries tirent des centaines de questions.)
   const VIVIERS_2 = {};
   function vivier2(code) {
@@ -2635,7 +2643,9 @@
     masse: ["Lequel pèse le plus ?", "Lequel pèse le moins ?"],
     contenance: ["Lequel contient le plus ?", "Lequel contient le moins ?"],
     // (Lot B3-1)
-    aire: ["Lequel a la plus grande aire ?", "Lequel a la plus petite aire ?"]};
+    aire: ["Lequel a la plus grande aire ?", "Lequel a la plus petite aire ?"],
+    // (Lot B5-1)
+    volume: ["Lequel a le plus grand volume ?", "Lequel a le plus petit volume ?"]};
   function questionComparer(code, degre, rng, eviter = []) {
     const {tous} = vivier2(code);
     const k = degre === 1 ? 10n : degre === 2 ? 3n : 1n;
@@ -12742,6 +12752,768 @@
     };
   });
 
+  // ======================================================== palier 5 (lot B5-1)
+  // A4 « Toutes les unités d'aire », R10 « Mes repères de volume », V2
+  // « 1 dm³ = 1 000 cm³ », V3 « Volume et contenance ». Choix de Gwenaël du
+  // 22/11 (lot B5-1a, les trois recommandés) : V2, le décimètre cube s'ouvre
+  // en trois touches (10 plaques, une plaque en 10 barres, une barre en 10
+  // cubes : son module « Unités de volume en 3D ») ; V3, l'outil, les trois
+  // ponts dessinés (1 cm³ = 1 mL, 1 dm³ = 1 L, 1 m³ = 1 000 L) ; A4, son
+  // tableau des aires (deux cases par unité, ha et a sous hm² et dam²,
+  // seulement les colonnes utiles) quand on saute une unité ou plus, le
+  // calcul « × 100 » entre deux unités voisines (comme A3).
+  // Le programme de 5e (S096, S097 p. 10, 22, 24, 26) : connaître les unités
+  // d'aire et de volume (automatisme) ; le cube de 10 ; 1 L = 1 dm³ ; les
+  // conversions de volume et de capacité « dans des situations de la vie
+  // courante ». S186 : retenir les relations (1 m² = 10 dm × 10 dm =
+  // 100 dm²) plutôt qu'un tableau dont le sens échappe. Carte v4 : l'are et
+  // l'hectare (gardés par Gwenaël le 14/11) ; « pour passer des cm² aux mm²,
+  // on multiplie par 10 » en vrai / faux (NCETM) ; « 1 L = 1 m³ ? » et
+  // 3,57 L en cm³ (brevet 2026) ; 33 cL en cm³ (attendu de 5e) ; 1 L d'eau
+  // pèse 1 kg, 1 m³ d'eau 1 t, 1 mL d'eau 1 g.
+  // Un outil ne donne jamais la réponse ; un pourquoi : 31 signes au plus.
+
+  // ---------------------------------------------- A4 · Toutes les unités d'aire
+  const UNITES_A4 = ["km²", "hm²", "dam²", "m²", "dm²", "cm²", "mm²"];
+  // L'hectare et l'are sont dans le tableau sous hm² et dam² (comme dans
+  // l'exerciseur de Gwenaël, AREA_LABELS) ; leur colonne.
+  const COLONNE_A4 = {ha: "hm²", a: "dam²"};
+  const colA4 = u => COLONNE_A4[u] || u;
+  // Les colonnes utiles du tableau : de l'unité la plus grande touchée par
+  // le nombre (ou par la réponse) à la plus petite, plus une voisine de
+  // chaque côté s'il reste de la place ; cinq unités au plus (dix cases).
+  function colonnesA4(v, de, vers) {
+    const iDe = UNITES_A4.indexOf(colA4(de));
+    const iVers = UNITES_A4.indexOf(colA4(vers));
+    const [e, d = ""] = brut(v).split(",");
+    const caseUnite = 2 * iDe + 1;
+    const gauche = caseUnite - (e.length - 1);
+    const droite = caseUnite + d.length;
+    let a = Math.min(Math.floor(gauche / 2), iVers, iDe);
+    let b = Math.max(Math.floor(droite / 2), iVers, iDe);
+    if (a < 0 || b >= UNITES_A4.length) return null;
+    if (b - a + 1 < 5 && a > 0) a -= 1;
+    if (b - a + 1 < 5 && b < UNITES_A4.length - 1) b += 1;
+    if (b - a + 1 > 6) return null;
+    const colonnes = [];
+    UNITES_A4.slice(a, b + 1).forEach(u => colonnes.push("", u));
+    return colonnes;
+  }
+  // Une conversion d'aire de 5e : la question, sa relation, sa ligne.
+  function conversionA4(degre, v, de, vers) {
+    const rep = convertir(v, de, vers);
+    if (rep === null || rep <= 0n || rep > 10000000n * MILLE || decimales(rep) > 3 || rep === v) return null;
+    const bas = exposant(de) > exposant(vers);
+    const [g, p] = bas ? [de, vers] : [vers, de];
+    const F = facteur(g, p);
+    const X = mes(v, de);
+    const R = mes(rep, vers);
+    const x = questionConversion("A4", degre, "nombre", v, de, vers, {
+      relation: relationTexte(g, p), grandeur: "aire", relationCle: `${g}-${p}`, facteurA4: String(F)});
+    x.correction = [`${X} = ${R}`];
+    return x;
+  }
+  // Entre deux unités voisines (× 100, ÷ 100) : le calcul de A3.
+  const VOISINS_A4 = [["cm²", "mm²"], ["dm²", "cm²"], ["m²", "dm²"], ["a", "m²"], ["ha", "a"], ["km²", "ha"]];
+  function calculA4(x) {
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const [g, p] = bas ? [d.de, d.vers] : [d.vers, d.de];
+    const X = mes(v, d.de);
+    const R = mes(milli(x.reponse), d.vers);
+    const note = bas ? `En ${p}, un nombre 100 fois plus grand.` : `En ${g}, un nombre 100 fois plus petit.`;
+    return Object.assign(x, {outil: "calcul-a3", calculA3: {gauche: X, nombre: ecrire(v), op: bas ? "×" : "÷", facteur: "100", unite: bas ? p : g},
+      noteOutil: note, image: [x.relation, note], sorteA4: bas ? "voisin" : "voisin-haut",
+      lignesB33: bas ? [`${X} = ${ecrire(v)} × 100${NB}${p}`, ["= ", R, ""]] : [`${X} = (${ecrire(v)} ÷ 100)${NB}${g}`, ["= ", R, ""]]});
+  }
+  function voisinA4(degre, rng) {
+    const c = () => entre(rng, 1, 9);
+    for (let essai = 0; essai < 40; essai += 1) {
+      // (L'are, peu employé : seulement au degré 3.)
+      const [g, p] = choisir(rng, degre === 3 ? VOISINS_A4 : VOISINS_A4.filter(([u, v]) => u !== "a" && v !== "a"));
+      const bas = rng() < 0.55;
+      let t;
+      if (bas) t = degre === 1 ? String(entre(rng, 2, 25)) : degre === 2 ? choisir(rng, [`${c()},${c()}`, `${c()},${c()}${c()}`, `${entre(rng, 11, 49)},${c()}`]) : choisir(rng, [`0,${c()}`, `0,0${c()}`, `${c()},0${c()}`]);
+      else t = degre === 1 ? String(100 * entre(rng, 2, 25)) : degre === 2 ? choisir(rng, [`${c()}${c()}0`, `${c()}${c()}${c()}`, `${c()}${c()}`]) : choisir(rng, [`${c()}`, `${c()}0${c()}`, `${c()}${c()}0${c()}`]);
+      const x = bas ? conversionA4(degre, milli(t), g, p) : conversionA4(degre, milli(t), p, g);
+      if (x) return calculA4(x);
+    }
+    return null;
+  }
+  // On saute une unité ou plus : le tableau des aires (`glisse` avec deux
+  // cases par unité). [de, vers, les nombres du degré 1, 2, 3].
+  const SAUTS_A4 = [
+    ["m²", "cm²", ["2", "5", "12"], ["3,5", "1,2", "0,5", "2,75"], ["0,08", "0,4", "1,05"]],
+    ["cm²", "m²", ["20000", "50000"], ["4500", "12000", "8500"], ["600", "250", "95000"]],
+    ["ha", "m²", ["2", "3", "15"], ["2,5", "0,7", "1,2"], ["0,08", "0,35", "12,5"]],
+    ["m²", "ha", ["30000", "20000"], ["7000", "4500", "25000"], ["800", "125000"]],
+    ["km²", "m²", ["2", "3"], ["0,5", "1,5", "0,25"], ["0,03", "0,125"]],
+    ["km²", "ha", ["3", "12", "25"], ["2,5", "0,8"], ["0,05", "1,25"]],
+    ["dm²", "mm²", ["2", "6"], ["0,5", "1,5"], ["0,07", "0,25"]],
+    ["mm²", "dm²", ["20000"], ["4500", "12000"], ["600", "750"]],
+    ["m²", "a", ["800", "1200"], ["450", "2500"], ["75", "1050"]]
+  ];
+  function sautA4(degre, rng, choisi = null) {
+    for (let essai = 0; essai < 30; essai += 1) {
+      const s = choisi || choisir(rng, SAUTS_A4);
+      const [de, vers] = s;
+      // (m² ↔ a et km² ↔ ha : voisins dans le tableau, mais l'hectare ou
+      // l'are : le tableau.)
+      const t = choisir(rng, s[1 + degre]);
+      const v = milli(t);
+      const x = conversionA4(degre, v, de, vers);
+      if (!x) continue;
+      const colonnes = colonnesA4(v, de, vers);
+      if (!colonnes) continue;
+      const sous = [de, vers].some(u => u === "ha" || u === "a") ? {"hm²": "ha", "dam²": "a"} : null;
+      Object.assign(x, {
+        outil: "glisse-unite", glisse: {valeur: brut(v), de: colA4(de), vers: colA4(vers), grandeur: "aire", pale: false, colonnes, aires: true, sous},
+        sorteA4: "saut", image: [x.relation, "Deux cases par unité."]
+      });
+      x.lignesB33 = null;
+      return x;
+    }
+    return null;
+  }
+  // Des aires vraies : [l'énoncé, la mesure, son unité, l'unité demandée, le degré].
+  const SITUATIONS_A4 = [
+    ["Un timbre a une aire de 6 cm².", "6", "cm²", "mm²", 1],
+    ["Un carreau de faïence a une aire de 4 dm².", "4", "dm²", "cm²", 1],
+    ["Un champ de 10 000 m² est à vendre.", "10000", "m²", "ha", 1],
+    ["Une parcelle de jardin créole a une aire de 4 a.", "4", "a", "m²", 1],
+    ["Un champ de cannes a une aire de 3,5 ha.", "3,5", "ha", "m²", 2],
+    ["Un terrain de football a une aire d'environ 7 000 m².", "7000", "m²", "ha", 2],
+    ["La Réunion a une aire d'environ 2 500 km².", "2500", "km²", "ha", 2],
+    ["Le tableau de la classe a une aire de 3,8 m².", "3,8", "m²", "cm²", 2],
+    ["Une carte bancaire a une aire d'environ 4 600 mm².", "4600", "mm²", "cm²", 2],
+    ["Une case créole est construite sur un terrain de 6,5 a.", "6,5", "a", "m²", 2],
+    ["Le cœur du parc national de La Réunion couvre environ 1 050 km².", "1050", "km²", "ha", 3],
+    ["L'écran d'une montre a une aire d'environ 900 mm².", "900", "mm²", "cm²", 3],
+    ["Une feuille A4 a une aire d'environ 0,06 m².", "0,06", "m²", "cm²", 3],
+    ["Un champ de letchis a une aire de 0,8 ha.", "0,8", "ha", "m²", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function situationA4(degre, rng) {
+    const vivier = SITUATIONS_A4.map((s, k) => [s, k]).filter(([s]) => s[4] === degre);
+    const [[enonce, n, de, vers], k] = choisir(rng, vivier);
+    const v = milli(n);
+    const voisins = Math.abs(UNITES.aire[de] - UNITES.aire[vers]) === 2 && ![de, vers].some(u => u === "ha" || u === "a");
+    let x;
+    if (voisins) { const y = conversionA4(degre, v, de, vers); x = y && calculA4(y); }
+    else x = sautA4(degre, rng, [de, vers, [n], [n], [n]]);
+    if (!x) return null;
+    const avant = `${mes(v, de)} =`;
+    return Object.assign(x, {texte: `${enonce} ${avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant, apres: vers},
+      sorteA4: `situation-${x.sorteA4}`, situationA4: k, cleBase: x.cle, cle: `A4:s:${k}`});
+  }
+  // Les relations à connaître (au choix) : 1 cm² = 100 mm², 1 m² =
+  // 10 000 cm², 1 a = 100 m², 1 ha = 10 000 m², 1 km² = 100 ha.
+  const FAITS_A4 = [
+    ["cm²", "mm²", [10n, 100n, 1000n], `1${NB}cm = 10${NB}mm`, "Un carré de 1 cm de côté.", `1${NB}cm² = 10${NB}mm × 10${NB}mm = `],
+    ["m²", "cm²", [100n, 1000n, 10000n], `1${NB}m = 100${NB}cm`, "Un carré de 1 m de côté.", `1${NB}m² = 100${NB}cm × 100${NB}cm = `],
+    ["a", "m²", [10n, 100n, 1000n], `1${NB}a : un carré de 10${NB}m de côté`, "Je compte les carrés de 1 m².", `1${NB}a = 10${NB}m × 10${NB}m = `],
+    ["ha", "m²", [100n, 1000n, 10000n], `1${NB}ha : un carré de 100${NB}m de côté`, "Je compte les carrés de 1 m².", `1${NB}ha = 100${NB}m × 100${NB}m = `],
+    ["km²", "ha", [10n, 100n, 1000n], `1${NB}km = 1${FINE}000${NB}m = 10 × 100${NB}m`, "Un hectare : un carré de 100 m de côté.", `1${NB}km² = 10 × 10${NB}ha = `]
+  ];
+  function faitA4(degre, rng, inverse = false) {
+    const [g, p, trois0, rel, note, debut] = choisir(rng, FAITS_A4);
+    const F = facteur(g, p);
+    const fin = mes(F * MILLE, p);
+    if (inverse) {
+      const x = conversionA4(degre, F * MILLE, p, g);
+      if (!x) return null;
+      return Object.assign(x, {outil: "lignes", outilLignes: [rel], outilPetit: true, noteOutil: note, sorteA4: "fait-inverse",
+        image: [rel], lignesB33: [[`${fin} = `, `1${NB}${g}`, ""]], cle: `A4:f:${g}:inv`});
+    }
+    const x = conversionA4(degre, MILLE, g, p);
+    if (!x) return null;
+    const trois = melanger(rng, trois0);
+    const choix = trois.map(k => ecrire(k * MILLE));
+    const bon = trois.indexOf(F);
+    const pourquoi = {};
+    trois.forEach((k, i) => { if (k !== F) pourquoi[i] = `${debut.split(" = ").slice(1).join(" = ")}${fin}.`; });
+    const phrase = `1${NB}${g} = ${CASE}${NB}${p}`;
+    return Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: p, sorte: "nombres"}, choix, bon, pourquoi,
+      outil: "lignes", outilLignes: [rel], outilPetit: true, noteOutil: note, sorteA4: "fait", image: [rel],
+      lignesB33: [[debut, fin, ""]], cleBase: x.cle, cle: `A4:f:${g}`});
+  }
+  // Vrai ou faux (NCETM : « pour passer des cm² aux mm², on multiplie par 10 »).
+  const VRAIFAUX_A4 = [
+    ["Pour passer des cm² aux mm², on multiplie par 10.", false, "Par 100 : 10 × 10."],
+    ["Pour passer des m² aux dm², on multiplie par 100.", true, "1 m² = 100 dm²."],
+    ["Pour passer des m² aux cm², on multiplie par 100.", false, "Par 10 000 : 100 × 100."],
+    ["Pour passer des mm² aux cm², on divise par 100.", true, "100 mm² font 1 cm²."],
+    ["1 ha = 100 m².", false, "1 ha = 10 000 m²."],
+    ["1 ha = 10 000 m².", true, "Un carré de 100 m de côté."],
+    ["1 km² = 1 000 m².", false, "1 km² = 1 000 000 m²."],
+    ["1 km² = 100 ha.", true, "10 rangées de 10 hectares."],
+    ["1 a = 100 m².", true, "Un carré de 10 m de côté."]
+  ].map(([t, v, p]) => [CARTE.typo(t), v, CARTE.typo(p)]);
+  function vraiFauxA4(degre, rng) {
+    const k = entre(rng, 0, VRAIFAUX_A4.length - 1);
+    const [phrase0, vrai, raison] = VRAIFAUX_A4[k];
+    const phrase = `${phrase0} Vrai ou faux${NB}?`;
+    return q({code: "A4", degre, forme: "qcm", texte: phrase, morceaux: {phrase, sorte: "vraifaux"},
+      choix: ["Vrai", "Faux"], bon: vrai ? 0 : 1, reponse: vrai ? "Vrai" : "Faux", reponseTexte: vrai ? "Vrai" : "Faux",
+      pourquoi: {[vrai ? 1 : 0]: raison}, resume: `${phrase0} ${vrai ? "Vrai." : "Faux."}`, grandeur: "aire",
+      outil: "lignes", outilLignes: [`mm² · cm² · dm² · m² · a · ha · km²`], outilPetit: true, noteOutil: "D'une unité à la suivante : × 100.",
+      image: ["D'une unité à la suivante : × 100."], lignesB33: [[`${vrai ? "Vrai" : "Faux"} : `, raison.replace(/^(Un|Une|Le|La|Par) /, m => m.toLowerCase()), ""]],
+      sorteA4: "vraifaux", donnees: {type: "vraifaux-a4", k}, cle: `A4:vf:${k}`});
+  }
+  // Ranger des aires écrites dans des unités différentes (de 1 cm² à
+  // quelques m²) ; le piège : le plus grand nombre n'est pas la plus
+  // grande aire. Tout s'écrit d'abord en cm².
+  function rangerA4(degre, rng) {
+    const ECRITURES = {"mm²": [100n, 1n], "cm²": [1n, 1n], "dm²": [1n, 100n], "m²": [1n, 10000n]};
+    for (let essai = 0; essai < 80; essai += 1) {
+      const vals = [];
+      const liste = [];
+      for (let j = 0; j < 4; j += 1) {
+        const u = choisir(rng, ["mm²", "cm²", "dm²", "m²"]);
+        let n;
+        if (u === "mm²") n = 100 * entre(rng, 2, 90);
+        else if (u === "cm²") n = entre(rng, 2, 99) * (degre === 3 ? 10 : 1);
+        else if (u === "dm²") n = degre === 1 ? entre(rng, 1, 9) : entre(rng, 1, 40) / 2;
+        else n = degre === 1 ? choisir(rng, [1, 2]) : choisir(rng, [0.05, 0.1, 0.25, 0.5, 0.08]);
+        const cm = Math.round((u === "mm²" ? n / 100 : u === "cm²" ? n : u === "dm²" ? n * 100 : n * 10000) * 100) / 100;
+        vals.push(cm);
+        liste.push([brut(milli(String(n).replace(".", ","))), u]);
+      }
+      if (new Set(vals).size !== 4 || new Set(liste.map(l => l[1])).size < 3) continue;
+      if (Math.max(...vals) / Math.min(...vals) > 300) continue;
+      const nb = liste.map(([n]) => parseFloat(n.replace(",", ".")));
+      const piege = nb.some((a, i) => nb.some((b, j) => a > b && vals[i] < vals[j]));
+      if (!piege) continue;
+      const ordre = [0, 1, 2, 3].sort((x, y) => vals[x] - vals[y]);
+      if (ordre.every((x, k) => x === k)) continue;
+      const mesures = liste.map(([n, u]) => mes(milli(n), u));
+      const enCm = ordre.map(k => CARTE.typo(`${ecrire(milli(String(vals[k]).replace(".", ",")))} cm²`));
+      const consigne = "Range ces aires de la plus petite à la plus grande.";
+      return q({
+        code: "A4", degre, forme: "ranger", texte: `${consigne} ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne, consigne: "Touche-les dans l'ordre : 1, 2, 3, 4."},
+        mesures, ordre, reponse: ordre.join(","), reponseTexte: ordre.map(k => mesures[k]).join(" < "), unite: null,
+        resume: ordre.map(k => mesures[k]).join(" < "), grandeur: "aire",
+        outil: "lignes", outilLignes: ["mm² < cm² < dm² < m²", "D'une unité à la suivante : × 100."], outilPetit: true,
+        noteOutil: "J'écris tout en cm².", image: ["mm² < cm² < dm² < m²"],
+        correction: [ordre.map(k => mesures[k]).join(" < "), `En cm² : ${enCm.join(" < ")}`], uniteCommune: "cm²",
+        sorteA4: "ranger", donnees: {type: "ranger-a4", mesures: liste},
+        cle: `A4:ranger:${liste.map(l => l.join("")).join("|")}`
+      });
+    }
+    return null;
+  }
+  // Les erreurs d'une conversion d'aire de 5e.
+  function erreursA4(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv" || typeof lu !== "bigint") return null;
+    const v = milli(d.valeur);
+    const rep = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const [g, p] = bas ? [d.de, d.vers] : [d.vers, d.de];
+    const F = facteur(g, p);
+    if (bas && v % F === 0n && lu === v / F) return {erreur: 1, retour: "Vers plus petit : je multiplie."};
+    if (!bas && lu === v * F) return {erreur: 3, retour: "Vers plus grand : je divise."};
+    // Le carré oublié : × 10 au lieu de × 100, × 100 au lieu de × 10 000.
+    const racine = F === 100n ? 10n : F === 10000n ? 100n : F === 1000000n ? 1000n : null;
+    if (racine && bas && lu === v * racine) return {erreur: 2, retour: `Un carré : × ${ecrire(F * MILLE)}, pas ${ecrire(racine * MILLE)}.`};
+    if (racine && !bas && lu * racine === v) return {erreur: 2, retour: `Un carré : ÷ ${ecrire(F * MILLE)}, pas ${ecrire(racine * MILLE)}.`};
+    if (F === 10000n && bas && lu === v * 100n) return {erreur: 2, retour: "Deux unités : × 100 × 100."};
+    if (F === 10000n && !bas && lu * 100n === v) return {erreur: 2, retour: "Deux unités : ÷ 100 ÷ 100."};
+    if (lu === rep * 10n) return {erreur: 5, retour: rep % MILLE || lu % MILLE ? "Dix fois trop grand." : "Un zéro de trop."};
+    if (lu * 10n === rep) return {erreur: 5, retour: rep % MILLE || lu % MILLE ? "Dix fois trop petit." : "Un zéro de moins."};
+    if (lu === v) return {erreur: 7, retour: "Le nombre change aussi."};
+    return null;
+  }
+  // Au choix : le carré oublié, le mauvais sens, dix fois.
+  function enChoixA4(x, rng) {
+    if (!x || !x.donnees || x.donnees.type !== "conv") return null;
+    const d = x.donnees;
+    const v = milli(d.valeur);
+    const rep = milli(x.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    const [g, p] = bas ? [d.de, d.vers] : [d.vers, d.de];
+    const F = facteur(g, p);
+    const r = F === 100n ? 10n : 100n;
+    const faux = bas ? [v * r, rep * 10n, v % F === 0n ? v / F : null] : [rep * r, rep % 10n === 0n ? rep / 10n : null, rep * 10n];
+    const propres = faux.filter(y => y !== null && y !== rep && y >= 1n && decimales(y) <= 3 && y <= 10000000n * MILLE)
+      .filter((y, i, t) => t.indexOf(y) === i);
+    if (propres.length < 2) return null;
+    const y = enQcm(x, rep, [propres[0], choisir(rng, propres.slice(1))], z => {
+      const e = erreursA4(x, z);
+      return e ? e.retour : z > rep ? "Dix fois trop grand." : "Dix fois trop petit.";
+    }, rng);
+    y.sorteA4 = `choix-${x.sorteA4}`;
+    // (Les nombres seuls dans les boutons : « 0,482 mm² » sortait du cadre
+    // au petit iPhone avec une police large ; l'unité est dans la phrase.)
+    y.morceaux.sorte = "nombres";
+    // (Au choix, la correction est la ligne ; le tableau ou le calcul restent l'outil.)
+    return y;
+  }
+  const PLACES_A4 = {
+    valide: ["voisin", "saut", "fait", "situation", "vraifaux", "saut", "ranger", "voisin-phrase", "saut", "situation"],
+    entraine: ["voisin", "saut", "fait", "saut", "voisin-phrase", "situation",
+      "saut", "vraifaux", "voisin", "situation", "choix", "saut", "ranger", "fait-inverse", "saut",
+      "situation", "voisin-phrase", "choix", "saut", "vraifaux", "ranger", "saut", "situation", "choix", "voisin"],
+    test: ["saut", "voisin", "fait", "situation"],
+    aide: ["voisin", "saut", "saut"],
+    retour: ["saut", "fait|vraifaux|situation"],
+    echauffement: ["saut|voisin"]
+  };
+  ETAPES.A4 = {
+    // On te montre : 1 cm² = 100 mm² (le carreau de 1 cm agrandi) ; 3,5 m² =
+    // 35 000 cm² (le tableau) ; 2,5 ha = 25 000 m² (le tableau, l'hectare).
+    clesExemples: ["A4:3,5m²>cm²", "A4:2,5ha>m²"],
+    formes(usage, rng) {
+      const p = PLACES_A4[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, ["voisin", "saut", "saut", "situation", "choix", "fait", "vraifaux"]);
+      if (sorte === "fait") return faitA4(degre, rng);
+      if (sorte === "fait-inverse") return faitA4(degre, rng, true);
+      if (sorte === "vraifaux") return vraiFauxA4(degre, rng);
+      if (sorte === "ranger") return rangerA4(degre, rng);
+      if (sorte === "situation") return situationA4(degre, rng);
+      if (sorte === "voisin") return voisinA4(degre, rng);
+      // (« Combien de millimètres carrés dans 4 cm² ? » : la phrase, carte v4.)
+      if (sorte === "voisin-phrase") { const x = enPhrase(voisinA4(Math.min(2, degre), rng)); return x && Object.assign(x, {sorteA4: `${x.sorteA4}-phrase`}); }
+      if (sorte === "choix") { const y = enChoixA4(rng() < 0.6 ? sautA4(Math.max(2, degre), rng) : voisinA4(Math.max(2, degre), rng), rng); return y && Object.assign(y, {degre}); }
+      return sautA4(degre, rng);
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      // (Le saut et le voisin ; l'hectare au moins une fois.)
+      return serie.some(x => /saut/.test(x.sorteA4 || "")) && serie.some(x => /voisin/.test(x.sorteA4 || ""))
+        && serie.some(x => /(^|[\s\u00a0])ha([\s\u00a0.,]|$)/.test(x.texte));
+    },
+    erreurs(question, lu) { return erreursA4(question, lu); }
+  };
+
+  // --------------------------------------------- R10 · Mes repères de volume
+  // Au modèle des repères du CM1 (etapeReperes2, la grandeur volume) : le
+  // petit cube unité (1 cm³), la brique de lait (1 dm³), la cuve de
+  // récupération d'eau de pluie (1 m³), la piscine olympique (2 500 m³) ; et
+  // « Quelle unité ? » pour des objets de la vie (carte v4 : la boîte à
+  // chaussures, le coffre de voiture, le camion), au choix cm³ · dm³ · m³.
+  // [le début, le nombre, l'unité, le degré]
+  const OBJETS_R10 = [
+    ["Une pièce de 2 € a un volume d'environ", "1", "cm³", 1],
+    ["Une boîte à chaussures a un volume d'environ", "8", "dm³", 1],
+    ["La benne d'un camion a un volume d'environ", "15", "m³", 1],
+    ["Une gomme a un volume d'environ", "10", "cm³", 2],
+    ["Un ballon de basket a un volume d'environ", "7", "dm³", 2],
+    ["La salle de classe a un volume d'environ", "180", "m³", 2],
+    ["Le coffre d'une voiture a un volume d'environ", "400", "dm³", 3],
+    ["Un morceau de sucre a un volume d'environ", "2", "cm³", 3],
+    ["Une citerne de camion de pompiers a un volume d'environ", "6", "m³", 3],
+    ["Un carton de déménagement a un volume d'environ", "50", "dm³", 3]
+  ];
+  function objetR10(degre, rng) {
+    const vivier = OBJETS_R10.map((o, k) => [o, k]).filter(([o]) => o[3] <= degre);
+    const [[debut, n, u], k] = choisir(rng, vivier);
+    const choix = melanger(rng, ["cm³", "dm³", "m³"]);
+    const texte = CARTE.typo(`${debut} ${n} ${CASE}`);
+    const resume = CARTE.typo(`${debut} ${n} ${u}.`);
+    return q({code: "R10", degre, forme: "qcm", texte, morceaux: {phrase: texte, apres: "", sorte: "unite"},
+      choix, bon: choix.indexOf(u), reponse: u, reponseTexte: CARTE.typo(`${n} ${u}`), unite: u, resume, grandeur: "volume",
+      outil: "reperes-unites", image: [], correction: [CARTE.typo(`Environ ${n} ${u}.`)], unites: ["cm³", "dm³", "m³"],
+      pourquoi: Object.fromEntries(choix.map((c, i) => [i, c === u ? "" : UNITES.volume[c] > UNITES.volume[u] ? "Beaucoup trop grand." : "Beaucoup trop petit."]).filter(([, t]) => t)),
+      donnees: {type: "objet-r10", k}, cle: `R10:objet:${k}`});
+  }
+  ETAPES.R10 = (() => {
+    const e = etapeReperes2("R10");
+    const formes = e.formes;
+    const tirer = e.tirer;
+    const jamais = e.jamais;
+    // (Quatre repères seulement : l'objet à trouver de quoi, et « Quelle
+    // unité ? » pour un objet de la vie, prennent des places.)
+    e.formes = usage => {
+      const f = formes(usage);
+      if (usage === "valide") Object.assign(f, {6: "objet"});
+      if (usage === "entraine") Object.assign(f, {5: "objet", 9: "objet", 16: "objet", 23: "objet"});
+      return f;
+    };
+    e.tirer = (rng, degre, i, usage, forme, serie = []) => (forme === "objet" ? objetR10(degre, rng) : tirer(rng, degre, i, usage, forme, serie));
+    e.jamais = (serie, question, usage) => (question.donnees && question.donnees.type === "objet-r10" ? true : jamais(serie, question, usage));
+    return e;
+  })();
+
+  // ---------------------------------------------------- V2 · 1 dm³ = 1 000 cm³
+  // Le décimètre cube s'ouvre (choix de Gwenaël du 22/11) : 10 plaques de
+  // 100 cm³, 10 barres de 10 cm³, 10 cubes de 1 cm³ ; 10 × 10 × 10 =
+  // 10³ = 1 000 (le cube de 10, programme de 5e). Le mètre cube s'ouvre de la
+  // même façon en 1 000 dm³.
+  const PAIRES_V2 = [["dm³", "cm³"], ["m³", "dm³"]];
+  function conversionV2(degre, v, de, vers) {
+    const rep = convertir(v, de, vers);
+    if (rep === null || rep <= 0n || rep > 1000000n * MILLE || decimales(rep) > 3 || rep === v) return null;
+    const bas = exposant(de) > exposant(vers);
+    const [g, p] = bas ? [de, vers] : [vers, de];
+    const X = mes(v, de);
+    const R = mes(rep, vers);
+    const x = questionConversion("V2", degre, "nombre", v, de, vers, {relation: relationTexte(g, p), grandeur: "volume", relationCle: `${g}-${p}`});
+    const op = bas ? "×" : "÷";
+    Object.assign(x, {outil: "calcul-a3", calculA3: {gauche: X, nombre: ecrire(v), op, facteur: `1${FINE}000`, unite: bas ? p : g},
+      noteOutil: bas ? `En ${p}, un nombre 1${FINE}000 fois plus grand.` : `En ${g}, un nombre 1${FINE}000 fois plus petit.`,
+      lignesB33: bas ? [`${X} = ${ecrire(v)} × 1${FINE}000${NB}${p}`, ["= ", R, ""]] : [`${X} = (${ecrire(v)} ÷ 1${FINE}000)${NB}${g}`, ["= ", R, ""]],
+      image: [relationTexte(g, p), bas ? `En ${p}, un nombre 1${FINE}000 fois plus grand.` : `En ${g}, un nombre 1${FINE}000 fois plus petit.`],
+      sorteV2: bas ? "multiple" : "multiple-haut"});
+    return x;
+  }
+  function multipleV2(degre, rng, haut = false) {
+    const c = () => entre(rng, 1, 9);
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [g, p] = choisir(rng, PAIRES_V2);
+      let t;
+      if (!haut) t = degre === 1 ? String(entre(rng, 2, 12)) : degre === 2 ? choisir(rng, [`${c()},5`, `${c()},${c()}`, `0,${c()}5`, `${c()},${c()}${c()}`]) : choisir(rng, [`0,0${c()}`, `${c()},0${c()}`, `0,${c()}`, `0,00${c()}`]);
+      else t = degre === 1 ? String(1000 * entre(rng, 2, 12)) : degre === 2 ? choisir(rng, [`${c()}500`, `${c()}${c()}00`, `${c()}50`, `${c()}${c()}0`]) : choisir(rng, [`${c()}0`, `${c()}`, `${c()}0${c()}`, `${c()}00${c()}`]);
+      const x = haut ? conversionV2(degre, milli(t), p, g) : conversionV2(degre, milli(t), g, p);
+      if (x) return x;
+    }
+    return null;
+  }
+  // Le fait, au choix (« 1 dm³ = … cm³ » : 100 · 1 000 · 10 000 ; « 1 m³ =
+  // … dm³ ») : l'outil, le cube qui s'ouvre.
+  function faitV2(degre, rng, inverse = false) {
+    const [g, p] = choisir(rng, PAIRES_V2);
+    const ouvre = {grande: g, petite: p};
+    if (inverse) {
+      const x = conversionV2(degre, 1000n * MILLE, p, g);
+      return x && Object.assign(x, {outil: "dm3-v2", dm3V2: ouvre, noteOutil: "Touche : le cube s'ouvre.", calculA3: null, sorteV2: "fait-inverse",
+        lignesB33: [[`1${FINE}000${NB}${p} = `, `1${NB}${g}`, ""]], corrB33: {type: "dm3-v2", grande: g, petite: p}, cle: `V2:f:${g}:inv`});
+    }
+    const x = conversionV2(degre, MILLE, g, p);
+    if (!x) return null;
+    const trois = melanger(rng, [100n, 1000n, 10000n]);
+    const choix = trois.map(k => ecrire(k * MILLE));
+    const bon = trois.indexOf(1000n);
+    const pourquoi = {};
+    trois.forEach((k, i) => { if (k === 100n) pourquoi[i] = `Une plaque : 100${NB}${p}.`; else if (k === 10000n) pourquoi[i] = `10 × 10 × 10 = 1${FINE}000.`; });
+    const phrase = `1${NB}${g} = ${CASE}${NB}${p}`;
+    return Object.assign(x, {forme: "qcm", texte: phrase, morceaux: {phrase, apres: p, sorte: "nombres"}, choix, bon, pourquoi,
+      outil: "dm3-v2", dm3V2: ouvre, noteOutil: "Touche : le cube s'ouvre.", calculA3: null, sorteV2: "fait",
+      lignesB33: [`1${NB}${g} = 10${NB}${p.slice(0, -1)} × 10${NB}${p.slice(0, -1)} × 10${NB}${p.slice(0, -1)}`, ["= ", mes(1000n * MILLE, p), ""]],
+      corrB33: {type: "dm3-v2", grande: g, petite: p}, cleBase: x.cle, cle: `V2:f:${g}`});
+  }
+  // Compter dans le cube ouvert : les plaques, les barres, les cubes ; le
+  // cube de 10 (10³).
+  const COMPTER_V2 = [
+    ["Combien de plaques de 1 cm d'épaisseur dans 1 dm³ ?", "10", "plaques", 1],
+    ["Une plaque de 10 cm sur 10 cm : combien de cubes de 1 cm³ ?", "100", "cubes", 1],
+    ["Combien de cubes de 1 cm³ dans 1 dm³ ?", "1000", "cubes", 2],
+    ["Une barre de 10 cubes de 1 cm³ : quel volume ?", "10", "cm³", 1],
+    ["10³ = 10 × 10 × 10 =", "1000", "", 2],
+    ["Un cube de 10 cm de côté a un volume de", "1000", "cm³", 2],
+    ["Combien de cubes de 1 dm³ dans 1 m³ ?", "1000", "cubes", 3],
+    ["Une plaque de 10 dm sur 10 dm, épaisse de 1 dm :", "100", "dm³", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function compterV2(degre, rng) {
+    const vivier = COMPTER_V2.map((s, k) => [s, k]).filter(([s]) => s[3] <= degre);
+    const [[enonce, n, apres], k] = choisir(rng, vivier);
+    const m3 = /1[\s\u00a0\u202f]m³|[\s\u00a0\u202f]dm[\s\u00a0\u202f]/.test(enonce);
+    const R = `${ecrire(milli(n))}${apres ? `${NB}${apres}` : ""}`;
+    const avecCase = enonce.endsWith("=") || enonce.endsWith("de") || enonce.endsWith(":");
+    return q({code: "V2", degre, forme: avecCase ? "nombre" : "phrase", texte: `${enonce} ${CASE}${apres ? `${NB}${apres}` : ""}`,
+      morceaux: avecCase ? {avant: enonce, apres} : {phrase: enonce, apres},
+      reponse: n, reponseTexte: R, unite: apres, grandeur: "volume", resume: avecCase ? `${enonce} ${R}` : R,
+      outil: "dm3-v2", dm3V2: {grande: m3 ? "m³" : "dm³", petite: m3 ? "dm³" : "cm³"}, noteOutil: "Touche : le cube s'ouvre.",
+      image: [m3 ? `1${NB}m = 10${NB}dm` : `1${NB}dm = 10${NB}cm`, "10 plaques, 10 barres, 10 cubes."],
+      lignesB33: [[n === "1000" ? "10 × 10 × 10 = " : n === "100" ? "10 × 10 = " : "", R, ""]],
+      corrB33: {type: "dm3-v2", grande: m3 ? "m³" : "dm³", petite: m3 ? "dm³" : "cm³"},
+      sorteV2: "compter", donnees: {type: "compter-v2", k}, cle: `V2:c:${k}`});
+  }
+  const VRAIFAUX_V2 = [
+    ["1 dm³ = 100 cm³.", false, "1 dm³ = 1 000 cm³."],
+    ["1 dm³ = 1 000 cm³.", true, "10 × 10 × 10 = 1 000."],
+    ["1 m³ = 1 000 dm³.", true, "10 × 10 × 10 = 1 000."],
+    ["1 m³ = 100 dm³.", false, "1 m³ = 1 000 dm³."],
+    ["1 dm = 10 cm, donc 1 dm³ = 10 cm³.", false, "10 × 10 × 10 = 1 000."],
+    ["10³ = 30.", false, "10³ = 10 × 10 × 10 = 1 000."]
+  ].map(([t, v, p]) => [CARTE.typo(t), v, CARTE.typo(p)]);
+  function vraiFauxV2(degre, rng) {
+    const k = entre(rng, 0, VRAIFAUX_V2.length - 1);
+    const [phrase0, vrai, raison] = VRAIFAUX_V2[k];
+    const phrase = `${phrase0} Vrai ou faux${NB}?`;
+    const m3 = /m³/.test(phrase0);
+    return q({code: "V2", degre, forme: "qcm", texte: phrase, morceaux: {phrase, sorte: "vraifaux"},
+      choix: ["Vrai", "Faux"], bon: vrai ? 0 : 1, reponse: vrai ? "Vrai" : "Faux", reponseTexte: vrai ? "Vrai" : "Faux",
+      pourquoi: {[vrai ? 1 : 0]: raison}, resume: `${phrase0} ${vrai ? "Vrai." : "Faux."}`, grandeur: "volume",
+      outil: "dm3-v2", dm3V2: {grande: m3 ? "m³" : "dm³", petite: m3 ? "dm³" : "cm³"}, noteOutil: "Touche : le cube s'ouvre.",
+      image: ["10 plaques, 10 barres, 10 cubes."], lignesB33: [[`${vrai ? "Vrai" : "Faux"} : `, raison.replace(/^(Un|Une|Le|La|Par) /, m => m.toLowerCase()), ""]],
+      sorteV2: "vraifaux", donnees: {type: "vraifaux-v2", k}, cle: `V2:vf:${k}`});
+  }
+  function erreursV2(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv" || typeof lu !== "bigint") return null;
+    const v = milli(d.valeur);
+    const rep = milli(question.reponse);
+    const bas = exposant(d.de) > exposant(d.vers);
+    if (bas && v % 1000n === 0n && lu === v / 1000n) return {erreur: 1, retour: "Vers plus petit : je multiplie."};
+    if (!bas && lu === v * 1000n) return {erreur: 3, retour: "Vers plus grand : je divise."};
+    if (bas && lu === v * 100n) return {erreur: 2, retour: `10 × 10 × 10 = 1${FINE}000, pas 100.`};
+    if (bas && lu === v * 10n) return {erreur: 2, retour: `× 1${FINE}000, pas × 10.`};
+    if (!bas && lu * 100n === v) return {erreur: 2, retour: `÷ 1${FINE}000, pas ÷ 100.`};
+    if (!bas && lu * 10n === v) return {erreur: 2, retour: `÷ 1${FINE}000, pas ÷ 10.`};
+    if (lu === rep * 10n) return {erreur: 5, retour: "Dix fois trop grand."};
+    if (lu * 10n === rep) return {erreur: 5, retour: "Dix fois trop petit."};
+    if (lu === v) return {erreur: 7, retour: "Le nombre change aussi."};
+    return null;
+  }
+  const PLACES_V2 = {
+    // (Les faits ont peu de questions : après À toi, Je valide prend l'une
+    // ou l'autre façon de les demander — sinon la série échouait.)
+    valide: ["fait|compter|vraifaux", "compter|vraifaux", "multiple", "vraifaux|compter", "multiple-haut", "fait-inverse|compter|fait", "multiple", "compter|vraifaux", "multiple-haut", "multiple"],
+    entraine: ["fait", "compter", "multiple", "compter", "multiple-haut", "fait-inverse",
+      "multiple", "vraifaux", "multiple-haut", "compter", "multiple", "fait", "multiple-haut", "vraifaux", "multiple",
+      "compter", "multiple-haut", "multiple", "fait-inverse", "multiple-haut", "vraifaux", "multiple", "compter", "multiple-haut", "multiple"],
+    test: ["fait", "multiple", "multiple-haut", "compter"],
+    aide: ["fait", "multiple", "multiple-haut"],
+    retour: ["multiple|multiple-haut", "fait|vraifaux|compter"],
+    echauffement: ["multiple"]
+  };
+  ETAPES.V2 = {
+    // Les faits SONT ce qu'on apprend par cœur : Je valide les demande.
+    exclureExemples: false,
+    clesExemples: ["V2:1dm³>cm³", "V2:3dm³>cm³"],
+    formes(usage, rng) {
+      const p = PLACES_V2[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, ["multiple", "multiple-haut", "fait", "compter"]);
+      if (sorte === "fait") return faitV2(degre, rng);
+      if (sorte === "fait-inverse") return faitV2(degre, rng, true);
+      if (sorte === "compter") return compterV2(degre, rng);
+      if (sorte === "vraifaux") return vraiFauxV2(degre, rng);
+      return multipleV2(degre, rng, sorte === "multiple-haut");
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      return serie.some(x => x.relationCle === "m³-dm³") && serie.some(x => x.relationCle === "dm³-cm³");
+    },
+    erreurs(question, lu) { return erreursV2(question, lu); }
+  };
+
+  // ------------------------------------------------- V3 · Volume et contenance
+  // 1 L = 1 dm³ ; 1 mL = 1 cm³ ; 1 m³ = 1 000 L (S097 p. 24 ; carte v4 :
+  // « 1 L = 1 m³ ? », 3,57 L en cm³, 33 cL en cm³) ; et l'eau : 1 mL pèse
+  // 1 g, 1 L pèse 1 kg, 1 m³ pèse 1 t. L'outil (choix de Gwenaël du 22/11) :
+  // les trois ponts, chacun avec son repère dessiné.
+  // Volumes et contenances sur une seule échelle (en puissances de 10 du
+  // mètre cube) : le litre est le décimètre cube.
+  const VOL_V3 = {"m³": 0, hL: -1, daL: -2, "dm³": -3, L: -3, dL: -4, cL: -5, "cm³": -6, mL: -6};
+  function convertirV3(m, de, vers) {
+    const d = VOL_V3[de] - VOL_V3[vers];
+    if (d >= 0) return m * puissance(d);
+    const p = puissance(-d);
+    return m % p === 0n ? m / p : null;
+  }
+  // [de, vers, les nombres du degré 1, 2, 3] : des conversions qu'on fait
+  // vraiment (une canette en cm³, une cuve en m³).
+  const CONV_V3 = [
+    ["L", "dm³", ["2", "5", "12"], ["2,5", "0,75"], ["0,25", "1,05"]],
+    ["dm³", "L", ["3", "8"], ["1,5", "4,5"], ["0,5", "0,08"]],
+    ["cL", "cm³", ["33", "25", "50"], ["75", "20", "15"], ["7,5", "2,5"]],
+    ["L", "cm³", ["2", "3"], ["1,5", "0,75", "3,57"], ["0,2", "0,05", "1,25"]],
+    ["cm³", "L", ["2000", "5000"], ["1500", "750", "250"], ["50", "1250"]],
+    ["mL", "cm³", ["5", "250"], ["500", "125"], ["15", "330"]],
+    ["m³", "L", ["2", "3", "5"], ["1,5", "0,5", "2,5"], ["0,2", "0,025", "0,75"]],
+    ["L", "m³", ["2000", "5000"], ["1500", "500", "200"], ["50", "2500"]],
+    ["cm³", "cL", ["330", "500"], ["250", "750"], ["75", "15"]]
+  ];
+  function convV3(degre, rng, choisi = null, n = null) {
+    for (let essai = 0; essai < 30; essai += 1) {
+      const s = choisi || choisir(rng, CONV_V3);
+      const [de, vers] = s;
+      const t = n || choisir(rng, s[1 + degre]);
+      const v = milli(t);
+      const rep = convertirV3(v, de, vers);
+      if (rep === null || rep <= 0n || decimales(rep) > 3) continue;
+      const X = mes(v, de);
+      const R = mes(rep, vers);
+      // La ligne : par le pont (« 33 cL = 330 mL = 330 cm³ »).
+      let lignes;
+      if (de === "cL" && vers === "cm³") lignes = [[`${X} = ${mes(v * 10n, "mL")} = `, R, ""]];
+      else if (de === "cm³" && vers === "cL") lignes = [[`${X} = ${mes(v, "mL")} = `, R, ""]];
+      else if (de === "L" && vers === "cm³") lignes = [[`${X} = ${mes(v, "dm³")} = `, R, ""]];
+      else if (de === "cm³" && vers === "L") lignes = [[`${X} = ${mes(v, "mL")} = `, R, ""]];
+      else if (de === "m³" && vers === "L") lignes = [[`${X} = ${ecrire(v)} × 1${FINE}000${NB}L = `, R, ""]];
+      else if (de === "L" && vers === "m³") lignes = [[`${X} = (${ecrire(v)} ÷ 1${FINE}000)${NB}m³ = `, R, ""]];
+      else lignes = [[`${X} = `, R, ""]];
+      return q({code: "V3", degre, forme: "nombre", texte: `${X} = ${CASE}${NB}${vers}`, morceaux: {avant: `${X} =`, apres: vers},
+        reponse: brut(rep), reponseTexte: R, unite: vers, grandeur: "volume", resume: `${X} = ${R}`,
+        outil: "ponts-v3", pontsV3: {marque: [de, vers]}, noteOutil: null, image: ["1 L = 1 dm³ ; 1 mL = 1 cm³ ; 1 m³ = 1 000 L"].map(CARTE.typo),
+        lignesB33: lignes, corrB33: {type: "ponts-v3", marque: [de, vers]}, sorteV3: "conv",
+        donnees: {type: "conv-v3", valeur: brut(v), de, vers}, cle: `V3:${brut(v)}${de}>${vers}`});
+    }
+    return null;
+  }
+  // Des situations : [l'énoncé, la mesure, son unité, l'unité demandée, le degré].
+  const SITUATIONS_V3 = [
+    ["Une canette contient 33 cL de jus de goyave.", "33", "cL", "cm³", 1],
+    ["Une bouteille de jus de letchi contient 50 cL.", "50", "cL", "cm³", 1],
+    ["Une marmite de cari contient 8 L.", "8", "L", "dm³", 1],
+    ["Une bouteille de jus de goyavier contient 75 cL.", "75", "cL", "cm³", 2],
+    ["Une brique de lait contient 1 L.", "1", "L", "cm³", 1],
+    ["Une cuve de récupération d'eau de pluie contient 1 000 L.", "1000", "L", "m³", 1],
+    ["Un verre contient 20 cL.", "20", "cL", "cm³", 1],
+    ["Un chauffe-eau solaire contient 200 L.", "200", "L", "m³", 2],
+    ["Une bouteille d'eau contient 1,5 L.", "1,5", "L", "cm³", 2],
+    ["Une piscine gonflable contient 5 m³ d'eau.", "5", "m³", "L", 2],
+    ["Un aquarium a un volume de 60 dm³.", "60", "dm³", "L", 2],
+    ["Un flacon de sirop contient 125 mL.", "125", "mL", "cm³", 2],
+    ["Un pot de confiture a un volume de 370 cm³.", "370", "cm³", "L", 3],
+    ["Une citerne contient 2,5 m³ d'eau.", "2,5", "m³", "L", 3],
+    ["Une bouteille contient 3,57 L.", "3,57", "L", "cm³", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function situationV3(degre, rng) {
+    const vivier = SITUATIONS_V3.map((s, k) => [s, k]).filter(([s]) => s[4] === degre);
+    const [[enonce, n, de, vers], k] = choisir(rng, vivier);
+    const x = convV3(degre, rng, [de, vers], n);
+    if (!x) return null;
+    const avant = `${mes(milli(n), de)} =`;
+    return Object.assign(x, {texte: `${enonce} ${avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant, apres: vers},
+      sorteV3: "situation", situationV3: k, cleBase: x.cle, cle: `V3:s:${k}`});
+  }
+  // Les ponts au choix : « 1 L = 1 … » (dm³ · cm³ · m³), « 1 mL = 1 … »,
+  // « 1 m³ = … L » (10 · 100 · 1 000).
+  function pontV3(degre, rng) {
+    const sorte = choisir(rng, ["L", "mL", "m3", "dm3", "cm3"]);
+    let phrase, choix, bon, pourquoi = {}, reponse, ligne;
+    if (sorte === "m3") {
+      const trois = melanger(rng, ["10", "100", `1${FINE}000`]);
+      phrase = `1${NB}m³ = ${CASE}${NB}L`;
+      choix = trois; bon = trois.indexOf(`1${FINE}000`); reponse = `1${FINE}000${NB}L`;
+      trois.forEach((t, i) => { if (i !== bon) pourquoi[i] = `1${NB}m³ = 1${FINE}000${NB}dm³.`; });
+      ligne = [`1${NB}m³ = 1${FINE}000${NB}dm³ = `, `1${FINE}000${NB}L`, ""];
+    } else if (sorte === "dm3" || sorte === "cm3") {
+      // (« 1 dm³ = 1 … » : L · mL · cL ; « 1 cm³ = 1 … » : mL · L · cL.)
+      const [u, bonne] = sorte === "dm3" ? ["dm³", "L"] : ["cm³", "mL"];
+      const trois = melanger(rng, ["L", "cL", "mL"]);
+      phrase = `1${NB}${u} = 1${NB}${CASE}`;
+      choix = trois; bon = trois.indexOf(bonne); reponse = `1${NB}${bonne}`;
+      trois.forEach((t, i) => { if (i !== bon) pourquoi[i] = sorte === "dm3" ? "Le cube de 1 dm de côté : 1 L." : "Le cube de 1 cm de côté : 1 mL."; });
+      ligne = [`1${NB}${u} = `, `1${NB}${bonne}`, ""];
+    } else {
+      const [u, bonne] = sorte === "L" ? ["L", "dm³"] : ["mL", "cm³"];
+      const trois = melanger(rng, ["cm³", "dm³", "m³"]);
+      phrase = `1${NB}${u} = 1${NB}${CASE}`;
+      choix = trois; bon = trois.indexOf(bonne); reponse = `1${NB}${bonne}`;
+      trois.forEach((t, i) => { if (i !== bon) pourquoi[i] = t === "m³" ? `1${NB}m³ = 1${FINE}000${NB}L.` : sorte === "L" ? "Le cube de 1 dm de côté." : "Le cube de 1 cm de côté."; });
+      ligne = [`1${NB}${u} = `, `1${NB}${bonne}`, ""];
+    }
+    return q({code: "V3", degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: sorte === "m3" ? "L" : "", sorte: sorte === "m3" ? "valeur" : "unite"},
+      choix: choix.map(CARTE.typo), bon, pourquoi, reponse: choix[bon], reponseTexte: reponse, grandeur: "volume",
+      resume: ligne.join(""), outil: "remplir-v3", noteOutil: "Touche la brique : je la verse.", image: ["La brique de 1 L remplit le cube de 1 dm de côté."],
+      lignesB33: [ligne], corrB33: {type: "ponts-v3", marque: []}, sorteV3: "pont",
+      donnees: {type: "pont-v3", sorte}, cle: `V3:p:${sorte}`});
+  }
+  // L'eau : 1 mL pèse 1 g, 1 L pèse 1 kg, 1 m³ pèse 1 t.
+  // [le début, la ligne de la correction, le nombre, l'unité, le degré]
+  const EAU_V3 = [
+    ["Une bouteille de 1,5 L d'eau pèse environ", "1,5 L d'eau : ", "1,5", "kg", 1],
+    ["Un seau de 10 L d'eau pèse environ", "10 L d'eau : ", "10", "kg", 1],
+    ["1 m³ d'eau pèse", "1 m³ = 1 000 L : ", "1", "t", 2],
+    ["1 mL d'eau pèse", "1 mL = un millième de litre : ", "1", "g", 2],
+    ["Une cuve de 1 000 L pleine d'eau : l'eau pèse", "1 000 L d'eau : 1 000 kg = ", "1", "t", 2],
+    ["Un verre de 20 cL d'eau : l'eau pèse", "20 cL = 200 mL : ", "200", "g", 3],
+    ["Une piscine gonflable de 5 m³ d'eau : l'eau pèse", "5 m³ = 5 000 L : ", "5", "t", 3],
+    ["Une cuillère de 5 mL d'eau : l'eau pèse", "5 mL d'eau : ", "5", "g", 3]
+  ].map(([t, l, ...r]) => [CARTE.typo(t), CARTE.typo(l), ...r]);
+  function eauV3(degre, rng) {
+    const vivier = EAU_V3.map((s, k) => [s, k]).filter(([s]) => s[4] <= degre);
+    const [[debut, ligne, n, u], k] = choisir(rng, vivier);
+    const R = mes(milli(n), u);
+    return q({code: "V3", degre, forme: "nombre", texte: `${debut} ${CASE}${NB}${u}`, morceaux: {avant: debut, apres: u},
+      reponse: brut(milli(n)), reponseTexte: R, unite: u, grandeur: "masse", resume: `${debut} ${R}.`,
+      outil: "lignes", outilLignes: [`1${NB}L d'eau pèse 1${NB}kg.`], outilPetit: true, noteOutil: `1${NB}L = 1${FINE}000${NB}mL ; 1${NB}m³ = 1${FINE}000${NB}L`,
+      image: [`1${NB}L d'eau pèse 1${NB}kg.`], lignesB33: [[ligne, R, ""]], sorteV3: "eau",
+      donnees: {type: "eau-v3", k}, cle: `V3:e:${k}`});
+  }
+  const VRAIFAUX_V3 = [
+    ["1 L = 1 m³.", false, "1 L = 1 dm³."],
+    ["1 L = 1 dm³.", true, "Le cube de 1 dm de côté."],
+    ["1 mL = 1 cm³.", true, "Le cube de 1 cm de côté."],
+    ["1 m³ = 1 000 L.", true, "1 m³ = 1 000 dm³."],
+    ["1 L = 100 cm³.", false, "1 L = 1 000 cm³."],
+    ["1 cL = 1 cm³.", false, "1 cL = 10 mL = 10 cm³."],
+    ["1 m³ d'eau pèse 1 t.", true, "1 000 L de 1 kg."]
+  ].map(([t, v, p]) => [CARTE.typo(t), v, CARTE.typo(p)]);
+  function vraiFauxV3(degre, rng) {
+    const k = entre(rng, 0, VRAIFAUX_V3.length - 1);
+    const [phrase0, vrai, raison] = VRAIFAUX_V3[k];
+    const phrase = `${phrase0} Vrai ou faux${NB}?`;
+    return q({code: "V3", degre, forme: "qcm", texte: phrase, morceaux: {phrase, sorte: "vraifaux"},
+      choix: ["Vrai", "Faux"], bon: vrai ? 0 : 1, reponse: vrai ? "Vrai" : "Faux", reponseTexte: vrai ? "Vrai" : "Faux",
+      pourquoi: {[vrai ? 1 : 0]: raison}, resume: `${phrase0} ${vrai ? "Vrai." : "Faux."}`, grandeur: "volume",
+      outil: "ponts-v3", pontsV3: {marque: []}, image: ["1 L = 1 dm³ ; 1 mL = 1 cm³ ; 1 m³ = 1 000 L"].map(CARTE.typo),
+      lignesB33: [[`${vrai ? "Vrai" : "Faux"} : `, raison.replace(/^(Un|Une|Le|La|Par) /, m => m.toLowerCase()), ""]], sorteV3: "vraifaux",
+      donnees: {type: "vraifaux-v3", k}, cle: `V3:vf:${k}`});
+  }
+  function erreursV3(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv-v3" || typeof lu !== "bigint") return null;
+    const v = milli(d.valeur);
+    const rep = milli(question.reponse);
+    if (lu === v && rep !== v) return {erreur: 7, retour: "Le nombre change aussi."};
+    if (lu === rep * 10n) return {erreur: 5, retour: "Dix fois trop grand."};
+    if (lu * 10n === rep) return {erreur: 5, retour: "Dix fois trop petit."};
+    if (lu === rep * 1000n || lu * 1000n === rep) return {erreur: 1, retour: "1 L = 1 dm³, pas 1 cm³."};
+    if (lu === rep * 100n) return {erreur: 5, retour: "Cent fois trop grand."};
+    if (lu * 100n === rep) return {erreur: 5, retour: "Cent fois trop petit."};
+    return null;
+  }
+  const PLACES_V3 = {
+    valide: ["conv", "pont|vraifaux|eau", "situation", "eau|pont", "conv", "vraifaux|eau|pont", "situation", "conv", "pont|vraifaux", "eau|vraifaux"],
+    entraine: ["pont", "conv", "situation", "conv", "pont", "eau",
+      "conv", "situation", "vraifaux", "conv", "eau", "situation", "pont", "conv", "vraifaux",
+      "situation", "conv", "eau", "conv", "situation", "vraifaux", "conv", "pont", "situation", "conv"],
+    test: ["conv", "situation", "pont", "eau"],
+    aide: ["pont", "conv", "situation"],
+    retour: ["conv|situation", "pont|eau|vraifaux"],
+    echauffement: ["conv"]
+  };
+  ETAPES.V3 = {
+    exclureExemples: false,
+    clesExemples: ["V3:33cL>cm³"],
+    formes(usage, rng) {
+      const p = PLACES_V3[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, ["conv", "conv", "situation", "pont", "eau", "vraifaux"]);
+      if (sorte === "pont") return pontV3(degre, rng);
+      if (sorte === "eau") return eauV3(degre, rng);
+      if (sorte === "vraifaux") return vraiFauxV3(degre, rng);
+      if (sorte === "situation") return situationV3(degre, rng);
+      return convV3(degre, rng);
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      // (Les trois ponts : les litres, les millilitres et le mètre cube.)
+      const t = serie.map(x => x.texte).join(" ");
+      return /m³/.test(t) && /mL|cL|cm³/.test(t);
+    },
+    erreurs(question, lu) { return erreursV3(question, lu); }
+  };
+  ["A4", "V2", "V3"].forEach(code => {
+    const tirer = ETAPES[code].tirer;
+    ETAPES[code].tirer = (...args) => {
+      const x = tirer(...args);
+      if (!x) return x;
+      x.degre = args[1];
+      if (!x.lignesB33) return typoB33(ligneB33(x));
+      return typoB33(ligneB33(x));
+    };
+  });
+
   // ============================================================== LES SÉRIES
 
   const PLANS = {
@@ -12938,7 +13710,9 @@
   // Lot B3-2 : C9 (les conversions au millième), A1 et A2 (les aires).
   const SENS = {C1: [1], C2: [1], P1: [3], E1: [3], P2: [1], P3: [1, 3], P4: [1, 3], C3: [1, 3], C4: [1, 3], C5: [1, 3], P5: [1, 3], C9: [1, 3], A1: [1, 3], A2: [1],
     // Lot B4-1 : A3 (les aires, vers plus grand et vers plus petit).
-    A3: [1, 3]};
+    A3: [1, 3],
+    // Lot B5-1 : A4 (toutes les aires), V2 (dm³ et cm³, m³ et dm³).
+    A4: [1, 3], V2: [1, 3]};
   // `tape` : ce que l'élève a écrit (ou le texte du choix touché).
   function erreurDeSens(question, tape) {
     if (!question || !SENS[question.code] || question.forme === "deux-cases" || question.forme === "associer" || question.forme === "ranger" || question.forme === "plusieurs") return false;

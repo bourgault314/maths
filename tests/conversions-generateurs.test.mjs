@@ -58,10 +58,12 @@ const FINE = " ";
 const EXPOSANTS = {Mm: 6, km: 3, hm: 2, dam: 1, m: 0, dm: -1, cm: -2, mm: -3, "µm": -6, nm: -9, t: 6, kg: 3, hg: 2, dag: 1, g: 0, dg: -1, cg: -2, mg: -3,
   "µg": -6, ng: -9, hL: 2, daL: 1, L: 0, dL: -1, cL: -2, mL: -3, "µL": -6, "€": 2, c: 0, o: 0, ko: 3, Mo: 6, Go: 9, W: 0, kW: 3, MW: 6, GW: 9,
   // (Lot B3-2 : les aires du CM2, 1 m² = 100 dm² = 10 000 cm².)
-  "m²": 0, "dm²": -2, "cm²": -4};
+  "m²": 0, "dm²": -2, "cm²": -4,
+  // (Lot B5-1 : toutes les aires de 5e, l'hectare et l'are ; les volumes.)
+  "km²": 6, "hm²": 4, ha: 4, "dam²": 2, a: 2, "mm²": -6, "m³": 0, "dm³": -3, "cm³": -6};
 const FAMILLE = {Mm: "l", km: "l", hm: "l", dam: "l", m: "l", dm: "l", cm: "l", mm: "l", "µm": "l", nm: "l", t: "m", kg: "m", hg: "m", dag: "m", g: "m", dg: "m", cg: "m", mg: "m",
   "µg": "m", ng: "m", hL: "c", daL: "c", L: "c", dL: "c", cL: "c", mL: "c", "µL": "c", "€": "a", c: "a", o: "o", ko: "o", Mo: "o", Go: "o", W: "w", kW: "w", MW: "w", GW: "w",
-  "m²": "s", "dm²": "s", "cm²": "s"};
+  "m²": "s", "dm²": "s", "cm²": "s", "km²": "s", "hm²": "s", ha: "s", "dam²": "s", a: "s", "mm²": "s", "m³": "v", "dm³": "v", "cm³": "v"};
 // Lot B1-2 : le sens des préfixes, recopié à part.
 const SENS_PREFIXES = {kilo: ["k", "mille"], hecto: ["h", "cent"], "déca": ["da", "dix"], "déci": ["d", "un dixième"], centi: ["c", "un centième"], milli: ["m", "un millième"]};
 // Un texte « 12,5 » en millièmes, sans l'outil du générateur.
@@ -82,9 +84,12 @@ function versUnite(m, de, vers) {
 // plus petite unité de sa grandeur, pour comparer deux repères.
 // (Lot B3-1 : les aires du CM2, comptées en cm² : 1 dm² = 100 cm², 1 m² =
 // 10 000 cm².)
-const EXP2 = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, mg: -3, L: 0, dL: -1, cL: -2, mL: -3, "cm²": 0, "dm²": 2, "m²": 4};
+const EXP2 = {km: 3, m: 0, dm: -1, cm: -2, mm: -3, t: 6, kg: 3, g: 0, mg: -3, L: 0, dL: -1, cL: -2, mL: -3, "cm²": 0, "dm²": 2, "m²": 4,
+  // (Lot B5-1 : les volumes, comptés en cm³.)
+  "cm³": 0, "dm³": 3, "m³": 6};
 const FAMILLE_G = {km: "longueur", m: "longueur", dm: "longueur", cm: "longueur", mm: "longueur", t: "masse", kg: "masse", g: "masse", mg: "masse",
-  L: "contenance", dL: "contenance", cL: "contenance", mL: "contenance", "cm²": "aire", "dm²": "aire", "m²": "aire"};
+  L: "contenance", dL: "contenance", cL: "contenance", mL: "contenance", "cm²": "aire", "dm²": "aire", "m²": "aire",
+  "cm³": "volume", "dm³": "volume", "m³": "volume"};
 function taille(r) {
   return lire(r.nombre.replace(".", ",")) * 10n ** BigInt(EXP2[r.unite] + 3);
 }
@@ -725,7 +730,9 @@ function controlerQuestion(q, ou) {
       // (Lot B3-1, R9 : le périmètre ou l'aire ; le gros qui n'est pas le plus lourd.)
       || q.donnees.type === "perim-aire" || q.donnees.type === "piege"
       // (Lot B4-2, D5 : « 1 h 30 min, est-ce 1,3 h ? », Oui · Non.)
-      || (q.donnees.type === "d5" && q.donnees.sorte === "piege"));
+      || (q.donnees.type === "d5" && q.donnees.sorte === "piege")
+      // (Lot B5-1 : « 1 L = 1 m³. Vrai ou faux ? », Vrai · Faux.)
+      || q.morceaux.sorte === "vraifaux");
   }
 }
 
@@ -941,6 +948,8 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       D3: ["nombre", "phrase", "deux-cases", "qcm"], Q3: ["nombre", "vrai-faux"], Q4: ["nombre", "qcm"],
       // Lot B4-1
       A3: ["nombre", "phrase", "qcm"], V1: ["nombre", "qcm"], Q5: ["nombre", "vrai-faux"],
+      // Lot B5-1
+      A4: ["nombre", "phrase", "qcm", "ranger"], R10: ["qcm", "phrase", "associer"], V2: ["nombre", "phrase", "qcm"], V3: ["nombre", "qcm"],
       // Lot B4-2
       D4: ["nombre", "phrase", "deux-cases", "qcm"], D5: ["nombre", "phrase", "deux-cases", "qcm"], Q6: ["nombre", "deux-cases", "qcm"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
@@ -3211,4 +3220,95 @@ test("lot B4-2 : D4, D5, Q6 — recalculés à part, l'outil sans la réponse, l
   assert.deepEqual([...G.clesExemples("Q6")], ["Q6:cinema:film:1060-1170", "Q6:rapide:400-465-6|430-505-5|485-555-6", "Q6:semaine:4x330"]);
   assert.equal(CARTE.palierPret(4), true);
   ["D4", "D5", "Q6"].forEach(c => { assert.ok(CARTE.etape(c).pret, c); assert.equal(CARTE.etape(c).apprends.length, 3, c); });
+});
+
+test("lot B5-1 : A4, R10, V2, V3 — recalculés à part, l'outil sans la réponse, les places, les pourquoi, l'écriture", () => {
+  const sp = t => String(t).replace(/[\u00a0\u202f\u2011]/g, x => (x === "\u2011" ? "-" : " "));
+  const EXP = {"km²": 6, "hm²": 4, ha: 4, "dam²": 2, a: 2, "m²": 0, "dm²": -2, "cm²": -4, "mm²": -6,
+    "m³": 0, "dm³": -3, L: -3, dL: -4, cL: -5, "cm³": -6, mL: -6};
+  const conv = (m, de, vers) => { const d = EXP[de] - EXP[vers]; return d >= 0 ? m * 10n ** BigInt(d) : m / 10n ** BigInt(-d); };
+  const sortes = {A4: {}, R10: {}, V2: {}, V3: {}};
+  const reunion = new Set();
+  for (let g = 1; g <= 300; g += 1) {
+    for (const code of ["A4", "R10", "V2", "V3"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        const serie = G.serie(code, {usage, graine: g});
+        assert.ok(serie.length > 0, `${code} ${usage} ${g} : série vide`);
+        serie.forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees || {};
+          const sorte = q.sorteA4 || q.sorteV2 || q.sorteV3 || d.type;
+          sortes[code][sorte] = (sortes[code][sorte] || 0) + 1;
+          if (/Réunion|créole|cannes|letchi|goyav|cari|Car Jaune/.test(q.texte)) reunion.add(code);
+          // Les pourquoi tiennent sur une ligne (31 signes).
+          Object.values(q.pourquoi || {}).forEach(p => assert.ok(sp(p).length <= 31, `${ou} : pourquoi trop long « ${p} »`));
+          // Les lignes de la correction : 44 signes au plus ; la dernière, la réponse en vert.
+          if (q.lignesB33) {
+            q.lignesB33.forEach(l => assert.ok(sp([].concat(l).join("")).length <= 44, `${ou} : ligne trop longue « ${[].concat(l).join("")} »`));
+            const der = q.lignesB33[q.lignesB33.length - 1];
+            assert.ok(Array.isArray(der), `${ou} : la dernière ligne`);
+            assert.equal(q.correction.join("|"), q.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l)).join("|"), `${ou} : la correction écrite`);
+          }
+          // Une conversion : la réponse recalculée à part ; l'outil ne l'écrit pas.
+          if (d.type === "conv" || d.type === "conv-v3") {
+            const attendu = conv(lire(d.valeur), d.de, d.vers);
+            assert.equal(lire(q.reponse), attendu, `${ou} : ${q.reponse}`);
+            const outil = sp(JSON.stringify([q.calculA3 && [q.calculA3.gauche, q.calculA3.nombre, q.calculA3.facteur], q.noteOutil, q.outilLignes]));
+            if (q.forme !== "qcm") assert.ok(!outil.includes(`"${sp(q.reponseTexte)}"`) && !outil.includes(`= ${sp(q.reponseTexte)}`), `${ou} : l'outil donne la réponse`);
+          }
+          if (code === "A4" && d.type === "conv") {
+            const saut = Math.abs(EXP[d.de] - EXP[d.vers]) > 2 || [d.de, d.vers].some(u => u === "ha" || u === "a") && !/voisin/.test(q.sorteA4);
+            // Le tableau quand on saute une unité (ou l'hectare), le calcul entre deux voisines (choix de Gwenaël du 22/11).
+            if (/saut/.test(q.sorteA4)) {
+              assert.ok(q.glisse && q.glisse.aires, `${ou} : le tableau`);
+              const cols = q.glisse.colonnes;
+              assert.ok(cols.length <= 12 && cols.length % 2 === 0, `${ou} : ${cols.length} colonnes`);
+              assert.ok(cols.includes(q.glisse.de) && cols.includes(q.glisse.vers), `${ou} : les colonnes`);
+              cols.forEach((c, i) => assert.equal(Boolean(c), i % 2 === 1, `${ou} : deux cases par unité`));
+              assert.ok(saut, `${ou} : un tableau entre deux voisines`);
+            }
+            if (/voisin/.test(q.sorteA4)) {
+              assert.equal(Math.abs(EXP[d.de] - EXP[d.vers]), 2, `${ou} : pas voisines`);
+              assert.ok(q.calculA3 || q.forme === "qcm", `${ou} : le calcul`);
+            }
+            // Des mesures vraisemblables : jamais plus de 10 000 000.
+            assert.ok(lire(q.reponse) <= 10000000000n, ou);
+          }
+          if (code === "A4" && q.forme === "ranger") {
+            const val = q.donnees.mesures.map(([n, u]) => conv(lire(n), u, "mm²"));
+            const ordre = q.ordre.map(k => val[k]);
+            ordre.slice(1).forEach((v, i) => assert.ok(v > ordre[i], `${ou} : ordre`));
+          }
+          if (code === "V2" && d.type === "conv") assert.ok(["dm³-cm³", "m³-dm³"].includes(q.relationCle), `${ou} : ${q.relationCle}`);
+          if (code === "V3" && d.type === "eau-v3") {
+            // 1 mL d'eau : 1 g ; 1 L : 1 kg ; 1 m³ : 1 t (recalculé dans la phrase).
+            const m = sp(q.texte).match(/([\d ,]+) (mL|cL|L|m³)(?: pleine)? d'eau/);
+            assert.ok(m, ou);
+            const grammes = conv(lire(m[1].trim().replace(/ /g, "")), m[2], "mL");
+            const enG = {g: 1n, kg: 1000n, t: 1000000n}[q.unite];
+            assert.equal(lire(q.reponse) * enG, grammes, `${ou} : la masse de l'eau`);
+          }
+          if (q.choix && q.bon !== undefined && q.forme === "qcm") {
+            assert.ok(q.bon >= 0 && q.bon < q.choix.length, ou);
+            assert.equal(new Set(q.choix.map(sp)).size, q.choix.length, `${ou} : deux choix pareils`);
+          }
+          // « chiffre des unités », jamais « dernier chiffre » ; « d' » devant une voyelle.
+          assert.doesNotMatch(sp(q.texte), /dernier chiffre| de [aeiouéh]/i, ou);
+        });
+      }
+    }
+  }
+  // Toutes les sortes servent.
+  ["voisin", "voisin-haut", "saut", "fait", "fait-inverse", "vraifaux", "ranger"].forEach(s => assert.ok(sortes.A4[s], `A4 : ${s}`));
+  ["fait", "fait-inverse", "multiple", "multiple-haut", "compter", "vraifaux"].forEach(s => assert.ok(sortes.V2[s], `V2 : ${s}`));
+  ["conv", "situation", "pont", "eau", "vraifaux"].forEach(s => assert.ok(sortes.V3[s], `V3 : ${s}`));
+  ["repere", "repere-quoi", "repere-comparer", "objet-r10"].forEach(s => assert.ok(sortes.R10[s], `R10 : ${s}`));
+  assert.ok(reunion.has("A4") && reunion.has("V3"), "des situations de La Réunion");
+  // On te montre et À retenir montrent ce que Je valide demande (prise de recul du 22/11).
+  const montre = c => sp(JSON.stringify(CARTE.etape(c)));
+  ["1 cm² = 100 mm²", "1 m² = 10 000 cm²", "1 ha = 10 000 m²", "1 km² = 100 ha", "1 a = 100 m²", "tableau"].forEach(t => assert.ok(montre("A4").includes(t), `A4 montre ${t}`));
+  ["1 dm³ = 1 000 cm³", "1 m³ = 1 000 dm³", "10³", "÷ 1 000"].forEach(t => assert.ok(montre("V2").includes(t), `V2 montre ${t}`));
+  ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "1 kg", "1 t", "1 g"].forEach(t => assert.ok(montre("V3").includes(t), `V3 montre ${t}`));
+  // Le palier 5 reste caché tant que V4, Q7, Q8, Q11 ne sont pas construites.
+  assert.equal(CARTE.palierPret(5), false);
 });

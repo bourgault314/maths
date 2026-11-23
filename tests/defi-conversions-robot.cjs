@@ -638,7 +638,10 @@ async function faireLeGeste(page, aide) {
       "regroupe-a3", "calcul-a3", "cubes-v1", "rect-q5",
       // Lot B4-2 (D4, Q6) : la chaîne (un paquet par toucher), le
       // calendrier (une semaine par toucher), la frise (une durée par toucher).
-      "chaine-d4", "calendrier-d4", "frise-q6"].includes(aide.type)) {
+      "chaine-d4", "calendrier-d4", "frise-q6",
+      // Lot B5-1 (V2, V3) : le cube qui s'ouvre (trois touchers), la brique
+      // qu'on verse.
+      "dm3-v2", "remplir-v3"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
