@@ -951,7 +951,9 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
       // Lot B5-1
       A4: ["nombre", "phrase", "qcm", "ranger"], R10: ["qcm", "phrase", "associer"], V2: ["nombre", "phrase", "qcm"], V3: ["nombre", "qcm"],
       // Lot B4-2
-      D4: ["nombre", "phrase", "deux-cases", "qcm"], D5: ["nombre", "phrase", "deux-cases", "qcm"], Q6: ["nombre", "deux-cases", "qcm"]}[code];
+      D4: ["nombre", "phrase", "deux-cases", "qcm"], D5: ["nombre", "phrase", "deux-cases", "qcm"], Q6: ["nombre", "deux-cases", "qcm"],
+      // Lot B5-2
+      V4: ["nombre", "phrase", "qcm", "ranger"], Q7: ["nombre", "vrai-faux"], Q8: ["nombre", "vrai-faux"], Q11: ["nombre", "vrai-faux"]}[code];
     assert.deepEqual([...formes].sort(), prevues.sort(), `${code} : formes`);
   });
 }
@@ -3309,6 +3311,113 @@ test("lot B5-1 : A4, R10, V2, V3 — recalculés à part, l'outil sans la répon
   ["1 cm² = 100 mm²", "1 m² = 10 000 cm²", "1 ha = 10 000 m²", "1 km² = 100 ha", "1 a = 100 m²", "tableau"].forEach(t => assert.ok(montre("A4").includes(t), `A4 montre ${t}`));
   ["1 dm³ = 1 000 cm³", "1 m³ = 1 000 dm³", "10³", "÷ 1 000"].forEach(t => assert.ok(montre("V2").includes(t), `V2 montre ${t}`));
   ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "1 kg", "1 t", "1 g"].forEach(t => assert.ok(montre("V3").includes(t), `V3 montre ${t}`));
-  // Le palier 5 reste caché tant que V4, Q7, Q8, Q11 ne sont pas construites.
-  assert.equal(CARTE.palierPret(5), false);
+  // (Lot B5-2 : V4, Q7, Q8, Q11 construites, le palier 5 s'ouvre.)
+  assert.equal(CARTE.palierPret(5), true);
+});
+
+test("lot B5-2 : V4, Q7, Q8, Q11 — recalculés à part, l'outil sans la réponse, les places, les pourquoi, l'écriture", () => {
+  const sp = t => String(t).replace(/[  ‑]/g, x => (x === "‑" ? "-" : " "));
+  const EXP = {"m³": 0, kL: 0, hL: -1, daL: -2, "dm³": -3, L: -3, dL: -4, cL: -5, "cm³": -6, mL: -6};
+  const conv = (m, de, vers) => { const d = EXP[de] - EXP[vers]; return d >= 0 ? m * 10n ** BigInt(d) : m / 10n ** BigInt(-d); };
+  const LONG = {km: 3, m: 0, dm: -1, cm: -2};
+  const enU = (n, u, v) => { const d = LONG[u] - LONG[v]; const m = lire(n); return d >= 0 ? m * 10n ** BigInt(d) : m / 10n ** BigInt(-d); };
+  const AIRE = {"km²": 6, ha: 4, a: 2, "m²": 0, "dm²": -2, "cm²": -4};
+  const convA = (m, de, vers) => { const d = AIRE[de] - AIRE[vers]; return d >= 0 ? m * 10n ** BigInt(d) : m / 10n ** BigInt(-d); };
+  const sortes = {V4: {}, Q7: {}, Q8: {}, Q11: {}};
+  const reunion = new Set();
+  for (let g = 1; g <= 200; g += 1) {
+    for (const code of ["V4", "Q7", "Q8", "Q11"]) {
+      for (const usage of ["valide", "entraine", "test", "retour", "aide", "echauffement"]) {
+        const serie = G.serie(code, {usage, graine: g});
+        assert.ok(serie.length > 0, `${code} ${usage} ${g} : série vide`);
+        serie.forEach(q => {
+          const ou = `${code} ${usage} ${g} « ${sp(q.texte)} »`;
+          const d = q.donnees || {};
+          const sorte = q.sorteV4 || q.sorteQ7 || q.sorteQ8 || q.sorteQ11 || d.type;
+          sortes[code][q.forme === "vrai-faux" ? "V" : sorte] = (sortes[code][q.forme === "vrai-faux" ? "V" : sorte] || 0) + 1;
+          if (/Réunion|créole|cannes|letchi|goyave|cari|Saint-|Cilaos|Le Port|varangue/.test(sp(q.texte))) reunion.add(code);
+          // Les pourquoi tiennent sur une ligne (31 signes).
+          Object.values(q.pourquoi || {}).forEach(p => assert.ok(sp(p).length <= 31, `${ou} : pourquoi trop long « ${p} »`));
+          // Les lignes de la correction : 44 signes au plus ; la dernière, la réponse en vert.
+          if (q.lignesB33) {
+            q.lignesB33.filter(Boolean).forEach(l => assert.ok(sp([].concat(l).join("")).length <= 44, `${ou} : ligne trop longue « ${[].concat(l).join("")} »`));
+            assert.ok(Array.isArray(q.lignesB33[q.lignesB33.length - 1]), `${ou} : la dernière ligne`);
+          }
+          // Un nombre et son unité ne se séparent pas ; pas de « dernier chiffre ».
+          assert.doesNotMatch(q.texte, /\d (?:m|cm|dm|km|L|cL|mL|dL|hL|m²|m³|cm³|dm³|ha|a|km²|kg|t)(?![\wÀ-ÿ²³])/, `${ou} : espace normale avant l'unité`);
+          // V4 : la réponse recalculée à part ; l'outil ne l'écrit pas.
+          if (d.type === "conv-v4") {
+            assert.equal(lire(q.reponse), conv(lire(d.valeur), d.de, d.vers), `${ou} : ${q.reponse}`);
+            const outil = sp(JSON.stringify([q.calculA3 && [q.calculA3.gauche, q.calculA3.nombre, q.calculA3.facteur], q.noteOutil, q.relation]));
+            assert.ok(!outil.includes(`"${sp(q.reponseTexte)}"`) && !outil.includes(`= ${sp(q.reponseTexte)}`), `${ou} : l'outil donne la réponse`);
+            // Le tableau des volumes quand on saute (trois cases, les litres) ; le pont et × 1 000 sinon.
+            if (/saut/.test(q.sorteV4)) {
+              assert.ok(q.glisse && q.glisse.cases === 3 && q.glisse.litres, `${ou} : le tableau`);
+              assert.equal(q.glisse.colonnes.length, 9, `${ou} : neuf cases`);
+              assert.ok(Math.abs(EXP[d.de] - EXP[d.vers]) !== 3 || ["hL", "dL", "cL", "daL"].some(u => [d.de, d.vers].includes(u)), `${ou} : un tableau pour un pont`);
+            }
+            if (/pont/.test(q.sorteV4)) {
+              assert.equal(Math.abs(EXP[d.de] - EXP[d.vers]), 3, `${ou} : × 1 000`);
+              assert.equal(q.outil, "calcul-a3", `${ou} : le calcul`);
+            }
+          }
+          if (code === "V4" && q.forme === "ranger") {
+            const ML = {L: 1000, "dm³": 1000, "cm³": 1, mL: 1, cL: 10};
+            const v = d.mesures.map(([n, u]) => parseFloat(n.replace(",", ".")) * ML[u]);
+            assert.deepEqual(q.ordre, [0, 1, 2, 3].sort((a, b) => v[a] - v[b]), `${ou} : l'ordre`);
+          }
+          // Q7 : l'aire ou le périmètre recalculés à part.
+          if (d.type === "q7" && q.forme === "nombre") {
+            let a;
+            if (d.sorte === "figure") { a = enU(d.b, d.ub, d.cu) * enU(d.h, d.uh, d.cu) / 1000n; if (d.forme === "tri") a /= 2n; a = convA(a, d.cu + "²", d.vers); }
+            else if (d.sorte === "pignon") a = enU(d.b, d.ub, d.cu) * (enU(d.m, d.um, d.cu) + enU(d.t, d.ut, d.cu) / 2n) / 1000n;
+            else a = 4n * lire(d.cote);
+            assert.equal(lire(q.reponse), a, `${ou} : ${q.reponse}`);
+            assert.ok(!sp(JSON.stringify([q.figQ7, q.noteOutil, q.image])).includes(sp(q.reponseTexte)), `${ou} : l'outil donne la réponse`);
+          }
+          // Q8 : le volume ou le nombre de seaux recalculés à part.
+          if (d.type === "q8" && q.forme === "nombre") {
+            if (d.sorte === "seaux") assert.equal(lire(q.reponse), conv(lire(d.t), d.ut, d.up) * 1000n / lire(d.p), `${ou} : ${q.reponse}`);
+            if (d.sorte === "pave") {
+              const v = d.dims.reduce((s, [n, u]) => s * enU(n, u, d.cu) / 1000n, 1000n);
+              assert.equal(lire(q.reponse), conv(v, d.cu + "³", d.vers), `${ou} : ${q.reponse}`);
+            }
+            assert.ok(!sp(JSON.stringify([q.paveQ8 && [q.paveQ8.l, q.paveQ8.p, q.paveQ8.h], q.noteOutil, q.image])).includes(sp(q.reponseTexte)), `${ou} : l'outil donne la réponse`);
+          }
+          // Q11 : la mesure vraie recalculée à part ; la droite cache la réponse.
+          if (d.type === "q11" && q.forme === "nombre") {
+            if (d.sorte === "carte") assert.equal(lire(q.reponse), lire(d.d) * lire(d.s) / 1000n, `${ou}`);
+            if (d.sorte === "inverse") assert.equal(lire(q.reponse) * lire(d.s) / 1000n, lire(d.D), `${ou}`);
+            if (d.sorte === "echelle") assert.equal(lire(q.reponse), lire(d.d) * BigInt(d.N) / 100n, `${ou}`);
+            if (q.droiteE) assert.ok(q.droiteE.sens === "vrai>carte" ? sp(q.droiteE.d) === sp(q.reponse) : sp(q.droiteE.vrai) === sp(q.reponse) || d.sorte === "plan", `${ou} : la droite`);
+            assert.ok(!sp(JSON.stringify([q.noteOutil, q.image, q.relationOutil])).includes(sp(q.reponseTexte)), `${ou} : l'outil donne la réponse`);
+          }
+          // Une bonne réponse juste.
+          if (q.forme === "nombre") assert.equal(G.verifier(q, q.reponse).juste, true, `${ou} : la réponse n'est pas acceptée`);
+        });
+        if (usage === "valide") {
+          // Un même contexte une fois dans Je valide.
+          const modeles = serie.map(x => x.modeleQ7 || x.modeleQ8 || x.modeleQ11).filter(Boolean);
+          assert.equal(new Set(modeles).size, modeles.length, `${code} ${g} : un contexte deux fois`);
+        }
+      }
+    }
+  }
+  // Toutes les sortes servent.
+  ["pont", "saut", "situation-pont", "situation-saut", "objet", "ranger", "pont-phrase"].forEach(s => assert.ok(sortes.V4[s], `V4 : ${s}`));
+  ["figure", "pignon", "carre", "V"].forEach(s => assert.ok(sortes.Q7[s], `Q7 : ${s}`));
+  ["pave", "seaux", "eau", "V"].forEach(s => assert.ok(sortes.Q8[s], `Q8 : ${s}`));
+  ["carte", "inverse", "plan", "echelle", "aire", "V"].forEach(s => assert.ok(sortes.Q11[s], `Q11 : ${s}`));
+  ["V4", "Q7", "Q11"].forEach(c => assert.ok(reunion.has(c), `${c} : des situations de La Réunion`));
+  // Les erreurs prévues ont leur retour (V4 : mille fois, le nombre recopié).
+  const a = G.serie("V4", {usage: "entraine", graine: 5}).find(x => x.donnees && x.donnees.type === "conv-v4");
+  assert.ok(G.verifier(a, a.donnees.valeur).retour, "le nombre recopié");
+  // On te montre et À retenir montrent ce que Je valide demande (prise de recul du 22/11).
+  const montre = c => sp(JSON.stringify(CARTE.etape(c)));
+  ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "tableau", "trois cases", "× 1 000", "mL"].forEach(t => assert.ok(montre("V4").includes(t), `V4 montre ${t}`));
+  ["base × hauteur", "÷ 2", "découpe", "1 ha", "carré"].forEach(t => assert.ok(montre("Q7").includes(t), `Q7 montre ${t}`));
+  ["longueur × largeur × hauteur", "1 m³ = 1 000 L", "seaux", "1 kg", "1 t"].forEach(t => assert.ok(montre("Q8").includes(t), `Q8 montre ${t}`));
+  ["1 cm représente", "÷", "1/200", "carreaux"].forEach(t => assert.ok(montre("Q11").includes(t), `Q11 montre ${t}`));
+  // Le palier 5 s'ouvre.
+  assert.equal(CARTE.palierPret(5), true);
 });

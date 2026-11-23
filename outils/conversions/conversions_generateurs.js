@@ -198,7 +198,9 @@
     // Lot B3-2 : les aires du CM2.
     "cm²": "centimètres carrés", "dm²": "décimètres carrés", "m²": "mètres carrés",
     // Lot B5-1 : les aires de 5e.
-    "mm²": "millimètres carrés", "km²": "kilomètres carrés", ha: "hectares", a: "ares", "hm²": "hectomètres carrés", "dam²": "décamètres carrés"
+    "mm²": "millimètres carrés", "km²": "kilomètres carrés", ha: "hectares", a: "ares", "hm²": "hectomètres carrés", "dam²": "décamètres carrés",
+    // Lot B5-2 : les volumes de 5e.
+    "m³": "mètres cubes", "dm³": "décimètres cubes", "cm³": "centimètres cubes"
   };
 
   function grandeurDe(unite) {
@@ -13510,6 +13512,874 @@
       if (!x) return x;
       x.degre = args[1];
       if (!x.lignesB33) return typoB33(ligneB33(x));
+      return typoB33(ligneB33(x));
+    };
+  });
+
+  // ======================================================== palier 5 (lot B5-2)
+  // V4 « Convertir volumes et contenances », Q7 « Problèmes : longueurs et
+  // aires », Q8 « Problèmes : volumes et contenances », Q11 « Problèmes :
+  // plans et cartes ». Décisions prises le 23/11 en l'absence de Gwenaël
+  // (réversibles, les options recommandées de la maquette B5-2a) : V4, son
+  // tableau des volumes (« Litres ↔ m³ » de l'exerciseur : trois cases par
+  // unité, les litres dessous) quand on saute des unités, le pont et
+  // « × 1 000 » entre unités voisines (comme A4) ; Q11, la double droite
+  // (sur la carte en haut, en vrai en bas) ; l'échelle « 1/200 » seulement
+  // au degré 3, toujours suivie de sa phrase. Décidé par Claude : la figure
+  // cotée (Q7), le pavé coté (Q8), La Réunion sur un quadrillage (On te
+  // montre de Q11).
+  // Le programme : S096 (« résoudre des problèmes de conversions de
+  // longueurs et d'aires », « connaître et convertir des unités usuelles
+  // (volume et capacité) ») ; S097 p. 22-27 (1 L = 1 dm³, les changements
+  // d'unités de volume dans la vie courante ; parallélogramme, triangle,
+  // figures complexes ; estimer l'aire de son département avec l'échelle
+  // d'une carte ; la distance réelle entre deux villes). La carte v4 : la
+  // conversion n° 2 du brevet (piscines, aquariums, confiture,
+  // jardinières), ranger des mesures mêlant L et dm³ (perdu de
+  // l'exerciseur) ; « combien de seaux de 10 L pour 1 m³ ? » ; « 1 cm
+  // représente 4 km ». Un outil ne donne jamais la réponse ; un pourquoi :
+  // 31 signes au plus ; des grandeurs vraies.
+  const mB52 = x => milli(String(x).replace(".", ","));
+  const foisB52 = (a, b) => (a * b) / MILLE;
+
+  // --------------------------------------- V4 · Convertir volumes et contenances
+  // Les unités du tableau des volumes : trois cases par unité ; la case de
+  // chaque litre (kL sous m³, hL daL L sous dm³, dL cL mL sous cm³).
+  const COLONNES_V4 = ["", "", "m³", "", "", "dm³", "", "", "cm³"];
+  const CASE_V4 = {"m³": 2, kL: 2, hL: 3, daL: 4, "dm³": 5, L: 5, dL: 6, cL: 7, "cm³": 8, mL: 8};
+  const PONT_V4 = {L: "dm³", mL: "cm³", "dm³": "L", "cm³": "mL"};
+  // Les chiffres tiennent dans les neuf cases (pas de colonne de plus).
+  function tientV4(v, de, vers) {
+    const [e, d = ""] = brut(v).split(",");
+    const c = CASE_V4[de];
+    const r = brut(convertirV3(v, de, vers) || 0n).split(",");
+    const cv = CASE_V4[vers];
+    return c - (e.replace(/^0+(?=\d)/, "").length - 1) >= 0 && c + d.length <= 8 && cv - (r[0].length - 1) >= 0 && cv + (r[1] || "").length <= 8;
+  }
+  function conversionV4(degre, v, de, vers) {
+    const rep = convertirV3(v, de, vers);
+    if (rep === null || rep <= 0n || decimales(rep) > 3 || rep > 100000000n * MILLE || rep === v) return null;
+    const X = mes(v, de);
+    const R = mes(rep, vers);
+    return q({code: "V4", degre, forme: "nombre", texte: `${X} = ${CASE}${NB}${vers}`, morceaux: {avant: `${X} =`, apres: vers},
+      reponse: brut(rep), reponseTexte: R, unite: vers, grandeur: "volume", resume: `${X} = ${R}`, correction: [`${X} = ${R}`],
+      donnees: {type: "conv-v4", valeur: brut(v), de, vers}, cle: `V4:${brut(v)}${de}>${vers}`});
+  }
+  // Par le pont, puis × 1 000 ou ÷ 1 000 : [de, vers, degré 1, 2, 3].
+  const PONTS_V4 = [
+    ["L", "cm³", ["2", "3", "5"], ["2,5", "1,5", "0,75"], ["3,57", "0,25", "1,05"]],
+    ["cm³", "L", ["2000", "4000"], ["1500", "750", "2500"], ["250", "75", "3570"]],
+    ["m³", "L", ["2", "3", "4"], ["1,5", "0,8", "2,5"], ["57,6", "0,125", "0,04"]],
+    ["L", "m³", ["2000", "5000"], ["1500", "800", "2500"], ["250", "75", "960"]],
+    ["dm³", "cm³", ["4", "6"], ["1,2", "0,5"], ["0,08", "2,45"]],
+    ["cm³", "dm³", ["3000", "8000"], ["1200", "500"], ["80", "2450"]],
+    ["m³", "dm³", ["2", "5"], ["1,5", "0,6"], ["0,045", "2,5"]],
+    ["mL", "dm³", ["2000"], ["500", "1500"], ["250", "75"]],
+    ["dm³", "mL", ["2", "3"], ["0,5", "1,5"], ["0,25", "0,33"]]
+  ];
+  function pontV4(degre, rng, choisi = null, n = null) {
+    for (let essai = 0; essai < 30; essai += 1) {
+      const s = choisi || choisir(rng, PONTS_V4);
+      const [de, vers] = s;
+      const v = milli(n || choisir(rng, s[1 + degre]));
+      const x = conversionV4(degre, v, de, vers);
+      if (!x) continue;
+      // L'unité du calcul : le pont (2,5 L = 2,5 dm³), puis × 1 000.
+      const bas = VOL_V3[de] > VOL_V3[vers];
+      const X = mes(v, de);
+      const R = mes(milli(x.reponse), vers);
+      const avantU = PONT_V4[de] && ["L", "mL"].includes(de) ? PONT_V4[de] : de;
+      const apresU = PONT_V4[vers] && ["L", "mL"].includes(vers) ? PONT_V4[vers] : vers;
+      const rel = de === "m³" && vers === "L" ? "1 m³ = 1 000 L" : de === "L" && vers === "m³" ? "1 000 L = 1 m³" : de === "mL" || vers === "mL" ? "1 mL = 1 cm³"
+        : de === "L" || vers === "L" ? "1 L = 1 dm³" : bas ? `1${NB}${de} = 1 000${NB}${vers}` : `1 000${NB}${de} = 1${NB}${vers}`;
+      const note = bas ? `En ${vers}, un nombre 1 000 fois plus grand.` : `En ${vers}, un nombre 1 000 fois plus petit.`;
+      const debut = `${X}${avantU !== de ? ` = ${mes(v, avantU)}` : ""} = `;
+      const calc = bas ? `${ecrire(v)} × 1${FINE}000${NB}${apresU}` : `(${ecrire(v)} ÷ 1${FINE}000)${NB}${apresU}`;
+      return Object.assign(x, {
+        outil: "calcul-a3", calculA3: {gauche: X, nombre: ecrire(v), op: bas ? "×" : "÷", facteur: `1${FINE}000`, unite: vers},
+        relation: CARTE.typo(rel), noteOutil: note, image: [CARTE.typo(rel), note], sorteV4: "pont", relationCle: `${de}-${vers}`,
+        lignesB33: [`${debut}${calc}`, apresU !== vers ? [`= ${mes(milli(x.reponse), apresU)} = `, R, ""] : ["= ", R, ""]]
+      });
+    }
+    return null;
+  }
+  // On saute des unités : le tableau des volumes. [de, vers, degré 1, 2, 3].
+  const SAUTS_V4 = [
+    ["m³", "cm³", ["2", "3"], ["0,5", "1,2"], ["0,008", "0,045"]],
+    ["cm³", "m³", ["2000000"], ["500000", "45000"], ["8000", "1200"]],
+    ["hL", "m³", ["10", "30"], ["5", "12"], ["2,5", "0,8"]],
+    ["m³", "hL", ["2", "3"], ["0,5", "1,2"], ["0,05", "2,45"]],
+    ["cL", "dm³", ["200", "500"], ["75", "150"], ["33", "8"]],
+    ["dm³", "cL", ["2", "5"], ["0,75", "1,5"], ["0,33", "0,05"]],
+    ["dL", "cm³", ["2", "5"], ["1,5", "25"], ["0,5", "3,7"]],
+    ["cm³", "dL", ["200", "500"], ["150", "250"], ["50", "375"]],
+    ["m³", "cL", ["1"], ["0,02", "0,5"], ["0,045", "0,006"]],
+    ["hL", "dm³", ["2", "4"], ["1,5", "0,8"], ["0,35", "2,25"]]
+  ];
+  function sautV4(degre, rng, choisi = null, n = null) {
+    for (let essai = 0; essai < 30; essai += 1) {
+      const s = choisi || choisir(rng, SAUTS_V4);
+      const [de, vers] = s;
+      const v = milli(n || choisir(rng, s[1 + degre]));
+      if (!tientV4(v, de, vers)) continue;
+      const x = conversionV4(degre, v, de, vers);
+      if (!x) continue;
+      const litre = u => /L$/.test(u);
+      return Object.assign(x, {
+        outil: "glisse-unite", glisse: {valeur: brut(v), de, vers, grandeur: "volume", pale: false, colonnes: COLONNES_V4.slice(), cases: 3, litres: true},
+        relation: CARTE.typo(litre(de) || litre(vers) ? "1 L = 1 dm³" : "1 m³ = 1 000 dm³"), sorteV4: "saut",
+        image: [CARTE.typo(litre(de) || litre(vers) ? "1 L = 1 dm³ ; 1 mL = 1 cm³" : "1 m³ = 1 000 dm³ ; 1 dm³ = 1 000 cm³"), "Trois cases par unité."],
+        lignesB33: null
+      });
+    }
+    return null;
+  }
+  // Le pont ou le tableau, selon les unités (pour une situation).
+  const estPontV4 = (de, vers) => PONTS_V4.some(([a, b]) => a === de && b === vers);
+  // Des mesures vraies (la conversion n° 2 du brevet) : [l'énoncé, la
+  // mesure, son unité, l'unité demandée, le degré].
+  const SITUATIONS_V4 = [
+    ["Une piscine contient 57,6 m³ d'eau.", "57,6", "m³", "L", 2],
+    ["Un aquarium a un volume de 72 000 cm³.", "72000", "cm³", "L", 1],
+    ["Une jardinière a un volume de 40 000 cm³.", "40000", "cm³", "L", 1],
+    ["Une cuve de récupération d'eau de pluie contient 2 m³.", "2", "m³", "L", 1],
+    ["Un pot de confiture a un volume de 300 cm³.", "300", "cm³", "L", 2],
+    ["Une citerne contient 3 500 L.", "3500", "L", "m³", 2],
+    ["Un seau a une contenance de 10 L.", "10", "L", "cm³", 1],
+    ["Un bac à sable contient 0,3 m³ de sable.", "0,3", "m³", "L", 2],
+    ["Une bouteille contient 75 cL de jus de goyave.", "75", "cL", "dm³", 2],
+    ["Le bassin d'un jardin créole contient 0,8 m³ d'eau.", "0,8", "m³", "L", 2],
+    ["Une marmite de cari a une contenance de 8 L.", "8", "L", "cm³", 1],
+    ["Une canette contient 33 cL.", "33", "cL", "dm³", 3],
+    ["Un chauffe-eau solaire contient 2 hL.", "2", "hL", "m³", 3],
+    ["Un prisme a un volume de 288 000 cm³.", "288000", "cm³", "L", 3],
+    ["Une baignoire contient 0,15 m³ d'eau.", "0,15", "m³", "L", 3],
+    ["Une bouteille contient 3,57 L.", "3,57", "L", "cm³", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function situationV4(degre, rng) {
+    const vivier = SITUATIONS_V4.map((s, k) => [s, k]).filter(([s]) => s[4] === degre);
+    const [[enonce, n, de, vers], k] = choisir(rng, vivier);
+    const x = estPontV4(de, vers) ? pontV4(degre, rng, PONTS_V4.find(([a, b]) => a === de && b === vers), n) : sautV4(degre, rng, [de, vers], n);
+    if (!x) return null;
+    const avant = `${mes(milli(n), de)} =`;
+    return Object.assign(x, {texte: `${enonce} ${avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant, apres: vers},
+      sorteV4: `situation-${x.sorteV4}`, situationV4: k, cleBase: x.cle, cle: `V4:s:${k}`});
+  }
+  // « Combien de centimètres cubes dans 2,5 L ? » (la phrase, carte v4).
+  function phraseV4(degre, rng) {
+    const s = choisir(rng, PONTS_V4.filter(([, b]) => ["cm³", "dm³", "m³"].includes(b)));
+    const x = pontV4(degre, rng, s);
+    if (!x) return null;
+    const d = x.donnees;
+    const gauche = mes(milli(d.valeur), d.de);
+    const phrase = `Combien de ${MOTS[d.vers]} dans ${gauche}${NB}?`;
+    return Object.assign(x, {forme: "phrase", texte: phrase, morceaux: {phrase, apres: d.vers}, sorteV4: "pont-phrase"});
+  }
+  // Quelle unité ? Des objets vrais (les repères de R10) : [le début, le
+  // nombre, la bonne unité, deux autres].
+  const OBJETS_V4 = [
+    ["Une baignoire contient environ", "150", "L", ["cm³", "m³"]],
+    ["Une salle de classe a un volume d'environ", "200", "m³", ["dm³", "cm³"]],
+    ["Un dé à jouer a un volume d'environ", "4", "cm³", ["dm³", "m³"]],
+    ["Une piscine gonflable contient environ", "5", "m³", ["cm³", "mL"]],
+    ["Le réservoir d'une voiture contient environ", "50", "L", ["mL", "m³"]],
+    ["Une canette contient", "330", "mL", ["L", "m³"]],
+    ["Un aquarium de salon contient environ", "80", "L", ["mL", "m³"]],
+    ["Un camion-citerne transporte environ", "30", "m³", ["L", "cm³"]],
+    ["Une seringue contient", "5", "mL", ["L", "dm³"]],
+    ["Une boîte à chaussures a un volume d'environ", "8", "dm³", ["cm³", "m³"]]
+  ].map(([t, n, b, f]) => [CARTE.typo(t), n, b, f]);
+  function objetV4(degre, rng) {
+    const k = entre(rng, 0, OBJETS_V4.length - 1);
+    const [debut, n, bonne, fausses] = OBJETS_V4[k];
+    const choix = melanger(rng, [bonne, ...fausses]);
+    const bon = choix.indexOf(bonne);
+    const phrase = `${debut} ${n}${NB}${CASE}`;
+    const pourquoi = {};
+    choix.forEach((u, i) => { if (i !== bon) pourquoi[i] = VOL_V3[u] > VOL_V3[bonne] ? "Beaucoup trop grand." : "Beaucoup trop petit."; });
+    return q({code: "V4", degre, forme: "qcm", texte: phrase, morceaux: {phrase, sorte: "unite"}, choix, bon, pourquoi,
+      reponse: bonne, reponseTexte: `${n}${NB}${bonne}`, grandeur: "volume", resume: `${debut} ${n}${NB}${bonne}.`,
+      outil: "lignes", outilLignes: ["Le petit cube : 1 cm³ = 1 mL.", "La brique de lait : 1 dm³ = 1 L.", "La cuve : 1 m³ = 1 000 L."], outilPetit: true,
+      image: ["Le petit cube : 1 cm³ ; la brique : 1 L ; la cuve : 1 m³."], lignesB33: [["La bonne unité : ", `${n}${NB}${bonne}`, ""]],
+      sorteV4: "objet", donnees: {type: "objet-v4", k}, cle: `V4:o:${k}`});
+  }
+  // Ranger des mesures mêlant L, dm³, cm³, mL et cL (perdu de l'exerciseur).
+  function rangerV4(degre, rng) {
+    const EN_ML = {L: 1000, "dm³": 1000, "cm³": 1, mL: 1, cL: 10};
+    for (let essai = 0; essai < 80; essai += 1) {
+      const liste = [];
+      const vals = [];
+      for (let j = 0; j < 4; j += 1) {
+        const u = choisir(rng, degre === 1 ? ["L", "dm³", "cm³", "mL"] : ["L", "dm³", "cm³", "mL", "cL"]);
+        let n;
+        if (u === "L" || u === "dm³") n = degre === 1 ? choisir(rng, [1, 2, 0.5]) : choisir(rng, [1.2, 0.75, 1.5, 0.8, 0.25, 2]);
+        else if (u === "cL") n = choisir(rng, [25, 33, 75, 90, 150]);
+        else n = choisir(rng, degre === 1 ? [300, 700, 900, 1500] : [250, 330, 600, 900, 1100, 1800]);
+        vals.push(n * EN_ML[u]);
+        liste.push([String(n).replace(".", ","), u]);
+      }
+      if (new Set(vals).size !== 4 || new Set(liste.map(l => l[1])).size < 3) continue;
+      const nb = liste.map(([n]) => parseFloat(n.replace(",", ".")));
+      if (!nb.some((a, i) => nb.some((b, j) => a > b && vals[i] < vals[j]))) continue;
+      const ordre = [0, 1, 2, 3].sort((x, y) => vals[x] - vals[y]);
+      if (ordre.every((x, k) => x === k)) continue;
+      const mesures = liste.map(([n, u]) => mes(milli(n), u));
+      const enML = ordre.map(k => `${ecrire(BigInt(Math.round(vals[k])) * MILLE)}${NB}mL`);
+      const consigne = "Range ces contenances de la plus petite à la plus grande.";
+      return q({
+        code: "V4", degre, forme: "ranger", texte: `${consigne} ${mesures.join(" ; ")}`,
+        morceaux: {phrase: consigne, consigne: "Touche-les dans l'ordre : 1, 2, 3, 4."},
+        mesures, ordre, reponse: ordre.join(","), reponseTexte: ordre.map(k => mesures[k]).join(" < "), unite: null,
+        resume: ordre.map(k => mesures[k]).join(" < "), grandeur: "volume",
+        outil: "lignes", outilLignes: ["1 L = 1 dm³ = 1 000 mL", "1 mL = 1 cm³ ; 1 cL = 10 mL"], outilPetit: true,
+        noteOutil: "J'écris tout en mL.", image: ["1 L = 1 dm³ = 1 000 mL ; 1 mL = 1 cm³"],
+        correction: [ordre.map(k => mesures[k]).join(" < "), `En mL : ${enML.join(" < ")}`], uniteCommune: "mL",
+        sorteV4: "ranger", donnees: {type: "ranger-v4", mesures: liste},
+        cle: `V4:ranger:${liste.map(l => l.join("")).join("|")}`
+      });
+    }
+    return null;
+  }
+  function erreursV4(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "conv-v4" || typeof lu !== "bigint") return null;
+    const v = milli(d.valeur);
+    const rep = milli(question.reponse);
+    if (lu === rep) return null;
+    if (lu === v) return {erreur: 7, retour: "Le nombre change aussi."};
+    const bas = VOL_V3[d.de] > VOL_V3[d.vers];
+    if (lu === rep * 1000n || lu * 1000n === rep) return {erreur: 2, retour: "1 L = 1 dm³, pas 1 cm³."};
+    if ((lu === rep * 10n || lu * 10n === rep) && question.glisse) return {erreur: 2, retour: "Trois cases par unité."};
+    if (lu === rep * 10n) return {erreur: 5, retour: rep % MILLE || lu % MILLE ? "Dix fois trop grand." : "Un zéro de trop."};
+    if (lu * 10n === rep) return {erreur: 5, retour: rep % MILLE || lu % MILLE ? "Dix fois trop petit." : "Un zéro de moins."};
+    if (lu === rep * 100n || lu * 100n === rep) return {erreur: 2, retour: bas ? "× 1 000, pas × 10." : "÷ 1 000, pas ÷ 10."};
+    if (lu * 1000000n === rep || lu === rep * 1000000n) return {erreur: 1, retour: bas ? "Vers plus petit : je multiplie." : "Vers plus grand : je divise."};
+    return null;
+  }
+  const PLACES_V4 = {
+    valide: ["pont", "saut", "situation", "objet", "pont", "saut", "ranger", "pont-phrase", "saut", "situation"],
+    entraine: ["pont", "saut", "situation", "pont", "objet", "saut",
+      "situation", "pont-phrase", "saut", "ranger", "pont", "situation", "saut", "objet", "pont",
+      "saut", "situation", "ranger", "pont", "saut", "pont-phrase", "situation", "saut", "pont", "situation"],
+    test: ["saut", "pont", "situation", "ranger"],
+    aide: ["pont", "saut", "situation"],
+    retour: ["pont|saut", "situation|ranger|objet"],
+    echauffement: ["pont|saut"]
+  };
+  ETAPES.V4 = {
+    // On te montre : 2,5 L = 2 500 cm³ (le pont, × 1 000) ; 0,045 m³ =
+    // 4 500 cL (le tableau des volumes) ; la piscine de 57,6 m³ (57 600 L).
+    clesExemples: ["V4:2,5L>cm³", "V4:0,045m³>cL", "V4:s:0"],
+    formes(usage, rng) {
+      const p = PLACES_V4[usage];
+      const f = {};
+      if (p) p.forEach((s, i) => { f[i] = choisir(rng, s.split("|")); });
+      return f;
+    },
+    tirer(rng, degre, i, usage, forme) {
+      const sorte = forme || choisir(rng, ["pont", "saut", "saut", "situation", "objet", "ranger"]);
+      if (sorte === "saut") return sautV4(degre, rng);
+      if (sorte === "situation") return situationV4(degre, rng);
+      if (sorte === "objet") return objetV4(degre, rng);
+      if (sorte === "ranger") return rangerV4(degre, rng);
+      if (sorte === "pont-phrase") return phraseV4(Math.min(2, degre), rng);
+      return pontV4(degre, rng);
+    },
+    valide(serie, usage) {
+      if (usage !== "valide") return true;
+      // (Le pont et le tableau ; un litre au moins une fois.)
+      return serie.some(x => /pont/.test(x.sorteV4 || "")) && serie.some(x => /saut/.test(x.sorteV4 || ""))
+        && serie.some(x => /\d[\s ](h|da|d|c|m)?L\b/.test(x.texte));
+    },
+    erreurs(question, lu) { return erreursV4(question, lu); }
+  };
+
+  // ------------------------------------------- Q7 · Problèmes : longueurs et aires
+  // Les figures du programme de 5e (S097 p. 26) : le parallélogramme
+  // (base × hauteur), le triangle (base × hauteur ÷ 2), la figure complexe
+  // (le pignon d'une case : un rectangle et un triangle) ; et l'hectare
+  // dans un carré (1 ha : un carré de 100 m de côté).
+  const UNITE_AIRE_B52 = {m: "m²", cm: "cm²", dm: "dm²", km: "km²", mm: "mm²"};
+  // [le modèle, le nom, la forme, base [n, u], hauteur [n, u], l'unité de
+  // calcul, l'unité demandée, le degré].
+  const FIGURES_Q7 = [
+    ["massif", "Un massif de fleurs en parallélogramme", "para", ["6", "m"], ["250", "cm"], "m", "m²", 1],
+    ["dalle", "Une dalle en parallélogramme", "para", ["40", "cm"], ["2,5", "dm"], "cm", "cm²", 1],
+    ["fanion", "Un fanion en triangle", "tri", ["30", "cm"], ["2,4", "dm"], "cm", "cm²", 1],
+    ["voile", "La voile d'un kayak, un triangle", "tri", ["1,8", "m"], ["150", "cm"], "m", "m²", 1],
+    ["cannes", "Un champ de cannes en parallélogramme", "para", ["250", "m"], ["80", "m"], "m", "ha", 2],
+    ["letchis", "Un verger de letchis en parallélogramme", "para", ["150", "m"], ["60", "m"], "m", "ha", 2],
+    ["parcelle", "Une parcelle en triangle", "tri", ["120", "m"], ["50", "m"], "m", "a", 2],
+    ["panneau", "Un panneau en parallélogramme", "para", ["1,2", "m"], ["45", "cm"], "m", "m²", 2],
+    ["terrain", "Un terrain en parallélogramme", "para", ["0,2", "km"], ["75", "m"], "m", "ha", 3],
+    ["savane", "Une savane en triangle", "tri", ["1,5", "km"], ["400", "m"], "m", "ha", 3],
+    ["vitre", "Une vitre en triangle", "tri", ["60", "cm"], ["0,5", "m"], "cm", "dm²", 3]
+  ];
+  // Le pignon d'une case : [le modèle, base, mur, toit (la hauteur du
+  // triangle), l'unité de calcul, le degré].
+  const PIGNONS_Q7 = [
+    ["case", ["6", "m"], ["2,5", "m"], ["150", "cm"], "m", 2],
+    ["kiosque", ["4", "m"], ["2", "m"], ["120", "cm"], "m", 2],
+    ["cabane", ["3", "m"], ["200", "cm"], ["1,2", "m"], "m", 3],
+    ["varangue", ["8", "m"], ["3", "m"], ["250", "cm"], "m", 3]
+  ];
+  // Le carré d'une aire en ha ou en a : son côté, son périmètre.
+  const CARRES_Q7 = [["1", "ha", "100"], ["4", "ha", "200"], ["9", "a", "30"], ["1", "a", "10"], ["0,25", "ha", "50"], ["16", "a", "40"]];
+  const enQ7 = (n, u, cu) => convertir(milli(n), u, cu);
+  function finirQ7(spec, rng = null, vrai = null) {
+    const {sorte, modele, degre, enonce, vers} = spec;
+    const rep = spec.reponse;
+    if (rep === null || rep <= 0n || decimales(rep) > 2) return null;
+    const R = mes(rep, vers);
+    const base = {code: "Q7", degre, unite: vers, grandeur: spec.grandeur || "aire", sorteQ7: sorte, modeleQ7: modele,
+      outil: "fig-q7", figQ7: spec.fig, noteOutil: spec.note, image: spec.image,
+      lignesB33: spec.lignes(R), corrB33: Object.assign({type: "fig-q7"}, spec.fig, {apres: spec.figCorr}),
+      donnees: Object.assign({type: "q7", sorte, vers}, spec.donnees), cle: spec.cle, cleBase: spec.cle};
+    base.correction = base.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l));
+    if (!vrai) {
+      return q(Object.assign(base, {forme: "nombre", texte: `${enonce} ${spec.avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant: spec.avant, apres: vers, serre: true},
+        reponse: brut(rep), reponseTexte: R, resume: `${spec.avant} ${R}`}));
+    }
+    const oui = vrai === "oui";
+    let propose = rep;
+    if (!oui) propose = choisir(rng, [rep * 10n, rep * 100n, rep % 10n === 0n ? rep / 10n : rep * 10n].filter(x => decimales(x) <= 3));
+    const auteur = choisir(rng, PRENOMS.filter(p => !enonce.includes(p)));
+    const dit = `${auteur} trouve ${mes(propose, vers)}.`;
+    return q(Object.assign(base, {
+      forme: "vrai-faux", texte: `${enonce} ${dit} Est-ce vraisemblable${NB}?`, morceaux: {enonce, proposition: dit, serre: true},
+      choix: ["Oui", "Non"], bon: oui ? 0 : 1, reponse: oui ? "Oui" : "Non", reponseTexte: oui ? "Oui" : "Non",
+      resume: `${dit} ${oui ? "Vraisemblable." : "Pas vraisemblable."}`,
+      lignesB33: [spec.controle, oui ? ["Oui : c'est bien ", R, "."] : ["Non : c'est ", R, `, pas ${mes(propose, vers)}.`]],
+      pourquoi: oui ? {1: `C'est bien ${R}.`} : {0: propose > rep ? (propose === rep * 10n ? "Dix fois trop grand." : "Cent fois trop grand.") : "Dix fois trop petit."},
+      donnees: Object.assign({}, base.donnees, {propose: brut(propose), vrai: oui}), cle: `${spec.cle}:v${oui ? 1 : 0}`
+    }));
+  }
+  function figureQ7(degre, rng, vrai = null) {
+    const vivier = FIGURES_Q7.filter(f => (vrai ? f[7] >= 2 : f[7] === degre));
+    const [modele, nom, forme, [b, ub], [h, uh], cu, vers] = choisir(rng, vivier);
+    const B = enQ7(b, ub, cu);
+    const Hh = enQ7(h, uh, cu);
+    if (B === null || Hh === null) return null;
+    let aire = foisB52(B, Hh);
+    if (forme === "tri") aire /= 2n;
+    const ua = UNITE_AIRE_B52[cu];
+    const rep = convertir(aire, ua, vers);
+    if (rep === null) return null;
+    const cotes = [[b, ub, B], [h, uh, Hh]].filter(([, u]) => u !== cu).map(([n, u, m]) => `${mes(milli(n), u)} = ${mes(m, cu)}`);
+    const calcul = forme === "tri" ? `${mes(B, cu)} × ${mes(Hh, cu)} ÷ 2 = ${mes(aire, ua)}` : `${mes(B, cu)} × ${mes(Hh, cu)} = ${mes(aire, ua)}`;
+    const nomForme = forme === "tri" ? "Aire du triangle : base × hauteur ÷ 2." : "Aire : base × hauteur.";
+    const enonceT = `${nom} : base ${mes(milli(b), ub)}, hauteur ${mes(milli(h), uh)}.`;
+    return {sorte: "figure", modele, degre, enonce: enonceT, avant: "Aire :", vers, reponse: rep,
+      fig: {forme, base: mes(milli(b), ub), hauteur: mes(milli(h), uh), titre: nom}, figCorr: {base: mes(B, cu), hauteur: mes(Hh, cu)},
+      note: cotes.length ? "Je mets tout dans la même unité." : nomForme,
+      image: [nomForme, ua !== vers ? `Puis en ${vers}.` : "Tout dans la même unité."],
+      lignes: R => (ua !== vers ? [calcul, [`${mes(aire, ua)} = `, R, ""]] : [[calcul.replace(/ = [^=]+$/, " = "), R, ""]]),
+      controle: calcul.replace(/ = [^=]+$/, ` = ${mes(aire, ua)}.`),
+      donnees: {forme, b, ub, h, uh, cu}, cle: `Q7:f:${modele}`};
+  }
+  function pignonQ7(degre, rng) {
+    const [modele, [b, ub], [m, um], [t, ut], cu] = choisir(rng, PIGNONS_Q7.filter(p => p[5] <= Math.max(2, degre)));
+    const B = enQ7(b, ub, cu);
+    const M = enQ7(m, um, cu);
+    const T = enQ7(t, ut, cu);
+    const rect = foisB52(B, M);
+    const tri = foisB52(B, T) / 2n;
+    const rep = rect + tri;
+    const ua = UNITE_AIRE_B52[cu];
+    const nomCase = {case: "La façade d'une case créole", kiosque: "Le pignon d'un kiosque", cabane: "Le pignon d'une cabane", varangue: "Le pignon d'une varangue"}[modele];
+    return {sorte: "pignon", modele, degre, enonce: `${nomCase} : un mur de ${mes(milli(b), ub)} sur ${mes(milli(m), um)}, et un toit en triangle de ${mes(milli(t), ut)} de haut.`, avant: "Aire :", vers: ua, reponse: rep,
+      fig: {forme: "maison", base: mes(milli(b), ub), hauteur: mes(milli(m), um), toit: mes(milli(t), ut), titre: nomCase},
+      figCorr: {base: mes(B, cu), hauteur: mes(M, cu), toit: mes(T, cu)},
+      note: "Je découpe : un rectangle, un triangle.", image: ["Le rectangle, puis le triangle.", "Puis j'ajoute les deux aires."],
+      // (Les cotes converties sont sur la figure verte.)
+      lignes: R => [`${mes(B, cu)} × ${mes(M, cu)} + ${mes(B, cu)} × ${mes(T, cu)} ÷ 2`, [`= ${mes(rect, ua)} + ${mes(tri, ua)} = `, R, ""]],
+      controle: `${mes(rect, ua)} + ${mes(tri, ua)} = ${mes(rep, ua)}.`,
+      donnees: {b, ub, m, um, t, ut, cu, rect: brut(rect), tri: brut(tri)}, cle: `Q7:p:${modele}`};
+  }
+  function carreQ7(degre, rng) {
+    const [n, u, cote] = choisir(rng, CARRES_Q7.filter((c, k) => (degre === 3 ? true : k < 4)));
+    const C = milli(cote);
+    const rep = 4n * C;
+    const nomU = u === "ha" ? "hectare" : "are";
+    const rel = u === "ha" ? `1${NB}ha : un carré de 100${NB}m de côté` : `1${NB}a : un carré de 10${NB}m de côté`;
+    return {sorte: "carre", modele: `carre-${n}${u}`, degre, enonce: `Un terrain carré a une aire de ${mes(milli(n), u)}. Quel est son périmètre${NB}?`, avant: "Périmètre :", vers: "m",
+      grandeur: "longueur", reponse: rep,
+      fig: {forme: "carre", aire: mes(milli(n), u), base: `?${NB}m`, titre: "Un terrain carré"}, figCorr: {base: mes(C, "m")},
+      note: `${rel}.`, image: [`${rel}.`, "Quel est le côté ? Puis le tour."],
+      lignes: R => [`${mes(milli(n), u)} = ${mes(convertir(milli(n), u, "m²"), "m²")} = ${mes(C, "m")} × ${mes(C, "m")}`, [`4 × ${mes(C, "m")} = `, R, ""]],
+      donnees: {n, u, cote, nomU}, cle: `Q7:c:${n}${u}`};
+  }
+  function erreursQ7(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "q7" || typeof lu !== "bigint") return null;
+    const rep = milli(question.reponse);
+    if (lu === rep) return null;
+    if (d.sorte === "figure") {
+      const brutA = foisB52(milli(d.b), milli(d.h));
+      if (d.ub !== d.uh && (lu === brutA || lu === brutA / 2n)) return {erreur: 1, retour: "Tout dans la même unité."};
+      if (d.forme === "tri" && lu === rep * 2n) return {erreur: 3, retour: "Un triangle : ÷ 2."};
+      if (d.forme === "para" && lu * 2n === rep) return {erreur: 3, retour: "Pas de ÷ 2 : base × hauteur."};
+    }
+    if (d.sorte === "pignon") {
+      if (lu === milli(d.rect)) return {erreur: 3, retour: "J'ajoute le triangle."};
+      if (lu === milli(d.rect) + 2n * milli(d.tri)) return {erreur: 3, retour: "Un triangle : ÷ 2."};
+    }
+    if (d.sorte === "carre") {
+      if (lu === milli(d.cote)) return {erreur: 3, retour: "Le côté ; puis le tour."};
+      if (lu === 4n * convertir(milli(d.n), d.u, "m²")) return {erreur: 2, retour: "D'abord le côté du carré."};
+    }
+    if (lu === rep * 10n || lu * 10n === rep) return {erreur: 5, retour: lu > rep ? "Dix fois trop grand." : "Dix fois trop petit."};
+    if (lu === rep * 100n || lu * 100n === rep) return {erreur: 2, retour: lu > rep ? "Cent fois trop grand." : "Cent fois trop petit."};
+    if (lu === rep * 10000n) return {erreur: 2, retour: "1 ha = 10 000 m²."};
+    return null;
+  }
+  const PLACES_Q7 = {
+    valide: ["figure", "figure", "carre", "figure", "V", "pignon", "figure", "carre", "pignon", "V"],
+    entraine: ["figure", "figure", "carre", "figure", "pignon", "figure",
+      "V", "carre", "figure", "pignon", "figure", "V", "carre", "figure", "pignon",
+      "figure", "V", "pignon", "figure", "carre", "figure", "V", "pignon", "figure", "carre"],
+    test: ["figure", "pignon", "carre", "figure"],
+    aide: ["figure", "figure", "carre"],
+    retour: ["figure|carre", "pignon|figure"],
+    echauffement: ["figure"]
+  };
+  function tirerQ7(rng, degre, forme) {
+    const vrai = forme && forme.startsWith("vrai") ? forme.slice(5) : null;
+    const sorte = vrai ? "figure" : forme || choisir(rng, ["figure", "figure", "pignon", "carre"]);
+    for (let essai = 0; essai < 60; essai += 1) {
+      let spec = null;
+      if (sorte === "figure") spec = figureQ7(degre, rng, vrai);
+      else if (sorte === "pignon") spec = pignonQ7(degre, rng);
+      else if (sorte === "carre") spec = carreQ7(degre, rng);
+      const x = spec && finirQ7(spec, rng, vrai);
+      if (x) return Object.assign(x, {degre});
+    }
+    return null;
+  }
+  // (« V » : Est-ce vraisemblable ? oui une fois, non une fois dans Je valide.)
+  function formesVrai(places, usage, rng) {
+    const p = places[usage];
+    const f = {};
+    if (!p) return f;
+    const [x, y] = rng() < 0.5 ? ["vrai-oui", "vrai-non"] : ["vrai-non", "vrai-oui"];
+    let v = 0;
+    p.forEach((s, i) => {
+      const t = choisir(rng, s.split("|"));
+      if (t === "V") { f[i] = usage === "valide" ? [x, y][v % 2] : rng() < 0.5 ? "vrai-oui" : "vrai-non"; v += 1; } else f[i] = t;
+    });
+    return f;
+  }
+  ETAPES.Q7 = {
+    // On te montre : le champ de cannes (2 ha), la voile (1,35 m²), le
+    // carré de 1 ha (400 m).
+    clesExemples: ["Q7:f:cannes", "Q7:f:voile", "Q7:c:1ha"],
+    tirer(rng, degre, i, usage, forme) { return tirerQ7(rng, degre, forme); },
+    formes(usage, rng) { return formesVrai(PLACES_Q7, usage, rng); },
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ7 === question.modeleQ7);
+    },
+    erreurs(question, lu) { return erreursQ7(question, lu); }
+  };
+
+  // ----------------------------------------- Q8 · Problèmes : volumes et contenances
+  // Le pavé (l'aquarium, la jardinière, la piscine : S097 p. 24, le brevet),
+  // combien de seaux (carte v4 : 10 L pour 1 m³), l'eau qui pèse (1 L d'eau
+  // pèse 1 kg). [le modèle, le nom, [longueur, largeur, hauteur] ([n, u]),
+  // l'unité de calcul, l'unité demandée, le degré].
+  const PAVES_Q8 = [
+    ["aquarium", "Un aquarium", [["60", "cm"], ["30", "cm"], ["40", "cm"]], "dm", "L", 1],
+    ["jardiniere", "Une jardinière", [["80", "cm"], ["20", "cm"], ["25", "cm"]], "dm", "L", 1],
+    ["bac", "Un bac à légumes", [["50", "cm"], ["40", "cm"], ["30", "cm"]], "dm", "L", 1],
+    ["piscine", "Une piscine", [["8", "m"], ["4", "m"], ["1,5", "m"]], "m", "m³", 1],
+    ["piscine2", "Une piscine", [["6", "m"], ["6", "m"], ["1,6", "m"]], "m", "L", 2],
+    ["sable", "Un bac à sable", [["2", "m"], ["1", "m"], ["15", "cm"]], "dm", "L", 2],
+    ["aquarium2", "Un grand aquarium", [["1", "m"], ["40", "cm"], ["50", "cm"]], "dm", "L", 2],
+    ["cuve", "Une cuve", [["1,2", "m"], ["1", "m"], ["80", "cm"]], "dm", "L", 2],
+    ["bassin", "Un bassin", [["2,5", "m"], ["1,2", "m"], ["40", "cm"]], "m", "m³", 3],
+    ["boite", "Une boîte", [["25", "cm"], ["12", "cm"], ["8", "cm"]], "cm", "L", 3],
+    ["citerne", "Une citerne", [["2", "m"], ["1,5", "m"], ["1,2", "m"]], "m", "L", 3]
+  ];
+  const VOL_B52 = {cm: "cm³", dm: "dm³", m: "m³"};
+  function paveQ8Spec(degre, rng, vrai = null) {
+    const vivier = PAVES_Q8.filter(p => (vrai ? p[5] <= 2 : p[5] === degre));
+    const [modele, nom, dims, cu, vers] = choisir(rng, vivier);
+    const D = dims.map(([n, u]) => convertir(milli(n), u, cu));
+    if (D.some(x => x === null)) return null;
+    const vol = foisB52(foisB52(D[0], D[1]), D[2]);
+    const uv = VOL_B52[cu];
+    const rep = convertirV3(vol, uv, vers);
+    if (rep === null) return null;
+    const conv = dims.map(([n, u], k) => [n, u, D[k]]).filter(([, u]) => u !== cu).map(([n, u, m]) => `${mes(milli(n), u)} = ${mes(m, cu)}`);
+    const calcul = `${D.map(x => mes(x, cu)).join(" × ")} = ${mes(vol, uv)}`;
+    const dans = vers === "L" ? "Contenance :" : "Volume :";
+    const tailles = D.map(x => Number(x) / 1000);
+    return {sorte: "pave", modele, degre, enonce: `${nom} : ${mes(milli(dims[0][0]), dims[0][1])} sur ${mes(milli(dims[1][0]), dims[1][1])}, et ${mes(milli(dims[2][0]), dims[2][1])} de haut.`,
+      avant: dans, vers, reponse: rep,
+      pave: {l: mes(milli(dims[0][0]), dims[0][1]), p: mes(milli(dims[1][0]), dims[1][1]), h: mes(milli(dims[2][0]), dims[2][1]), dims: tailles, eau: modele === "boite" ? 0 : 0.85, titre: nom},
+      paveCorr: {l: mes(D[0], cu), p: mes(D[1], cu), h: mes(D[2], cu)},
+      note: conv.length ? "Je mets tout dans la même unité." : "Volume : longueur × largeur × hauteur.",
+      image: ["Volume : longueur × largeur × hauteur.", vers === "L" ? "1 L = 1 dm³ ; 1 m³ = 1 000 L." : "Les trois longueurs en m."],
+      lignes: R => (uv !== vers ? [calcul, [`${mes(vol, uv)} = `, R, ""]] : [[`${D.map(x => mes(x, cu)).join(" × ")} = `, R, ""]]),
+      controle: `${calcul}.`,
+      donnees: {dims, cu, vol: brut(vol), uv}, cle: `Q8:p:${modele}`};
+  }
+  // Combien de seaux ? [l'énoncé ({P}), le tout [n, u], la part [n, u], le
+  // nom des parts, le degré].
+  const SEAUX_Q8 = [
+    ["{P} remplit une cuve de 1 m³ avec un seau de 10 L.", ["1", "m³"], ["10", "L"], "seaux", 1],
+    ["{P} remplit une citerne de 2,5 m³ avec un arrosoir de 10 L.", ["2,5", "m³"], ["10", "L"], "arrosoirs", 2],
+    ["{P} vide un bassin de 0,6 m³ avec un seau de 12 L.", ["0,6", "m³"], ["12", "L"], "seaux", 3],
+    ["{P} verse 1,5 L de jus dans des verres de 250 cm³.", ["1,5", "L"], ["250", "cm³"], "verres", 1],
+    ["{P} met 2,7 L de confiture dans des pots de 300 cm³.", ["2,7", "L"], ["300", "cm³"], "pots", 2],
+    ["{P} remplit un réservoir de 0,5 m³ avec des bidons de 20 L.", ["0,5", "m³"], ["20", "L"], "bidons", 2],
+    ["{P} partage 2 L de sirop en flacons de 125 cm³.", ["2", "L"], ["125", "cm³"], "flacons", 3],
+    ["{P} remplit un aquarium de 72 dm³ avec un seau de 8 L.", ["72", "dm³"], ["8", "L"], "seaux", 2]
+  ];
+  function seauxQ8(degre, rng) {
+    const vivier = SEAUX_Q8.filter(s => s[4] <= degre);
+    const [texte, [t, ut], [p, up], noms] = choisir(rng, vivier);
+    const T = milli(t);
+    const Pp = milli(p);
+    const Tc = convertirV3(T, ut, up);
+    if (Tc === null || Tc % Pp !== 0n) return null;
+    const n = Tc / Pp;
+    const P = choisir(rng, PRENOMS);
+    const enonce = texte.replace("{P}", P);
+    const pluriel = noms;
+    return {sorte: "seaux", modele: `seaux-${t}${ut}-${p}${up}`, degre, enonce: `${enonce} Combien de ${pluriel}${NB}?`, avant: "", apres: pluriel, compte: true,
+      vers: up, reponse: n * MILLE,
+      barre: {tout: mes(T, ut), parts: partsQ3(Number(n), mes(Pp, up)), dessous: `?${NB}${pluriel}`},
+      barreCorr: {tout: `${mes(T, ut)} = ${mes(Tc, up)}`, parts: partsQ3(Number(n), mes(Pp, up)), dessous: ""},
+      note: `D'abord ${mes(T, ut)} en ${up}.`,
+      image: [`${mes(T, ut)} = ${CASE}${NB}${up}`, `Combien de fois ${mes(Pp, up)}${NB}?`],
+      // (La conversion est écrite au-dessus de la barre verte.)
+      lignes: v => [[`${mes(Tc, up)} ÷ ${mes(Pp, up)} = `, v, `${NB}${pluriel}`]],
+      donnees: {t, ut, p, up, n: String(n)}, cle: `Q8:s:${t}${ut}/${p}${up}`};
+  }
+  // L'eau qui pèse : l'aquarium plein, la piscine gonflable.
+  const EAUX_Q8 = [
+    ["Un aquarium plein d'eau", [["50", "cm"], ["30", "cm"], ["40", "cm"]], "dm", "kg", 2],
+    ["Une piscine gonflable pleine d'eau", [["2", "m"], ["1,5", "m"], ["50", "cm"]], "m", "t", 3],
+    ["Une cuve pleine d'eau", [["1", "m"], ["1", "m"], ["1,2", "m"]], "m", "t", 3]
+  ];
+  function eauQ8(degre, rng) {
+    const [nom, dims, cu, vers] = choisir(rng, EAUX_Q8.filter(e => e[4] <= Math.max(2, degre)));
+    const D = dims.map(([n, u]) => convertir(milli(n), u, cu));
+    const vol = foisB52(foisB52(D[0], D[1]), D[2]);
+    const uv = VOL_B52[cu];
+    // 1 dm³ d'eau : 1 kg ; 1 m³ d'eau : 1 t.
+    const rep = vol;
+    return {sorte: "eau", modele: `eau-${nom}`, degre, grandeur: "masse",
+      enonce: `${nom} : ${mes(milli(dims[0][0]), dims[0][1])} sur ${mes(milli(dims[1][0]), dims[1][1])}, et ${mes(milli(dims[2][0]), dims[2][1])} de haut.`,
+      avant: "L'eau pèse :", vers, reponse: rep,
+      pave: {l: mes(milli(dims[0][0]), dims[0][1]), p: mes(milli(dims[1][0]), dims[1][1]), h: mes(milli(dims[2][0]), dims[2][1]), dims: D.map(x => Number(x) / 1000), eau: 1, titre: nom},
+      paveCorr: {l: mes(D[0], cu), p: mes(D[1], cu), h: mes(D[2], cu)},
+      note: vers === "kg" ? "1 L d'eau pèse 1 kg." : "1 m³ d'eau pèse 1 t.",
+      image: ["Le volume d'abord.", vers === "kg" ? "1 L d'eau pèse 1 kg." : "1 m³ d'eau pèse 1 t."],
+      lignes: R => [`${D.map(x => mes(x, cu)).join(" × ")} = ${mes(vol, uv)}`, [vers === "kg" ? `${mes(vol, "L")} d'eau : ` : `${mes(vol, "m³")} d'eau : `, R, ""]],
+      controle: "", donnees: {cu, vol: brut(vol)}, cle: `Q8:e:${nom}`};
+  }
+  function finirQ8(spec, rng = null, vrai = null) {
+    const {sorte, modele, degre, enonce, vers} = spec;
+    const rep = spec.reponse;
+    if (rep === null || rep <= 0n || decimales(rep) > 2 || rep > 1000000n * MILLE) return null;
+    const unite = spec.apres || vers;
+    const R = spec.compte ? `${ecrire(rep)}${NB}${unite}` : mes(rep, vers);
+    const vertTexte = spec.compte ? ecrire(rep) : R;
+    const lignes = spec.lignes(vertTexte);
+    const corr = spec.barre ? Object.assign({type: "barre-q3"}, spec.barreCorr) : Object.assign({type: "pave-q8"}, spec.pave, {apres: spec.paveCorr});
+    const base = {code: "Q8", degre, unite, grandeur: spec.compte ? "nombre" : spec.grandeur || grandeurDe(vers) || "volume", sorteQ8: sorte, modeleQ8: modele,
+      outil: spec.barre ? "barre-q3" : "pave-q8", barreQ3: spec.barre || null, paveQ8: spec.pave || null,
+      noteOutil: spec.note, image: spec.image, lignesB33: lignes, corrB33: corr,
+      donnees: Object.assign({type: "q8", sorte, vers}, spec.donnees), cle: spec.cle, cleBase: spec.cle};
+    if (spec.barre) spec.barre.serre = true;
+    base.correction = lignes.map(l => (Array.isArray(l) ? l.join("") : l));
+    if (!vrai) {
+      const avant = spec.avant || "";
+      const apresCase = unite;
+      return q(Object.assign(base, {forme: "nombre", texte: `${enonce} ${avant ? `${avant} ` : ""}${CASE}${apresCase ? `${NB}${apresCase}` : ""}`,
+        morceaux: {enonce, avant, apres: apresCase, serre: true}, reponse: brut(rep), reponseTexte: R, resume: `${avant ? `${avant} ` : ""}${R}`}));
+    }
+    const oui = vrai === "oui";
+    const propose = oui ? rep : choisir(rng, [rep * 10n, rep * 1000n, rep % 10n === 0n ? rep / 10n : rep * 100n]);
+    const auteur = choisir(rng, PRENOMS.filter(p => !enonce.includes(p)));
+    const dit = `${auteur} trouve ${mes(propose, vers)}.`;
+    return q(Object.assign(base, {
+      forme: "vrai-faux", texte: `${enonce} ${dit} Est-ce vraisemblable${NB}?`, morceaux: {enonce, proposition: dit, serre: true},
+      choix: ["Oui", "Non"], bon: oui ? 0 : 1, reponse: oui ? "Oui" : "Non", reponseTexte: oui ? "Oui" : "Non",
+      resume: `${dit} ${oui ? "Vraisemblable." : "Pas vraisemblable."}`,
+      lignesB33: [spec.controle, oui ? ["Oui : c'est bien ", R, "."] : ["Non : c'est ", R, `, pas ${mes(propose, vers)}.`]],
+      pourquoi: oui ? {1: `C'est bien ${R}.`} : {0: propose === rep * 10n ? "Dix fois trop grand." : propose === rep * 1000n ? "Mille fois trop grand." : propose > rep ? "Cent fois trop grand." : "Dix fois trop petit."},
+      donnees: Object.assign({}, base.donnees, {propose: brut(propose), vrai: oui}), cle: `${spec.cle}:v${oui ? 1 : 0}`
+    }));
+  }
+  function erreursQ8(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "q8" || typeof lu !== "bigint") return null;
+    const rep = milli(question.reponse);
+    if (lu === rep) return null;
+    if (d.sorte === "pave") {
+      const brutV = d.dims.reduce((s, [n]) => foisB52(s, milli(n)), MILLE);
+      if (lu === brutV && d.dims.some(([, u]) => u !== d.dims[0][1])) return {erreur: 1, retour: "Tout dans la même unité."};
+      const somme = d.dims.reduce((s, [n, u]) => s + convertir(milli(n), u, d.cu), 0n);
+      if (lu === somme) return {erreur: 3, retour: "Volume : je multiplie."};
+      if (lu === rep * 1000n || lu * 1000n === rep) return {erreur: 2, retour: "1 m³ = 1 000 L ; 1 L = 1 dm³."};
+    }
+    if (d.sorte === "seaux") {
+      if (lu * milli(d.p) === milli(d.t) * MILLE) return {erreur: 1, retour: `D'abord en ${d.up}.`};
+      if (lu * 10n === rep || lu === rep * 10n || lu * 100n === rep || lu === rep * 100n) return {erreur: 2, retour: d.ut === "m³" ? "1 m³ = 1 000 L." : "1 L = 1 000 cm³."};
+    }
+    if (lu === rep * 10n || lu * 10n === rep) return {erreur: 5, retour: lu > rep ? "Dix fois trop grand." : "Dix fois trop petit."};
+    if (lu === rep * 1000n || lu * 1000n === rep) return {erreur: 2, retour: "1 m³ = 1 000 L ; 1 L = 1 dm³."};
+    return null;
+  }
+  const PLACES_Q8 = {
+    valide: ["pave", "seaux", "pave", "seaux", "V", "pave", "eau", "seaux", "pave", "V"],
+    entraine: ["pave", "seaux", "pave", "seaux", "pave", "eau",
+      "V", "seaux", "pave", "eau", "pave", "V", "seaux", "pave", "eau",
+      "pave", "V", "seaux", "pave", "eau", "seaux", "V", "pave", "seaux", "pave"],
+    test: ["pave", "seaux", "eau", "pave"],
+    aide: ["pave", "seaux", "pave"],
+    retour: ["pave|seaux", "eau|pave"],
+    echauffement: ["pave"]
+  };
+  function tirerQ8(rng, degre, forme) {
+    const vrai = forme && forme.startsWith("vrai") ? forme.slice(5) : null;
+    const sorte = vrai ? "pave" : forme || choisir(rng, ["pave", "pave", "seaux", "eau"]);
+    for (let essai = 0; essai < 60; essai += 1) {
+      let spec = null;
+      if (sorte === "pave") spec = paveQ8Spec(degre, rng, vrai);
+      else if (sorte === "seaux") spec = seauxQ8(degre, rng);
+      else if (sorte === "eau") spec = eauQ8(degre, rng);
+      const x = spec && finirQ8(spec, rng, vrai);
+      if (x) return Object.assign(x, {degre});
+    }
+    return null;
+  }
+  ETAPES.Q8 = {
+    // On te montre : l'aquarium (72 L), la cuve et le seau (100 seaux), la
+    // piscine (48 000 L).
+    clesExemples: ["Q8:p:aquarium", "Q8:s:1m³/10L"],
+    tirer(rng, degre, i, usage, forme) { return tirerQ8(rng, degre, forme); },
+    formes(usage, rng) { return formesVrai(PLACES_Q8, usage, rng); },
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ8 === question.modeleQ8);
+    },
+    erreurs(question, lu) { return erreursQ8(question, lu); }
+  };
+
+  // --------------------------------------------- Q11 · Problèmes : plans et cartes
+  // L'échelle d'une carte (S097 p. 26-27 ; carte v4 : « 1 cm représente
+  // 4 km ») : des distances vraies de La Réunion à vol d'oiseau, arrondies
+  // (Saint-Denis et Saint-Pierre : environ 50 km ; l'île : environ 70 km de
+  // long). [la première ville, la seconde, la distance en km].
+  const VILLES_Q11 = [
+    ["Saint-Denis", "Saint-Pierre", 50], ["Saint-Denis", "Saint-Benoît", 30], ["Saint-Paul", "Saint-Leu", 20],
+    ["Saint-Pierre", "Saint-Philippe", 30], ["Saint-Denis", "Cilaos", 30], ["Le Port", "Saint-Benoît", 45], ["Saint-Denis", "Saint-Paul", 20],
+    ["Saint-Joseph", "Saint-Philippe", 15], ["Saint-Louis", "Cilaos", 20], ["Saint-André", "Salazie", 15]
+  ];
+  const ECHELLES_Q11 = [2, 2.5, 4, 5, 10];
+  const virgB52 = x => String(Math.round(x * 1000) / 1000).replace(".", ",");
+  // Les sentiers et les plans : [l'énoncé, 1 cm représente [n, u], la
+  // mesure sur la carte (cm), l'unité de la réponse, le degré].
+  const PLANS_Q11 = [
+    ["Sur le plan de la case, 1 cm représente 2 m. La varangue mesure 3,5 cm sur le plan.", ["2", "m"], "3,5", "m", 1],
+    ["Sur le plan du jardin, 1 cm représente 5 m. L'allée mesure 6 cm sur le plan.", ["5", "m"], "6", "m", 1],
+    ["Sur le plan de la classe, 1 cm représente 50 cm. Le tableau mesure 7 cm sur le plan.", ["50", "cm"], "7", "m", 2],
+    ["Sur une carte de randonnée, 1 cm représente 500 m. Le sentier mesure 7 cm sur la carte.", ["500", "m"], "7", "km", 2],
+    ["Sur une carte de randonnée, 1 cm représente 250 m. Le sentier mesure 9 cm sur la carte.", ["250", "m"], "9", "km", 3],
+    ["Sur le plan du collège, 1 cm représente 10 m. Le préau mesure 2,5 cm sur le plan.", ["10", "m"], "2,5", "m", 2],
+    ["Sur le plan de la cuisine, 1 cm représente 25 cm. Le plan de travail mesure 9 cm sur le plan.", ["25", "cm"], "9", "m", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  // Le plan à l'échelle 1/n (degré 3) : [n, le lieu, la mesure (cm), le nom].
+  const ECHELLE_N_Q11 = [[100, "de la chambre", "3,5", "La chambre mesure"], [200, "de la case", "4", "La case mesure"], [500, "du collège", "8", "La cour mesure"],
+    [1000, "du quartier", "6", "La rue mesure"], [200, "de l'appartement", "2,5", "Le salon mesure"]];
+  function finirQ11(spec, rng = null, vrai = null) {
+    const {sorte, degre, enonce, vers} = spec;
+    const rep = spec.reponse;
+    if (rep === null || rep <= 0n || decimales(rep) > 2) return null;
+    const R = mes(rep, vers);
+    const base = {code: "Q11", degre, unite: vers, grandeur: spec.grandeur || grandeurDe(vers) || "longueur", sorteQ11: sorte, modeleQ11: spec.modele,
+      outil: spec.droite ? "droite-echelle" : "lignes", droiteE: spec.droite || null, outilLignes: spec.outilLignes || null, outilPetit: true,
+      relationOutil: spec.relationOutil || null, noteOutil: spec.note, image: spec.image,
+      lignesB33: spec.lignes(R), corrB33: spec.droite ? Object.assign({type: "droite-echelle"}, spec.droite) : null,
+      donnees: Object.assign({type: "q11", sorte, vers}, spec.donnees), cle: spec.cle, cleBase: spec.cle};
+    base.correction = base.lignesB33.map(l => (Array.isArray(l) ? l.join("") : l));
+    if (!vrai) {
+      return q(Object.assign(base, {forme: "nombre", texte: `${enonce} ${spec.avant} ${CASE}${NB}${vers}`, morceaux: {enonce, avant: spec.avant, apres: vers, serre: true},
+        reponse: brut(rep), reponseTexte: R, resume: `${spec.avant} ${R}`}));
+    }
+    const oui = vrai === "oui";
+    const propose = oui ? rep : choisir(rng, [rep * 10n, rep * 100n]);
+    const auteur = choisir(rng, PRENOMS.filter(p => !enonce.includes(p)));
+    const dit = `${auteur} trouve ${mes(propose, vers)}.`;
+    return q(Object.assign(base, {
+      forme: "vrai-faux", texte: `${enonce} ${dit} Est-ce vraisemblable${NB}?`, morceaux: {enonce, proposition: dit, serre: true},
+      choix: ["Oui", "Non"], bon: oui ? 0 : 1, reponse: oui ? "Oui" : "Non", reponseTexte: oui ? "Oui" : "Non",
+      resume: `${dit} ${oui ? "Vraisemblable." : "Pas vraisemblable."}`,
+      // (La correction : le calcul et la réponse, sans la droite : elle
+      // tenait à 87 % au petit iPhone.)
+      lignesB33: [spec.controle, oui ? ["Oui : c'est bien ", R, "."] : ["Non : c'est ", R, `, pas ${mes(propose, vers)}.`]], corrB33: null,
+      pourquoi: oui ? {1: `C'est bien ${R}.`} : {0: "L'île mesure environ 70 km."},
+      donnees: Object.assign({}, base.donnees, {propose: brut(propose), vrai: oui}), cle: `${spec.cle}:v${oui ? 1 : 0}`
+    }));
+  }
+  function carteQ11(degre, rng, inverse = false, vrai = null) {
+    for (let essai = 0; essai < 40; essai += 1) {
+      const [a, b, D] = choisir(rng, VILLES_Q11);
+      const s = choisir(rng, degre === 1 ? [5, 10] : ECHELLES_Q11);
+      const d = D / s;
+      if (d < 2 || d > 11 || Math.round(d * 10) !== d * 10) continue;
+      if (degre === 1 && !Number.isInteger(d)) continue;
+      if (degre === 3 && Number.isInteger(d) && rng() < 0.5) continue;
+      const dT = virgB52(d);
+      const sT = virgB52(s);
+      const intro = `Sur une carte, 1 cm représente ${sT} km.`;
+      const droite = {pas: sT, u: "km", d: dT, vrai: ecrire(BigInt(D) * MILLE), sens: inverse ? "vrai>carte" : "carte>vrai"};
+      const controle = `${dT} × ${sT} km = ${D} km.`;
+      if (inverse) {
+        return {sorte: "inverse", modele: `inv-${a}-${b}`, degre, enonce: `${intro} ${a} et ${b} sont à ${D} km à vol d'oiseau.`, avant: "Sur la carte :", vers: "cm",
+          reponse: milli(dT), droite, note: "Sur la carte en haut, en vrai en bas.", image: [`1 cm : ${sT} km.`, `Combien de fois ${sT} km dans ${D} km ?`],
+          lignes: R => [[`${D} km ÷ ${sT} km = ${dT}, donc `, R, ""]], controle,
+          donnees: {d: dT, s: sT, D: String(D)}, cle: `Q11:i:${a}-${b}:${sT}`};
+      }
+      return {sorte: "carte", modele: `carte-${a}-${b}`, degre, enonce: `${intro} ${a} et ${b} sont à ${dT} cm sur la carte.`, avant: "En vrai :", vers: "km",
+        reponse: BigInt(D) * MILLE, droite, note: "Sur la carte en haut, en vrai en bas.", image: [`1 cm : ${sT} km.`, `${dT} cm : ${dT} fois plus.`],
+        lignes: R => [[`${dT} × ${sT} km = `, R, ""]], controle,
+        donnees: {d: dT, s: sT, D: String(D)}, cle: `Q11:c:${a}-${b}:${sT}`};
+    }
+    return null;
+  }
+  function planQ11(degre, rng) {
+    const vivier = PLANS_Q11.map((p, k) => [p, k]).filter(([p]) => p[4] === degre || (degre === 3 && p[4] === 2));
+    const [[enonce, [n, u], dT, vers], k] = choisir(rng, vivier);
+    const d = milli(dT);
+    const vraiU = foisB52(d, milli(n));
+    const rep = convertir(vraiU, u, vers);
+    if (rep === null) return null;
+    const droite = {pas: n, u, d: dT, vrai: ecrire(vraiU), sens: "carte>vrai"};
+    const conv = u !== vers;
+    return {sorte: "plan", modele: `plan-${k}`, degre, enonce, avant: "En vrai :", vers, reponse: rep, droite,
+      note: conv ? `Puis en ${vers}.` : "Sur le plan en haut, en vrai en bas.", image: [`1 cm : ${n} ${u}.`, conv ? `Puis en ${vers}.` : `${dT} cm : ${dT} fois plus.`],
+      lignes: R => (conv ? [`${dT} × ${n} ${u} = ${mes(vraiU, u)}`, [`${mes(vraiU, u)} = `, R, ""]] : [[`${dT} × ${n} ${u} = `, R, ""]]),
+      controle: `${dT} × ${n} ${u} = ${mes(vraiU, u)}.`,
+      donnees: {d: dT, n, u}, cle: `Q11:p:${k}`};
+  }
+  // « 1/200 » (degré 3) : toujours avec sa phrase.
+  function echelleNQ11(degre, rng) {
+    const [N, lieu, dT, nom] = choisir(rng, ECHELLE_N_Q11);
+    const d = milli(dT);
+    const enCm = foisB52(d, BigInt(N) * MILLE);
+    const rep = convertir(enCm, "cm", "m");
+    const pasM = convertir(BigInt(N) * MILLE, "cm", "m");
+    // (Court : la question la plus haute fixe la hauteur de la série.)
+    const NT = ecrire(BigInt(N) * MILLE);
+    const enonce = `Plan ${lieu} au 1/${NT} : 1 cm sur le plan représente ${NT} cm. ${nom} ${dT} cm sur le plan.`;
+    return {sorte: "echelle", modele: `ech-${N}-${lieu}`, degre, enonce, avant: "En vrai :", vers: "m", reponse: rep,
+      droite: {pas: brut(pasM), u: "m", d: dT, vrai: ecrire(rep), sens: "carte>vrai"}, relationOutil: `${ecrire(BigInt(N) * MILLE)} cm = ${mes(pasM, "m")}`,
+      note: "Sur le plan en haut, en vrai en bas.", image: [`1/${NT} : 1 cm pour ${NT} cm.`, `${ecrire(BigInt(N) * MILLE)} cm = ${mes(pasM, "m")}.`],
+      lignes: R => [`1 cm représente ${ecrire(BigInt(N) * MILLE)} cm = ${mes(pasM, "m")}`, [`${dT} × ${mes(pasM, "m")} = `, R, ""]],
+      controle: "", donnees: {d: dT, N: String(N)}, cle: `Q11:e:${N}:${dT}`};
+  }
+  // Une aire avec un quadrillage (S097 p. 26) : [l'énoncé, le côté d'un
+  // carreau [n, u], le nombre de carreaux, l'unité de la réponse, le degré].
+  const CARREAUX_Q11 = [
+    ["Sur un plan, un carreau représente 10 m sur 10 m. Le jardin couvre 12 carreaux.", ["10", "m"], 12, "m²", 2],
+    ["Sur une carte, un carreau représente 100 m sur 100 m. Le champ de cannes couvre 7 carreaux.", ["100", "m"], 7, "ha", 2],
+    ["Sur une carte, un carreau représente 10 km sur 10 km. La Réunion couvre environ 25 carreaux.", ["10", "km"], 25, "km²", 3],
+    ["Sur une carte, un carreau représente 1 km sur 1 km. Le cirque de Cilaos couvre environ 85 carreaux.", ["1", "km"], 85, "km²", 3],
+    ["Sur un plan, un carreau représente 50 m sur 50 m. Le parc couvre 8 carreaux.", ["50", "m"], 8, "ha", 3]
+  ].map(([t, ...r]) => [CARTE.typo(t), ...r]);
+  function aireQ11(degre, rng) {
+    const vivier = CARREAUX_Q11.map((c, k) => [c, k]).filter(([c]) => c[4] <= degre);
+    const [[enonce, [n, u], nb, vers], k] = choisir(rng, vivier);
+    const c = milli(n);
+    const un = foisB52(c, c);
+    const ua = UNITE_AIRE_B52[u];
+    const tot = un * BigInt(nb);
+    const rep = convertir(tot, ua, vers);
+    if (rep === null) return null;
+    const environ = /environ/.test(enonce);
+    return {sorte: "aire", modele: `aire-${k}`, degre, grandeur: "aire", enonce, avant: environ ? "Environ" : "Aire :", vers, reponse: rep,
+      outilLignes: [`Un carreau : ${mes(c, u)} × ${mes(c, u)}.`], note: `${nb} carreaux : ${nb} fois plus.`,
+      image: ["L'aire d'un carreau, puis × le nombre de carreaux."],
+      lignes: R => [`Un carreau : ${mes(c, u)} × ${mes(c, u)} = ${mes(un, ua)}`, ...(ua !== vers ? [`${nb} × ${mes(un, ua)} = ${mes(tot, ua)}`, [`${mes(tot, ua)} = `, R, ""]] : [[`${nb} × ${mes(un, ua)} = `, R, ""]])],
+      controle: "", donnees: {nb: String(nb), n, u}, cle: `Q11:a:${k}`};
+  }
+  function erreursQ11(question, lu) {
+    const d = question.donnees;
+    if (!d || d.type !== "q11" || typeof lu !== "bigint") return null;
+    const rep = milli(question.reponse);
+    if (lu === rep) return null;
+    if (d.sorte === "carte" && lu === milli(d.d)) return {erreur: 1, retour: `1 cm, c'est ${d.s} km : × ${d.s}.`};
+    if (d.sorte === "carte" && lu * milli(d.s) === milli(d.d) * MILLE) return {erreur: 3, retour: "En vrai, c'est plus grand."};
+    if (d.sorte === "inverse" && lu === foisB52(milli(d.D), milli(d.s))) return {erreur: 3, retour: "Sur la carte, c'est plus petit."};
+    if (d.sorte === "inverse" && lu === milli(d.D)) return {erreur: 1, retour: `Combien de fois ${d.s} km ?`};
+    if (d.sorte === "echelle" && lu === rep * 100n) return {erreur: 1, retour: "En m : 100 cm = 1 m."};
+    if (d.sorte === "aire" && lu * 100n === rep * BigInt(d.nb)) return {erreur: 2, retour: "Un carreau : côté × côté."};
+    if (lu === rep * 1000n || lu * 1000n === rep) return {erreur: 2, retour: "1 km = 1 000 m."};
+    if (lu === rep * 100n || lu * 100n === rep) return {erreur: 2, retour: lu > rep ? "Cent fois trop grand." : "Cent fois trop petit."};
+    if (lu === rep * 10n || lu * 10n === rep) return {erreur: 5, retour: lu > rep ? "Dix fois trop grand." : "Dix fois trop petit."};
+    return null;
+  }
+  const PLACES_Q11 = {
+    valide: ["carte", "plan", "carte", "inverse", "V", "plan", "carte", "echelle|aire", "inverse", "V"],
+    entraine: ["carte", "plan", "carte", "inverse", "plan", "carte",
+      "V", "inverse", "plan", "aire", "carte", "V", "echelle", "plan", "inverse",
+      "carte", "V", "aire", "echelle", "plan", "inverse", "V", "carte", "echelle", "aire"],
+    test: ["carte", "plan", "inverse", "echelle|aire"],
+    aide: ["carte", "plan", "inverse"],
+    retour: ["carte|plan", "inverse|echelle|aire"],
+    echauffement: ["carte"]
+  };
+  function tirerQ11(rng, degre, forme) {
+    const vrai = forme && forme.startsWith("vrai") ? forme.slice(5) : null;
+    let sorte = vrai ? "carte" : forme || choisir(rng, ["carte", "plan", "inverse"]);
+    // (L'échelle « 1/200 » et les aires : au degré 3 seulement, décision du 23/11.)
+    if ((sorte === "echelle" || sorte === "aire") && degre < 3) sorte = sorte === "aire" && degre === 2 ? "aire" : "plan";
+    for (let essai = 0; essai < 60; essai += 1) {
+      let spec = null;
+      if (sorte === "carte") spec = carteQ11(degre, rng, false, vrai);
+      else if (sorte === "inverse") spec = carteQ11(degre, rng, true);
+      else if (sorte === "plan") spec = planQ11(degre, rng);
+      else if (sorte === "echelle") spec = echelleNQ11(degre, rng);
+      else if (sorte === "aire") spec = aireQ11(degre, rng);
+      const x = spec && finirQ11(spec, rng, vrai);
+      if (x) return Object.assign(x, {degre});
+    }
+    return null;
+  }
+  ETAPES.Q11 = {
+    // On te montre : Saint-Denis et Saint-Pierre (10 cm, 50 km) ; le plan
+    // au 1/200 de la case (3,5 cm, 7 m) ; La Réunion sur un quadrillage.
+    clesExemples: ["Q11:c:Saint-Denis-Saint-Pierre:5"],
+    tirer(rng, degre, i, usage, forme) { return tirerQ11(rng, degre, forme); },
+    formes(usage, rng) { return formesVrai(PLACES_Q11, usage, rng); },
+    accepte(serie, question, usage) {
+      if (usage !== "valide" && usage !== "test") return true;
+      return !serie.some(x => x.modeleQ11 === question.modeleQ11);
+    },
+    erreurs(question, lu) { return erreursQ11(question, lu); }
+  };
+  // (Correctif du B5-2, trouvé par les bancs à 2 000 graines de Code : un
+  // exemple de On te montre ne revient jamais ailleurs ; une clé n'a pas
+  // d'espace — « Le Port », « Un aquarium plein d'eau ».)
+  ["V4", "Q7", "Q8", "Q11"].forEach(code => {
+    const tirer = ETAPES[code].tirer;
+    const exemples = new Set(ETAPES[code].clesExemples || []);
+    const sansEspace = c => (typeof c === "string" ? c.replace(/\s+/g, "_") : c);
+    ETAPES[code].tirer = (...args) => {
+      let x = null;
+      for (let essai = 0; essai < 40; essai += 1) {
+        x = tirer(...args);
+        if (!x) return x;
+        x.cle = sansEspace(x.cle);
+        x.cleBase = sansEspace(x.cleBase);
+        if (!exemples.has(x.cle) && !exemples.has(x.cleBase)) break;
+      }
+      x.degre = args[1];
       return typoB33(ligneB33(x));
     };
   });

@@ -119,6 +119,10 @@ const APRES2 = PALIER3.length ? 3 : 6;
 // au palier 4 (par A3), puis au palier 6 (le palier 5 est en construction).
 const PALIER4 = PARCOURS.filter(c => CARTE.etape(c).palier === 4);
 const APRES3 = PALIER4.length ? 4 : 6;
+// Lot B5-2 : le palier 5 s'ouvre ; un élève qui finit le palier 4 continue
+// au palier 5 (par A4), puis au palier 6 ; tous les paliers sont ouverts.
+const PALIER5 = PARCOURS.filter(c => CARTE.etape(c).palier === 5);
+const APRES4 = PALIER5.length ? 5 : 6;
 const ETAPES = filtre("DEFI_CONVERSIONS_ETAPES", PRETS.concat(["commun"]), x => x);
 const REPERES_PAR_ETAPE = {};
 CARTE.ETAPES.forEach(e => { if (e.reperes && e.reperes.length) REPERES_PAR_ETAPE[e.code] = e.reperes; });
@@ -641,7 +645,11 @@ async function faireLeGeste(page, aide) {
       "chaine-d4", "calendrier-d4", "frise-q6",
       // Lot B5-1 (V2, V3) : le cube qui s'ouvre (trois touchers), la brique
       // qu'on verse.
-      "dm3-v2", "remplir-v3"].includes(aide.type)) {
+      "dm3-v2", "remplir-v3",
+      // Lot B5-2 (Q7, Q8, Q11) : la figure (sa hauteur), le pavé (l'eau),
+      // la droite de l'échelle (un centimètre par toucher), La Réunion
+      // (les carreaux entiers, puis les morceaux).
+      "fig-q7", "pave-q8", "droite-echelle", "carte-reunion"].includes(aide.type)) {
       // Lot A2 bis : on touche ce qui reste à toucher (une pièce de 1 €,
       // l'étiquette, l'horloge de départ, l'axe du temps).
       const a = page.locator(".zone .a-toucher");
@@ -708,7 +716,12 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {prof: true});
   const choisir = async () => {
     await cliquerTexte(page, "Changer d'étape");
-    await appuyer(page, page.locator("#cadre .li2").filter({hasText: etape.nomCourt}).first());
+    // (Lot B5-2 : le nom au début de la ligne, en entier ; « Volumes et
+    // contenances » (Q8) trouvait « Convertir volumes et contenances » (V4),
+    // « Heures décimales » (D6) trouvait « Les heures décimales usuelles »
+    // (D5) : le robot jouait deux fois la même étape.)
+    const exact = new RegExp(`^\\s*${etape.nomCourt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
+    await appuyer(page, page.locator("#cadre .li2").filter({hasText: exact}).first());
     await attendre(page, 50);
   };
   const accueilProf = async () => {
@@ -938,9 +951,10 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     await carnet.photo(page, "Accueil · en cours (Je me souviens)");
     await cliquerTexte(page, "Mon parcours");
     await carnet.photo(page, "Mon parcours · en cours");
-    await appuyer(page, page.locator(".pal-tabs button").nth(3));
+    // (Lot B5-2 : plus de palier en préparation ; l'onglet du palier 5.)
+    await appuyer(page, page.locator(".pal-tabs button").nth(4));
     await attendre(page, 50);
-    await carnet.photo(page, "Mon parcours · palier en préparation");
+    await carnet.photo(page, "Mon parcours · le palier 5");
     await appuyer(page, page.locator(".tete-ecran .rond"));
     await cliquerTexte(page, "Mon carnet");
     await carnet.photo(page, "Mon carnet · 10 repères");
@@ -1164,7 +1178,7 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     await cliquerTexte(page, "Je commence");
     for (let i = 0; i < 3; i += 1) await repondre(page, null);
     if (await page.getByText("Je m'arrête là").count()) {
-      await carnet.photo(page, "Tu connais déjà ? · la marche suivante, au palier 6");
+      await carnet.photo(page, `Tu connais déjà ? · la marche suivante, au palier ${APRES4}`);
       await cliquerTexte(page, "Je m'arrête là");
     }
     await carnet.photo(page, "Palier 4 · la ceinture par le test");
@@ -1176,6 +1190,44 @@ async function jouerCommun(navigateur, base, taille, carnet) {
     if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (palier 4 fini)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
     await contexte.close();
   }
+  // Lot B5-2 : le palier 5 ouvert. Un élève qui a fini les paliers 1 à 4 :
+  // l'accueil (la première étape du palier 5, A4), Mon parcours (l'onglet du
+  // palier 5), « Tu connais déjà ? » (l'escalier du palier 5) ; puis le
+  // palier 5 fini sauf Q11 : la ceinture marron par le test, et l'escalier
+  // qui continue au palier 6.
+  if (PALIER5.length) {
+    let p = P.creer();
+    PALIER1.concat(PALIER2, PALIER3, PALIER4).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(40 - (i % 30)))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(39 - (i % 30))), 9); });
+    const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
+    await carnet.photo(page, "Palier 5 · accueil (palier 4 fini)");
+    await cliquerTexte(page, "Mon parcours");
+    await carnet.photo(page, "Palier 5 · Mon parcours");
+    await appuyer(page, page.locator(".tete-ecran .rond"));
+    await cliquerTexte(page, "Tu connais déjà ?");
+    await carnet.photo(page, "Palier 5 · Tu connais déjà ? (l'escalier du palier 5)");
+    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (palier 5 ouvert)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
+    await contexte.close();
+  }
+  if (PALIER5.length) {
+    let p = P.creer();
+    PALIER1.concat(PALIER2, PALIER3, PALIER4, PALIER5).slice(0, -1).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(40 - (i % 30)))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(39 - (i % 30))), 9); });
+    const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
+    await cliquerTexte(page, "Tu connais déjà ?");
+    await cliquerTexte(page, "Je commence");
+    for (let i = 0; i < 3; i += 1) await repondre(page, null);
+    if (await page.getByText("Je m'arrête là").count()) {
+      await carnet.photo(page, "Tu connais déjà ? · la marche suivante, au palier 6");
+      await cliquerTexte(page, "Je m'arrête là");
+    }
+    await carnet.photo(page, "Palier 5 · la ceinture par le test");
+    await cliquerTexte(page, "Continuer");
+    await carnet.photo(page, "Palier 5 · Tu connais déjà ? (fin avec ceinture)");
+    if (await page.getByText("Continuer").count()) await cliquerTexte(page, "Continuer");
+    if (await page.locator("#cadre").getByText("Accueil", {exact: true}).count()) await appuyer(page, page.locator("#cadre").getByText("Accueil", {exact: true}).first());
+    await carnet.photo(page, "Palier 5 · accueil (palier 5 fini)");
+    if (erreurs.length) carnet.ecrans.push({nom: "Erreurs (palier 5 fini)", defauts: erreurs.slice(0, 3), png: await page.screenshot()});
+    await contexte.close();
+  }
   // Lot B6-3 : le palier 6 ouvert. Un élève qui a fini les paliers d'avant :
   // Mon parcours (l'onglet du palier 6) ; puis tout fini sauf Q9 : la
   // ceinture du palier 6 par le test, et l'accueil (« Le palier 5 arrive
@@ -1183,9 +1235,9 @@ async function jouerCommun(navigateur, base, taille, carnet) {
   // B4-2 : le palier 4 aussi.)
   if (PALIER6.length) {
     let p = P.creer();
-    PALIER1.concat(PALIER2, PALIER3, PALIER4).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(40 - (i % 30)))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(39 - (i % 30))), 9); });
+    PALIER1.concat(PALIER2, PALIER3, PALIER4, PALIER5).forEach((c, i) => { p = P.noterTest(p, c, P.ajouterJours(JOUR, -(40 - (i % 30)))); p = P.noterRetour(p, c, true, P.ajouterJours(JOUR, -(39 - (i % 30))), 9); });
     const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, {parcours: p});
-    await carnet.photo(page, `Palier 6 · accueil (palier ${PALIER4.length ? 4 : PALIER3.length ? 3 : 2} fini)`);
+    await carnet.photo(page, `Palier 6 · accueil (palier ${PALIER5.length ? 5 : PALIER4.length ? 4 : PALIER3.length ? 3 : 2} fini)`);
     await cliquerTexte(page, "Mon parcours");
     await carnet.photo(page, "Palier 6 · Mon parcours");
     await appuyer(page, page.locator(".tete-ecran .rond"));
