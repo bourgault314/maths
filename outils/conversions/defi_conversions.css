@@ -1158,6 +1158,10 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 .panneau .frac .fn, .panneau .frac .fd { padding-top: 0; padding-bottom: 0; }
 .frac-unite { white-space: nowrap; }
 .frac .fs { display: none; }
+/* (Lot B5-2, trouvé par le robot de Code : D5, On te montre 2, Android
+   412 × 780 — le « 10 » de 1⁄10 touchait « = 6 min » de la ligne d'en
+   dessous ; une fraction dans les lignes d'explication prend de l'air.) */
+.apres .frac { margin-block: .4em; }
 .dessin.droite2, .dessin.barre2 { max-width: 21.25rem; }
 .dessin.droite2.a-toucher, .dessin.barre2.a-toucher { cursor: pointer; }
 .droite2-boite, .barre2-boite { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .25rem; }
@@ -1610,4 +1614,44 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
   .v3-pont { grid-template-columns: 4.5rem 1fr; }
   .v3-pont .ill.v3-img { width: 4.5rem; height: 3.5rem; }
   .v3-eg { font-size: 1.5rem; }
+}
+
+/* ======================================================= lot B5-2 (palier 5)
+   V4 : le tableau des volumes de Gwenaël (« Litres ↔ m³ » de son
+   exerciseur) : trois cases par unité, son rose ; les litres sous les cases
+   (kL sous m³ ; hL, daL, L sous dm³ ; dL, cL, mL sous cm³), qu'on peut
+   toucher. Q7 : les figures cotées ; Q8 : le pavé coté ; Q11 : la double
+   droite de l'échelle, La Réunion sur un quadrillage. */
+.gu2.vol .gu2-tete, .gu2.vol .gu2-chiffres, .gu2-litres { gap: .125rem; }
+.gu2-litres { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: .125rem; position: relative; z-index: 1; margin-top: .125rem; }
+.gu2-litres button { position: relative; min-width: 0; min-height: 1.375rem; padding: 0; border: 0; border-radius: .375rem; background: transparent; font-size: .875rem; font-weight: 900;
+  color: var(--acc-f); cursor: pointer; touch-action: manipulation; line-height: 1.1; }
+.gu2-litres button.l { font-size: 1rem; }
+.gu2-litres button.on { background: color-mix(in srgb, var(--acc) 14%, #fff); }
+.gu2-litres button > span { white-space: nowrap; }
+.gu2-litres .gu2-pin { right: -.125rem; top: -.375rem; }
+.gu2.vol .gu2-chiffres { margin-top: .125rem; }
+.gu2.vol .gu2-chiffres span { font-size: 1.3125rem; border-right-style: dashed; }
+.gu2.vol .gu2-chiffres span:nth-child(odd) { border-right-style: dashed; }
+.gu2.vol .gu2-chiffres span:nth-child(3n) { border-right-style: solid; }
+.gu2.vol .gu2-tete button:not(.sans-nom) { align-items: center; }
+.gu2.vol .gu2-tete button > span { padding-right: 0; }
+/* (Les noms des unités : la case couvre trois colonnes, ils ont la place.) */
+.gu2.vol .gu2-tete button, .zone .gu2.vol .gu2-tete button > span { font-size: .9375rem; }
+.zone .dessin.q11-droite { width: 100%; max-width: 21.25rem; max-height: min(7.75rem, 19vh); }
+.dessin.q11-droite.a-toucher, .dessin.q11-carte.a-toucher, .dessin.q7-fig.a-toucher, .dessin.q8-pave.a-toucher { cursor: pointer; }
+.zone .dessin.q11-carte { width: auto; max-width: 100%; height: min(9rem, 23vh); max-height: none; margin: 0 auto; }
+.zone .dessin.q7-fig { width: 100%; max-width: 19rem; max-height: min(7.5rem, 20vh); margin: 0 auto; }
+.zone .dessin.q8-pave { width: auto; max-width: 100%; height: min(8.5rem, 22vh); max-height: none; margin: 0 auto; }
+.reponse-bonne .dessin.q7-fig { max-height: min(6rem, 15vh); }
+.reponse-bonne .dessin.q8-pave { height: min(6.5rem, 16vh); }
+.reponse-bonne .dessin.q11-droite { max-height: min(7rem, 19vh); }
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .cadre[data-forme="seance"] .zone .dessin.q11-droite { max-width: 28rem; max-height: min(9.5rem, 17vh); }
+  .cadre[data-forme="seance"] .zone .dessin.q11-carte { height: min(15rem, 32vh); max-height: none; }
+  .cadre[data-forme="seance"] .zone .dessin.q7-fig { max-width: 26rem; max-height: min(10rem, 22vh); }
+  .cadre[data-forme="seance"] .zone .dessin.q8-pave { height: min(12rem, 26vh); max-height: none; }
+  .cadre[data-forme="seance"] .reponse-bonne .dessin.q7-fig { max-height: min(7rem, 15vh); }
+  .cadre[data-forme="seance"] .reponse-bonne .dessin.q8-pave { height: min(8rem, 17vh); }
+  .cadre[data-forme="seance"] .reponse-bonne .dessin.q11-droite { max-height: min(8rem, 17vh); }
 }

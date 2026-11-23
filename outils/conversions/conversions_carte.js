@@ -1208,6 +1208,111 @@
       relations: ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "1 mL d'eau : 1 g", "1 L d'eau : 1 kg", "1 m³ d'eau : 1 t"],
       reperes: []
     },
+    // ============================================ palier 5 (lot B5-2)
+    // V4 « Convertir volumes et contenances » (S097 p. 24 : les
+    // changements d'unités de volume dans la vie courante ; carte v4 : la
+    // conversion n° 2 du brevet, ranger des mesures mêlant L et dm³).
+    // Décision du 23/11 en l'absence de Gwenaël (réversible) : le pont et
+    // × 1 000 entre voisines, son tableau des volumes quand on saute.
+    V4: {
+      pret: true,
+      aide: {outil: "glisse-unite", image: "relation"},
+      apprends: [
+        {etiquette: "Je calcule", question: {avant: "2,5 L =", reponse: "2 500", apres: "cm³"},
+          consigne: "1 L = 1 dm³ = 1 000 cm³.\nTouche le calcul.",
+          aide: {type: "calcul-a3", gauche: "2,5 L", nombre: "2,5", op: "×", facteur: "1 000", unite: "cm³"},
+          apres: ["2,5 L = 2,5 dm³ = 2,5 × 1 000 cm³", "= 2 500 cm³"]},
+        {etiquette: "Je glisse", question: {avant: "0,045 m³ =", reponse: "4 500", apres: "cL"},
+          consigne: "On saute des unités : le tableau des volumes.\nTrois cases par unité, les litres dessous.",
+          aide: {type: "glisse-unite", grandeur: "volume", nombre: "0,045", de: "m³", vers: "cL", pale: false, cases: 3, litres: true,
+            colonnes: ["", "", "m³", "", "", "dm³", "", "", "cm³"]},
+          apres: ["0,045 m³ = 45 dm³ = 45 L", "= 4 500 cL"]},
+        {etiquette: "Je vérifie", question: {enonce: "Une piscine contient 57,6 m³ d'eau.", avant: "57,6 m³ =", reponse: "57 600", apres: "L"},
+          consigne: "1 m³ = 1 000 L.\nTouche le calcul.",
+          aide: {type: "calcul-a3", gauche: "57,6 m³", nombre: "57,6", op: "×", facteur: "1 000", unite: "L"},
+          apres: ["57,6 × 1 000 = 57 600", "= 57 600 L"]}
+      ],
+      retenir: "1 L = 1 dm³ ; 1 mL = 1 cm³ ; 1 m³ = 1 000 L.\nPar le pont, puis × 1 000 : 2,5 L = 2,5 dm³ = 2 500 cm³.\nOn saute des unités : le tableau des volumes, trois cases par unité.\nPour ranger, tout en mL.",
+      titreRelations: "À connaître par cœur",
+      cahier: "Je recopie cela dans mon cahier.",
+      relations: ["1 L = 1 dm³", "1 mL = 1 cm³", "1 m³ = 1 000 L", "1 cL = 10 cm³", "2,5 L = 2 500 cm³", "1 hL = 100 L"],
+      reperes: []
+    },
+    // Q7 « Problèmes : longueurs et aires » (S096 ; S097 p. 26 : le
+    // parallélogramme, le triangle, les figures complexes). Décidé par
+    // Claude : la figure cotée, la hauteur en pointillé.
+    Q7: {
+      pret: true,
+      aide: {outil: "fig-q7", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Un champ de cannes en parallélogramme : base 250 m, hauteur 80 m.", avant: "Aire :", reponse: "2", apres: "ha"},
+          consigne: "Touche la figure : sa hauteur.\nAire : base × hauteur.",
+          aide: {type: "fig-q7", forme: "para", base: "250 m", hauteur: "80 m"},
+          apres: ["250 m × 80 m = 20 000 m²", "= 2 ha"],
+          legende: "1 ha = 10 000 m²."},
+        {etiquette: "Je convertis", question: {enonce: "La voile d'un kayak, un triangle : base 1,8 m, hauteur 150 cm.", avant: "Aire :", reponse: "1,35", apres: "m²"},
+          consigne: "Touche : tout en m.\nTriangle : base × hauteur ÷ 2.",
+          aide: {type: "fig-q7", forme: "tri", base: "1,8 m", hauteur: "150 cm", apres: {hauteur: "1,5 m"}},
+          apres: ["1,8 m × 1,5 m ÷ 2", "= 1,35 m²"]},
+        {etiquette: "Je vérifie", question: {enonce: "Un terrain carré a une aire de 1 ha.", avant: "Périmètre :", reponse: "400", apres: "m"},
+          consigne: "1 ha : un carré de 100 m de côté.\nTouche le carré.",
+          aide: {type: "fig-q7", forme: "carre", aire: "1 ha", base: "? m", apres: {base: "100 m"}},
+          apres: ["4 × 100 m", "= 400 m"]}
+      ],
+      retenir: "Avant de calculer : les longueurs dans la même unité.\nParallélogramme : base × hauteur. Triangle : base × hauteur ÷ 2.\nFigure complexe : je découpe, j'ajoute les aires.\nPuis l'unité demandée : 20 000 m² = 2 ha.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Q8 « Problèmes : volumes et contenances » (S097 p. 24 ; carte v4 :
+    // combien de seaux de 10 L pour 1 m³ ? l'aquarium ; le brevet). Décidé
+    // par Claude : le pavé coté, l'eau qui vient au toucher.
+    Q8: {
+      pret: true,
+      aide: {outil: "pave-q8", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Un aquarium : 60 cm sur 30 cm, et 40 cm de haut.", avant: "Contenance :", reponse: "72", apres: "L"},
+          consigne: "Touche le pavé : tout en dm, car 1 L = 1 dm³.",
+          aide: {type: "pave-q8", l: "60 cm", p: "30 cm", h: "40 cm", dims: [6, 3, 4], apres: {l: "6 dm", p: "3 dm", h: "4 dm"}},
+          apres: ["6 dm × 3 dm × 4 dm = 72 dm³", "= 72 L"]},
+        {etiquette: "Je calcule", question: {enonce: "Une cuve de 1 m³, un seau de 10 L.", avant: "Il faut", reponse: "100", apres: "seaux"},
+          consigne: "Touche la barre : tout en L.",
+          aide: {type: "barre-q3", tout: "1 m³", toutApres: "1 m³ = 1 000 L", parts: ["10 L", "10 L", "…", "10 L"], dessous: "? seaux", touche: true},
+          apres: ["1 000 L ÷ 10 L", "= 100 seaux"]},
+        {etiquette: "Je vérifie", question: {enonce: "Une piscine : 8 m sur 4 m, et 1,5 m de haut.", avant: "Contenance :", reponse: "48 000", apres: "L"},
+          consigne: "En m, le volume est en m³.\nPuis 1 m³ = 1 000 L.",
+          aide: {type: "pave-q8", l: "8 m", p: "4 m", h: "1,5 m", dims: [16, 8, 3]},
+          apres: ["8 m × 4 m × 1,5 m = 48 m³", "= 48 000 L"]}
+      ],
+      retenir: "Pavé : longueur × largeur × hauteur, dans la même unité.\nEn dm : des dm³, donc des L. En m : des m³ ; 1 m³ = 1 000 L.\nCombien de seaux ? Tout en L, puis je divise.\n1 L d'eau pèse 1 kg ; 1 m³ d'eau, 1 t.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
+    // Q11 « Problèmes : plans et cartes » (S097 p. 26-27 ; carte v4 : « 1 cm
+    // représente 4 km »). Décisions du 23/11 en l'absence de Gwenaël
+    // (réversibles) : la double droite ; « 1/200 » avec sa phrase. Décidé par
+    // Claude : La Réunion sur un quadrillage (estimer l'aire de son
+    // département avec l'échelle d'une carte).
+    Q11: {
+      pret: true,
+      aide: {outil: "droite-echelle", image: "calcul"},
+      apprends: [
+        {etiquette: "Je vois", question: {enonce: "Sur une carte, 1 cm représente 5 km. Saint-Denis et Saint-Pierre sont à 10 cm sur la carte.", avant: "En vrai :", reponse: "50", apres: "km"},
+          consigne: "Touche la droite :\n1 cm, c'est 5 km.",
+          aide: {type: "droite-echelle", pas: "5", u: "km", d: "10", vrai: "50", sens: "carte>vrai"},
+          apres: ["10 × 5 km", "= 50 km"]},
+        {etiquette: "Je calcule", question: {enonce: "Le plan de la case est à l'échelle 1/200 : 1 cm sur le plan représente 200 cm. La varangue mesure 3,5 cm sur le plan.", avant: "En vrai :", reponse: "7", apres: "m"},
+          consigne: "200 cm = 2 m.\nTouche la droite.",
+          aide: {type: "droite-echelle", pas: "2", u: "m", d: "3,5", vrai: "7", sens: "carte>vrai"},
+          apres: ["3,5 × 2 m", "= 7 m"]},
+        {etiquette: "J'estime", question: {enonce: "La Réunion sur une carte : un carreau représente 10 km sur 10 km, donc 100 km². Son aire ?", avant: "Environ", reponse: "2 400", apres: "km²"},
+          consigne: "Touche la carte :\nje compte les carreaux.",
+          aide: {type: "carte-reunion"},
+          apres: ["environ 24 × 100 km²", "= 2 400 km²"]}
+      ],
+      retenir: "« 1 cm représente 5 km » : 10 cm sur la carte, c'est 50 km.\nEn vrai vers la carte, je divise : 20 km ÷ 5 km = 4 cm.\nÉchelle 1/200 : 1 cm représente 200 cm = 2 m.\nUne aire : les carreaux × l'aire d'un carreau.",
+      cahier: "Je recopie cela dans mon cahier.",
+      reperes: []
+    },
     // ============================================ palier 2 (lot B1-2)
     // Préfixes et relations (carte v4). L'outil de « À toi » : le
     // glisse-unité, toutes ses colonnes ; l'image : l'échelle des unités

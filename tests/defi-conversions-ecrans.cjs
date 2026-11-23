@@ -411,9 +411,10 @@ async function scenarioLendemain(navigateur, base, taille) {
   assert.equal(await page.locator(".li2.ok").count(), 5);
   assert.equal(await page.locator(".pceinture").getByText("Ceinture jaune : 5 étapes validées sur 10").count(), 1);
   await capture(page, taille, "16-mon-parcours");
-  // (Lot B4-2 : le palier 4 est ouvert ; c'est le palier 5 qui est en préparation.)
+  // (Lot B5-2 : le palier 5 est ouvert ; plus aucun palier en préparation.)
   await page.locator(".pal-tabs button").nth(4).click();
-  assert.equal(await page.getByText("Ce palier est en préparation").count(), 1);
+  assert.equal(await page.getByText("Ce palier est en préparation").count(), 0);
+  assert.equal(await page.locator(".li2").filter({hasText: "Problèmes : plans et cartes"}).count() + await page.locator(".li2").filter({hasText: "Plans et cartes"}).count() > 0, true);
   await page.locator(".tete-ecran .rond").click();
   await page.getByText("Mon carnet").click();
   await tientEntier(page, `${ou}, carnet`);

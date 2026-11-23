@@ -1142,30 +1142,49 @@
   // mesure trouvée : c'est l'élève qui lit les chiffres.
   const THEMES_GLISSE = {longueur: ["#1283ff", "#0b67c6"], masse: ["#16a34a", "#0e7a36"], contenance: ["#06b6d4", "#0a8aa3"],
     // (Lot B5-1 : le tableau des aires, l'orange de l'exerciseur de Gwenaël.)
-    aire: ["#f59e0b", "#b77207"]};
+    aire: ["#f59e0b", "#b77207"],
+    // (Lot B5-2 : le tableau des volumes, le rose de son tableau « Litres ↔ m³ ».)
+    volume: ["#db2777", "#a81d5a"]};
+  // Lot B5-2 (V4, le tableau « Litres ↔ m³ » de l'exerciseur de Gwenaël,
+  // CROSS_LABELS) : les litres sous les trois cases de chaque unité de volume.
+  const LITRES_V4 = {"m³": ["", "", "kL"], "dm³": ["hL", "daL", "L"], "cm³": ["dL", "cL", "mL"]};
   // `colonnes` (lot B1-2) : les colonnes du palier 2 (les masses du
   // kilogramme au milligramme, la tonne devant quand elle est en jeu).
   // `aires` (lot B5-1, le tableau des aires de Gwenaël en 5e) : deux cases par
   // unité ; la colonne sans nom avant chaque unité est celle de ses dizaines,
   // l'unité s'écrit dans une case qui couvre les deux (son nom au-dessus du
   // chiffre des unités) ; `sous` : l'hectare et l'are sous hm² et dam².
-  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false, colonnes: lesColonnes = null, aires = false, sous = null}, arrivee = () => {}) {
+  // Lot B5-2 (V4) : `cases` (trois pour le tableau des volumes ; deux pour
+  // celui des aires, `aires`) et `litres` (les litres sous les cases, qu'on
+  // peut toucher : l'unité de départ ou d'arrivée peut être un litre).
+  function glisseUnite(zone, {grandeur, valeur, de, vers, pale = true, fige = false, colonnes: lesColonnes = null, aires = false, sous = null, cases: k0 = 0, litres = false}, arrivee = () => {}) {
     const G = gen();
+    const k = k0 || (aires ? 2 : 1);
+    const grille = k > 1;
     const [entier, decimales = ""] = String(valeur).replace(/\s/g, "").replace(".", ",").split(",");
     const avant = entier.replace(/\D/g, "").replace(/^0+(?=\d)/, "").split("");
     const apres = decimales.replace(/\D/g, "").split("").filter(Boolean);
     let colonnes = (lesColonnes || G.COLONNES[grandeur]).slice();
+    const litresDe = cols => {
+      const l = cols.map(() => "");
+      if (litres) cols.forEach((u, i) => { if (LITRES_V4[u]) LITRES_V4[u].forEach((t, j) => { if (i - k + 1 + j >= 0) l[i - k + 1 + j] = t; }); });
+      return l;
+    };
+    const indice = (cols, lits, u) => (cols.indexOf(u) >= 0 ? cols.indexOf(u) : lits.indexOf(u));
     // Des colonnes sans nom à gauche (ou à droite) si le nombre en a besoin.
-    const iDe0 = colonnes.indexOf(de);
+    const iDe0 = indice(colonnes, litresDe(colonnes), de);
     const manqueG = Math.max(0, avant.length - 1 - iDe0);
     let manqueD = Math.max(0, apres.length - (colonnes.length - 1 - iDe0));
-    // (Le tableau des aires s'élargit par unité entière : deux cases.)
-    const manqueG2 = aires ? manqueG + (manqueG % 2) : manqueG;
-    if (aires) manqueD += manqueD % 2;
+    // (Le tableau des aires s'élargit par unité entière : deux cases ; celui
+    // des volumes, trois.)
+    const manqueG2 = grille ? Math.ceil(manqueG / k) * k : manqueG;
+    if (grille) manqueD = Math.ceil(manqueD / k) * k;
     colonnes = Array(manqueG2).fill("").concat(colonnes, Array(manqueD).fill(""));
+    const litre = litresDe(colonnes);
+    const nom = i => colonnes[i] || litre[i] || "";
     const n = colonnes.length;
-    const iDe = colonnes.indexOf(de);
-    const iVers = colonnes.indexOf(vers);
+    const iDe = indice(colonnes, litre, de);
+    const iVers = indice(colonnes, litre, vers);
     // Les chiffres posés une fois pour toutes : le chiffre des unités sous
     // l'unité de départ.
     const poses = Array(n).fill("");
@@ -1177,7 +1196,7 @@
     let fini = false;
     const [acc, accF] = THEMES_GLISSE[grandeur] || THEMES_GLISSE.longueur;
 
-    const boite = el("div", `gu2${fige ? " fige" : ""}${aires ? " aires" : ""}`);
+    const boite = el("div", `gu2${fige ? " fige" : ""}${grille ? " aires" : ""}${k === 3 ? " vol" : ""}`);
     boite.style.setProperty("--acc", acc);
     boite.style.setProperty("--acc-f", accF);
     boite.style.setProperty("--n", String(n));
@@ -1204,9 +1223,10 @@
       const b = el("button", u ? "" : "sans-nom");
       b.type = "button";
       b.appendChild(el("span", "", u || NB));
-      // (Le tableau des aires : la case de l'unité couvre ses deux colonnes.)
-      if (aires && u) {
-        b.style.gridColumn = `${Math.max(1, i)} / span ${i > 0 ? 2 : 1}`;
+      // (Le tableau des aires : la case de l'unité couvre ses deux colonnes ;
+      // celui des volumes, ses trois.)
+      if (grille && u) {
+        b.style.gridColumn = `${Math.max(1, i - k + 2)} / span ${Math.min(k, i + 1)}`;
         if (sous && sous[u]) b.appendChild(el("small", "gu2-sous", sous[u]));
       }
       if (!u) { b.disabled = true; b.setAttribute("aria-hidden", "true"); b.tabIndex = -1; }
@@ -1215,7 +1235,7 @@
         b.tabIndex = -1;
         if (pale && G.HORS_CYCLE_2.includes(u)) b.classList.add("pale");
       }
-      if (i === iDe) {
+      if (i === iDe && !(litres && litre[i] === de)) {
         b.classList.add("depart");
         // (Lot 3b-2 : la punaise dessinée, plus l'émoticône.)
         b.appendChild(icone("punaise", "gu2-pin"));
@@ -1226,7 +1246,21 @@
       return b;
     });
     const cases = colonnes.map(() => { const c = el("span", ""); ligne.appendChild(c); return c; });
-    piste.append(curseur, haut, flecheH, tete, ligne, bas, flecheB);
+    // (Lot B5-2 : la rangée des litres, sous les unités de volume.)
+    const rangL = el("div", "gu2-litres");
+    const boutonsL = colonnes.map((u, i) => {
+      if (!litre[i]) { const v = el("span", ""); rangL.appendChild(v); return null; }
+      const b = el("button", litre[i] === "L" ? "l" : "");
+      b.type = "button";
+      b.tabIndex = -1;
+      b.appendChild(el("span", "", litre[i]));
+      b.setAttribute("aria-label", `Mettre l'unité sur ${litre[i]}`);
+      if (i === iDe && litre[i] === de) { b.classList.add("depart"); b.appendChild(icone("punaise", "gu2-pin")); b.title = "L'unité de départ"; }
+      b.addEventListener("click", () => { if (!fige) aller(i); });
+      rangL.appendChild(b);
+      return b;
+    });
+    piste.append(curseur, haut, flecheH, tete, ...(litres ? [rangL] : []), ligne, bas, flecheB);
     boite.appendChild(piste);
     zone.appendChild(boite);
 
@@ -1246,7 +1280,8 @@
       // par son échelle).
       const rp = piste.getBoundingClientRect();
       const k = rp.width && piste.offsetWidth ? rp.width / piste.offsetWidth : 1;
-      const rUnite = boutons[cible] && boutons[cible].getBoundingClientRect();
+      const bU = colonnes[cible] ? boutons[cible] : boutonsL[cible] || boutons[cible];
+      const rUnite = bU && bU.getBoundingClientRect();
       const rChiffre = cases[cible] && cases[cible].getBoundingClientRect();
       if (rUnite && rChiffre && rp.height && rChiffre.bottom > rUnite.top) {
         curseur.style.top = `${(rUnite.top - rp.top) / k}px`;
@@ -1271,11 +1306,12 @@
         c.className = `${cl}${i === cible ? " unite" : ""}`;
       });
       boutons.forEach((b, i) => b.classList.toggle("on", i === cible));
-      [haut, bas].forEach(p => p.setAttribute("aria-valuetext", colonnes[cible]));
+      boutonsL.forEach((b, i) => { if (b) b.classList.toggle("on", i === cible); });
+      [haut, bas].forEach(p => p.setAttribute("aria-valuetext", nom(cible)));
       placer((cible + 0.5) / n);
     }
     function aller(i) {
-      if (i < 0 || i >= n || !colonnes[i]) return;
+      if (i < 0 || i >= n || !nom(i)) return;
       cible = i;
       dessiner();
       if (i === iVers && !fini) { fini = true; arrivee(); }
@@ -1285,7 +1321,7 @@
       let meilleur = cible;
       let ecart = Infinity;
       colonnes.forEach((u, i) => {
-        if (!u) return;
+        if (!nom(i)) return;
         const d = Math.abs((i + 0.5) / n - pos);
         if (d < ecart) { ecart = d; meilleur = i; }
       });
@@ -1344,7 +1380,7 @@
       const pas = ev.key === "ArrowLeft" ? -1 : ev.key === "ArrowRight" ? 1 : 0;
       if (!pas || fige) return;
       ev.preventDefault();
-      for (let i = cible + pas; i >= 0 && i < n; i += pas) if (colonnes[i]) { aller(i); break; }
+      for (let i = cible + pas; i >= 0 && i < n; i += pas) if (nom(i)) { aller(i); break; }
     });
     // Le glisse-unité qui se glisse tout seul, colonne par colonne, jusqu'à
     // l'unité `vers` (la correction de « À toi », comme le glisse-unité animé
@@ -1354,15 +1390,15 @@
     // et kg) se sautent ; avant, `aller` les refusait et le glisse-unité
     // restait sur t, la réponse cachée (« 1 t, c'est combien de fois 1 kg ? »).
     boite.animer = (versU, {pas = 420, ensuite = () => {}} = {}) => {
-      const j = colonnes.indexOf(versU);
+      const j = indice(colonnes, litre, versU);
       if (j < 0) { ensuite(); return; }
       const avance = () => {
         if (!boite.isConnected) return;
         if (cible === j) { ensuite(); return; }
         const sens = j > cible ? 1 : -1;
-        let k = cible + sens;
-        while (k !== j && !colonnes[k]) k += sens;
-        aller(k);
+        let c = cible + sens;
+        while (c !== j && !nom(c)) c += sens;
+        aller(c);
         root.setTimeout(avance, pas);
       };
       root.setTimeout(avance, pas);
@@ -3970,6 +4006,10 @@
     // Lot B5-1 (V2, V3) : le cube ouvert, les ponts, en vert.
     else if (c && c.type === "dm3-v2") dm3V2(zone, c, {mode: "correction"});
     else if (c && c.type === "ponts-v3") pontsV3(zone, {vert: true});
+    // Lot B5-2 (Q7, Q8, Q11) : la figure, le pavé, la droite, en vert.
+    else if (c && c.type === "fig-q7") figQ7(zone, c, {mode: "correction"});
+    else if (c && c.type === "pave-q8") paveQ8(zone, c, {mode: "correction"});
+    else if (c && c.type === "droite-echelle") droiteEchelle(zone, c, {mode: "correction"});
     question.lignesB33.forEach((l, i) => {
       const d = el("div", "calcul-pb b33");
       if (Array.isArray(l)) {
@@ -4849,6 +4889,294 @@
     if (question.noteOutil) zone.appendChild(note);
   }
 
+  // ======================================================= lot B5-2 (palier 5)
+  // V4 « Convertir volumes et contenances », Q7 « Problèmes : longueurs et
+  // aires », Q8 « Problèmes : volumes et contenances », Q11 « Problèmes :
+  // plans et cartes ». Décisions prises en l'absence de Gwenaël (23/11,
+  // réversibles, les options recommandées de la maquette) : V4, son tableau
+  // des volumes (`glisseUnite`, `cases: 3`, `litres`) quand on saute des
+  // unités, le pont et × 1 000 sinon ; Q11, la double droite de l'échelle ;
+  // « 1/500 » seulement aux questions difficiles, avec sa phrase. Décidé par
+  // Claude : les figures cotées (Q7), le pavé coté (Q8), La Réunion sur un
+  // quadrillage (On te montre de Q11). Aucun dessin ne donne la réponse.
+  const txtB52 = (x, y, t, a = {}) => svg("text", Object.assign({x, y, "text-anchor": "middle", "font-size": 17, "font-weight": 900, fill: N}, a), carte().typo(String(t)));
+  // Toucher un dessin (On te montre) : un toucher, le geste suivant.
+  function toucherB52(dessin, avance, reste) {
+    dessin.classList.add("a-toucher");
+    dessin.setAttribute("role", "button");
+    dessin.setAttribute("tabindex", "0");
+    const fin = () => { dessin.classList.remove("a-toucher"); dessin.setAttribute("role", "img"); dessin.removeAttribute("tabindex"); };
+    const toucher = () => { if (!reste()) return; avance(); if (!reste()) fin(); };
+    dessin.addEventListener("click", toucher);
+    dessin.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toucher(); } });
+    return enChaine(toucher, reste, 450);
+  }
+
+  // Q11 · la double droite de l'échelle : en haut, sur la carte (ou le
+  // plan) ; en bas, en vrai. aide : {pas (le vrai de 1 cm, « 4 »), u (l'unité
+  // vraie), d (la mesure sur la carte, « 12 » ou « 3,5 »), vrai (la mesure
+  // vraie), sens (« carte>vrai » : la vraie est cherchée ; « vrai>carte »)}.
+  // L'outil écrit 0, 1 et la mesure connue ; On te montre avance de 1 cm à
+  // chaque toucher ; la correction écrit les deux mesures en vert.
+  const nbB52 = t => Number(String(t).replace(/\s| /g, "").replace(",", "."));
+  function droiteEchelle(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const d = nbB52(aide.d);
+    const pas = nbB52(aide.pas);
+    const n = Math.min(12, Math.max(4, Math.ceil(d) + 1));
+    const x0 = 22;
+    const x1 = 282;
+    const yH = 42;
+    const yB = 84;
+    const X = t => x0 + ((x1 - x0) * t) / n;
+    const boite = el("div", "dessin-boite droite2-boite");
+    const dessin = svg("svg", {viewBox: "0 0 340 118", class: "dessin droite2 q11-droite", role: "img", "aria-label": carte().typo(`La double droite : 1 cm représente ${aide.pas} ${aide.u}`)});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    const fin = Math.floor(d);
+    let vus = mode === "montre" ? 1 : fin;
+    const G = gen();
+    const vraiDe = k => G.ecrire(G.milli(String(Math.round(k * pas * 1000) / 1000).replace(".", ",")));
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: 340, height: 118, fill: "transparent"}));
+      [yH, yB].forEach(y => {
+        dessin.appendChild(svg("line", {x1: x0, y1: y, x2: x1 + 14, y2: y, stroke: ENCRE, "stroke-width": 2.4}));
+        dessin.appendChild(svg("path", {d: `M${x1 + 16} ${y} l-8 -5 v10 Z`, fill: ENCRE}));
+      });
+      const fu = mode === "correction" ? 21 : 18;
+      dessin.appendChild(txtB52(x1 + 22, yH + 6, aide.uCarte || "cm", {"text-anchor": "start", "font-size": fu, fill: ENCRE}));
+      dessin.appendChild(txtB52(x1 + 22, yB + 6, aide.u, {"text-anchor": "start", "font-size": fu, fill: ENCRE}));
+      const trouve = mode === "correction" || (mode === "montre" && vus >= fin && aide.vu);
+      const ici = mode === "correction" ? VERT : BLEU;
+      // (Dans la correction, la droite est plus petite : des nombres plus grands.)
+      const fz = mode === "correction" ? 21 : 18;
+      for (let k = 0; k <= n; k += 1) {
+        const x = X(k);
+        [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: x, y1: y - 6, x2: x, y2: y + 6, stroke: ENCRE, "stroke-width": k === 0 ? 2.4 : 1.6})));
+      }
+      // Les nombres : 0 et 1, puis (On te montre) le centimètre atteint.
+      const xc = X(d);
+      const ecrits = [0, 1];
+      if (mode === "montre" && vus > 1 && !trouve) ecrits.push(vus);
+      ecrits.forEach(k => {
+        const x = X(k);
+        if (Math.abs(x - xc) < 40 && k !== 0) return;
+        const c = k > 1 ? BLEU : ENCRE;
+        dessin.appendChild(txtB52(x, yH - 14, String(k), {"font-size": fz, fill: c}));
+        dessin.appendChild(txtB52(x, yB + 27, vraiDe(k), {"font-size": fz, fill: c}));
+      });
+      // La mesure cherchée.
+      [yH, yB].forEach(y => dessin.appendChild(svg("line", {x1: xc, y1: y - 9, x2: xc, y2: y + 9, stroke: ici, "stroke-width": 2.6})));
+      dessin.appendChild(svg("line", {x1: xc, y1: yH + 9, x2: xc, y2: yB - 9, stroke: ici, "stroke-width": 2, "stroke-dasharray": "4 3"}));
+      const cache = (cote) => !trouve && mode !== "correction" && (aide.sens === "vrai>carte" ? cote === "haut" : cote === "bas");
+      const coul = mode === "correction" ? VERT : trouve ? VERT : BLEU;
+      dessin.appendChild(txtB52(xc, yH - 14, cache("haut") ? "?" : aide.d, {"font-size": fz + 1, fill: cache("haut") ? ROUGE : coul}));
+      dessin.appendChild(txtB52(xc, yB + 26, cache("bas") ? "?" : aide.vrai, {"font-size": fz + 1, fill: cache("bas") ? ROUGE : coul}));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche la droite");
+    boite.appendChild(note);
+    // (Chaque toucher : 1 cm de plus ; le dernier écrit la mesure cherchée.)
+    let fait = false;
+    return toucherB52(dessin, () => {
+      if (vus < fin) vus = Math.min(fin, vus + (fin > 6 ? 2 : 1));
+      if (vus >= fin) { aide = Object.assign({}, aide, {vu: true}); fait = true; note.remove(); dessiner(); fini(); return; }
+      dessiner();
+    }, () => !fait);
+  }
+
+  // Q11 · La Réunion sur un quadrillage de carreaux de 10 km de côté (S097
+  // p. 26 : estimer l'aire de son département avec l'échelle d'une carte).
+  // Le contour suit les villes de la côte (longitude, latitude). On te
+  // montre : 1er toucher, les carreaux entiers ; 2e, les morceaux.
+  const COTE_REUNION = [[55.45, -20.875], [55.55, -20.90], [55.61, -20.91], [55.65, -20.96], [55.71, -21.03], [55.79, -21.13], [55.84, -21.22], [55.77, -21.36],
+    [55.62, -21.385], [55.48, -21.345], [55.41, -21.29], [55.36, -21.27], [55.28, -21.17], [55.22, -21.06], [55.27, -21.01], [55.29, -20.94], [55.33, -20.93], [55.40, -20.89]];
+  function carteReunion(zone, aide, {mode = "outil", fini = () => {}} = {}) {
+    const c = 30;
+    const km = c / 10;
+    const P = COTE_REUNION.map(([lo, la]) => [12 + (lo - 55.21) * 104 * km, 10 - (la + 20.87) * 111 * km]);
+    const W = 12 + 7 * c + 12;
+    // (Sans échelle dessinée : l'énoncé dit « un carreau : 10 km sur
+    // 10 km » ; « 10 km » dans le dessin tombait à 7 px au téléphone.)
+    const H = 10 + 6 * c + 10;
+    // La part de chaque carreau couverte par l'île (échantillonnée).
+    const dedans = (x, y) => {
+      let r = false;
+      for (let i = 0, j = P.length - 1; i < P.length; j = i, i += 1) {
+        const [xi, yi] = P[i];
+        const [xj, yj] = P[j];
+        if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) r = !r;
+      }
+      return r;
+    };
+    const part = [];
+    for (let j = 0; j < 6; j += 1) for (let i = 0; i < 7; i += 1) {
+      let k = 0;
+      for (let a = 0; a < 10; a += 1) for (let b = 0; b < 10; b += 1) if (dedans(12 + (i + (a + 0.5) / 10) * c, 10 + (j + (b + 0.5) / 10) * c)) k += 1;
+      part.push([i, j, k / 100]);
+    }
+    const boite = el("div", "dessin-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: "dessin q11-carte", role: "img", "aria-label": "La Réunion sur un quadrillage de carreaux de 10 km de côté"});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let etape = mode === "correction" ? 2 : 0;
+    function dessiner() {
+      dessin.textContent = "";
+      if (mode === "montre") dessin.appendChild(svg("rect", {x: 0, y: 0, width: W, height: H, fill: "transparent"}));
+      part.forEach(([i, j, p]) => {
+        const entier = p >= 0.85;
+        const morceau = p >= 0.1 && !entier;
+        if ((etape >= 1 && entier) || (etape >= 2 && morceau)) {
+          dessin.appendChild(svg("rect", {x: 12 + i * c, y: 10 + j * c, width: c, height: c, fill: entier ? (mode === "correction" ? "#bfe9cf" : "#8fdcd6") : "#ffe0bf"}));
+        }
+      });
+      dessin.appendChild(svg("polygon", {points: ptsB51(P), fill: etape ? "none" : PALE, stroke: mode === "correction" ? VERT : N, "stroke-width": 2.2, "stroke-linejoin": "round"}));
+      for (let i = 0; i <= 7; i += 1) dessin.appendChild(svg("line", {x1: 12 + i * c, y1: 10, x2: 12 + i * c, y2: 10 + 6 * c, stroke: "#8ea1af", "stroke-width": 1}));
+      for (let j = 0; j <= 6; j += 1) dessin.appendChild(svg("line", {x1: 12, y1: 10 + j * c, x2: 12 + 7 * c, y2: 10 + j * c, stroke: "#8ea1af", "stroke-width": 1}));
+    }
+    dessiner();
+    const entiers = part.filter(([, , p]) => p >= 0.85).length;
+    const morceaux = Math.round(part.filter(([, , p]) => p >= 0.1 && p < 0.85).reduce((s, [, , p]) => s + p, 0));
+    if (mode !== "montre") return null;
+    const note = el("div", "note", "touche la carte");
+    boite.appendChild(note);
+    return toucherB52(dessin, () => {
+      etape += 1;
+      dessiner();
+      note.textContent = carte().typo(etape === 1 ? `${entiers} carreaux entiers.` : `${entiers} entiers ; les morceaux : environ ${morceaux}.`);
+      if (etape >= 2) fini();
+    }, () => etape < 2);
+  }
+
+  // Q7 · une figure cotée : `forme` « para » (parallélogramme), « tri »
+  // (triangle), « maison » (un rectangle et un triangle dessus : le pignon),
+  // « carre » (un carré). `base`, `hauteur`, `toit` (la hauteur du
+  // triangle du pignon), `apres` (les cotes converties : On te montre, la
+  // correction).
+  function figQ7(zone, f, {mode = "outil", fini = () => {}} = {}) {
+    const vert = mode === "correction";
+    const boite = el("div", "dessin-boite");
+    const W = 300;
+    const H = f.forme === "maison" ? 124 : 122;
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin q7-fig${mode === "montre" ? " a-toucher" : ""}`, role: "img", "aria-label": carte().typo(f.titre || "Une figure cotée")});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let apres = vert;
+    function dessiner() {
+      dessin.textContent = "";
+      const t = apres && f.apres ? Object.assign({}, f, f.apres) : f;
+      const tr = vert ? VERT : N;
+      const fond = vert ? "#e5f7eb" : "#eaf2fd";
+      const poly = pts => dessin.appendChild(svg("polygon", {points: ptsB51(pts), fill: fond, stroke: tr, "stroke-width": 2.5, "stroke-linejoin": "miter"}));
+      // (On te montre : la hauteur apparaît au toucher.)
+      const cache = mode === "montre" && !apres;
+      const haut = (x, y1, y2) => {
+        if (cache) return;
+        dessin.appendChild(svg("line", {x1: x, y1, x2: x, y2, stroke: tr, "stroke-width": 1.8, "stroke-dasharray": "5 4"}));
+        dessin.appendChild(svg("path", {d: `M${x} ${y2 - 10} L${x + 10} ${y2 - 10} L${x + 10} ${y2}`, fill: "none", stroke: tr, "stroke-width": 1.5}));
+      };
+      // (Les cotes : 17 dans l'outil ; plus grandes dans la correction, où
+      // la figure est plus petite, et dans le pignon, plus haut.)
+      const fs = vert ? 23 : f.forme === "maison" ? 19 : 17;
+      const co = (x, y, s, a = {}) => dessin.appendChild(txtB52(x, y, s, Object.assign({fill: tr, "font-size": fs}, a)));
+      if (f.forme === "para") {
+        poly([[14, 88], [194, 88], [246, 14], [66, 14]]);
+        haut(66, 14, 88);
+        co(104, 111, t.base);
+        co(82, 57, t.hauteur, {"text-anchor": "start"});
+      } else if (f.forme === "tri") {
+        poly([[40, 90], [250, 90], [104, 12]]);
+        haut(104, 12, 90);
+        co(150, 112, t.base);
+        co(120, 62, t.hauteur, {"text-anchor": "start"});
+      } else if (f.forme === "carre") {
+        dessin.setAttribute("viewBox", `0 0 ${W} 122`);
+        dessin.appendChild(svg("rect", {x: 92, y: 10, width: 82, height: 82, fill: fond, stroke: tr, "stroke-width": 2.5}));
+        dessin.appendChild(svg("path", {d: "M92 80 L104 80 L104 92", fill: "none", stroke: tr, "stroke-width": 1.5}));
+        co(133, 57, t.aire);
+        co(133, 113, t.base);
+      } else {
+        // le pignon : le mur, puis le toit (la hauteur du triangle en pointillé)
+        // (Compact : la base écrite dans le mur, la correction reste basse.)
+        poly([[40, 118], [220, 118], [220, 62], [40, 62]]);
+        poly([[40, 62], [220, 62], [130, 8]]);
+        if (!cache) dessin.appendChild(svg("line", {x1: 130, y1: 8, x2: 130, y2: 62, stroke: tr, "stroke-width": 1.8, "stroke-dasharray": "5 4"}));
+        co(130, 110, t.base);
+        co(228, 96, t.hauteur, {"text-anchor": "start"});
+        co(138, 48, t.toit, {"text-anchor": "start"});
+      }
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    let fait = false;
+    return toucherB52(dessin, () => { apres = true; fait = true; dessiner(); fini(); }, () => !fait);
+  }
+
+  // Q8 · le pavé coté (l'aquarium, la jardinière, la piscine) en perspective
+  // cavalière, l'eau dedans. f : {l, p, h (les cotes), eau (0 à 1), apres}.
+  function paveQ8(zone, f, {mode = "outil", fini = () => {}} = {}) {
+    const vert = mode === "correction";
+    const [L, PP, Hh] = f.dims || [60, 30, 40];
+    const a = 140 / Math.max(L + PP * K_B51, 1);
+    const sz = Math.min(a, 110 / Math.max(Hh + PP * K_B51, 1));
+    const dy = PP * K_B51;
+    // (Les cotes : 17 dans l'outil, 23 dans la correction, où le pavé est
+    // dessiné plus petit.)
+    const fsP = vert ? 26 : 17;
+    const W = Math.ceil(L * sz + dy * sz + 8 + fsP * 5.4);
+    const H = Math.ceil(Hh * sz + dy * sz + 12 + fsP * 1.4);
+    const boite = el("div", "dessin-boite");
+    const dessin = svg("svg", {viewBox: `0 0 ${W} ${H}`, class: `dessin q8-pave${mode === "montre" ? " a-toucher" : ""}`, role: "img", "aria-label": carte().typo(f.titre || "Un pavé coté")});
+    boite.appendChild(dessin);
+    zone.appendChild(boite);
+    let apres = vert;
+    const x0 = 8;
+    const yb = H - 6 - fsP * 1.3;
+    const Pt = (x, y, z) => [x0 + sz * x + K_B51 * sz * y, yb - sz * z - K_B51 * sz * y];
+    function dessiner() {
+      dessin.textContent = "";
+      const t = apres && f.apres ? Object.assign({}, f, f.apres) : f;
+      const tr = vert ? VERT : N;
+      const poly = (arr, fill) => dessin.appendChild(svg("polygon", {points: ptsB51(arr), fill, stroke: "none"}));
+      const ln = (p, q, pointille) => dessin.appendChild(svg("line", {x1: p[0].toFixed(1), y1: p[1].toFixed(1), x2: q[0].toFixed(1), y2: q[1].toFixed(1), stroke: tr, "stroke-width": 2,
+        "stroke-dasharray": pointille ? "4 4" : "none", "stroke-linecap": "round"}));
+      // (On te montre : l'eau vient au toucher.)
+      const eau = mode === "montre" && !apres ? 0 : f.eau === undefined ? 0.85 : f.eau;
+      if (eau > 0) {
+        const z = Hh * eau;
+        // (l'eau, sous les arêtes)
+        poly([Pt(0, 0, 0), Pt(L, 0, 0), Pt(L, 0, z), Pt(0, 0, z)], vert ? "#cdeed8" : "#bfe6f5");
+        poly([Pt(L, 0, 0), Pt(L, PP, 0), Pt(L, PP, z), Pt(L, 0, z)], vert ? "#9fd9b4" : "#9fd3ea");
+        poly([Pt(0, 0, z), Pt(L, 0, z), Pt(L, PP, z), Pt(0, PP, z)], vert ? "#e9f8ee" : "#d9f1fb");
+      }
+      ln(Pt(0, PP, 0), Pt(L, PP, 0), true); ln(Pt(0, PP, 0), Pt(0, PP, Hh), true); ln(Pt(0, 0, 0), Pt(0, PP, 0), true);
+      [[Pt(0, 0, 0), Pt(L, 0, 0)], [Pt(L, 0, 0), Pt(L, 0, Hh)], [Pt(L, 0, Hh), Pt(0, 0, Hh)], [Pt(0, 0, Hh), Pt(0, 0, 0)],
+        [Pt(L, 0, 0), Pt(L, PP, 0)], [Pt(L, PP, 0), Pt(L, PP, Hh)], [Pt(L, PP, Hh), Pt(L, 0, Hh)], [Pt(0, 0, Hh), Pt(0, PP, Hh)], [Pt(0, PP, Hh), Pt(L, PP, Hh)]]
+        .forEach(([p, q]) => ln(p, q));
+      const [ax, ay] = Pt(L / 2, 0, 0);
+      dessin.appendChild(txtB52(ax, ay + fsP + 4, t.l, {fill: tr, "font-size": fsP}));
+      const [bx, by] = Pt(L, PP / 2, 0);
+      dessin.appendChild(txtB52(bx + 8, by + fsP - 1, t.p, {fill: tr, "text-anchor": "start", "font-size": fsP}));
+      const [cx, cy] = Pt(L, PP, Hh / 2);
+      dessin.appendChild(txtB52(cx + 8, cy + 6, t.h, {fill: tr, "text-anchor": "start", "font-size": fsP}));
+    }
+    dessiner();
+    if (mode !== "montre") return null;
+    let fait = false;
+    return toucherB52(dessin, () => { apres = true; fait = true; dessiner(); fini(); }, () => !fait);
+  }
+
+  // L'outil des étapes du lot B5-2 : le dessin, la note dessous.
+  function outilB52(zone, question) {
+    if (question.relationOutil) zone.appendChild(el("div", "rel petite", carte().typo(question.relationOutil)));
+    if (question.outil === "droite-echelle") droiteEchelle(zone, question.droiteE);
+    else if (question.outil === "carte-reunion") carteReunion(zone, {});
+    else if (question.outil === "fig-q7") figQ7(zone, question.figQ7);
+    else if (question.outil === "pave-q8") paveQ8(zone, question.paveQ8);
+    if (question.noteOutil) zone.appendChild(el("div", "note", carte().typo(question.noteOutil)));
+  }
+
   // ============================================================ les entrées
 
   // Renvoie `jouer` : le geste joué à la place de l'élève (ou rien, quand il
@@ -4881,7 +5209,7 @@
     if (aide.type === "glisse-nombre") return glisseNombre(zone, aide, f);
     if (aide.type === "glisse-unite") {
       const g = glisseUnite(zone, {grandeur: aide.grandeur, valeur: aide.nombre, de: aide.de, vers: aide.vers, pale: aide.pale !== false,
-        colonnes: aide.colonnes || null, aires: Boolean(aide.aires), sous: aide.sous || null}, f);
+        colonnes: aide.colonnes || null, aires: Boolean(aide.aires), sous: aide.sous || null, cases: aide.cases || 0, litres: Boolean(aide.litres)}, f);
       return () => g.animer(aide.vers);
     }
     // Lot B1-2
@@ -4946,6 +5274,11 @@
     if (aide.type === "dm3-v2") return dm3V2(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "remplir-v3") return remplirV3(zone, aide, {mode: "montre", fini: f});
     if (aide.type === "ponts-v3") { pontsV3(zone); f(); return null; }
+    // Lot B5-2 (Q7, Q8, Q11) : la figure, le pavé, la droite de l'échelle, La Réunion.
+    if (aide.type === "fig-q7") return figQ7(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "pave-q8") return paveQ8(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "droite-echelle") return droiteEchelle(zone, aide, {mode: "montre", fini: f});
+    if (aide.type === "carte-reunion") return carteReunion(zone, aide, {mode: "montre", fini: f});
     return null;
   }
   // La correction après une erreur (lot A2 ter, comme le glisse-unité animé
@@ -4956,7 +5289,7 @@
   function correctionGlisse(zone, question, {ensuite = () => {}, phrase = false} = {}) {
     const g = question.glisse;
     if (!g) return false;
-    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null});
+    const gu = glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, fige: true, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null, cases: g.cases || 0, litres: Boolean(g.litres)});
     // Lot 3b-2 : la phrase que le glisse-unité accompagne.
     if (phrase && g.phrase) {
       const n = el("div", "note phrase-glisse", carte().typo(g.phrase));
@@ -5068,7 +5401,7 @@
     if (question.outil === "glisse-unite" && (question.glisse || question.glisseOutil)) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
       const g = question.glisse || question.glisseOutil;
-      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null}, fini);
+      glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null, cases: g.cases || 0, litres: Boolean(g.litres)}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));
       // (Lot B2-2b-2, C8 : la mesure qui ne se convertit pas, « Puis
       // j'enlève 25 cL. », « Puis je l'enlève de 3 kg. ».)
@@ -5124,6 +5457,8 @@
     if (["chaine-d4", "frise-q6"].includes(question.outil)) { outilB42(zone, question); return; }
     // Lot B5-1 (V2, V3).
     if (["dm3-v2", "ponts-v3", "remplir-v3"].includes(question.outil)) { outilB51(zone, question); return; }
+    // Lot B5-2 (Q7, Q8, Q11).
+    if (["droite-echelle", "carte-reunion", "fig-q7", "pave-q8"].includes(question.outil)) { outilB52(zone, question); return; }
     // Lot B4-1 (A3, V1, Q5).
     if (["regroupe-a3", "calcul-a3", "cubes-v1", "deux-v1", "rect-q5"].includes(question.outil)) { outilB41(zone, question); return; }
     // Lot B3-3 (D3, Q3, Q4).
@@ -5360,7 +5695,7 @@
     return s;
   }
 
-  return Object.freeze({chaineD4, calendrierD4, friseQ6, droiteQuartsD5, horlogeQ6, tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
+  return Object.freeze({droiteEchelle, carteReunion, figQ7, paveQ8, chaineD4, calendrierD4, friseQ6, droiteQuartsD5, horlogeQ6, tableauProp, bandePuissances, droiteHeures, etapesVitesse, axeArcs, supportQ10, deuxBarres, figurePb, figureA5, aireTache, correctionAire, doubleDroite, barrePartagee, texteFractions, echelle, numeration, montrer, outil, image, correctionGlisse, carteRepere, referencesUnites2, icone, imageRepere, regle, horlogeHeure, schema, glisseUnite, glisseNombre, barreHeure, verre, balance, horloge, paquets, lignes, REFERENCES,
     rangeePieces, etiquette, monnaie, horloges, horlogesImage, axe, axeTemps, tableauHeures, grandeurs, ceinture, reporte, arrondis, perimAire, carreA1, decoupeA2, calculA2, droiteC9, exempleC9,
     trotteuse, horlogeSec, barreMinute, axeSec, barreQ3, plancheQ3, barreQ4, correctionB33,
     regroupeA3, calculA3, cubesV1, cubesQuestion, deuxV1, rectQ5,
