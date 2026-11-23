@@ -50,6 +50,14 @@ test("le dessin à étapes : chaque droite à plusieurs sauts, sur des milliers 
       CORE.genererSerie(cle, {graine, genre: "entraine", total: 25, exclure: []}).forEach(calcul => {
         const aide = CORE.aideDe(calcul);
         const d = CORE.dessinAEtapesDe(calcul);
+        // Lot C4a : le tableau des rangs se joue aussi à étapes — la case du
+        // rang (« 74 + 8 = □ »), puis le résultat (testé en détail au lot C4a).
+        if (aide && aide.outil === "tableau-rang") {
+          if (!aide.etape) { assert.equal(d, null, `${cle} ${calcul.texte}`); return; }
+          assert.deepEqual(d.etapes.map(e => e.texte), [aide.etape.texte, calcul.texte], `${cle} ${calcul.texte}`);
+          assert.deepEqual(d.dessins[0], aide);
+          return;
+        }
         if (!multiSauts(aide)) { assert.equal(d, null, `${cle} ${calcul.texte} : pas de droite à sauts, pas d'étapes`); return; }
         vus += 1;
         niveaux.add(cle);
@@ -88,7 +96,9 @@ test("le dessin à étapes : chaque droite à plusieurs sauts, sur des milliers 
   assert.ok(vus > 5000, `${vus} calculs`);
   // L'inventaire de la notice : 29 niveaux ont un dessin à plusieurs sauts
   // (30 depuis le lot 6 « programmes 2 » : A3-4, les milliers avec une retenue).
-  assert.equal(niveaux.size, 30, [...niveaux].join(" "));
+  // (Lot C4a : 26 — A3-2, A3-3, A3-4 comptent dans le tableau des rangs,
+  // A2-2 n'a plus de nombres en 5.)
+  assert.equal(niveaux.size, 26, [...niveaux].join(" "));
 });
 
 test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipuler) : à étapes, comme les doubles", () => {
@@ -97,7 +107,8 @@ test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipul
     return !a.manipule && multiSauts(a.represente.image);
   });
   // (Lot C2 : « un chiffre en passant la centaine » avant « Dizaines entières en passant la centaine ».)
-  assert.deepEqual(avec, ["A10-3", "A11-3", "A3-2", "A4-3", "A2-4", "A3-3", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
+  // (Lot C4a : A3-2 et A3-3 comptent dans le tableau, à étapes aussi.)
+  assert.deepEqual(avec, ["A10-3", "A11-3", "A4-3", "A2-4", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
   avec.forEach(cle => {
     const r = CORE.niveauDe(cle).niveau.apprends.represente;
     assert.equal(r.etapes.length, 2, cle);

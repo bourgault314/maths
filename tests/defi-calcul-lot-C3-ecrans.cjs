@@ -142,7 +142,10 @@ const CAS = [
   // un dessin à étapes sous la pastille ; Code : « moitié de 8,10 » sous
   // Windows, « 3,28 − 0,1 » dans WebKit.)
   ["A3", 2, "532 − 60 = □"],
-  ["A2", 2, "100 − 55 = □"],
+  // (C4a : les nombres en 5 vont dans « Compléments à 100 » ; ici, le tableau
+  // des dizaines à étape.)
+  ["A2", 2, "100 − 30 = □"],
+  ["A2", 3, "100 − 55 = □"],
   // (Un « À toi » sans dessin après un exemple qui en a un : la place du
   // dessin reste, le pavé ne monte pas.)
   ["M10", 1, "2 × 197 × 5 = 197 × □"]

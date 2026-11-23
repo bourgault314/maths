@@ -192,8 +192,8 @@ test("le dessin d'un calcul : « □/□ » demande ses deux cases à part, « n
 test("la page : deux cases, la case touchée, Valider descend dans la case vide, le clavier ; cache, copie prof, VERSION", async () => {
   const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261122-1/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261122-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261122-2/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261122-2/);
   assert.match(page, /defi_calcul\.css\?v=20261122-1/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
@@ -201,7 +201,8 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   // Valider avec une case vide : la case vide devient la case où l'on tape, partout où une réponse passe.
   assert.equal((page.match(/completerFraction\(\)\) return/g) || []).length, 3, "J'apprends, le dessin à étapes, les séries");
   // Le juste passe par le moteur (10/12 est juste), partout.
-  assert.equal((page.match(/CORE\.estJuste\(/g) || []).length, 3);
+  // (Lot C4a : le dessin à étapes accepte aussi le résultat tapé à la première case.)
+  assert.equal((page.match(/CORE\.estJuste\(/g) || []).length, 4);
   assert.doesNotMatch(page, /CORE\.memeNombre\(valeur, (question\.calcul\.reponse|attendue|etapes\[)/);
   assert.match(page, /event\.key === "\/" \|\| event\.key === "Tab"/);
   assert.match(page, /Le dénominateur ne peut pas être 0\./);
@@ -215,5 +216,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

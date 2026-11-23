@@ -92,7 +92,8 @@ test("les leçons du cahier 3a : la sorte du calcul montré et de J'écris", () 
     const forme = i < 3 ? "double" : "moitie";
     assert.equal(montre.forme, forme, cle);
     assert.equal(ecris.forme, forme, cle);
-    assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : plus de deuxième façon`);
+    // (Lot C4a : M1-5, le double d'un nombre rond.)
+    if (cle !== "M1-5") assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : plus de deuxième façon`);
   });
   // La leçon des moitiés jusqu'à 40 : moitié de 34, on coupe 30 et 4.
   assert.deepEqual(CORE.niveauDe("M1-2").niveau.apprends.represente.etapes.map(e => [espaces(e.texte), e.reponse]),

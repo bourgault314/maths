@@ -601,7 +601,8 @@ test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il
   const detail = objet("DETAIL_APPRENDS");
   const reprise = objet("REPRISE");
   const image = objet("OUTILS_IMAGE");
-  const outil = a => (a.manipule ? a.manipule.outil : image[a.represente.outil] || "aucun");
+  // (Lot C4a : les perles, puis le tableau de numération.)
+  const outil = a => (a.manipule && a.manipule.outil === "perles" && a.represente.outil === "tableau-rang" ? "perles-tableau" : a.manipule ? a.manipule.outil : image[a.represente.outil] || "aucun");
   const SANS_DROITE = ["C3", "M10", "M12", "D1", "F2", "F5", "F6", "F8", "F1", "F3"];
   CORE.MODULES.filter(m => m.construit).forEach(m => m.niveaux.forEach(n => {
     const cle = outil(n.apprends);
@@ -617,6 +618,11 @@ test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il
   assert.equal(detail[outil(CORE.niveauDe("F3-1").niveau.apprends)], "avec les billes");
   assert.equal(reprise[outil(CORE.niveauDe("F3-2").niveau.apprends)], "avec les billes");
   assert.equal(detail[outil(CORE.niveauDe("F3-3").niveau.apprends)], "avec le schéma en barres");
+  // Lot C4a : plus de droite dans « Ajouter, retrancher des dizaines ».
+  assert.equal(detail[outil(CORE.niveauDe("A3-1").niveau.apprends)], "avec les perles et le tableau de numération");
+  assert.equal(detail[outil(CORE.niveauDe("A3-2").niveau.apprends)], "avec le tableau de numération");
+  assert.equal(detail[outil(CORE.niveauDe("M12-1").niveau.apprends)], "avec le tableau de numération");
+  assert.match(page, /if \(apprends\.manipule && apprends\.manipule\.outil === "perles" && apprends\.represente\.outil === "tableau-rang"\) return "perles-tableau";/);
 });
 
 // Modules lot 6b (05/11/2026, choix de Gwenaël sur la planche avant/après) :

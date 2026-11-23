@@ -64,6 +64,20 @@ const FRACTIONS = ["F2", "F5", "F6", "F8", "F1", "F3", "F4", "F9", "F11"];
 test("J'écris : chaque égalité juste fait apparaître son morceau, jamais un nombre pas encore écrit", () => {
   NIVEAUX.filter(({fiche}) => !FRACTIONS.includes(fiche.id)).forEach(({niveau, cle}) => {
     const ecris = niveau.apprends.ecris;
+    // (Lot C4a : le tableau des rangs écrit les chiffres du nombre — 21 462 a
+    // un 4, comme 1 + 3 = 4 : seule sa case cherchée compte, « ? » jusqu'à
+    // son étape, puis trouvée, en vert.)
+    if (ecris.dessins[0].outil === "tableau-rang") {
+      const cherchees = d => [...d.lignes, d.res].flatMap(l => l.cells.filter(cel => cel && cel.e === "cherche"));
+      const trouvees = d => [...d.lignes, d.res].flatMap(l => l.cells.filter(cel => cel && cel.e === "trouve"));
+      assert.deepEqual(cherchees(ecris.dessins[0]).map(cel => cel.t), ["?"], cle);
+      ecris.dessins.slice(1).forEach(d => {
+        assert.equal(cherchees(d).length, 0, cle);
+        assert.deepEqual(trouvees(d).map(cel => cel.t.replace(/\s/g, "")), [String(ecris.etapes[0].reponse)], `${cle} : la case du rang, trouvée à la première étape`);
+      });
+      assert.equal(trouvees(ecris.solution.image).length, 0, `${cle} : révélé, sans le vert`);
+      return;
+    }
     const svgs = ecris.dessins.map(AIDES.dessinerImage);
     const reponses = ecris.etapes.map(etape => Number(etape.reponse));
     svgs.forEach((svg, k) => {
@@ -152,17 +166,19 @@ test("J'écris : les morceaux attendus, module par module", () => {
 test("J'écris des modules lot 2 (A3, A4, A6, A7, A8) : les morceaux attendus", () => {
   const dessins = cle => CORE.niveauDe(cle).niveau.apprends.ecris.dessins;
   const vus = d => d.sauts.map(s => (s.cache ? "·" : s.masque ? "?" : s.val));
-  // A3-2, 768 + 50 (lot 3a : une addition) : + 40 (808), puis + 10 (818), puis + 50 dessous.
-  assert.deepEqual(dessins("A3-2").map(vus), [["·", "·"], [40, "·"], [40, 10], [40, 10]]);
-  assert.deepEqual(dessins("A3-2").map(d => Boolean(d.directCache)), [true, true, true, false]);
-  // A3-1, 234 + 60 : « 3 + 6 = 9 » dessine le saut, « 234 + 60 = 294 » son point.
-  assert.deepEqual(dessins("A3-1").map(d => [vus(d), d.inconnues]), [[["·"], [1]], [[60], [1]], [[60], []]]);
-  // A4-2, 58 + 34 : « 58 + 30 = 88 », puis « 88 + 4 = 92 » fait les deux
-  // petits sauts (+ 2 jusqu'à 90, + 2) d'un coup, puis + 34 dessous.
-  assert.deepEqual(dessins("A4-2").map(vus), [["·", "·", "·"], [30, "·", "·"], [30, 2, 2], [30, 2, 2]]);
-  assert.deepEqual(dessins("A4-2").map(d => d.inconnues), [[1, 2, 3], [2, 3], [], []]);
-  // A7-3, 615 − 38 : − 30, puis − 5 et − 3 (par 580).
-  assert.deepEqual(dessins("A7-3").map(vus), [["·", "·", "·"], [-30, "·", "·"], [-30, -5, -3], [-30, -5, -3]]);
+  // Lot C4a : A3, le tableau des rangs — A3-2, 768 + 50 : « 76 + 5 = 81 »
+  // remplit la case des dizaines ; A3-1, 234 + 60 : « 3 + 6 = 9 ».
+  const caseDe = d => [...d.lignes, d.res].flatMap(l => l.cells.filter(cel => cel && (cel.e === "cherche" || cel.e === "trouve")).map(cel => cel.t));
+  assert.deepEqual(dessins("A3-2").map(caseDe), [["?"], ["81"], ["81"]]);
+  assert.deepEqual(dessins("A3-1").map(caseDe), [["?"], ["9"], ["9"]]);
+  // A4-2, 58 + 34 (lot C4a : deux sauts) : « 58 + 30 = 88 », puis « 88 + 4
+  // = 92 » fait le petit saut d'un coup, 90 en repère, puis + 34 dessous.
+  assert.deepEqual(dessins("A4-2").map(vus), [["·", "·"], [30, "·"], [30, 4], [30, 4]]);
+  assert.deepEqual(dessins("A4-2").map(d => d.inconnues), [[1, 2], [2], [], []]);
+  assert.deepEqual(dessins("A4-2").map(d => d.repere), [90, 90, 90, 90]);
+  // A7-3, 615 − 38 : − 30, puis − 8 (580 en repère).
+  assert.deepEqual(dessins("A7-3").map(vus), [["·", "·"], [-30, "·"], [-30, -8], [-30, -8]]);
+  assert.equal(dessins("A7-3")[0].repere, 580);
   // A6-1, 142 − 9 : − 10 (132), puis + 1 (133), puis − 9 dessous.
   assert.deepEqual(dessins("A6-1").map(vus), [["·", "·"], [-10, "·"], [-10, 1], [-10, 1]]);
   assert.equal(dessins("A6-1")[3].direct, -9);

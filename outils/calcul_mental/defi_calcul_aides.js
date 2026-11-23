@@ -615,7 +615,10 @@
     const g = geometrieDroite(o);
     const valeurs = [o.depart];
     o.sauts.forEach(saut => valeurs.push(valeurs[valeurs.length - 1] + saut.val));
-    const tries = [...new Set(valeurs)].sort((a, b) => a - b);
+    // Lot C4a : la dizaine passée (`repere`) garde sa place, comme un point
+    // de la droite à trois sauts d'avant (sinon son nombre touche les cases).
+    const avecRepere = Number.isFinite(o.repere) ? [...valeurs, o.repere] : valeurs;
+    const tries = [...new Set(avecRepere)].sort((a, b) => a - b);
     const retour = o.sauts.some(saut => saut.val < 0);
     const gauche = g.gauche;
     const droite = retour ? g.droiteRetour : g.droite;
@@ -637,7 +640,9 @@
     }
     const xDe = new Map([[tries[0], gauche]]);
     tries.slice(1).forEach((v, i) => xDe.set(v, xDe.get(tries[i]) + largeurs[i]));
-    return {valeurs, x: valeurs.map(v => Math.round(xDe.get(v))), gauche, droite};
+    const plan = {valeurs, x: valeurs.map(v => Math.round(xDe.get(v))), gauche, droite};
+    if (Number.isFinite(o.repere)) plan.xRepere = Math.round(xDe.get(o.repere));
+    return plan;
   }
 
   let compteurDroites = 0;
@@ -720,6 +725,13 @@
         + `<rect x="${x - w / 2}" y="${y + 15}" width="${w}" height="${hp}" rx="8" fill="${style[0]}" stroke="${style[1]}" stroke-width="${style[3]}"/>`
         + `<text x="${x}" y="${y + 5.5 + hp}" text-anchor="middle" font-size="${T.point}" fill="${style[2]}">${texte}</text>`;
     });
+    // Lot C4a (planches 9 à 13, validées le 22/11) : deux sauts, et la
+    // dizaine passée par le petit saut marquée d'un trait plus long et de
+    // son nombre en gris — un repère, pas une case à trouver.
+    if (Number.isFinite(plan.xRepere)) {
+      s += `<line x1="${plan.xRepere}" y1="${y - 13}" x2="${plan.xRepere}" y2="${y + 13}" stroke="#143451" stroke-width="3.5" stroke-linecap="round"/>`
+        + `<text x="${plan.xRepere}" y="${y + 32}" text-anchor="middle" font-size="16" fill="#5b7286">${nombre(o.repere)}</text>`;
+    }
     if (o.direct && !o.directCache) {
       const x1 = plan.x[0];
       const x2 = plan.x[plan.x.length - 1];
@@ -745,7 +757,72 @@
       const arrivee = o.inconnue === index + 1 || inconnues.includes(index + 1) || caches.includes(index + 1) ? "un nombre à trouver" : nombre(plan.valeurs[index + 1]);
       return `${saut.val < 0 ? "moins" : "plus"} ${saut.masque ? "un nombre à trouver" : nombre(saut.val)} : ${arrivee}`;
     });
-    return `Droite : on part de ${nombre(o.depart)}.${morceaux.length ? ` ${morceaux.join(". Puis ")}.` : ""}`;
+    const repere = Number.isFinite(o.repere) ? ` On passe ${nombre(o.repere)}.` : "";
+    return `Droite : on part de ${nombre(o.depart)}.${morceaux.length ? ` ${morceaux.join(". Puis ")}.` : ""}${repere}`;
+  }
+
+  // ------------------------------------------- le tableau « compter en dizaines »
+  //
+  // Lot C4a (22/11/2026, planches 0 à 13 validées par Gwenaël) : le nombre
+  // réécrit dans le rang qu'on compte (une colonne large : « dizaines »,
+  // « centaines », « milliers »), puis les rangs qui ne bougent pas (gris).
+  // On calcule dans la colonne large (74 + 8 = 82 dizaines). Trois sortes,
+  // décrites par le cœur (defi_calcul_core.js) : le chiffre qui change (toutes
+  // les colonnes, celle du rang en bleu), casser une centaine (une 2e ligne
+  // grise : 4 centaines et 10 dizaines), compter en dizaines (2 colonnes).
+  //   cols : [{nom, large}] ; lignes : [{label, cells}] ; res : {label, cells}
+  //   une cellule : null (rien), ou {t: texte, e: "" | "cherche" | "trouve" | "garde"}
+  //   lab : la largeur de la colonne des étiquettes (122 d'habitude)
+  const TABLEAU_RANG = Object.freeze({largeur: 560, titre: 34, rangee: 54, interligne: 8, ecart: 8});
+  function tableauRang(o) {
+    const {largeur: W, titre: T, rangee: R, interligne: I, ecart: GAP} = TABLEAU_RANG;
+    const n = o.cols.length;
+    const petit = n >= 5 ? 68 : n >= 4 ? 78 : 96;
+    const grand = n >= 5 ? 80 : n >= 4 ? 150 : 168;
+    const LAB = o.lab || (n >= 5 ? 112 : 122);
+    const larg = o.cols.map(c => (c.large ? grand : petit));
+    const total = LAB + larg.reduce((a, b) => a + b, 0) + GAP * (n - 1);
+    const x0 = (W - total) / 2;
+    const xs = [];
+    let xx = x0 + LAB;
+    larg.forEach(l => { xs.push(xx); xx += l + GAP; });
+    const yL = i => T + 8 + i * (R + I);
+    const yTrait = yL(o.lignes.length) + 2;
+    const yRes = yTrait + 10;
+    const H = yRes + R + 6;
+    let s = `<svg class="dc-rang" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireTableauRang(o)}">`;
+    o.cols.forEach((c, i) => {
+      const taille = c.large ? (n >= 5 ? 16 : 20) : (n >= 5 ? 13 : 16);
+      s += `<rect x="${xs[i]}" y="0" width="${larg[i]}" height="${T}" rx="7" fill="${c.large ? "#dbe8f7" : "#e3ecf2"}"/>`
+        + `<text x="${xs[i] + larg[i] / 2}" y="24" text-anchor="middle" font-size="${taille}" fill="${c.large ? "#0755b8" : "#2c4a63"}">${c.nom}</text>`;
+    });
+    const cellule = (i, y, cel) => {
+      const {t, e = ""} = cel;
+      const fond = e === "trouve" ? "#e5f7eb" : e === "garde" ? "#eef2f5" : "#fff";
+      const bord = e === "cherche" ? "#0755b8" : e === "trouve" ? "#147447" : e === "garde" ? "#8a9caa" : "#143451";
+      const encre = e === "trouve" ? "#147447" : e === "cherche" ? "#0755b8" : e === "garde" ? "#5b7286" : "#143451";
+      const texte = String(t);
+      const taille = texte === "?" ? 24 : texte.length > 4 ? 25 : 29;
+      return `<rect x="${xs[i] + 1}" y="${y}" width="${larg[i] - 2}" height="${R}" rx="9" fill="${fond}" stroke="${bord}" stroke-width="${e === "cherche" || e === "trouve" ? 3 : 1.8}"/>`
+        + (texte !== "" ? `<text x="${xs[i] + larg[i] / 2}" y="${y + R / 2 + (texte === "?" ? 8 : 10)}" text-anchor="middle" font-size="${taille}" fill="${encre}">${texte}</text>` : "");
+    };
+    const ligne = (l, y, couleur) => {
+      if (l.label) s += `<text x="${x0 + LAB - 14}" y="${y + R / 2 + 9}" text-anchor="end" font-size="25" fill="${couleur}">${l.label}</text>`;
+      l.cells.forEach((cel, i) => { if (cel) s += cellule(i, y, cel); });
+    };
+    o.lignes.forEach((l, k) => ligne(l, yL(k), "#143451"));
+    s += `<line x1="${x0 + LAB - 40}" y1="${yTrait}" x2="${x0 + total}" y2="${yTrait}" stroke="#143451" stroke-width="3" stroke-linecap="round"/>`;
+    ligne(o.res, yRes, "#0755b8");
+    return s + "</svg>";
+  }
+
+  // Le même tableau, en mots, pour un lecteur d'écran.
+  function decrireTableauRang(o) {
+    const dire = l => {
+      const morceaux = l.cells.map((cel, i) => (cel && cel.t !== "" ? `${cel.t === "?" ? "un nombre à trouver" : cel.t} ${o.cols[i].nom}` : null)).filter(Boolean);
+      return `${l.label ? `${l.label} : ` : ""}${morceaux.join(", ")}`;
+    };
+    return `Tableau, en ${o.cols.find(c => c.large).nom}. ${[...o.lignes, o.res].map(dire).filter(t => t.trim()).join(". ")}.`;
   }
 
 
@@ -4583,6 +4660,7 @@
     if (image.outil === "presque-double") return presqueDouble(image);
     if (image.outil === "rekenrek") return rekenrekImage(image);
     if (image.outil === "fois-fraction") return foisFraction(image);
+    if (image.outil === "tableau-rang") return tableauRang(image);
     return droiteSauts(image);
   }
 
@@ -4604,6 +4682,9 @@
     planDroite,
     droiteSauts,
     decrireDroite,
+    TABLEAU_RANG,
+    tableauRang,
+    decrireTableauRang,
     RANGS,
     chiffresParRang,
     chiffresDansColonnes,
