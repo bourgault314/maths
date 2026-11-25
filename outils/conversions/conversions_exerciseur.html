@@ -198,6 +198,9 @@
       .thumbnails-bar { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
       .thumb-btn { flex: 0 0 auto; }
       .est-assoc-grid { grid-template-columns: 1fr; gap: 10px; padding: 12px; font-size: 1.05rem; }
+      /* « Associer » : A, B, C restent sur la ligne de leur valeur, la colonne ne touche pas le bord */
+      .question-text .assoc-cols { gap: 14px !important; }
+      .question-text .assoc-vals { flex-shrink: 0; }
       .lancer-col { flex-direction: row; width: 100%; }
       .lancer-col > * { flex: 1 1 0; min-height: 44px; }
     }
@@ -255,6 +258,206 @@
       .est-badge { width: 36px; height: 36px; font-size: 1.2rem; margin-right: 12px; }
       .est-assoc-grid { font-size: 1.25rem; padding: 10px; gap: 10px; }
       .est-assoc-col { gap: 8px; }
+    }
+    /* =========================================
+       « JE M'ENTRAÎNE » (lot 3, 25/11/2026) : l'élève tape ou touche sa réponse, la page la valide.
+       Couleurs déjà dans la page ; jamais la couleur seule (plein, contour, pointillés, et le mot).
+       ========================================= */
+    .seg-mode { display: flex; border: 2px solid #1283ff; border-radius: 10px; overflow: hidden; background: white; }
+    .seg-mode .seg { border: 0; background: white; color: var(--text); font: bold 0.9rem 'Nunito', sans-serif; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+    .seg-mode .seg[aria-pressed="true"] { background: #1283ff; color: white; }
+    .config-block[hidden] { display: none; }
+    .cb-row.hors-mode { opacity: .45; cursor: not-allowed; }
+    .cb-row.hors-mode input { cursor: not-allowed; }
+
+    .diapo-container .entr-entete, .diapo-container .entr-pied, .entr-msg[hidden], .entr-bilan[hidden], .voile[hidden], .pave[hidden], .entr-astuce[hidden], .entr-btn[hidden] { display: none; }
+    .diapo-container.entr .diapo-header, .diapo-container.entr .thumbnails-bar { display: none !important; }
+    .diapo-container.entr .entr-entete { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 10px 24px; background: #f8fafc; border-bottom: 1px solid #e7edf8; flex-shrink: 0; }
+    .entr .entr-entete .slide-counter { text-align: center; }
+    .entr .entr-entete .btn-nav { min-width: 0; }
+    .entr #btnAide.cache { visibility: hidden; }
+    .diapo-container.entr .entr-pied { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: auto; position: sticky; bottom: 0; background: white; padding-top: 4px; flex-shrink: 0; z-index: 20; }
+    .entr-btn { display: block; width: calc(100% - 20px); max-width: 420px; min-height: 50px; margin: 2px auto 2px; border: 0; border-radius: 12px; background: #1283ff; color: white; font: 900 1.15rem 'Nunito', sans-serif; cursor: pointer; }
+    .entr-btn:disabled { opacity: .4; cursor: default; }
+    .entr-astuce { text-align: center; font-weight: 700; font-size: .9rem; color: var(--muted); margin-top: -2px; }
+    .entr.tactile .entr-astuce { display: none; }
+    .pave { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 8px 10px 2px; width: 100%; max-width: 440px; border-top: 1px solid #e7edf8; }
+    .pave button { font: 900 1.35rem 'Nunito', Arial, sans-serif; min-height: 46px; border-radius: 10px; border: 2px solid #cfd8ea; background: white; color: var(--text); touch-action: manipulation; cursor: pointer; }
+    .diapo-container:not(.tactile) .pave { display: none; }
+    /* le trait qui se remplit au fil de la série, comme dans Défi tables et Défi calcul (pas de couleur par question :
+       le résultat de chaque question est dit tout de suite, puis dans le bilan) */
+    .entr-piste { display: none; }
+    .diapo-container.entr .entr-piste { display: block; height: 7px; margin: 6px 24px 0; overflow: hidden; border-radius: 99px; background: #dfebf3; flex-shrink: 0; }
+    .entr-piste b { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--est), #1283ff); transition: width .2s; }
+    .diapo-container.entr.fin .entr-piste { display: none; }
+    .entr-msg { margin: 10px auto 0; padding: 8px 12px; border-radius: 10px; font-weight: 800; font-size: 1.05rem; line-height: 1.3; text-align: center; max-width: 720px; width: calc(100% - 20px); }
+    .entr-msg.non { background: #fff7ed; border: 2px solid #fdba74; color: #9a3412; }
+    .entr-msg.oui { background: #ecfdf5; border: 2px solid #6ee7b7; color: #065f46; }
+    .entr-pied .entr-msg { margin-top: 2px; }
+
+    /* la case de la réponse : pas un vrai champ (au téléphone, le clavier ne s'ouvre pas et la page ne saute pas) */
+    .champ { display: inline-block; min-width: 3.2em; padding: 0 .35em; border: 3px solid #1283ff; border-radius: 10px; background: #eef6ff; color: var(--text); text-align: center; vertical-align: middle; line-height: 1.3; min-height: 1.4em; }
+    .champ.faux { border-color: #dc2626; background: #fef2f2; color: #b91c1c; }
+    .champ.juste { border-color: #059669; background: #ecfdf5; color: #047857; }
+    .champ .car { display: inline-block; width: 2px; height: 1em; background: #1283ff; vertical-align: -0.12em; margin-left: 2px; animation: clignote 1s steps(1) infinite; }
+    @keyframes clignote { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .champ .car { animation: none; } }
+    .ligne-rep { display: inline-flex; align-items: center; gap: 10px; font-size: 1.7rem; font-weight: 900; color: var(--text); margin-top: 8px; }
+    .entr .question-subtext .corr { display: block; color: var(--success); margin-top: 8px; }
+
+    /* questions à toucher */
+    .entr .est-board { margin-top: 6px; padding-bottom: 10px; gap: 10px; }
+    .choix-liste { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 520px; }
+    .choix-liste.vf { display: grid; grid-template-columns: 1fr 1fr; }
+    .ch { display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 16px; border: 3px solid #cfd8ea; border-radius: 14px; background: white; font: 900 1.3rem 'Nunito', sans-serif; color: var(--text); text-align: left; cursor: pointer; width: 100%; }
+    .vf .ch { justify-content: center; }
+    .ch .est-badge { width: 38px; height: 38px; font-size: 1.15rem; margin: 0; }
+    .ch .t { flex: 1; }
+    .vf .ch .t { flex: 0 1 auto; }
+    .ch .mot { font-size: .8rem; font-weight: 900; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+    .ch.ok { background: var(--success); border-color: var(--success); color: white; }
+    .ch.ok .est-badge { background: rgba(255,255,255,.3); color: white; }
+    .ch.ok .mot { background: white; color: #047857; }
+    .ch.ko { border-color: #dc2626; border-style: dashed; color: #b91c1c; }
+    .ch.ko .mot { border: 2px solid #dc2626; }
+    .ch.gris { opacity: .45; }
+    .ch:disabled { cursor: default; }
+    .reperes-titre { font-weight: 800; font-size: .9rem; color: var(--muted); }
+    .entr .est-frise { flex-wrap: nowrap; gap: 4px; padding: 8px; margin: 0; width: 100%; max-width: 560px; }
+    .entr .est-frise-item { flex: 1; min-width: 0; padding: 4px 2px; gap: 2px; }
+    .entr .est-frise-unit { font-size: .9rem; }
+    .entr .est-frise-emoji { font-size: 1.4rem; }
+
+    /* associer, classer */
+    .assoc-liste { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 560px; }
+    .assoc-obj { display: grid; grid-template-columns: 26px 1fr 100px; align-items: center; gap: 8px; min-height: 52px; padding: 6px 10px; border: 3px solid #cfd8ea; border-radius: 12px; background: white; font: 800 1.05rem 'Nunito', sans-serif; color: var(--text); text-align: left; cursor: pointer; width: 100%; }
+    .assoc-obj b { font-weight: 900; color: var(--est); font-size: 1.15rem; }
+    .assoc-obj .place { border: 2px dashed #94a3b8; border-radius: 8px; min-height: 36px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #94a3b8; white-space: nowrap; }
+    .assoc-obj .place.plein { border: 2px solid var(--text); color: var(--text); background: #f8fafc; }
+    .assoc-obj.sel { border-color: #1283ff; background: #eef6ff; }
+    .assoc-obj.ok { border-color: var(--success); }
+    .assoc-obj.ok .place { border-color: var(--success); background: #ecfdf5; color: #047857; }
+    .assoc-obj.ko { border-color: #dc2626; border-style: dashed; }
+    .assoc-obj.ko .place { border-color: #dc2626; color: #b91c1c; }
+    .assoc-obj .vrai { grid-column: 2 / 4; font-size: .9rem; color: #047857; font-weight: 900; }
+    .assoc-obj:disabled, .jeton:disabled, .rang button:disabled { cursor: default; }
+    .consigne { font-weight: 800; font-size: .9rem; color: var(--muted); text-align: center; }
+    .jetons { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); gap: 8px; width: 100%; max-width: 560px; }
+    .jeton { min-width: 0; min-height: 48px; border: 3px solid var(--est); border-radius: 12px; background: white; font: 900 1.1rem 'Nunito', sans-serif; color: var(--text); white-space: nowrap; padding: 0 4px; cursor: pointer; }
+    .jeton.pris { opacity: .35; border-style: dashed; }
+    .jeton.sel { border-color: #1283ff; background: #eef6ff; }
+    .rang-fleche { display: flex; justify-content: space-between; width: 100%; max-width: 560px; font-weight: 800; font-size: .8rem; color: var(--muted); }
+    .rang { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; max-width: 560px; }
+    .rang button { min-width: 0; min-height: 52px; border: 2px dashed #94a3b8; border-radius: 10px; background: white; font: 900 1.05rem 'Nunito', sans-serif; color: #94a3b8; white-space: nowrap; padding: 0 2px; }
+    .rang button.plein { border: 3px solid var(--text); background: #f8fafc; color: var(--text); cursor: pointer; }
+    .rang button.ok { border: 3px solid var(--success); background: #ecfdf5; color: #047857; }
+    .rang button.ko { border: 3px dashed #dc2626; background: white; color: #b91c1c; }
+    .bon-ordre { font-weight: 800; color: #065f46; text-align: center; line-height: 1.35; }
+
+    /* le bilan */
+    .entr-bilan { padding: 14px 14px 18px; text-align: center; width: 100%; max-width: 640px; margin: 0 auto; }
+    .entr-bilan h3 { margin: 4px 0 2px; font-size: 2.4rem; font-weight: 900; color: var(--text); }
+    .entr-bilan .detail { margin: 2px 0 12px; font-weight: 700; color: var(--muted); }
+    .bilan-liste { display: grid; text-align: left; border: 1px solid #e7edf8; border-radius: 12px; overflow: hidden; margin: 0 0 14px; }
+    .bilan-liste > div { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 7px 10px; font-weight: 700; font-size: .95rem; border-bottom: 1px solid #eef2f8; }
+    .bilan-liste b { font-weight: 900; }
+    .etat { font-size: .78rem; font-weight: 800; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+    .etat.ok { background: var(--success); color: white; }
+    .etat.aide { border: 2px solid var(--success); color: #047857; }
+    .etat.ko { border: 2px dashed #dc2626; color: #b91c1c; }
+    .bilan-btns { display: grid; gap: 8px; }
+    .bilan-btns button { min-height: 48px; border-radius: 12px; font: 900 1.02rem 'Nunito', sans-serif; border: 2px solid #cfd8ea; background: white; color: var(--text); cursor: pointer; }
+    .bilan-btns .p { background: #1283ff; border-color: #1283ff; color: white; }
+
+    /* ✕ : « Arrêter la série ? » dans la page (pas d'alert()) */
+    .voile { position: fixed; inset: 0; background: rgba(31,42,68,.45); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+    .boite { background: white; border-radius: 16px; padding: 18px 16px; width: 100%; max-width: 340px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    .boite h4 { margin: 0 0 6px; font-size: 1.25rem; font-weight: 900; color: var(--text); }
+    .boite p { margin: 0 0 14px; font-weight: 700; color: var(--muted); }
+    .boite-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .boite-btns button { min-height: 48px; border-radius: 12px; font: 900 1rem 'Nunito', sans-serif; border: 2px solid #cfd8ea; background: white; color: var(--text); cursor: pointer; }
+    .boite-btns .p { background: #1283ff; border-color: #1283ff; color: white; }
+
+    @media screen and (max-width: 700px) {
+      .mode-block, .seg-mode { width: 100%; }
+      .seg-mode .seg { flex: 1; padding: 10px 6px; font-size: .95rem; }
+      /* la page défile, le pied (pavé, Valider) reste sous le doigt */
+      .diapo-container.entr { overflow: clip; }
+      .diapo-container.entr .entr-entete { padding: 8px; grid-template-columns: 44px 1fr auto; gap: 6px; }
+      .entr .entr-entete .btn-nav { min-height: 44px; padding: 8px 12px; }
+      .entr-x-mot { display: none; }
+      .entr .question-box { padding: 14px 10px 4px; }
+      .entr .question-emoji { font-size: 3.2rem; margin-bottom: 6px; }
+      .entr .inner { padding-top: 58px; padding-bottom: 58px; }
+      .entr .handle { height: 48px; width: 120px; }
+      .entr .h-text { font-size: .78rem; }
+      .entr .digit { min-height: 58px; }
+      .entr .unitBtn { min-height: 34px; font-size: 1.05rem; }
+      .entr .ligne-rep { font-size: 1.4rem; }
+      .entr .question-text.pb { font-size: 1.15rem; line-height: 1.3; }
+      .entr .question-subtext { margin-top: 6px; }
+      .entr .entr-msg { margin-top: 6px; padding: 6px 10px; }
+      .entr .question-box { padding-top: 10px; }
+      .pave button { min-height: 42px; }
+      .diapo-container.entr .entr-piste { margin: 5px 10px 0; height: 6px; }
+      .ch { font-size: 1.15rem; }
+      .assoc-obj { font-size: .98rem; grid-template-columns: 22px 1fr 92px; }
+      .jeton { font-size: 1.02rem; }
+      .rang button { font-size: .98rem; }
+      .entr-bilan h3 { font-size: 2.1rem; }
+    }
+    /* petit téléphone (360 × 640) : le pavé et le tableau se resserrent pour que le tableau reste au-dessus du pavé */
+    @media screen and (max-width: 700px) and (max-height: 700px) {
+      .diapo-container.entr .entr-entete { padding: 4px 8px; }
+      .entr .entr-entete .btn-nav { min-height: 40px; padding: 6px 10px; }
+      .entr .question-box { padding: 8px 10px 2px; }
+      .entr .question-emoji { font-size: 2.6rem; margin-bottom: 2px; }
+      .entr .entr-msg { padding: 5px 10px; margin-top: 6px; font-size: 0.98rem; }
+      .entr .table-box { padding-top: 2px; }
+      .entr .inner { padding-top: 46px; padding-bottom: 46px; }
+      .entr .handle { height: 38px; width: 112px; }
+      .entr .h-text { font-size: 0.72rem; }
+      .entr .digit { min-height: 50px; }
+      .entr .unitBtn { min-height: 30px; }
+      .pave { gap: 4px; padding-top: 5px; }
+      .pave button { min-height: 39px; font-size: 1.2rem; }
+      .entr-btn { min-height: 44px; }
+    }
+    @media screen and (min-width: 701px) {
+      /* le cadre tient entier : la question, la réponse, le message et le tableau sous la question */
+      .entr .question-box { padding: 16px 40px 4px; }
+      .entr .question-text { font-size: 2rem; line-height: 1.3; }
+      .entr .inner { padding-top: 84px; padding-bottom: 84px; }
+      .entr .handle { height: 64px; }
+      .entr .h-text { font-size: 0.95rem; }
+      .entr .est-frise-unit { font-size: 1.05rem; }
+      .entr .est-frise-emoji { font-size: 1.9rem; }
+      .entr-bilan.longue { max-width: 1000px; }
+      .entr-bilan.longue .bilan-liste { grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(var(--r, 10), auto); }
+    }
+    @media screen and (min-width: 701px) and (max-height: 800px) {
+      .diapo-container.entr .entr-entete { padding: 8px 24px; }
+      .entr .entr-msg { padding: 6px 12px; margin-top: 6px; }
+      .entr-btn { min-height: 44px; }
+      .entr .ligne-rep { margin-top: 4px; }
+      .entr-bilan h3 { font-size: 2rem; }
+      .bilan-liste > div { padding: 5px 10px; }
+      .entr .question-text { font-size: 1.8rem; }
+      .entr .question-subtext { font-size: 1.3rem; margin-top: 6px; }
+      .entr .inner { padding-top: 76px; padding-bottom: 76px; }
+      .entr .handle { height: 58px; }
+    }
+    /* petite fenêtre d'ordinateur : un problème raté deux fois (énoncé, réponse, calcul, message, tableau) tient encore */
+    @media screen and (min-width: 701px) and (max-height: 680px) {
+      .entr .question-box { padding: 10px 30px 2px; }
+      .entr .question-text { font-size: 1.5rem; }
+      .entr .ligne-rep { font-size: 1.45rem; margin-top: 2px; }
+      .entr .question-subtext { font-size: 1.15rem; margin-top: 4px; }
+      .entr .question-subtext .corr { margin-top: 4px; }
+      .entr .entr-msg { font-size: 0.98rem; padding: 4px 10px; margin-top: 4px; }
+      .entr .inner { padding-top: 64px; padding-bottom: 64px; }
+      .entr .handle { height: 52px; }
+      .entr .h-text { font-size: 0.85rem; }
     }
     @media print {
       body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
@@ -364,6 +567,12 @@
 
     <div class="bottom-config">
       <div class="config-options">
+        <div class="config-block mode-block">
+          <div class="seg-mode" role="group" aria-label="Mode">
+            <button type="button" class="seg" data-mode="diapo" aria-pressed="false" onclick="choisirMode('diapo', true)">💻 Je projette</button>
+            <button type="button" class="seg" data-mode="entrainement" aria-pressed="true" onclick="choisirMode('entrainement', true)">✍️ Je m'entraîne</button>
+          </div>
+        </div>
         <div class="config-block">
           <label>Niveaux :</label>
           <div style="display: flex; gap: 12px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cfd8ea;">
@@ -385,11 +594,19 @@
           <label title="Laisse vide pour générer aléatoirement. Modifie pour rejouer !">Code série :</label>
           <input type="text" id="inputSeed" placeholder="Auto" maxlength="6">
         </div>
+        <div class="config-block" id="blocAide">
+          <label for="selAide">Aide :</label>
+          <select id="selAide">
+            <option value="demande" selected>à la demande</option>
+            <option value="debut">dès le début</option>
+            <option value="sans">sans aide</option>
+          </select>
+        </div>
       </div>
       
       <div class="btn-wrap">
         <div class="lancer-col">
-          <button class="btn-main" onclick="generateQuiz()">💻 Lancer diapo</button>
+          <button class="btn-main" id="btnLancer" onclick="lancer()">✍️ Commencer</button>
           <button class="btn-lien" id="btnLien" type="button" onclick="copierLien()">🔗 Copier le lien</button>
         </div>
 
@@ -415,11 +632,19 @@
         <button class="btn-nav" id="btnNext" onclick="nextAction()" style="background-color: var(--accent); color: white;">Aide : placer dans le tableau 💡 ►</button>
       </div>
     </div>
+    <!-- « Je m'entraîne » : l'en-tête (✕, numéro, aide) -->
+    <div class="entr-entete">
+      <button type="button" class="btn-nav entr-x" id="btnArret" onclick="demanderArret()" aria-label="Arrêter la série">✕<span class="entr-x-mot"> Arrêter</span></button>
+      <div class="slide-counter" id="entrCompteur"></div>
+      <button type="button" class="btn-nav" id="btnAide" onclick="ouvrirAide()">💡 Aide</button>
+    </div>
+    <div class="entr-piste" aria-hidden="true"><b id="entrPiste"></b></div>
     
     <div class="question-box">
         <div id="qEmoji" class="question-emoji"></div>
         <p class="question-text" id="qText"></p>
         <div class="question-subtext" id="qSubtext"></div>
+        <div class="entr-msg" id="entrMsgHaut" role="status" aria-live="polite" hidden></div>
     </div>
     
     <div class="table-box" id="tBox">
@@ -436,6 +661,27 @@
     </div>
 
     <div class="thumbnails-bar" id="thumbBar"></div>
+
+    <!-- « Je m'entraîne » : le message, le pavé, le bouton, la barre de progression -->
+    <div class="entr-pied" id="entrPied">
+      <div class="entr-msg" id="entrMsgBas" role="status" aria-live="polite" hidden></div>
+      <div class="pave" id="pave">
+        <button type="button" onclick="taper('7')">7</button><button type="button" onclick="taper('8')">8</button><button type="button" onclick="taper('9')">9</button>
+        <button type="button" onclick="taper('4')">4</button><button type="button" onclick="taper('5')">5</button><button type="button" onclick="taper('6')">6</button>
+        <button type="button" onclick="taper('1')">1</button><button type="button" onclick="taper('2')">2</button><button type="button" onclick="taper('3')">3</button>
+        <button type="button" onclick="taper(',')" aria-label="virgule">,</button><button type="button" onclick="taper('0')">0</button><button type="button" onclick="taper('⌫')" aria-label="effacer">⌫</button>
+      </div>
+      <button type="button" class="entr-btn" id="btnEntr" onclick="valider()">Valider ✓</button>
+      <div class="entr-astuce" id="entrAstuce">Tape ta réponse au clavier, puis Entrée.</div>
+    </div>
+    <div class="entr-bilan" id="entrBilan" hidden></div>
+    <div class="voile" id="voileArret" hidden>
+      <div class="boite" role="dialog" aria-modal="true" aria-labelledby="arretTitre">
+        <h4 id="arretTitre">Arrêter la série&nbsp;?</h4>
+        <p>Tes réponses ne sont pas gardées.</p>
+        <div class="boite-btns"><button type="button" id="btnContinuer" onclick="fermerArret()">Continuer</button><button type="button" class="p" onclick="arreter()">Arrêter</button></div>
+      </div>
+    </div>
   </div>
 
   <div id="printContainer"></div>
@@ -868,10 +1114,11 @@
       return questionDeConversion(schema, valStr, schema.units[uIndex1], schema.units[uIndex2], uIndex1 * s + s - 1, uIndex2 * s + s - 1);
     }
 
-    // une question de problème : la conversion montrée dans le tableau, plus l'énoncé et la correction
-    function problemeAvec(base, valStr, sourceUnit, targetUnit, problemText, correctionText) {
+    // une question de problème : la conversion montrée dans le tableau, plus l'énoncé et la correction ;
+    // « reponse » (une chaîne « 12,5 ») et « uniteReponse » servent au mode « Je m'entraîne » (aucun tirage en plus)
+    function problemeAvec(base, valStr, sourceUnit, targetUnit, problemText, correctionText, reponse, uniteReponse) {
       const q = questionDeConversion(base, valStr, sourceUnit, targetUnit, posUnite(base, sourceUnit), posUnite(base, targetUnit));
-      return { ...q, isProblem: true, problemText, correctionText, textId: problemText };
+      return { ...q, isProblem: true, problemText, correctionText, textId: problemText, reponse: normaliser(String(reponse)), uniteReponse };
     }
     // un tirage qui peut échouer (aucun objet ne va avec les nombres) : on recommence
     function tirer(f) { for (let i = 0; i < 500; i++) { const r = f(); if (r) return r; } throw new Error("tirage impossible"); }
@@ -903,7 +1150,7 @@
                                              : `Je réunis ${o.n} de <strong>${mesure(v1, G.grand)}</strong> et ${autre}`;
                 const texte = `${debut} de <strong>${mesure(v2, petit)}</strong>. Quel est le total en <strong>${petit}</strong> ?`;
                 const corr = `Calcul : ${ecrire(conv)} + ${ecrire(v2)} = <strong>${mesure(conv + v2, petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, petit, texte, corr);
+                return problemeAvec(G.s, v1, G.grand, petit, texte, corr, conv + v2, petit);
             });
         }
         if (family === 'sub') {
@@ -925,7 +1172,7 @@
                 const o = pick(objets);
                 const texte = `Dans ${o.n} de <strong>${mesure(v1, G.grand)}</strong>, ${pick(o.a)} <strong>${mesure(v2, G.petit)}</strong>. Combien reste-t-il en <strong>${G.petit}</strong> ?`;
                 const corr = `Calcul : ${ecrire(conv)} − ${ecrire(v2)} = <strong>${mesure(conv - v2, G.petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr);
+                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr, conv - v2, G.petit);
             });
         }
         if (family === 'mult') {
@@ -952,7 +1199,7 @@
                 const conv = decaler(total, tP - sP);
                 const texte = `${o.n} fait <strong>${mesure(v1, src)}</strong>. Quel est le total pour <strong>${qte} ${o.p} identiques</strong> en <strong>${tgt}</strong> ?`;
                 const corr = `1) Calcul : ${qte} × ${mesure(v1, src)} = ${mesure(total, src)}. <br> 2) Conversion : <strong>${mesure(conv, tgt)}</strong>.`;
-                return problemeAvec(G.s, total, src, tgt, texte, corr);
+                return problemeAvec(G.s, total, src, tgt, texte, corr, conv, tgt);
             });
         }
         if (family === 'div') {
@@ -970,7 +1217,7 @@
                 const conv = n * pas / versPetit;
                 const texte = `Je partage ${o.n} de <strong>${mesure(v1, G.grand)}</strong> en <strong>${div} parts égales</strong>. Combien fait une part en <strong>${G.petit}</strong> ?`;
                 const corr = `Calcul après conversion : ${ecrire(conv)} ÷ ${div} = <strong>${mesure(conv / div, G.petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr);
+                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr, conv / div, G.petit);
             });
         }
         if (family === 'frac') {
@@ -995,7 +1242,7 @@
                 } else expr = `${frac.le} de ${mesure(v1, grand)}`;
                 const texte = `Dans une recette, il faut <strong>${expr}</strong> ${o.n}. Combien cela fait-il en <strong>${petit}</strong> ?`;
                 const corr = `1) Conversion : ${mesure(v1, grand)} = ${mesure(conv, petit)}.<br> 2) Calcul : ${frac.le} de ${mesure(conv, petit)} = <strong>${mesure(rep, petit)}</strong>.`;
-                return problemeAvec(s, v1, grand, petit, texte, corr);
+                return problemeAvec(s, v1, grand, petit, texte, corr, rep, petit);
             });
         }
         // family === 'geom'
@@ -1006,7 +1253,7 @@
             const mToCm = versEntier(m, 2), perim = (mToCm + cm) * 2;
             const texte = `Un rectangle mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quel est son périmètre en <strong>cm</strong> ?`;
             const corr = `1) Conversion : ${mesure(m, 'm')} = ${mesure(mToCm, 'cm')}.<br> 2) Calcul : (${ecrire(mToCm)} + ${cm}) × 2 = <strong>${mesure(perim, 'cm')}</strong>.`;
-            return problemeAvec(SCHEMAS.length, m, 'm', 'cm', texte, corr);
+            return problemeAvec(SCHEMAS.length, m, 'm', 'cm', texte, corr, perim, 'cm');
         }
         return tirer(() => {
             const m = rand(2, 6), cm = (level === 2) ? rand(3, 9) * 10 : rand(4, 9) * 10;
@@ -1016,7 +1263,7 @@
             const cmToM = depuisEntier(cm, 2), aire = depuisEntier(m * cm, 2);
             const texte = `${o.n} rectangulaire mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quelle est son aire en <strong>m²</strong> ?`;
             const corr = `1) Conversion : ${mesure(cm, 'cm')} = ${mesure(cmToM, 'm')}.<br> 2) Aire : ${mesure(m, 'm')} × ${mesure(cmToM, 'm')} = <strong>${mesure(aire, 'm²')}</strong>.`;
-            return problemeAvec(SCHEMAS.length, String(cm), 'cm', 'm', texte, corr);
+            return problemeAvec(SCHEMAS.length, String(cm), 'cm', 'm', texte, corr, aire, 'm²');
         });
     }
 
@@ -1096,7 +1343,7 @@
             }
             const m = melangerChoix(pris.map(d => NOMS[d]));
             let problemText = `Quelle grandeur mesure-t-on pour : <strong>${qObject}</strong> ?`;
-            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e, sujet: qObject, rappel: `On mesure ${correctG.toLowerCase()}.` };
         }
 
         if (qType === 7) {
@@ -1104,7 +1351,7 @@
             if(pontsList.length === 0) pontsList = PONTS_DB;
             let pont = pick(pontsList);
             const m = melangerChoix([pont.c, pont.w1, pont.w2]);
-            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: m.choices, correctIndex: m.correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e };
+            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: m.choices, correctIndex: m.correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e, rappel: `L'équivalence est : <strong>${pont.c}</strong>.` };
         }
 
         if (qType === 8) {
@@ -1130,13 +1377,15 @@
             }
             let shuffledVals = shuffle([...values]);
             let letters = ["A", "B", "C"];
+            // les valeurs A, B, C restent sur la ligne de leur lettre (au téléphone, la colonne ne se coupe plus)
             let htmlStr = `Associe chaque élément à la bonne valeur :<br><br>
-               <div style="display:flex; justify-content:center; gap: 50px; font-size:0.9em; text-align:left;">
+               <div class="assoc-cols" style="display:flex; justify-content:center; gap: 50px; font-size:0.9em; text-align:left;">
                  <div>1) ${objects[0]}<br>2) ${objects[1]}<br>3) ${objects[2]}</div>
-                 <div>A) ${shuffledVals[0]}<br>B) ${shuffledVals[1]}<br>C) ${shuffledVals[2]}</div>
+                 <div class="assoc-vals">A)${NBSP}${shuffledVals[0]}<br>B)${NBSP}${shuffledVals[1]}<br>C)${NBSP}${shuffledVals[2]}</div>
                </div>`;
             let correctStr = `1 → ${letters[shuffledVals.indexOf(values[0])]} | 2 → ${letters[shuffledVals.indexOf(values[1])]} | 3 → ${letters[shuffledVals.indexOf(values[2])]}`;
-            return { isProblem: false, isEstimation: true, qType: 8, problemText: htmlStr, choices: [], correctIndex: 0, correctionText: `La bonne combinaison : <strong>${correctStr}</strong>.`, phase: 0, textId: objects.join(""), emoji: "🔗" };
+            return { isProblem: false, isEstimation: true, qType: 8, problemText: htmlStr, choices: [], correctIndex: 0, correctionText: `La bonne combinaison : <strong>${correctStr}</strong>.`, phase: 0, textId: objects.join(""), emoji: "🔗",
+                     objets: objects, valeurs: shuffledVals, paires: values.map(v => shuffledVals.indexOf(v)) };
         }
 
         if (qType === 9) {
@@ -1152,7 +1401,8 @@
                 displayUnit = conv.unit; displayVal = conv.val;
             }
             let problemText = `Complète la phrase : <br><br><strong>${debutDePhrase(pickedQItem.n)}</strong> ....... <strong>${displayUnit}</strong>.`;
-            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${ecrire(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e };
+            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${ecrire(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e,
+                     sujet: pickedQItem.n, phrase: debutDePhrase(pickedQItem.n), reponse: normaliser(displayVal), uniteReponse: displayUnit };
         }
 
         if (qType === 10) {
@@ -1162,7 +1412,8 @@
             let sorted = [...targetItem.arr];
             let shuf = shuffle([...targetItem.arr]);
             let problemText = `Classe ces mesures de la plus petite à la plus grande :<br><br><span style='color:var(--accent); font-size:1.1em;'>${shuf.join(' &nbsp; | &nbsp; ')}</span>`;
-            return { isProblem: false, isEstimation: true, qType: 10, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${sorted.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, phase: 0, textId: problemText, emoji: "📶" };
+            return { isProblem: false, isEstimation: true, qType: 10, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${sorted.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, phase: 0, textId: problemText, emoji: "📶",
+                     mesures: shuf, ordre: sorted };
         }
 
         let dim = pick(dims);
@@ -1228,12 +1479,13 @@
             }
             problemText = `<strong>${debutDePhrase(qObject)} ${mesure(affiche.val, affiche.unit)}</strong>.`;
             const m = { choices: ["Vrai", "Faux"], correctIndex: isTrue ? 0 : 1 };
+            const rappel = correctionText;
             correctionText = (isTrue ? "C'est vrai ! " : "C'est faux ! ") + correctionText;
-            return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
+            return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji, sujet: qObject, rappel };
         }
 
         const m = melangerChoix(choices);
-        return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji };
+        return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji, sujet: qObject, rappel: correctionText };
     }
 
     /* =========================================
@@ -1306,6 +1558,8 @@
       est_grandeur: 'grandeur', est_unit: 'unite', est_val: 'ordre', est_tf: 'vrai-faux', est_action: 'action', est_pont: 'ponts', est_assoc: 'associer', est_trou: 'trous', est_tri: 'classer'
     };
     const NIVEAUX_LIEN = ['1', '2', '3'], QUESTIONS_LIEN = ['5', '10', '15', '20'];
+    // lot 3 : « mode=diapo|entrainement » et « aide=demande|debut|sans », listes fermées
+    const MODES = ['diapo', 'entrainement'], AIDES = ['demande', 'debut', 'sans'];
     const SERIE_LIEN = /^[A-Z0-9]{1,6}$/;
     // une liste « a,b,c » de l'adresse → les seules valeurs connues, sans doublon, au plus 30 morceaux lus
     function morceaux(texte, permis) {
@@ -1322,11 +1576,16 @@
       const niveaux = morceaux(p.get('niveaux'), NIVEAUX_LIEN).map(Number).sort((a, b) => a - b);
       const questions = QUESTIONS_LIEN.includes(p.get('questions')) ? Number(p.get('questions')) : null;
       const serie = String(p.get('serie') || '').toUpperCase();
-      return { cases, niveaux, questions, serie: SERIE_LIEN.test(serie) ? serie : '' };
+      // sans mode : « Je m'entraîne » (décision du 25/11) ; l'aide n'existe que dans ce mode
+      const mode = MODES.includes(p.get('mode')) ? p.get('mode') : 'entrainement';
+      const aide = mode === 'entrainement' && AIDES.includes(p.get('aide')) ? p.get('aide') : 'demande';
+      return { cases, niveaux, questions, serie: SERIE_LIEN.test(serie) ? serie : '', mode, aide };
     }
     function ecrireLien(r) {
       const q = [`cases=${r.cases.map(v => CASES_LIEN[v]).join(',')}`, `niveaux=${r.niveaux.join(',')}`, `questions=${r.questions}`];
       if (r.serie) q.push(`serie=${r.serie}`);
+      if (MODES.includes(r.mode)) q.push(`mode=${r.mode}`);
+      if (r.mode === 'entrainement' && AIDES.includes(r.aide)) q.push(`aide=${r.aide}`);
       return '?' + q.join('&');
     }
     function reglagesDuMenu() {
@@ -1353,6 +1612,7 @@
       // le code du lien devient le code du menu : « Lancer diapo » redonne alors exactement la série du lien
       champ.value = code; lastGeneratedSeed = "";
       r.serie = code;
+      r.mode = modeMenu; r.aide = aideDuMenu();
       const lien = location.origin + location.pathname + ecrireLien(r);
       const afficher = (copie) => {
         montrerMessage(copie
@@ -1376,13 +1636,19 @@
       if (r.niveaux.length) document.querySelectorAll('input[name="cbLevel"]').forEach(cb => { cb.checked = r.niveaux.includes(Number(cb.value)); });
       if (r.questions) document.getElementById('selCount').value = String(r.questions);
       document.getElementById('inputSeed').value = r.serie;
+      document.getElementById('selAide').value = r.aide;
+      // le mode du lien vaut pour cette visite ; le mode retenu sur l'appareil ne change pas
+      choisirMode(r.mode, false);
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-      generateQuiz(false);
+      lancer(false);
     }
 
-    function getQuizData() {
+    function getQuizData(entrainement = false) {
       let rawTypes = Array.from(document.querySelectorAll('.theme-grid input[type="checkbox"]:checked')).map(cb => cb.value);
       if (rawTypes.length === 0) { montrerMessage("⚠️ Coche au moins une case dans le menu !"); return false; }
+      // « Je m'entraîne » : « Action en classe » n'est jamais tirée (sans elle, la série est celle du diaporama)
+      if (entrainement) rawTypes = typesEntrainement(rawTypes);
+      if (rawTypes.length === 0) { montrerMessage("⚠️ « Action en classe » se fait en classe : coche une autre case pour « Je m'entraîne »."); return false; }
       const levelCbs = document.querySelectorAll('input[name="cbLevel"]:checked');
       if (levelCbs.length === 0) { montrerMessage("⚠️ Coche au moins un niveau !"); return false; }
       montrerMessage('');
@@ -1747,6 +2013,7 @@
 
     function generateQuiz(doux = true) {
       if(!getQuizData()) return;
+      quitterEntrainement();
       document.getElementById('diapoContainer').style.display = 'flex';
       buildThumbnails(); loadSlide(0, 0);
       document.getElementById('diapoContainer').scrollIntoView({ behavior: doux ? "smooth" : "auto" });
@@ -1785,10 +2052,487 @@
 
     document.addEventListener("keydown", (e) => {
       if (document.getElementById('diapoContainer').style.display !== "none") {
+        // « Je m'entraîne » : chiffres, virgule, Retour arrière, Entrée ; les flèches ne changent pas de question
+        if (enEntrainement()) { toucheEntrainement(e); return; }
         if (e.key === "ArrowRight") { if (!document.getElementById('btnNext').disabled) nextAction(); }
         else if (e.key === "ArrowLeft") { if (!document.getElementById('btnPrev').disabled) prevSlide(); }
       }
     });
+
+    /* =========================================
+       « JE M'ENTRAÎNE » (lot 3, 25/11/2026)
+       L'élève tape ou touche sa réponse, la page la valide : trois états par question
+       (« juste » au 1er essai sans aide ouverte, « avec l'aide », « à revoir »), un score, un bilan.
+       Rien n'est enregistré : ni réponse, ni score. Seul le dernier mode choisi est retenu sur l'appareil.
+       ========================================= */
+    const CLE_MODE = 'mathsgo-exerciseur-conversions-mode';
+    const MAX_SAISIE = 14;
+    let modeMenu = 'entrainement';
+    const E = { serie: [], st: [], i: 0, aide: 'demande', code: '', bilan: false, minuteur: 0 };
+
+    function typesEntrainement(types) { return types.filter(t => t !== 'est_action'); }
+    function lireModeRetenu() {
+      try { const m = window.localStorage.getItem(CLE_MODE); return MODES.includes(m) ? m : null; } catch (e) { return null; }
+    }
+    function retenirMode(m) { try { window.localStorage.setItem(CLE_MODE, m); } catch (e) { /* navigation privée : tant pis */ } }
+    function aideDuMenu() { const v = document.getElementById('selAide').value; return AIDES.includes(v) ? v : 'demande'; }
+    function choisirMode(m, retenir) {
+      if (!MODES.includes(m)) m = 'entrainement';
+      modeMenu = m;
+      if (retenir) retenirMode(m);
+      if (typeof document === 'undefined' || !document.getElementById('btnLancer')) return;
+      document.querySelectorAll('.seg-mode .seg').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === m)));
+      document.getElementById('btnLancer').textContent = m === 'diapo' ? '💻 Lancer diapo' : '✍️ Commencer';
+      document.getElementById('blocAide').hidden = m !== 'entrainement';
+      // « Action en classe » : grisée dans « Je m'entraîne » (elle reste cochée pour le diaporama)
+      const action = document.querySelector('.theme-grid input[value="est_action"]');
+      action.disabled = m === 'entrainement';
+      action.closest('.cb-row').classList.toggle('hors-mode', m === 'entrainement');
+      action.closest('.cb-row').title = m === 'entrainement' ? "En classe seulement : pas dans « Je m'entraîne »" : '';
+    }
+    function lancer(doux = true) { if (modeMenu === 'diapo') generateQuiz(doux); else commencerEntrainement(doux); }
+
+    /* ---- les réponses (sans DOM, testées dans node) ---- */
+    // une saisie → un nombre « 12,5 », ou null ; espaces (insécables compris), point ou virgule, zéros inutiles
+    function lireSaisie(s) {
+      const t = String(s == null ? '' : s).slice(0, 40).replace(/[\s  ]/g, '').replace('.', ',');
+      if (t.length > MAX_SAISIE || !/^(\d+(,\d*)?|,\d+)$/.test(t)) return null;
+      return normaliser(t.charAt(0) === ',' ? '0' + t : t);
+    }
+    function nbDecimales(s) { return (String(s).split(',')[1] || '').length; }
+    function grandEntier(s, d) { const [e, f = ''] = String(s).split(','); return BigInt(e + f.padEnd(d, '0')); }
+    // « Texte à trous » : juste de la moitié au double, bornes comprises (entiers, jamais de virgule flottante)
+    function dansLaFourchette(lu, rep) {
+      const d = Math.max(nbDecimales(lu), nbDecimales(rep));
+      const x = grandEntier(lu, d), r = grandEntier(rep, d);
+      return 2n * x >= r && x <= 2n * r;
+    }
+    function fois(s, k) { const d = nbDecimales(s); return decaler(String(grandEntier(s, d) * BigInt(k)), -d); }
+    function moitie(s) { return decaler(fois(s, 5), -1); }
+    function double(s) { return fois(s, 2); }
+    function genreDe(q) {
+      if (!q.isEstimation || q.qType === 9) return 'nombre';
+      if (q.qType === 8) return 'associer';
+      if (q.qType === 10) return 'classer';
+      return 'choix';
+    }
+    // la bonne réponse d'une question tapée
+    function bonneReponse(q) {
+      if (q.isProblem || q.qType === 9) return { val: q.reponse, unite: q.uniteReponse };
+      return { val: q.calcValStr, unite: q.targetUnit };
+    }
+    function estJuste(q, saisie) {
+      const lu = lireSaisie(saisie);
+      if (lu === null) return false;
+      if (q.qType === 9) return dansLaFourchette(lu, q.reponse);
+      return lu === normaliser(bonneReponse(q).val);
+    }
+    // l'aide : le tableau (conversions, problèmes) ou la frise des repères (« Quelle unité ? »)
+    function aUneAide(q) { return !q.isEstimation || q.qType === 1; }
+    function etatFinal(st, ok) { return !ok ? 'revoir' : (st.essai === 1 && !st.aideVue ? 'juste' : 'aide'); }
+    const NOMS_ETATS = { juste: 'juste', aide: "avec l'aide", revoir: 'à revoir' };
+    const CLASSES_ETATS = { juste: 'ok', aide: 'aide', revoir: 'ko' };
+    const NOMS_CASES = {
+      prob_add: "Problème d'addition", prob_sub: 'Problème de soustraction', prob_mult: 'Problème de multiplication',
+      prob_div: 'Problème de division', prob_frac: 'Problème de fraction', prob_geom: "Problème de périmètre ou d'aire",
+      est_grandeur: 'Quelle grandeur ?', est_unit: 'Quelle unité ?', est_val: 'Ordre de valeur', est_tf: 'Vrai ou faux',
+      est_pont: 'Ponts et symboles', est_assoc: 'Associer', est_trou: 'Texte à trous', est_tri: 'Classer'
+    };
+    // une ligne du bilan, en texte
+    function resumeDe(q) {
+      if (!q.isEstimation && !q.isProblem) return `${mesure(q.valStr, q.sourceUnit)} = ${mesure(q.calcValStr, q.targetUnit)}`;
+      const nom = (NOMS_CASES[q.caseCochee] || '').replace(/ \?$/, NBSP + '?');
+      if (!q.sujet) return nom;
+      return /\?$/.test(nom) ? `${nom} ${q.sujet}` : `${nom}${NBSP}: ${q.sujet}`;
+    }
+
+    /* ---- la série ---- */
+    function ecranTactile() { return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches; }
+    function enEntrainement() { const d = document.getElementById('diapoContainer'); return d.classList.contains('entr') && d.style.display === 'flex'; }
+    function nouvelEtat() { return { saisie: '', faux: false, essai: 1, aideVue: false, fini: false, etat: null, choix: -1, liens: [-1, -1, -1], sel: null, rangs: [-1, -1, -1, -1] }; }
+    function commencerEntrainement(doux = true) {
+      if (!getQuizData(true)) return;
+      E.aide = aideDuMenu(); E.code = currentSeedStr;
+      demarrerSerie(quizData, doux);
+    }
+    function demarrerSerie(questions, doux = true) {
+      E.serie = questions; E.st = questions.map(nouvelEtat); E.i = 0; E.bilan = false;
+      const d = document.getElementById('diapoContainer');
+      d.classList.add('entr'); d.classList.toggle('tactile', ecranTactile());
+      d.style.display = 'flex';
+      fermerArret();
+      afficherQuestion(false);
+      d.scrollIntoView({ behavior: doux ? 'smooth' : 'auto' });
+    }
+    function quitterEntrainement() {
+      const d = document.getElementById('diapoContainer');
+      d.classList.remove('entr', 'tactile');
+      document.getElementById('entrBilan').hidden = true;
+      document.querySelector('.question-box').style.display = '';
+      fermerArret();
+      E.bilan = false;
+    }
+
+    /* ---- l'écran d'une question ---- */
+    function texteEn(el, texte) { el.textContent = texte; return el; }
+    function creer(balise, classe, texte) { const el = document.createElement(balise); if (classe) el.className = classe; if (texte !== undefined) el.textContent = texte; return el; }
+    function champHTML() { return '<span class="champ" id="champ" role="textbox" aria-label="Ta réponse"></span>'; }
+    function majChamp() {
+      const st = E.st[E.i], champ = document.getElementById('champ');
+      if (!champ) return;
+      champ.textContent = st.saisie ? ecrire(st.saisie) : '';
+      champ.classList.toggle('faux', st.faux || st.etat === 'revoir');
+      champ.classList.toggle('juste', st.fini && st.etat !== 'revoir');
+      if (!st.fini && !st.faux) champ.appendChild(creer('span', 'car'));
+    }
+    function message(texteOuHtml, oui, enHtml = false) {
+      const q = E.serie[E.i];
+      const haut = genreDe(q) === 'nombre';
+      const el = document.getElementById(haut ? 'entrMsgHaut' : 'entrMsgBas');
+      document.getElementById(haut ? 'entrMsgBas' : 'entrMsgHaut').hidden = true;
+      if (!texteOuHtml) { el.hidden = true; return; }
+      el.className = 'entr-msg ' + (oui ? 'oui' : 'non');
+      // les textes viennent des banques de la page ; la saisie de l'élève n'y entre jamais
+      if (enHtml) el.innerHTML = typo(texteOuHtml); else el.textContent = texteOuHtml;
+      el.hidden = false;
+    }
+    // le trait se remplit d'une part par question terminée (le modèle de Défi tables et de Défi calcul)
+    function majProgression() {
+      const faites = E.st.filter(st => st.fini).length;
+      document.getElementById('entrPiste').style.width = `${Math.round(100 * faites / E.serie.length)}%`;
+      document.getElementById('diapoContainer').classList.toggle('fin', E.bilan);
+    }
+    // téléphone : quand le tableau arrive et qu'il passe sous le pied (pavé, Valider), la page remonte juste assez,
+    // sans jamais faire sortir la case de réponse de l'écran
+    function tableauAuDessusDuPied() {
+      const pied = document.getElementById('entrPied'), champ = document.getElementById('champ');
+      if (!champ || !document.getElementById('diapoContainer').classList.contains('tactile')) return;
+      const bas = Math.max(...[...document.querySelectorAll('#diapoBoardColumns .digit, #diapoHandleBottom')].map(e => e.getBoundingClientRect().bottom));
+      const manque = Math.ceil(bas - pied.getBoundingClientRect().top + 4);
+      const marge = Math.floor(champ.getBoundingClientRect().top - 6);
+      if (manque > 0 && marge > 0) window.scrollBy(0, Math.min(manque, marge));
+    }
+    function montrerTableau(q, final, animer) {
+      const v = vueDuTableau(q);
+      document.getElementById('tBox').style.display = 'flex';
+      document.getElementById('mainBoard').style.display = 'block';
+      document.getElementById('estBoard').style.display = 'none';
+      buildDiapoTableDOM(v.schema);
+      fillDiapoDigits(v, final);
+      requestAnimationFrame(() => {
+        if (!final) { positionDiapoCursor(v.sourcePos, false, v, false); requestAnimationFrame(tableauAuDessusDuPied); return; }
+        if (!animer) { positionDiapoCursor(v.targetPos, false, v, true); return; }
+        // la correction s'anime : la fenêtre de l'unité part de l'unité de départ
+        positionDiapoCursor(v.sourcePos, false, v, false);
+        requestAnimationFrame(() => requestAnimationFrame(() => positionDiapoCursor(v.targetPos, true, v, true)));
+      });
+    }
+    function afficherQuestion(animer = false) {
+      const q = E.serie[E.i], st = E.st[E.i], genre = genreDe(q);
+      E.bilan = false;
+      document.getElementById('entrBilan').hidden = true;
+      document.querySelector('.question-box').style.display = '';
+      document.getElementById('entrPied').style.display = '';
+      document.getElementById('entrCompteur').textContent = `Question ${E.i + 1} / ${E.serie.length}`;
+      const aideOuverte = st.aideVue || E.aide === 'debut' || st.essai === 2;
+      const btnAide = document.getElementById('btnAide');
+      btnAide.classList.toggle('cache', !(E.aide === 'demande' && aUneAide(q) && !aideOuverte && !st.fini));
+      document.documentElement.style.setProperty('--accent', '#1283ff');
+
+      const qEmoji = document.getElementById('qEmoji'), qText = document.getElementById('qText'), qSub = document.getElementById('qSubtext');
+      qText.classList.remove('pb');
+      const tBox = document.getElementById('tBox'), estBoard = document.getElementById('estBoard'), mainBoard = document.getElementById('mainBoard');
+      qEmoji.style.display = q.isEstimation && q.emoji ? 'block' : 'none';
+      qEmoji.innerText = q.isEstimation && q.emoji ? q.emoji : '';
+      qSub.innerHTML = ''; estBoard.innerHTML = '';
+      tBox.style.display = 'none';
+      message('');
+
+      if (genre === 'nombre') {
+        const unite = bonneReponse(q).unite;
+        if (!q.isEstimation && !q.isProblem) {
+          qText.innerHTML = `Convertis${NBSP}: <span class="nb">${mesure(q.valStr, q.sourceUnit)}</span> = <span class="nb">${champHTML()}${NBSP}<span id="uniteRep"></span></span>`;
+        } else {
+          qText.innerHTML = q.isProblem ? typo(q.problemText) : `<strong>${typo(q.phrase)}</strong>`;
+          qText.classList.toggle('pb', !!q.isProblem);
+          qSub.innerHTML = `<span class="ligne-rep nb">${champHTML()}<span id="uniteRep"></span></span>`;
+        }
+        texteEn(document.getElementById('uniteRep'), unite);
+        majChamp();
+        if (q.isProblem && st.fini) qSub.insertAdjacentHTML('beforeend', `<span class="corr">${typo(q.correctionText)}</span>`);
+        if (q.qType !== 9 && (st.fini || aideOuverte)) montrerTableau(q, st.fini, animer);
+        if (st.fini) messageFinal(q, st);
+        else if (st.essai === 2) message('Pas encore. Regarde le tableau, puis réessaie.', false);
+      } else {
+        qText.innerHTML = typo(genre === 'associer' ? 'Associe chaque objet à sa valeur.' : (genre === 'classer' ? 'Classe ces mesures de la plus petite à la plus grande.' : q.problemText));
+        tBox.style.display = 'flex'; mainBoard.style.display = 'none'; estBoard.style.display = 'flex';
+        if (genre === 'choix') dessinerChoix(q, st, aideOuverte);
+        if (genre === 'associer') dessinerAssocier(q, st);
+        if (genre === 'classer') dessinerClasser(q, st);
+        if (st.fini) messageFinal(q, st);
+      }
+      // le pied : le pavé (téléphone, tablette), le bouton, l'astuce du clavier (ordinateur)
+      document.getElementById('pave').hidden = !(genre === 'nombre' && !st.fini);
+      document.getElementById('entrAstuce').hidden = !(genre === 'nombre' && !st.fini);
+      majBouton();
+      majProgression();
+    }
+    function majBouton() {
+      const q = E.serie[E.i], st = E.st[E.i], genre = genreDe(q), b = document.getElementById('btnEntr');
+      b.hidden = false;
+      if (st.fini) { b.textContent = E.i < E.serie.length - 1 ? 'Question suivante ►' : 'Voir mon score ►'; b.disabled = false; return; }
+      b.textContent = 'Valider ✓';
+      if (genre === 'choix') { b.hidden = true; return; }   // un choix touché est validé tout de suite
+      if (genre === 'nombre') b.disabled = lireSaisie(st.saisie) === null || st.faux;
+      if (genre === 'associer') b.disabled = st.liens.includes(-1);
+      if (genre === 'classer') b.disabled = st.rangs.includes(-1);
+    }
+    function messageFinal(q, st) {
+      const genre = genreDe(q), ok = st.etat !== 'revoir';
+      if (genre === 'nombre') {
+        const b = bonneReponse(q);
+        if (q.qType === 9) {
+          if (ok) message(`✅ Bien estimé${NBSP}! Le repère${NBSP}: environ ${mesure(b.val, b.unite)}.`, true);
+          else message(`Trop loin. Le repère${NBSP}: environ ${mesure(b.val, b.unite)}. On accepte de ${mesure(moitie(b.val), b.unite)} à ${mesure(double(b.val), b.unite)}.`, false);
+          return;
+        }
+        const egalite = q.isProblem ? mesure(b.val, b.unite) : `${mesure(q.valStr, q.sourceUnit)} = ${mesure(q.calcValStr, q.targetUnit)}`;
+        if (ok) message(`✅ Oui${NBSP}! ${egalite}`, true);
+        else message(`Pas cette fois. La bonne réponse${NBSP}: ${egalite}.`, false);
+        return;
+      }
+      if (genre === 'choix') {
+        message(ok ? `✅ Oui${NBSP}! ${q.rappel || ''}` : `Pas cette fois. ${q.rappel || ''}`, ok, true);
+        return;
+      }
+      if (genre === 'associer') {
+        const justes = st.liens.filter((v, k) => v === q.paires[k]).length;
+        message(ok ? `✅ Oui${NBSP}! Tout est juste.` : `Pas cette fois${NBSP}: ${justes} sur 3. Les bonnes valeurs sont écrites en vert.`, ok);
+        return;
+      }
+      message(ok ? `✅ Oui${NBSP}! C'est le bon ordre.` : 'Pas cette fois. Regarde le bon ordre.', ok);
+    }
+
+    function dessinerChoix(q, st, aideOuverte) {
+      const board = document.getElementById('estBoard');
+      const liste = creer('div', 'choix-liste' + (q.choices.length === 2 ? ' vf' : ''));
+      q.choices.forEach((c, k) => {
+        const b = creer('button', 'ch'); b.type = 'button';
+        if (q.choices.length !== 2) b.appendChild(creer('span', 'est-badge', 'ABC'[k]));
+        const t = creer('span', 't'); t.innerHTML = typo(c); b.appendChild(t);
+        if (st.fini) {
+          b.disabled = true;
+          if (k === q.correctIndex) { b.classList.add('ok'); b.appendChild(creer('span', 'mot', st.choix === k ? NOMS_ETATS[st.etat] : 'la bonne')); }
+          else if (k === st.choix) { b.classList.add('ko'); b.appendChild(creer('span', 'mot', 'ton choix')); }
+          else b.classList.add('gris');
+        } else b.onclick = () => toucherChoix(k);
+        liste.appendChild(b);
+      });
+      board.appendChild(liste);
+      // « Quelle unité ? » : la frise sous les choix, seulement quand l'aide est ouverte
+      if (q.qType === 1 && aideOuverte) {
+        board.appendChild(creer('div', 'reperes-titre', '💡 Les repères'));
+        board.insertAdjacentHTML('beforeend', q.friseHtml);
+      }
+    }
+    function toucherChoix(k) {
+      const q = E.serie[E.i], st = E.st[E.i];
+      if (st.fini) return;
+      st.choix = k;
+      terminer(k === q.correctIndex);
+    }
+    function dessinerAssocier(q, st) {
+      const board = document.getElementById('estBoard');
+      const liste = creer('div', 'assoc-liste');
+      q.objets.forEach((nom, k) => {
+        const b = creer('button', 'assoc-obj'); b.type = 'button';
+        b.appendChild(creer('b', '', String(k + 1)));
+        b.appendChild(creer('span', '', nom));
+        const v = st.liens[k];
+        b.appendChild(creer('span', 'place' + (v >= 0 ? ' plein' : ''), v >= 0 ? q.valeurs[v] : '…'));
+        if (st.fini) {
+          b.disabled = true;
+          const ok = v === q.paires[k];
+          b.classList.add(ok ? 'ok' : 'ko');
+          if (!ok) b.appendChild(creer('span', 'vrai', `→ ${q.valeurs[q.paires[k]]}`));
+        } else {
+          if (st.sel && st.sel.t === 'o' && st.sel.k === k) b.classList.add('sel');
+          b.onclick = () => toucherAssoc('o', k);
+        }
+        liste.appendChild(b);
+      });
+      board.appendChild(liste);
+      if (st.fini) return;
+      board.appendChild(creer('div', 'consigne', 'Touche un objet, puis sa valeur.'));
+      const jetons = creer('div', 'jetons'); jetons.style.setProperty('--n', 3);
+      q.valeurs.forEach((val, v) => {
+        const b = creer('button', 'jeton', val); b.type = 'button';
+        if (st.liens.includes(v)) b.classList.add('pris');
+        if (st.sel && st.sel.t === 'v' && st.sel.k === v) b.classList.add('sel');
+        b.onclick = () => toucherAssoc('v', v);
+        jetons.appendChild(b);
+      });
+      board.appendChild(jetons);
+    }
+    // toucher un objet puis une valeur (ou l'inverse) les relie ; une valeur déjà prise change d'objet
+    function relier(st, o, v) { st.liens = st.liens.map(x => (x === v ? -1 : x)); st.liens[o] = v; st.sel = null; }
+    function toucherAssoc(t, k) {
+      const st = E.st[E.i];
+      if (st.fini) return;
+      if (st.sel && st.sel.t === t && st.sel.k === k) st.sel = null;
+      else if (st.sel && st.sel.t !== t) relier(st, t === 'o' ? k : st.sel.k, t === 'v' ? k : st.sel.k);
+      else st.sel = { t, k };
+      afficherQuestion(false);
+    }
+    function dessinerClasser(q, st) {
+      const board = document.getElementById('estBoard');
+      if (!st.fini) {
+        const jetons = creer('div', 'jetons'); jetons.style.setProperty('--n', q.mesures.length);
+        q.mesures.forEach((m, k) => {
+          const b = creer('button', 'jeton', m); b.type = 'button';
+          if (st.rangs.includes(k)) b.classList.add('pris');
+          b.onclick = () => toucherMesure(k);
+          jetons.appendChild(b);
+        });
+        board.appendChild(jetons);
+        board.appendChild(creer('div', 'consigne', "Touche-les dans l'ordre. Touche une case pour la vider."));
+      }
+      const fl = creer('div', 'rang-fleche');
+      fl.appendChild(creer('span', '', 'la plus petite')); fl.appendChild(creer('span', '', 'la plus grande'));
+      board.appendChild(fl);
+      const rang = creer('div', 'rang');
+      st.rangs.forEach((k, j) => {
+        const b = creer('button', k >= 0 ? 'plein' : '', k >= 0 ? q.mesures[k] : '…'); b.type = 'button';
+        if (st.fini) { b.disabled = true; b.classList.add(q.mesures[k] === q.ordre[j] ? 'ok' : 'ko'); }
+        else if (k >= 0) b.onclick = () => viderCase(j);
+        else b.disabled = true;
+        rang.appendChild(b);
+      });
+      board.appendChild(rang);
+      if (st.fini && st.etat === 'revoir') board.appendChild(creer('div', 'bon-ordre', `Le bon ordre${NBSP}: ${q.ordre.join(' < ')}`));
+    }
+    function toucherMesure(k) {
+      const st = E.st[E.i];
+      if (st.fini || st.rangs.includes(k)) return;
+      const j = st.rangs.indexOf(-1);
+      if (j >= 0) st.rangs[j] = k;
+      afficherQuestion(false);
+    }
+    function viderCase(j) { const st = E.st[E.i]; if (st.fini) return; st.rangs[j] = -1; afficherQuestion(false); }
+
+    /* ---- répondre ---- */
+    function taper(c) {
+      if (!enEntrainement() || E.bilan) return;
+      const q = E.serie[E.i], st = E.st[E.i];
+      if (st.fini || genreDe(q) !== 'nombre') return;
+      if (st.faux) { st.saisie = ''; st.faux = false; }
+      const nb = st.saisie.length;
+      if (c === '⌫') st.saisie = st.saisie.slice(0, -1);
+      else if (c === ',') { if (!st.saisie.includes(',') && nb < MAX_SAISIE - 1) st.saisie += st.saisie ? ',' : '0,'; }
+      else if (/^[0-9]$/.test(c) && nb < MAX_SAISIE) st.saisie += c;
+      majChamp(); majBouton();
+    }
+    function valider() {
+      if (!enEntrainement() || E.bilan) return;
+      const q = E.serie[E.i], st = E.st[E.i], genre = genreDe(q);
+      if (st.fini) { suivante(); return; }
+      if (genre === 'nombre') {
+        if (lireSaisie(st.saisie) === null || st.faux) return;
+        if (estJuste(q, st.saisie)) { terminer(true); return; }
+        // 1re erreur : un 2e essai avec le tableau (pas pour « sans aide », pas pour le texte à trous)
+        if (st.essai === 1 && E.aide !== 'sans' && q.qType !== 9) { st.essai = 2; st.faux = true; afficherQuestion(false); return; }
+        terminer(false); return;
+      }
+      if (genre === 'associer' && !st.liens.includes(-1)) terminer(st.liens.every((v, k) => v === q.paires[k]));
+      if (genre === 'classer' && !st.rangs.includes(-1)) terminer(st.rangs.every((k, j) => q.mesures[k] === q.ordre[j]));
+    }
+    function terminer(ok) {
+      const st = E.st[E.i];
+      st.fini = true; st.faux = false; st.etat = etatFinal(st, ok);
+      afficherQuestion(true);
+      const b = document.getElementById('btnEntr');
+      if (!b.hidden && ecranTactile()) b.scrollIntoView({ block: 'nearest' });
+    }
+    function suivante() {
+      if (E.i < E.serie.length - 1) { E.i++; afficherQuestion(false); document.getElementById('diapoContainer').scrollIntoView({ block: 'start' }); }
+      else afficherBilan();
+    }
+    function ouvrirAide() {
+      const st = E.st[E.i];
+      if (!enEntrainement() || E.bilan || st.fini || E.aide !== 'demande') return;
+      st.aideVue = true;
+      afficherQuestion(false);
+    }
+    function toucheEntrainement(e) {
+      if (!document.getElementById('voileArret').hidden) { if (e.key === 'Escape') fermerArret(); return; }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const cible = e.target && e.target.tagName;
+      if (cible === 'INPUT' || cible === 'SELECT' || cible === 'TEXTAREA') return;
+      if (E.bilan) return;
+      if (/^[0-9]$/.test(e.key)) { taper(e.key); e.preventDefault(); }
+      else if (e.key === ',' || e.key === '.' || e.key === 'Decimal') { taper(','); e.preventDefault(); }
+      else if (e.key === 'Backspace') { taper('⌫'); e.preventDefault(); }
+      // Entrée : un bouton visible et actif garde son rôle ; sinon (bouton caché ou grisé), Entrée valide
+      else if (e.key === 'Enter' && !(cible === 'BUTTON' && e.target.offsetParent !== null && !e.target.disabled)) { valider(); e.preventDefault(); }
+    }
+
+    /* ---- le bilan ---- */
+    function afficherBilan() {
+      E.bilan = true;
+      const n = E.serie.length;
+      const compte = (x) => E.st.filter(s => s.etat === x).length;
+      const juste = compte('juste'), aide = compte('aide'), revoir = compte('revoir');
+      document.querySelector('.question-box').style.display = 'none';
+      document.getElementById('tBox').style.display = 'none';
+      document.getElementById('entrPied').style.display = 'none';
+      document.getElementById('btnAide').classList.add('cache');
+      document.getElementById('entrCompteur').textContent = `Série ${E.code} · terminée`;
+      const b = document.getElementById('entrBilan');
+      b.textContent = ''; b.hidden = false;
+      b.classList.toggle('longue', n > 10);
+      b.style.setProperty('--r', Math.ceil(n / 2));
+      b.appendChild(creer('h3', '', `${juste + aide} sur ${n}`));
+      b.appendChild(creer('p', 'detail', aide ? `${juste} du premier coup · ${aide} avec l'aide` : `${juste} du premier coup`));
+      const liste = creer('div', 'bilan-liste');
+      E.serie.forEach((q, k) => {
+        const ligne = creer('div');
+        ligne.appendChild(creer('b', '', String(k + 1)));
+        ligne.appendChild(creer('span', '', resumeDe(q)));
+        ligne.appendChild(creer('span', 'etat ' + CLASSES_ETATS[E.st[k].etat], NOMS_ETATS[E.st[k].etat]));
+        liste.appendChild(ligne);
+      });
+      b.appendChild(liste);
+      const btns = creer('div', 'bilan-btns');
+      if (revoir) {
+        const r = creer('button', 'p', `🔁 Refaire ${revoir > 1 ? `mes ${revoir} questions` : 'ma question'} à revoir`); r.type = 'button';
+        r.onclick = () => demarrerSerie(E.serie.filter((q, k) => E.st[k].etat === 'revoir'));
+        btns.appendChild(r);
+      }
+      const nv = creer('button', revoir ? '' : 'p', '🎲 Nouvelle série, mêmes réglages'); nv.type = 'button';
+      nv.onclick = () => { document.getElementById('inputSeed').value = ''; commencerEntrainement(); };
+      btns.appendChild(nv);
+      b.appendChild(btns);
+      majProgression();
+      document.getElementById('diapoContainer').scrollIntoView({ block: 'start' });
+    }
+
+    /* ---- ✕ : arrêter la série ---- */
+    function demanderArret() {
+      if (E.bilan) { arreter(); return; }
+      document.getElementById('voileArret').hidden = false;
+      document.getElementById('btnContinuer').focus();
+    }
+    function fermerArret() {
+      const v = document.getElementById('voileArret');
+      if (!v) return;
+      if (v.contains(document.activeElement)) document.activeElement.blur();
+      v.hidden = true;
+    }
+    function arreter() {
+      quitterEntrainement();
+      document.getElementById('diapoContainer').style.display = 'none';
+      window.scrollTo({ top: 0 });
+    }
 
     /* =========================================
        MOTEUR IMPRESSION PDF
@@ -1866,6 +2610,11 @@
       setTimeout(() => { window.print(); }, 300);
     }
 
+    // le menu s'ouvre sur le dernier mode choisi sur cet appareil, « Je m'entraîne » sinon
+    if (typeof window !== 'undefined' && typeof location !== 'undefined') {
+      choisirMode(lireModeRetenu() || 'entrainement', false);
+      window.addEventListener('resize', () => { clearTimeout(E.minuteur); E.minuteur = setTimeout(() => { if (enEntrainement() && !E.bilan) afficherQuestion(false); }, 150); });
+    }
     // un lien de partage ouvert : la série démarre une fois la page posée (polices comprises)
     if (typeof window !== 'undefined' && typeof location !== 'undefined' && location.search) {
       if (document.readyState === 'complete') ouvrirLien();
