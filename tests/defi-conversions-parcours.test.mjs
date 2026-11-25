@@ -825,3 +825,19 @@ test("lot police : Nunito, servie par le site, sur tous les appareils", () => {
   // changement de taille du cadre (sinon une boucle d'un cinquième de pixel).
   assert.match(html, /Math\.abs\(r\.width - cadreVu\.l\) < 1 && Math\.abs\(r\.height - cadreVu\.h\) < 1\) return;/, "le cadre n'est réajusté que pour un changement d'un pixel ou plus");
 });
+
+// ------------------------------------- lot « la multiplication » (25/11/2026)
+// Sous la relation du glisse-unité, la ligne « donc 3 L = 3 × 10 dL » (la
+// valeur est recalculée dans conversions-generateurs.test.mjs).
+test("lot la multiplication : la ligne « donc » sous la relation de l'outil", () => {
+  const css = fs.readFileSync(new URL("../outils/conversions/defi_conversions.css", import.meta.url), "utf8");
+  const html = fs.readFileSync(new URL("../outils/conversions/defi_conversions.html", import.meta.url), "utf8");
+  const aides = fs.readFileSync(new URL("../outils/conversions/defi_conversions_aides.js", import.meta.url), "utf8");
+  assert.match(aides, /const donc = gen\(\)\.doncOutil\(question\);\s*if \(donc\) zone\.appendChild\(el\("div", "rel-donc", carte\(\)\.typo\(donc\)\)\);/, "l'outil écrit la ligne sous la relation");
+  assert.ok(aides.indexOf('el("div", "rel petite", question.relation)') < aides.indexOf('"rel-donc"'), "la relation d'abord, la ligne dessous");
+  assert.match(css, /\.rel-donc \{[^}]*font-weight: 800;[^}]*\}/);
+  assert.match(css, /@media \(max-width: 899px\) \{\s*\.zone:has\(\.rel-donc\) \{ padding-top: 2\.125rem; \}/, "au téléphone, la relation monte à côté de l'étiquette");
+  // Le cadre se réajuste à l'image suivante (« ResizeObserver loop » au grand écran).
+  assert.match(html, /requestAnimationFrame\(\(\) => ajusterZone\(cadre\.querySelector\("\.zone"\)\)\);/);
+  ["conversions_generateurs.js", "defi_conversions_aides.js", "defi_conversions.css"].forEach(f => assert.ok(html.includes(`${f}?v=20261125-mul`), `${f} rechargé`));
+});
