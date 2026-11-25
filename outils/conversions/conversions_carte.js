@@ -415,19 +415,57 @@
     P1: {
       pret: true,
       aide: {outil: "glisse-unite", image: "prefixe"},
+      // Lot « cohérence » (25/11) : une étape de faits à savoir par cœur
+      // montre TOUS ses faits. Un temps par relation, avec son objet (la
+      // règle qui s'ouvre, la balance, le verre doseur), rangés par
+      // grandeur ; un dernier temps pour l'autre sens (« 100 cm = 1 m »),
+      // que « Je valide » demande une fois sur trois.
       apprends: [
-        {etiquette: "Je vois", question: {avant: "1 m =", reponse: "100", apres: "cm"},
+        {etiquette: "Les longueurs", question: {avant: "1 m =", reponse: "100", apres: "cm"},
           consigne: "Touche le mètre : il s'ouvre en 100 centimètres.",
           aide: {type: "barres", n: 1, grande: "m", petite: "cm", facteur: 100}, apres: ["1 m = 100 cm"],
           legende: "Une règle de 1 m a 100 petits traits de 1 cm."},
-        {etiquette: "Je vois", question: {avant: "1 L =", reponse: "100", apres: "cL"},
+        {etiquette: "Les longueurs", question: {avant: "1 m =", reponse: "10", apres: "dm"},
+          consigne: "Touche le mètre : il s'ouvre en 10 décimètres.",
+          aide: {type: "barres", n: 1, grande: "m", petite: "dm", facteur: 10}, apres: ["1 m = 10 dm"],
+          legende: "1 dm, c'est la largeur de ma main."},
+        {etiquette: "Les longueurs", question: {avant: "1 dm =", reponse: "10", apres: "cm"},
+          consigne: "Touche le décimètre : il s'ouvre en 10 centimètres.",
+          aide: {type: "barres", n: 1, grande: "dm", petite: "cm", facteur: 10}, apres: ["1 dm = 10 cm"],
+          legende: "1 cm, c'est la largeur de mon petit doigt."},
+        {etiquette: "Les longueurs", question: {avant: "1 cm =", reponse: "10", apres: "mm"},
+          consigne: "Touche le centimètre : il s'ouvre en 10 millimètres.",
+          aide: {type: "barres", n: 1, grande: "cm", petite: "mm", facteur: 10}, apres: ["1 cm = 10 mm"],
+          legende: "1 mm : la plus petite graduation de ma règle."},
+        {etiquette: "Les longueurs", question: {avant: "1 m =", reponse: "1 000", apres: "mm"},
+          consigne: "Touche le mètre : il s'ouvre en 1 000 millimètres.",
+          aide: {type: "barres", n: 1, grande: "m", petite: "mm", facteur: 1000}, apres: ["1 m = 1 000 mm"],
+          legende: "100 centimètres de 10 mm chacun."},
+        {etiquette: "Les longueurs", question: {avant: "1 km =", reponse: "1 000", apres: "m"},
+          consigne: "Touche le kilomètre : il s'ouvre en 1 000 mètres.",
+          aide: {type: "barres", n: 1, grande: "km", petite: "m", facteur: 1000}, apres: ["1 km = 1 000 m"],
+          legende: "1 km : 10 terrains de foot bout à bout."},
+        {etiquette: "Les masses", question: {avant: "1 kg =", reponse: "1 000", apres: "g"},
+          consigne: "Touche le plateau vide : pose des tablettes de 100 g jusqu'à l'équilibre.",
+          aide: {type: "balance", nombre: 10}, apres: ["10 tablettes de 100 g", "= 1 000 g"],
+          legende: "kilo veut dire mille : 1 kilogramme = 1 000 grammes."},
+        {etiquette: "Les masses", question: {avant: "1 t =", reponse: "1 000", apres: "kg"},
+          consigne: "Touche la tonne : elle s'ouvre en 1 000 kilogrammes.",
+          aide: {type: "barres", n: 1, grande: "t", petite: "kg", facteur: 1000}, apres: ["1 t = 1 000 kg"],
+          legende: "Une petite voiture pèse environ 1 t."},
+        {etiquette: "Les contenances", question: {avant: "1 L =", reponse: "100", apres: "cL"},
           consigne: "Touche le verre doseur : ses traits comptent les centilitres.",
           aide: {type: "verre", grande: "L", petite: "cL", facteur: 100}, apres: ["1 L = 100 cL"],
           legende: "L'eau arrive au trait du haut : 1 L, c'est 100 cL."},
-        {etiquette: "Je vois", question: {avant: "1 kg =", reponse: "1 000", apres: "g"},
-          consigne: "Touche le plateau vide : pose des tablettes de 100 g jusqu'à l'équilibre.",
-          aide: {type: "balance", nombre: 10}, apres: ["10 tablettes de 100 g", "= 1 000 g"],
-          legende: "kilo veut dire mille : 1 kilogramme = 1 000 grammes."}
+        {etiquette: "Les contenances", question: {avant: "1 L =", reponse: "10", apres: "dL"},
+          consigne: "Touche le verre doseur : ses traits comptent les décilitres.",
+          aide: {type: "verre", grande: "L", petite: "dL", facteur: 10}, apres: ["1 L = 10 dL"],
+          legende: "1 L, c'est 10 dL."},
+        {etiquette: "Dans l'autre sens", question: {avant: "100 cm =", reponse: "1", apres: "m"},
+          relation: ["1 m = 100 cm", "donc 100 cm = 1 m"],
+          consigne: "Touche les 100 centimètres : ils se regroupent en 1 mètre.",
+          aide: {type: "barres", n: 1, grande: "m", petite: "cm", facteur: 100, regrouper: true}, apres: ["100 cm = 1 m"],
+          legende: "Une relation se lit dans les deux sens."}
       ],
       // Lot A2 ter : le tableau des relations dit tout (choix de Gwenaël).
       retenir: "",
@@ -496,7 +534,12 @@
         {etiquette: "Je représente", question: {avant: "1 h 10 min =", reponse: "70", apres: "min"},
           relation: ["1 h = 60 min", "donc 1 h 10 min = 60 min + 10 min"],
           aide: {type: "heure", heures: 1, parts: 1, plus: 10},
-          apres: ["60 min + 10 min = 70 min"]}
+          apres: ["60 min + 10 min = 70 min"]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "130 min =", reponse: "2 h 10", apres: "min"},
+          relation: ["1 h = 60 min", "130 min = 60 min + 60 min + 10 min"],
+          aide: {type: "heure", heures: 2, parts: 1, plus: 10},
+          apres: ["2 paquets de 60 min, et 10 min", "= 2 h 10 min"]}
       ],
       retenir: "1 h = 60 min, pas 100 min.\n1 h 10 min = 60 min + 10 min = 70 min.",
       cahier: "Je recopie cela dans mon cahier.",
@@ -564,7 +607,12 @@
           consigne: "Sur une étiquette, la virgule sépare\nles euros et les centimes.",
           aide: {type: "etiquette", euros: 2, centimes: 50},
           apres: ["2,50 € = 2 € 50 c"],
-          legende: "Et 0,85 €, c'est 0 € 85 c : 85 c."}
+          legende: "Et 0,85 €, c'est 0 € 85 c : 85 c."},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "400 c =", reponse: "4", apres: "€"},
+          relation: ["1 € = 100 c", "donc 400 c = 4 × 100 c"],
+          aide: {type: "pieces", pieces: [100, 100, 100, 100]},
+          apres: ["100 c + 100 c + 100 c + 100 c", "= 4 €"]}
       ],
       retenir: "1 € = 100 c : 3 € 50 c = 350 c.\nSur une étiquette, la virgule sépare les euros et les centimes : 2,50 € = 2 € 50 c.",
       cahier: "Je recopie cela dans mon cahier.",
@@ -805,7 +853,12 @@
         {etiquette: "J'écris", question: {avant: "10 cm × 10 cm =", reponse: "100", apres: "cm²"},
           consigne: "J'écris les unités dans le calcul.",
           aide: {type: "phrase", lignes: ["1 dm = 10 cm", "1 dm² = 1 dm × 1 dm"]},
-          apres: ["1 dm² = 10 cm × 10 cm", "= 100 cm²"]}
+          apres: ["1 dm² = 10 cm × 10 cm", "= 100 cm²"]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "100 cm² =", reponse: "1", apres: "dm²"},
+          relation: ["1 dm² = 100 cm²", "donc 100 cm² = 1 dm²"],
+          aide: {type: "carre-a1", cote: "10 cm", petite: "cm²", grande: "dm²"},
+          apres: ["100 carreaux de 1 cm²", "= 1 dm²"]}
       ],
       retenir: "Un carré de 1 dm de côté se découpe en 10 rangées de 10 carreaux de 1 cm² : 1 dm² = 10 cm × 10 cm = 100 cm².\nDe même, 1 m² = 10 dm × 10 dm = 100 dm².",
       cahier: "Je recopie cela dans mon cahier.",
@@ -951,7 +1004,7 @@
           apres: ["4 colonnes de 0,1 m²", "= 0,4 m²"],
           legende: "Pas 4 m² : 100 dm² font 1 m²."}
       ],
-      retenir: "Vers une unité plus grande, je regroupe : 100 cm² font 1 dm², 100 dm² font 1 m². 1 cm² est le centième de 1 dm².\nEn dm², le nombre est 100 fois plus petit : 2 450 cm² = (2 450 ÷ 100) dm² = 24,5 dm².",
+      retenir: "Vers une unité plus grande, je regroupe : 100 cm² font 1 dm², 100 dm² font 1 m². 1 cm² est le centième de 1 dm². Un carré de 1 km de côté a une aire de 1 km².\nEn dm², le nombre est 100 fois plus petit : 2 450 cm² = (2 450 ÷ 100) dm² = 24,5 dm².",
       titreRelations: "Des exemples à connaître",
       cahier: "Je recopie cela dans mon cahier.",
       relations: ["370 cm² = 3,7 dm²", "2 450 cm² = 24,5 dm²", "40 dm² = 0,4 m²", "3,7 m² = 370 dm²", "1 cm² = 0,01 dm²"],
@@ -1336,7 +1389,16 @@
         {etiquette: "Je vérifie", question: {avant: "1 m, c'est", reponse: "10", apres: "fois 1 dm"},
           consigne: "Touche le mètre : il s'ouvre en décimètres.",
           aide: {type: "barres", n: 1, grande: "m", petite: "dm", facteur: 10}, apres: ["1 m = 10 dm"],
-          legende: "Pas 100 fois : déci veut dire un dixième.\n1 dm est le dixième de 1 m."}
+          legende: "Pas 100 fois : déci veut dire un dixième.\n1 dm est le dixième de 1 m."},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Je vois", question: {avant: "1 hL =", reponse: "100", apres: "L"},
+          consigne: "Les préfixes veulent dire la même chose pour toutes les unités.",
+          aide: {type: "numeration", sens: "plus", base: "L", titre: "Les contenances"},
+          legende: "kilo : mille ; hecto : cent ; déca : dix."},
+        {etiquette: "Je vois", question: {avant: "1 m =", reponse: "100", apres: "cm"},
+          consigne: "Le mètre se partage comme l'unité.",
+          aide: {type: "numeration", sens: "moins", base: "m", titre: "Les longueurs"},
+          legende: "déci : un dixième ; centi : un centième ; milli : un millième."}
       ],
       retenir: "kilo, comme un millier : 1 km = 1 000 m.\ncenti, comme un centième : 1 cm est le centième de 1 m, et 1 m = 100 cm.",
       titreRelations: "Les six préfixes",
@@ -1362,7 +1424,20 @@
         {etiquette: "Je vois", question: {avant: "1 kg =", reponse: "10", apres: "hg"},
           consigne: "Touche le plateau vide : pose des tablettes de 1 hg jusqu'à l'équilibre.",
           aide: {type: "balance", nombre: 10, hg: true}, apres: ["10 tablettes de 1 hg", "= 1 kg"],
-          legende: "hecto veut dire cent : 1 hg = 100 g."}
+          legende: "hecto veut dire cent : 1 hg = 100 g."},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Les longueurs", question: {avant: "1 dam =", reponse: "10", apres: "m"},
+          consigne: "Sur l'échelle des longueurs, deux voisines : 10 fois.",
+          aide: {type: "echelle", grandeur: "longueur", marque: ["dam", "m"]},
+          apres: ["1 dam = 10 m", "1 m = 0,1 dam"]},
+        {etiquette: "Les masses", question: {avant: "1 g =", reponse: "10", apres: "dg"},
+          consigne: "Sur l'échelle des masses, c'est pareil.",
+          aide: {type: "echelle", grandeur: "masse", marque: ["g", "dg"]},
+          apres: ["1 g = 10 dg", "1 dg = 0,1 g"]},
+        {etiquette: "Les contenances", question: {avant: "1 cL =", reponse: "10", apres: "mL"},
+          consigne: "Sur l'échelle des contenances, c'est pareil.",
+          aide: {type: "echelle", grandeur: "contenance", marque: ["cL", "mL"]},
+          apres: ["1 cL = 10 mL", "1 mL = 0,1 cL"]}
       ],
       retenir: "Deux unités voisines : la plus grande vaut 10 fois la plus petite.\n1 dm = 10 cm, et 1 cm est un dixième de dm : 1 cm = 0,1 dm.",
       cahier: "Je recopie cela dans mon cahier.",
@@ -1388,7 +1463,20 @@
         {etiquette: "Je vérifie", question: {enonce: "0,33 t ou 565 kg : quelle mesure est la plus grande ?", avant: "0,33 t =", reponse: "330", apres: "kg"},
           consigne: "Je les écris dans la même unité.",
           aide: {type: "glisse-unite", grandeur: "masse", nombre: "0,33", de: "t", vers: "kg", pale: false, colonnes: ["t", "", "", "kg", "hg", "dag", "g"]},
-          apres: ["0,33 t = 330 kg : moins que 565 kg.", "565 kg est la plus grande."]}
+          apres: ["0,33 t = 330 kg : moins que 565 kg.", "565 kg est la plus grande."]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "1 000 mL =", reponse: "1", apres: "L"},
+          relation: ["1 L = 1 000 mL", "donc 1 000 mL = 1 L"],
+          aide: {type: "echelle", grandeur: "contenance", marque: ["L", "mL"], note: "De L à mL : 3 unités plus loin, 10 × 10 × 10."},
+          apres: ["1 000 mL = 1 L"]},
+        {etiquette: "Les longueurs", question: {avant: "1 km =", reponse: "1 000", apres: "m"},
+          consigne: "De km à m, je compte les unités.",
+          aide: {type: "echelle", grandeur: "longueur", marque: ["km", "m"], note: "De km à m : 3 unités plus loin, 10 × 10 × 10."},
+          apres: ["1 km = 1 000 m", "1 m = 1 000 mm"]},
+        {etiquette: "Les masses", question: {avant: "1 kg =", reponse: "1 000", apres: "g"},
+          consigne: "De kg à g, je compte les unités.",
+          aide: {type: "echelle", grandeur: "masse", marque: ["kg", "g"], note: "De kg à g : 3 unités plus loin, 10 × 10 × 10."},
+          apres: ["1 kg = 1 000 g", "1 g = 1 000 mg"]}
       ],
       retenir: "Du mm au km, du mg au kg, du mL au hL : d'une unité à la suivante, c'est toujours 10 fois.\n1 hm = 10 dam = 100 m ; 1 t = 1 000 kg.",
       cahier: "Je recopie cela dans mon cahier.",
@@ -1509,7 +1597,12 @@
         {etiquette: "Je vérifie", question: {avant: "3⁄4 m =", reponse: "75", apres: "cm"},
           relation: ["1⁄4 m = 100 cm ÷ 4 = 25 cm", "donc 3⁄4 m = 3 × 1⁄4 m"],
           aide: {type: "droite2", haut: "m", bas: "cm", parts: 4, valeur: "100", cherche: 3, tout: 1},
-          apres: ["3 × 25 cm", "= 75 cm"]}
+          apres: ["3 × 25 cm", "= 75 cm"]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "250 mL =", reponse: "1⁄4", apres: "L"},
+          relation: ["1 L = 1 000 mL", "250 mL, c'est 1 000 mL ÷ 4"],
+          aide: {type: "droite2", haut: "L", bas: "mL", parts: 4, valeur: "1000", cherche: 1, tout: 1},
+          apres: ["1 000 mL ÷ 4 = 250 mL", "donc 250 mL = 1⁄4 L"]}
       ],
       retenir: "Je partage l'unité : 1 L = 100 cL, donc 1⁄4 L = 100 cL ÷ 4 = 25 cL.\n3⁄4 L, c'est 3 quarts : 3 × 25 cL = 75 cL.",
       titreRelations: "Des exemples à connaître",
@@ -1710,7 +1803,12 @@
         {etiquette: "Je vérifie", question: {avant: "90 km/h =", reponse: "25", apres: "m/s"},
           relation: ["Plus vite : 1 m/s = 3,6 km/h", "De km/h à m/s : ÷ 3,6"],
           aide: {type: "etapes-v", s2: 50, depuis: 0, vers: 2},
-          apres: ["90 ÷ 3,6", "= 25 m/s"]}
+          apres: ["90 ÷ 3,6", "= 25 m/s"]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "En 1 min", question: {avant: "72 km/h =", reponse: "1 200", apres: "m/min"},
+          relation: ["72 km/h : 72 000 m en 1 h", "En 1 min : 60 fois moins"],
+          aide: {type: "etapes-v", s2: 40, depuis: 0, vers: 1},
+          apres: ["72 000 m ÷ 60", "= 1 200 m en 1 min"]}
       ],
       retenir: "72 km/h : 72 000 m en 1 h, 1 200 m en 1 min, 20 m en 1 s.\nDonc 72 km/h = 20 m/s.\nPlus vite : de km/h à m/s, je divise par 3,6 ; de m/s à km/h, je multiplie par 3,6.",
       titreRelations: "Des exemples à connaître",
@@ -1745,7 +1843,12 @@
         {etiquette: "Je vérifie", question: {enonce: "Il reste 1,5 Go libres sur un téléphone. Une chanson fait 4 Mo.", avant: "1,5 Go =", reponse: "1 500", apres: "Mo"},
           consigne: "J'écris tout en Mo.",
           aide: {type: "glisse-unite", grandeur: "octet", nombre: "1,5", de: "Go", vers: "Mo", pale: false, colonnes: ["Go", "", "", "Mo"]},
-          apres: ["1 500 Mo ÷ 4 Mo = 375", "= 375 chansons au plus"]}
+          apres: ["1 500 Mo ÷ 4 Mo = 375", "= 375 chansons au plus"]},
+        // Lot « cohérence » (25/11) : ce que « Je valide » demande et que la leçon ne montrait pas.
+        {etiquette: "Dans l'autre sens", question: {avant: "1 000 Mo =", reponse: "1", apres: "Go"},
+          relation: ["1 Go = 1 000 Mo", "donc 1 000 Mo = 1 Go"],
+          aide: {type: "glisse-unite", grandeur: "octet", nombre: "1000", de: "Mo", vers: "Go", pale: false, colonnes: ["Go", "", "", "Mo"]},
+          apres: ["Vers l'unité plus grande,", "le nombre est 1 000 fois plus petit."]}
       ],
       retenir: "giga : un milliard ; méga : un million ; kilo : mille.\nmilli : un millième ; micro : un millionième ; nano : un milliardième.\nD'une unité à la suivante, c'est 1 000 fois : 1 Go = 1 000 Mo ; 1 µm = 1 000 nm.",
       titreRelations: "Les relations à connaître",

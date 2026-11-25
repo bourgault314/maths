@@ -187,6 +187,13 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 .zone.ko { border: .125rem solid #f0b8b8; background: #fffafa; }
 /* « Je prévois » (lot 3b-2) : turquoise de maths&go. */
 .zone.prevois { border: .125rem solid #8fd8d5; background: #f2fbfa; }
+/* Lot « cohérence » : « Un exemple », la question déjà faite (le vert des bonnes réponses). */
+.zone.exemple { border: .125rem solid #a9dcc0; background: #f4fbf7; }
+.etiq.exemple { background: #dff3e7; color: #147447; }
+.verd.exemple { background: var(--green-soft); color: var(--green); border: .125rem solid #9fd6b3; text-align: center; }
+.zone.panneau.methode .verd.exemple { display: grid; gap: .125rem; font-size: 1.0625rem; line-height: 1.3; color: var(--ink); background: #fff; }
+.zone.panneau.methode .verd.exemple > div:last-child { color: var(--green); }
+.zone.panneau.methode .verd.exemple .egal { white-space: nowrap; }
 .etiq.prevois { background: #d8f3f1; color: #087a71; }
 .verd.ok { background: var(--green-soft); color: var(--green); border: .125rem solid #9fd6b3; text-align: center; }
 .zone.prevois .verd { align-self: center; padding: .25rem 1rem; }

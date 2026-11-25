@@ -493,6 +493,7 @@ async function cliquerTexte(page, texte, exact = false) {
 // Répondre à la question à l'écran, juste ou faux (`_q` : plus utilisé, la
 // page donne la question).
 async function repondre(page, _q, juste = true) {
+  await passerExemple(page);
   const q = await page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question());
   if (!q) throw new Error("pas de question à l'écran");
   if (q.forme === "associer") {
@@ -552,7 +553,24 @@ async function repondreSens(page, sens) {
   await attendre(page, 50);
 }
 // « Je ne sais pas » (lot 3a).
+// Lot « cohérence » (25/11) : « Un exemple », une question déjà faite avant
+// une sorte que la leçon n'a pas montrée. Photographié (`carnet`), puis passé
+// par « À toi → ».
+async function passerExemple(page, carnet = null, reference = null) {
+  for (let k = 0; k < 3; k += 1) {
+    const q = await page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question());
+    if (!q || !q.exemple) return;
+    // (La correction se joue : le glisse-unité glisse, le dessin se fait.)
+    await attendre(page, 3000);
+    const defauts = [];
+    if ((await page.locator("#cadre .action").textContent()).trim() !== "À toi →") defauts.push("un exemple sans « À toi → »");
+    if (carnet) await carnet.photo(page, "À toi · un exemple", defauts.concat(reference ? ecarts(reference, await places(page)) : []));
+    await appuyer(page, page.locator("#cadre .action"));
+    await attendre(page, 50);
+  }
+}
 async function jeNeSaisPas(page) {
+  await passerExemple(page);
   await appuyer(page, page.locator("#cadre .jnsp"));
   await attendre(page, 50);
 }
@@ -784,6 +802,7 @@ async function jouerEtape(navigateur, base, taille, code, carnet) {
   const vus = new Set();
   let bouge = [];
   for (let i = 0; i < 25 && !(await page.locator(".retenir, .cahier").count()); i += 1) {
+    await passerExemple(page, carnet, reference);
     const phase = await page.evaluate(() => {
       const z = document.querySelector(".zone");
       return z ? (z.classList.contains("outil") ? "outil" : z.classList.contains("image") ? "image" : "seul") : null;

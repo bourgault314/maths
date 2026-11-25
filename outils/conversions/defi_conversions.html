@@ -16,7 +16,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261123-b52">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261125-coh2">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -39,10 +39,10 @@
     <div class="voile" id="voile" hidden></div>
   </div>
 
-  <script src="./conversions_carte.js?v=20261123-b52"></script>
-  <script src="./conversions_generateurs.js?v=20261123-b52"></script>
+  <script src="./conversions_carte.js?v=20261125-coh2"></script>
+  <script src="./conversions_generateurs.js?v=20261125-coh2"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261123-b52"></script>
+  <script src="./defi_conversions_aides.js?v=20261125-coh2"></script>
   <script>
   (function () {
     "use strict";
@@ -986,6 +986,10 @@
         else l.append(nouvelleCase(0), el("span", "", m.apres));
         qEl.appendChild(l);
         if (m.cases) couperSiTropLarge(qEl, l, avantEl);
+        // (Lot « cohérence », défaut ancien vu sur un exemple : sous un énoncé,
+        // « Mise au four : … h » sortait de la question au téléphone ; la
+        // ligne se fait un peu plus petite pour tenir.)
+        else serrerLigne(qEl, l);
       } else if (m.phrase) {
         deuxLignes(qEl.appendChild(el("div", "phrase-t", m.phrase)));
         pieces();
@@ -1029,13 +1033,15 @@
     // mêlées et sans les questions déjà vues ne se recalculent plus de
     // l'extérieur). Rien qu'on ne puisse déjà trouver avec les générateurs.
     let ici = null;
+    // (Lot « cohérence » : la question à l'écran est un exemple déjà fait.)
+    let iciExemple = false;
     // Les cartes cochées de « Coche tout ce qui est égal à… » (lot B2-1b),
     // pour les montrer dans la correction.
     const cochesDe = new WeakMap();
     const sensPourRobot = x => { const f = G.fauxDeSens(x); return f ? Object.assign({grandit: G.sensDe(x).grandit}, f) : null; };
     window.MATHSGO_DEFI_CONVERSIONS_ECRAN = Object.freeze({
       question: () => (ici ? {forme: ici.forme, reponse: ici.reponse, choix: ici.choix || null, bon: ici.bon, bonnes: ici.bonnes || null,
-        ordre: ici.ordre || null, bons: ici.bons || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici), resume: ici.resume} : null)
+        ordre: ici.ordre || null, bons: ici.bons || null, code: ici.code, cle: cleDe(ici), sens: sensPourRobot(ici), resume: ici.resume, exemple: iciExemple} : null)
     });
 
     // Le nom d'un objet à relier (lot 3b-2) : au téléphone peu haut, son
@@ -1047,13 +1053,16 @@
       t.append(el("span", "t-long", o.texte), el("span", "t-court", o.court));
       return t;
     }
-    function interroger(ui, question, {avant, apres}) {
+    // `exemple` (lot « cohérence ») : la question s'affiche déjà faite, la
+    // bonne réponse en vert (voir montrerExemple).
+    function interroger(ui, question, {avant, apres, exemple = false}) {
       const saisie = {cases: ["", "", ""], focus: 0, fige: false};
       const nbCases = question.forme === "deux-cases" ? (Array.isArray(question.reponse) ? question.reponse.length : 2) : 1;
       const exposantQ = question.forme === "exposant";
       const m = question.morceaux;
       const casesEl = poserQuestion(ui.q, question, i => { if (!saisie.fige) { saisie.focus = i; peindre(); } });
       ici = question;
+      iciExemple = exemple;
       voir(question);
       function peindre() {
         casesEl.forEach((c, i) => {
@@ -1261,7 +1270,7 @@
         // (Correctif B3-3 : trois durées côte à côte, « 52 min 24 s », sortaient
         // du cadre au téléphone ; une durée ne se coupe pas : la réponse se fait
         // un peu plus petite dans son bouton, jamais sous 14 px.)
-        if (["D3", "Q3", "Q4", "D4", "D5", "Q6"].includes(question.code) && !choixEl.classList.contains("mots")) {
+        if (["D3", "Q3", "Q4", "D4", "D5", "Q6", "Q9"].includes(question.code) && !choixEl.classList.contains("mots")) {
           choixEl.classList.add("ajuste");
           choixEl.querySelectorAll("button").forEach(b => {
             const taille = parseFloat(getComputedStyle(b).fontSize);
@@ -1377,6 +1386,21 @@
         }});
       }
       peindre();
+      // Un exemple : la bonne réponse est posée (les objets reliés, les
+      // mesures rangées, les cartes cochées, le choix touché, le nombre
+      // écrit), puis vérifiée comme une réponse d'élève.
+      if (exemple) {
+        if (ui.jnsp) ui.jnsp.style.visibility = "hidden";
+        if (question.forme === "associer") { relie.lien = question.bonnes.slice(); peindreGeste(); repondre(null); }
+        else if (question.forme === "ranger") { question.ordre.forEach(k => range.push(k)); peindreGeste(); repondre(null); }
+        else if (question.forme === "plusieurs") { question.bons.forEach(k => coche.push(k)); peindreGeste(); repondre(null); }
+        else if (question.choix) repondre(question.bon);
+        else {
+          [].concat(question.reponse).forEach((r, k) => { saisie.cases[k] = String(r); });
+          peindre();
+          repondre(null);
+        }
+      }
     }
 
     let clavier = null;
@@ -1750,6 +1774,119 @@
     }
 
     // ---------------------------------------------------------------- À toi
+    // « Un exemple » (lot « cohérence », 25/11 ; l'écran du lot C3 de Défi
+    // calcul) : une question de la même sorte, déjà faite. La réponse en
+    // vert dans la question, la correction dans la zone (le glisse-unité
+    // glisse tout seul, le dessin se fait), puis « À toi → ». Rien ne
+    // compte, rien n'est enregistré.
+    function remplirExempleZone(zone, qn, {animer = false} = {}) {
+      remplirErreurZone(zone, qn, {animer, phrase: true});
+      zone.classList.remove("ko");
+      zone.classList.add("exemple");
+      const e = zone.querySelector(":scope > .etiq");
+      if (e) { e.className = "etiq exemple"; e.textContent = "Un exemple"; }
+      // Des réponses au choix, des cartes : la méthode n'a pas la place du
+      // pavé ; les lignes de la correction que la zone ne dit pas s'écrivent
+      // sous la réponse (« Lequel mesure le moins ? » : les deux repères).
+      if (qn.choix || qn.forme === "associer" || qn.forme === "ranger" || qn.forme === "plusieurs") {
+        const dit = zone.textContent.replace(/\s/g, "");
+        const manquent = (qn.correction || []).filter(l => l && !dit.includes(String(l).replace(/\s/g, ""))).slice(0, 2);
+        // (Seulement sous la carte d'un repère : ailleurs, la correction dit déjà sa méthode.)
+        if (!zone.querySelector(".carte-rep")) manquent.length = 0;
+        // (La carte dit déjà le bon repère : une seule ligne, l'autre repère.)
+        if (manquent.length) zone.appendChild(texteLignes("rel petite libre", manquent[manquent.length - 1]));
+      }
+    }
+    // (Correctif du 25/11, retour de Code : pas de pastille pendant un
+    // exemple. « un exemple » était plus large que « à toi · 7 » et passait
+    // sur la fin du nom de l'étape dans 16 étapes au petit iPhone ;
+    // l'étiquette « Un exemple » de la zone le dit déjà.)
+    function montrerExemple(ui, qn, ensuite, chip = "") {
+      ui.chip.textContent = chip;
+      interroger(ui, qn, {exemple: true, avant(zone) { remplirZone(zone, "vide", null); }, apres: {fait() {
+        remplirExempleZone(ui.zone, qn, {animer: true});
+        ajusterZone(ui.zone);
+        // Le pavé ne sert pas : à sa place, la méthode (les lignes de la
+        // correction que la zone ne dit pas déjà). Des réponses au choix,
+        // des cartes à ranger, à relier ou à cocher restent en place, la
+        // bonne réponse en vert.
+        if (ui.bas.querySelector(".pave4")) {
+          const dit = ui.zone.textContent.replace(/\s/g, "");
+          const lignes = (qn.correction || []).filter(l => l && !dit.includes(String(l).replace(/\s/g, ""))).slice(0, 3);
+          ui.bas.textContent = "";
+          const panneau = el("div", "zone exemple panneau pourquoi methode");
+          const boite = el("div", "verd exemple");
+          // (Une suite d'égalités : le dernier « = résultat » ne se coupe pas,
+          // « … = 5 t 952 kg » restait à cheval sur deux lignes.)
+          (lignes.length ? lignes : ["Regarde bien cet exemple."]).forEach(l => {
+            const d = el("div");
+            const k = String(l).lastIndexOf(" = ");
+            if (k > 0 && String(l).indexOf(" = ") < k) d.append(document.createTextNode(`${String(l).slice(0, k)} `), el("span", "egal", String(l).slice(k + 1)));
+            else d.textContent = l;
+            boite.appendChild(d);
+          });
+          panneau.appendChild(boite);
+          ui.bas.appendChild(panneau);
+          ajusterZone(panneau);
+        }
+        ui.action.style.visibility = "";
+        ui.action.disabled = false;
+        ui.action.textContent = "À toi →";
+        ui.action.onclick = ensuite;
+        if (ui.jnsp) ui.jnsp.parentElement.classList.remove("jnsp-seul");
+      }}});
+    }
+    // Les hauteurs d'« À toi » (la question la plus haute, l'aide la plus
+    // haute de la série, exemples compris) : rien ne bouge d'un écran à l'autre.
+    function exemplesAToi(code, serie) {
+      const exemples = {};
+      const prises = serie.flatMap(q => [q.cle, q.cleBase || q.cle]).concat([...etat.vues]);
+      G.sortes(code).filter(so => so.montree === false && serie.some(q => G.sorte(q).id === so.id)).forEach(so => {
+        const suit = serie.find(q => G.sorte(q).id === so.id);
+        const x = G.exemple(code, so.id, {graine: graine(), exclure: prises, apres: suit ? suit.cleBase || suit.cle : null});
+        if (x) { exemples[so.id] = x; prises.push(x.cle, x.cleBase || x.cle); }
+      });
+      return exemples;
+    }
+    function mesurerAToi(ui, code, serie, exemplesListe) {
+      const hauteurQ = hauteurSerie(ui.q, code, serie.concat(exemplesListe));
+      cadre.style.setProperty("--q-h", `${hauteurQ}px`);
+      // La hauteur de l'aide la plus haute de la série (l'outil, l'image,
+      // une erreur, un exemple), pour que rien ne bouge ensuite.
+      const hauteurZone = mesurerZone(ui.zone, serie.flatMap(qn => [
+        z => { remplirZone(z, "outil", ["outil", "L'outil"]); AIDES.outil(z, qn); },
+        z => { remplirZone(z, "image", ["image", "L'image"]); AIDES.image(z, qn); },
+        z => remplirErreurZone(z, qn, {phrase: true}),
+        // (Lot B3-2c : « Je prévois », répondu, compte aussi dans la
+        // hauteur de la zone. Sous une situation de A2, dont les aides
+        // sont basses, il tombait à 79 % au petit iPhone, 69 % au petit
+        // Android avec une police large.)
+        z => (PREVOIS_MESURE.has(code) ? prevoisMesure(z, qn) : null)
+      ]).concat(z => { remplirZone(z, "vide", ["sans", "Sans aide"]); z.append(cEstAToi(), suiteRonds(4, 5, true, true)); })
+        .concat(exemplesListe.map(x => z => remplirExempleZone(z, x))));
+      cadre.style.setProperty("--z-h", `${hauteurZone}px`);
+      return {hauteurQ, hauteurZone};
+    }
+    // Mode prof : les exemples d'une étape, l'un après l'autre, dans les
+    // mêmes hauteurs que « À toi ».
+    function voirExemples() {
+      const code = etat.profEtape;
+      const etape = CARTE.etape(code);
+      const serie = serieSure(code, {usage: "entraine", graine: graine()});
+      const liste = Object.values(exemplesAToi(code, serie));
+      let k = 0;
+      let h = null;
+      const suivant = () => {
+        if (k >= liste.length) { accueilProf(); return; }
+        const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: "", chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
+          retour: accueilProf, hauteurPx: h ? h.hauteurQ : 0, hauteurZone: h ? h.hauteurZone : 0, jnsp: true});
+        if (!h) h = mesurerAToi(ui, code, serie, liste);
+        k += 1;
+        montrerExemple(ui, liste[k - 1], suivant, `${k} / ${liste.length}`);
+      };
+      suivant();
+    }
+
     function aToi(code, {retour, fin} = {}) {
       const etape = CARTE.etape(code);
       // Lot R1-refonte (Gwenaël, 18/11 : « Précédent change la question ») :
@@ -1760,6 +1897,12 @@
       const garde = !PROF && etat.aToiEnCours && etat.aToiEnCours.code === code && etat.aToiEnCours.jour === etat.jour ? etat.aToiEnCours : null;
       // Lot 3a : sans les questions déjà vues aujourd'hui (« Je me souviens »).
       const enCours = garde || {code, jour: etat.jour, serie: serieSure(code, {usage: "entraine", graine: graine()}), reponses: [], i: 0};
+      // Lot « cohérence » (25/11) : une sorte de question que la leçon n'a pas
+      // montrée a son exemple déjà fait, juste avant sa première question.
+      // Les exemples sont tirés une fois, avec la série (ils comptent dans
+      // les hauteurs : rien ne bouge). Un exemple ne compte pas.
+      if (!enCours.exemples) { enCours.exemples = exemplesAToi(code, enCours.serie); enCours.exemplesVus = {}; }
+      const exemplesListe = Object.values(enCours.exemples);
       etat.aToiEnCours = PROF ? null : enCours;
       const {serie, reponses} = enCours;
       let hauteurZone = 0;
@@ -1785,21 +1928,11 @@
         const qn = serie[i];
         const ui = ecranQuestion({petit: etape.nom, titre: "J'apprends", chip: `à toi · ${i + 1}`, chemin: {noms: ["J'apprends", "Je valide"], ici: 0},
           retour, hauteurPx: hauteurQ, hauteurZone, jnsp: true});
-        if (!hauteurQ) { hauteurQ = hauteurSerie(ui.q, code, serie); cadre.style.setProperty("--q-h", `${hauteurQ}px`); }
-        // La première fois : la hauteur de l'aide la plus haute de la série
-        // (l'outil, l'image, une erreur), pour que rien ne bouge ensuite.
-        if (!hauteurZone) {
-          hauteurZone = mesurerZone(ui.zone, serie.flatMap(qn => [
-            z => { remplirZone(z, "outil", ["outil", "L'outil"]); AIDES.outil(z, qn); },
-            z => { remplirZone(z, "image", ["image", "L'image"]); AIDES.image(z, qn); },
-            z => remplirErreurZone(z, qn, {phrase: true}),
-            // (Lot B3-2c : « Je prévois », répondu, compte aussi dans la
-            // hauteur de la zone. Sous une situation de A2, dont les aides
-            // sont basses, il tombait à 79 % au petit iPhone, 69 % au petit
-            // Android avec une police large.)
-            z => (PREVOIS_MESURE.has(code) ? prevoisMesure(z, qn) : null)
-          ]).concat(z => { remplirZone(z, "vide", ["sans", "Sans aide"]); z.append(cEstAToi(), suiteRonds(4, 5, true, true)); }));
-          cadre.style.setProperty("--z-h", `${hauteurZone}px`);
+        if (!hauteurQ) ({hauteurQ, hauteurZone} = mesurerAToi(ui, code, serie, exemplesListe));
+        const so = G.sorte(qn).id;
+        if (enCours.exemples[so] && !enCours.exemplesVus[so]) {
+          montrerExemple(ui, enCours.exemples[so], () => { enCours.exemplesVus[so] = true; question(); });
+          return;
         }
         const phase = suivi.outil;
         // `deuxieme` : la question reposée après « Je prévois » (lot 3b-2) ;
@@ -2718,8 +2851,11 @@
         b.addEventListener("click", action);
         d.appendChild(b);
       });
-      const lc = el("div", "liens2 un");
+      // (Lot « cohérence » : les exemples déjà faits de l'étape, s'il y en a.)
+      const avecExemples = G.sortes(code).some(so => so.montree === false);
+      const lc = el("div", avecExemples ? "liens2" : "liens2 un");
       lc.appendChild(lien(T("Comment ça marche ?"), commentCaMarche));
+      if (avecExemples) lc.appendChild(lien("Voir les exemples", voirExemples));
       d.appendChild(lc);
       ajouter(d);
     }

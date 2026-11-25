@@ -5198,6 +5198,8 @@
       return null;
     }
     if (aide.type === "barres") return barres(zone, aide, f);
+    // Lot « cohérence » : l'échelle des unités d'une grandeur (P3, P4).
+    if (aide.type === "echelle") { echelle(zone, aide); f(); return null; }
     // Lot B2-3a : l'aire en carreaux.
     if (aide.type === "aire-compter" || aide.type === "aire-superposer") return montrerAire(zone, aide, f);
     // Lot B2-2a : les fractions usuelles.
@@ -5393,6 +5395,10 @@
   }
 
   function outil(zone, question, {fini = () => {}} = {}) {
+    // Lot « cohérence » (P1) : l'objet de la leçon, à toucher.
+    if (question.outil === "objet" && question.objet) { montrer(zone, question.objet, {fini}); return; }
+    // (P2, P3, P4) : l'échelle des unités, les deux unités marquées.
+    if (question.outil === "echelle" && question.echelleOutil) { echelle(zone, question.echelleOutil); return; }
     // Lot B2-3a (A5) : la figure à toucher, la tache, B à poser sur A.
     if (question.outil === "aire" && question.aire) { outilAire(zone, question); return; }
     // (Lot B2-1b : « Trouve l'intrus », « Coche tout ce qui est égal à… » :

@@ -78,7 +78,10 @@ test("la carte : le palier 1 est entier (10 étapes prêtes, textes complets)", 
   PRETS.forEach(code => {
     const e = CARTE.etape(code);
     // (Lot R1-refonte : « Mes premiers repères », un temps par repère.)
-    assert.equal(e.apprends.length, code === "R1" ? 10 : 3, code);
+    // (Lot « cohérence », 25/11 : « Les relations des bases », un temps par
+    // relation et un pour l'autre sens ; un temps de plus pour l'autre sens
+    // dans « Les euros et les centimes » et « Heures et minutes ».)
+    assert.equal(e.apprends.length, {R1: 10, P1: 11, E1: 4, D1: 4}[code] || 3, code);
     // Lot A2 ter (choix de Gwenaël, le 13/11) : « À retenir » n'a plus de
     // texte quand ses cases (relations, repères) disent tout ; sinon, une ou
     // deux phrases courtes.
@@ -663,7 +666,8 @@ test("lots B2-3b-2, B6-3, B3-3, B4-2 et B5-2 : les paliers 2, 6, 3, 4 et 5 s'ouv
   // (Lot B4-2 : au palier 4 aussi, 250 signes au plus.)
   // (Lot B5-2 : au palier 5 aussi.)
   [2, 3, 4, 5, 6].flatMap(n => CARTE.etapesDuPalier(n)).forEach(e => {
-    assert.equal(e.apprends.length, 3, e.code);
+    // (Lot « cohérence » : un temps de plus pour l'autre sens ; les préfixes pour les trois unités ; l'échelle de chaque grandeur.)
+    assert.equal(e.apprends.length, {P2: 5, P3: 6, P4: 6, C6: 4, A1: 4, P5: 4, G1: 4}[e.code] || 3, e.code);
     if (e.reperes.length) assert.equal(e.retenir, "", e.code);
     else assert.ok(e.retenir.length > 20 && e.retenir.length < (e.palier >= 4 ? 250 : 200), `${e.code} : ${e.retenir.length} signes`);
     assert.ok(e.cahier, e.code);
@@ -685,4 +689,111 @@ test("lots B2-3b-2, B6-3, B3-3, B4-2 et B5-2 : les paliers 2, 6, 3, 4 et 5 s'ouv
   assert.doesNotMatch(html, /CARTE\.ORDRE\.filter\(code => CARTE\.etape\(code\)\.pret\)/, "plus de liste des étapes prêtes à côté");
   // (Lot B3-3 : deux paliers à venir, « Les paliers 4 et 5 », pas « 4 à 5 ».)
   assert.match(html, /const suiteA = aVenir\.length > 2 &&/);
+});
+
+// ------------------------------------------------ lot « cohérence » (25/11/2026)
+// Ce qui est demandé a été montré : les sortes de questions de chaque étape,
+// « À toi » qui les fait toutes passer, l'exemple déjà fait d'une sorte
+// que la leçon ne montre pas, les leçons complétées.
+const GEN = require("../outils/conversions/conversions_generateurs.js");
+const graineCoh = (i, d) => 1 + ((i * 7919 + d) % 99999);
+const PRETES = CARTE.ORDRE.filter(c => CARTE.etape(c).pret);
+
+test("lot cohérence : chaque question a sa sorte, chaque sorte est tirée", () => {
+  PRETES.forEach(code => {
+    const sortes = GEN.sortes(code);
+    assert.ok(sortes.length >= 2 && sortes.length <= 7, `${code} : ${sortes.length} sortes`);
+    assert.equal(new Set(sortes.map(s => s.id)).size, sortes.length, `${code} : deux sortes de même nom`);
+    const vues = new Set();
+    for (let i = 0; i < 150; i += 1) {
+      ["valide", "entraine", "retour", "test"].forEach(usage => GEN.serie(code, {usage, graine: graineCoh(i, 1061)}).forEach(q => {
+        const s = GEN.sorte(q);
+        assert.notEqual(s.id, "?", `${code} : sans sorte — ${q.texte}`);
+        vues.add(s.id);
+      }));
+    }
+    sortes.forEach(s => assert.ok(vues.has(s.id), `${code} : la sorte « ${s.id} » n'est jamais tirée`));
+    // Un fait à savoir, hors d'« À toi », est montré par la leçon.
+    sortes.filter(s => s.fait).forEach(s => assert.equal(s.montree, true, `${code} : le fait « ${s.id} » n'est pas montré`));
+  });
+});
+
+test("lot cohérence : « À toi » fait passer toutes les sortes dans ses 9 premières questions", () => {
+  const {avecOutil, sansOutil} = P.SEUILS.entraine;
+  const tete = 2 * avecOutil + sansOutil;
+  assert.equal(tete, 9, "le minimum d'« À toi » (2 avec l'outil, 2 avec l'image, 5 sans aide)");
+  PRETES.forEach(code => {
+    const voulues = GEN.sortes(code).filter(s => !s.fait).map(s => s.id);
+    assert.ok(voulues.length <= tete, `${code} : plus de sortes que de questions`);
+    for (let i = 0; i < 200; i += 1) {
+      const graine = graineCoh(i, 60133);
+      const s = GEN.serie(code, {usage: "entraine", graine});
+      assert.equal(s.length, 25, `${code}/${graine}`);
+      const debut = new Set(s.slice(0, tete).map(q => GEN.sorte(q).id));
+      voulues.forEach(id => assert.ok(debut.has(id), `${code}/${graine} : « ${id} » n'est pas dans les ${tete} premières`));
+      // La tête monte : jamais une question plus facile après une plus difficile.
+      s.slice(1, tete).forEach((q, k) => assert.ok(q.degre >= s[k].degre, `${code}/${graine} : la question ${k + 2} redescend`));
+      s.forEach((q, k) => assert.equal(q.place, k + 1, `${code}/${graine} : place`));
+      // Même graine, même série.
+      if (i < 5) assert.deepEqual(GEN.serie(code, {usage: "entraine", graine}).map(q => q.cle), s.map(q => q.cle), `${code}/${graine}`);
+    }
+  });
+});
+
+test("lot cohérence : une sorte jamais montrée a son exemple, juste, et qui n'est pas la question qui suit", () => {
+  let n = 0;
+  PRETES.forEach(code => {
+    GEN.sortes(code).filter(s => s.montree === false).forEach(so => {
+      for (let i = 0; i < 40; i += 1) {
+        const graine = graineCoh(i, 4409);
+        const s = GEN.serie(code, {usage: "entraine", graine});
+        const suit = s.find(q => GEN.sorte(q).id === so.id);
+        assert.ok(suit, `${code}/${graine} : pas de question « ${so.id} »`);
+        const x = GEN.exemple(code, so.id, {graine, exclure: s.flatMap(q => [q.cle, q.cleBase || q.cle]), apres: suit.cleBase || suit.cle});
+        assert.ok(x, `${code}/${graine} : pas d'exemple pour « ${so.id} »`);
+        assert.equal(GEN.sorte(x).id, so.id, `${code}/${graine}`);
+        assert.notEqual(x.cleBase || x.cle, suit.cleBase || suit.cle, `${code}/${graine} : l'exemple est la question qui suit`);
+        assert.ok(!GEN.clesExemples(code).includes(x.cle), `${code}/${graine} : l'exemple est un temps de la leçon`);
+        assert.ok(x.correction && x.correction.length >= 1 && x.correction.length <= 3, `${code} : la méthode de l'exemple`);
+        const saisie = x.forme === "associer" ? x.bonnes : x.forme === "ranger" ? x.ordre : x.forme === "plusieurs" ? x.bons : x.choix ? x.bon : x.reponse;
+        assert.equal(GEN.verifier(x, saisie).juste, true, `${code}/${graine} : la réponse de l'exemple — ${x.texte}`);
+        n += 1;
+      }
+    });
+  });
+  assert.ok(n > 2000);
+});
+
+test("lot cohérence : les leçons montrent les deux sens et tous les faits", () => {
+  const temps = code => CARTE.etape(code).apprends.map(a => CARTE.typo(`${a.question.avant} ${a.question.reponse} ${a.question.apres}`));
+  // « Les relations des bases » : les 10 relations, chacune dans un temps, et l'autre sens.
+  CARTE.etape("P1").relations.forEach(r => assert.ok(temps("P1").includes(r), `P1 : « ${r} » n'est pas montrée`));
+  assert.ok(temps("P1").includes(CARTE.typo("100 cm = 1 m")));
+  // L'autre sens, que « Je valide » demande : un temps de la leçon.
+  [["E1", "400 c = 4 €"], ["D1", "130 min = 2 h 10 min"], ["P4", "1 000 mL = 1 L"], ["A1", "100 cm² = 1 dm²"], ["P5", "1 000 Mo = 1 Go"],
+    ["G1", "72 km/h = 1 200 m/min"], ["C6", "250 mL = 1⁄4 L"]].forEach(([code, t]) => assert.ok(temps(code).includes(CARTE.typo(t)), `${code} : « ${t} »`));
+  // Les relations du CM1 : l'échelle des trois grandeurs dans la leçon.
+  ["P3", "P4"].forEach(code => {
+    const g = CARTE.etape(code).apprends.filter(a => a.aide.type === "echelle").map(a => a.aide.grandeur);
+    ["longueur", "masse", "contenance"].forEach(x => assert.ok(g.includes(x), `${code} : l'échelle des ${x}s`));
+  });
+  // Les préfixes : les six, pour les trois unités de base.
+  const bases = CARTE.etape("P2").apprends.filter(a => a.aide.type === "numeration").map(a => `${a.aide.base}/${a.aide.sens}`);
+  ["m/plus", "m/moins", "g/moins", "L/plus"].forEach(x => assert.ok(bases.includes(x), `P2 : ${x}`));
+});
+
+test("lot cohérence : l'outil d'une relation à savoir est l'objet ou l'échelle de la leçon, plus le glisse-unité", () => {
+  for (let i = 0; i < 60; i += 1) {
+    GEN.serie("P1", {usage: "entraine", graine: graineCoh(i, 77)}).filter(q => ["conv", "fois"].includes(q.donnees.type)).forEach(q => {
+      assert.equal(q.outil, "objet", q.texte);
+      assert.ok(["barres", "verre", "balance"].includes(q.objet.type), q.texte);
+      // vers l'unité plus grande : les petites unités se regroupent
+      if (q.donnees.type === "conv" && q.objet.type === "barres") assert.equal(Boolean(q.objet.regrouper), GEN.sorte(q).id === "grand", q.texte);
+    });
+    ["P2", "P3", "P4"].forEach(code => GEN.serie(code, {usage: "entraine", graine: graineCoh(i, 77)}).filter(q => q.glisse && ["conv", "fois"].includes(q.donnees.type)).forEach(q => {
+      assert.equal(q.outil, "echelle", `${code} : ${q.texte}`);
+      assert.equal(q.echelleOutil.marque.length, 2);
+      assert.doesNotMatch(q.echelleOutil.note, /=/, "l'échelle ne donne pas le nombre");
+    }));
+  }
 });
