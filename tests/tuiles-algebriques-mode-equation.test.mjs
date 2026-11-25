@@ -105,5 +105,5 @@ test("miniatures du catalogue refaites (vert rouge, coins droits) : adresse chan
   const catalogue = lire("assets/js/catalogue-refonte-data.js");
   assert.match(catalogue, /"thumbnail": "assets\/img\/thumbnails\/tuiles-algebriques\/plateau-expressions\.png\?v=3"/);
   assert.match(catalogue, /"thumbnail": "assets\/img\/thumbnails\/tuiles-algebriques\/plateau-equations\.png\?v=3"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=generateur-tuiles-20261121-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte-data\.js\?v=exerciseur-conversions-20261125-1/);
 });
