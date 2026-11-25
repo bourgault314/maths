@@ -127,11 +127,12 @@ test("M1 : « Je représente » par étapes dans les trois niveaux (le double co
 test("lot 7b : D8, « Je représente » par étapes comme M1 — les deux morceaux, puis le tout", () => {
   const attendus = {
     "D8-1": ["moitié de 9 = 8 ÷ 2 + 1 ÷ 2", ["8 ÷ 2", "1 ÷ 2", "moitié de 9"], 4.5],
-    "D8-2": ["double de 13,6 = 2 × 13 + 2 × 0,6", ["2 × 13", "2 × 0,6", "double de 13,6"], 27.2],
-    // (Lot C2 : les moitiés, chacune son niveau.)
-    "D8-3": ["moitié de 13,6 = 13 ÷ 2 + 0,6 ÷ 2", ["13 ÷ 2", "0,6 ÷ 2", "moitié de 13,6"], 6.8],
-    "D8-4": ["2 × 4,35 = 2 × 4 + 2 × 0,35", ["2 × 4", "2 × 0,35", "2 × 4,35"], 8.7],
-    "D8-5": ["1,22 ÷ 2 = 1 ÷ 2 + 0,22 ÷ 2", ["1 ÷ 2", "0,22 ÷ 2", "1,22 ÷ 2"], 0.61]
+    // (Lot C4d, choix de Gwenaël du 21/11 : les décimaux comptés en
+    // dixièmes, en centièmes — le tableau, la case du rang puis le calcul.)
+    "D8-2": ["double de 13,6 = 2 × 136 dixièmes", ["136 + 136", "double de 13,6"], 27.2],
+    "D8-3": ["moitié de 13,6 = 136 dixièmes ÷ 2", ["136 ÷ 2", "moitié de 13,6"], 6.8],
+    "D8-4": ["2 × 4,35 = 2 × 435 centièmes", ["2 × 435", "2 × 4,35"], 8.7],
+    "D8-5": ["1,22 ÷ 2 = 122 centièmes ÷ 2", ["122 ÷ 2", "1,22 ÷ 2"], 0.61]
   };
   Object.entries(attendus).forEach(([cle, [consigne, etapes, reponse]]) => {
     const r = apprends(cle).represente;
@@ -139,7 +140,8 @@ test("lot 7b : D8, « Je représente » par étapes comme M1 — les deux morcea
     assert.deepEqual(r.etapes.map(e => espaces(e.texte).replace(" = □", "")), etapes, cle);
     assert.equal(r.reponse, reponse, cle);
     assert.equal(r.dessins.length, r.etapes.length + 1, cle);
-    assert.ok(r.dessins[0].masque && r.dessins[0].trouves.length === 0 && r.dessins[r.etapes.length].fini, cle);
+    if (cle === "D8-1") assert.ok(r.dessins[0].masque && r.dessins[0].trouves.length === 0 && r.dessins[r.etapes.length].fini, cle);
+    else assert.ok(r.dessins[0].outil === "tableau-rang" && r.dessins[r.etapes.length].res.cells[0].e === "trouve", cle);
   });
 });
 
@@ -231,8 +233,8 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-2/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261125-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261125-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");
 });

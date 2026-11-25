@@ -37,7 +37,10 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // et 8 unités. », « 20, c’est 2 dizaines ; 100, c’est 10 dizaines. »,
 // « 350, c’est 35 dizaines. ».)
 // (Lot C4b : A2-1 a sa phrase « Dans 433, le chiffre des unités est 3. », comme A2-2 au lot C4a.)
-const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-1", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
+const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-1", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2",
+  // (Lot C4d : je compte dans le rang, comme C4a — « 5,73 + 0,6 : 7 dixièmes
+  // + 6 dixièmes », « moitié de 15,8 = 158 dixièmes ÷ 2 ».)
+  "D4-3", "D8-2", "D8-3", "D8-4", "D8-5"]);
 const SANS_LIGNE = new Set(["M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
@@ -171,7 +174,8 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // Lot C2 : les cinq niveaux de moitiés (M1-2, M1-4, M1-6, D8-3, D8-5).
   // Lot C4a : A3-2, A3-3 et M12-1 écrivent deux égalités, une par ligne
   // (« 74 + 8 = 82. », puis « 746 + 80 = 826. ») : 3 de moins ici.
-  assert.equal(coupes, 79, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // (Lot C4d : « au-delà de 20 » devient un calcul seul, sous ses flèches.)
+  assert.equal(coupes, 80, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   ["A3-2", "A3-3", "M12-1"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.equal(lignes.length, 2, cle);

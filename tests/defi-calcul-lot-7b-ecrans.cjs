@@ -238,7 +238,9 @@ async function attendreQue(page, lire, essais = 40) {
       await tient(s.page, largeur, hauteur);
       assert.equal(await appel(s.page, "poser", "D8", 5, "moitié de 8,10 = □", "image"), true);
       await pause(s.page, 500);
-      assert.deepEqual((await textesDessin(s.page)).filter(t => t.includes(",")).slice(0, 2), ["8,10", "0,10"]);
+      // (Lot C4d : compté en centièmes — 8,10 = 810 centièmes, le tableau.)
+      assert.deepEqual((await textesDessin(s.page)).filter(t => t.includes(",")).slice(0, 2), ["8,10"]);
+      assert.ok((await textesDessin(s.page)).includes("810"), "810 centièmes");
       await photo(s.page, `${f}-D8-5-810`);
       await tient(s.page, largeur, hauteur);
       assert.deepEqual(s.erreurs, []);

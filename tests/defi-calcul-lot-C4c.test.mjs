@@ -175,12 +175,10 @@ test("fractions du CM1 : plus d'unité entière coupée au-delà de 12 parts, ja
   assert.equal(CORE.aideDe(trouve("F8-3", "7/9 + 7/9 = □/9")).entiers || 0, 0, "7/9 + 7/9 : le calcul coupe la première unité");
 });
 
-test("fractions : ailleurs, rien ne change (bases, CM2, 6e — lot C4d)", () => {
-  ["F8-1", "F8-2", "F9-1", "F9-3", "F11-1", "F11-2", "F2-1"].forEach(cle => tirage(cle, 10).forEach(c => {
+test("fractions : ailleurs, rien ne change (bases ; le CM2 et la 6e : lot C4d)", () => {
+  ["F8-1", "F8-2", "F9-1", "F2-1"].forEach(cle => tirage(cle, 10).forEach(c => {
     [CORE.aideDe(c), CORE.imageDe(c)].forEach(image => barres(image).forEach(b => assert.ok(!b.blocs, `${cle} : ${c.texte}`)));
   }));
-  // F9-3 garde ses barres de plus de 12 parts par unité (lot C4d).
-  assert.ok(tirage("F9-3", 10).some(c => barres(CORE.aideDe(c)).some(b => b.d > 12)));
 });
 
 // ---------------------------------------------------------- Regrouper 2 et 5
@@ -287,7 +285,7 @@ test("les données ne changent pas : progression en version 11, clés des calcul
   TIRAGES["M2-2"].concat(TIRAGES["F5-1"]).forEach(c => assert.match(c.cle, /^(M2|F5)-\d-/));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-2/);
-  assert.match(html, /defi_calcul_aides\.js\?v=20261125-1/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
   assert.match(await lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C4c$|^lot \S+$/m);
 });

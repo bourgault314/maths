@@ -156,7 +156,10 @@ function verifierDessins(cle, calcul, ecris) {
   ecris.dessins.forEach((d, k) => {
     if (k > premiere) return;
     if (d.outil === "barre-droite" && d.bas) assert.ok(String(d.bas.texte).includes("?") && !d.bas.trouve, `${cle} ${calcul.texte} : l'accolade garde « ? » au dessin ${k}`);
-    if (d.outil === "fois-fraction") assert.ok(!d.trouve, `${cle} ${calcul.texte} : la case reste à trouver au dessin ${k}`);
+    // (Lot C4d : en F9, la case des flèches est le numérateur réécrit — la
+    // première ligne —, pas la réponse.)
+    if (d.outil === "fois-fraction" && calcul.module !== "F9") assert.ok(!d.trouve, `${cle} ${calcul.texte} : la case reste à trouver au dessin ${k}`);
+    if (d.outil === "fois-fraction" && calcul.module === "F9" && k === 0) assert.ok(!d.trouve && !d.montre, `${cle} ${calcul.texte} : la case à trouver au dessin 0`);
     if (d.outil === "tout-parts") assert.ok(!d.trouve, `${cle} ${calcul.texte} : la part reste à trouver au dessin ${k}`);
   });
   const fin = ecris.dessins[n];

@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-calcul-lot-C4c
+lot defi-calcul-lot-C4d
 genere_le 2026-11-25
 fichiers 75
-manifeste 91b74f4ccb15ea4459f6be1872e6eb9d3529ce0b292c19b53d413965408ce953
+manifeste 1d5bcdf873e9ba7624b9715832588c8efde2e33f062a1f448b096f55c5d9775a
 672e650f12f5ea1ff6ca5598de902761850fdc4adb890ffec08367259c993d6c  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -47,7 +47,7 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960  polices/nunito-latin-ext-wght-normal.woff2
 ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793  polices/nunito-latin-wght-normal.woff2
 95248821578c48f890d325ad0cee74eabffdad8c5459ea1e1e4b47a3d0935fd6  prof/coffres-parcours.js
-d81025cd7169024a0f9ed4c52888883e4f37a8bcedbab8cbad1747504d56ad2b  prof/defi_calcul_core.js
+b596e03f28ec6a61747c55a2a5d0eb38669fe07e9eeeeb63a97e83754f0693aa  prof/defi_calcul_core.js
 67cd80393670511daba32ed1e4ad73d393dbff4ce0db7778eb3694408a020dd1  prof/defi_calcul_mon_parcours.js
 a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tables_core.js
 7ab1799a069a2eda6967cb2fcd9a543d7474a7a13723530af6ca2141959ba5c6  prof/defi_tables_mon_parcours.js
