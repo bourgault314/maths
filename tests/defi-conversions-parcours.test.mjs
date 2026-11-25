@@ -797,3 +797,31 @@ test("lot cohérence : l'outil d'une relation à savoir est l'objet ou l'échell
     }));
   }
 });
+
+// ------------------------------------------------ lot « police » (25/11/2026)
+// Nunito sur tous les appareils, servie par le site : plus d'Inter, que ni
+// le site ni les appareils des élèves n'avaient.
+test("lot police : Nunito, servie par le site, sur tous les appareils", () => {
+  const css = fs.readFileSync(new URL("../outils/conversions/defi_conversions.css", import.meta.url), "utf8");
+  const html = fs.readFileSync(new URL("../outils/conversions/defi_conversions.html", import.meta.url), "utf8");
+  const polices = fs.readFileSync(new URL("../assets/vendor/polices/polices.css", import.meta.url), "utf8");
+  const sansNotes = css.replace(/\/\*[\s\S]*?\*\//g, "");
+  const familles = [...sansNotes.matchAll(/font-family:\s*([^;}]+)/g)].map(m => m[1].trim());
+  assert.ok(familles.includes('Nunito, "Segoe UI", system-ui, sans-serif'), "la police de l'appli commence par Nunito");
+  familles.forEach(f => assert.ok(f === "inherit" || /^Nunito,/.test(f), `une autre police est demandée : ${f}`));
+  assert.doesNotMatch(sansNotes, /\bInter\b|ui-rounded/, "ni Inter ni la police d'Apple");
+  assert.match(html, /<link rel="stylesheet" href="\.\.\/\.\.\/assets\/vendor\/polices\/polices\.css">/);
+  assert.ok(html.indexOf("polices/polices.css") < html.indexOf("defi_conversions.css"), "les polices avant la feuille de l'appli");
+  const pre = html.match(/<link rel="preload" href="\.\.\/\.\.\/assets\/vendor\/polices\/([\w-]+\.woff2)" as="font" type="font\/woff2" crossorigin>/);
+  assert.ok(pre, "Nunito demandée tout de suite");
+  assert.ok(fs.existsSync(new URL(`../assets/vendor/polices/${pre[1]}`, import.meta.url)), "le fichier préchargé existe");
+  assert.ok(polices.includes(`url(./${pre[1]})`) && /font-family: "Nunito"/.test(polices), "le fichier préchargé est celui de Nunito dans polices.css");
+  assert.match(html, /document\.fonts\.load\("900 1rem Nunito"\)\.then\(partir, partir\);\s*setTimeout\(partir, 1500\);/, "le premier écran attend Nunito, 1,5 s au plus");
+  // Nunito n'a pas « → » : avec une hauteur de ligne « normale », la police
+  // de secours de l'appareil (Segoe UI) faisait grandir « Suivant → » d'un
+  // pixel par rapport à « Valider » (retour de Code, 25/11).
+  assert.match(sansNotes, /\.btn \{[^}]*line-height: 1\.333;[^}]*\}/, "le bouton a une hauteur de ligne fixée");
+  // Retour de Code n° 2 : la zone ne se réajuste que pour un vrai
+  // changement de taille du cadre (sinon une boucle d'un cinquième de pixel).
+  assert.match(html, /Math\.abs\(r\.width - cadreVu\.l\) < 1 && Math\.abs\(r\.height - cadreVu\.h\) < 1\) return;/, "le cadre n'est réajusté que pour un changement d'un pixel ou plus");
+});

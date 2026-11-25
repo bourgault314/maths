@@ -292,7 +292,7 @@ test("les copies locales des bibliothèques ont l'empreinte attendue", () => {
 //     demandées à fonts.googleapis.com par 36 pages. Elles vivent maintenant dans
 //     assets/vendor/polices/, déclarées par une seule feuille que ces pages chargent.
 // ---------------------------------------------------------------------------
-const PAGES_AVEC_POLICES = 39; // 37 depuis Défi tables (audit 2, 30/09/2026), 38 depuis Défi calcul par modules (lot 1a, 03/10/2026), 39 depuis Flash Anzan (lot 1, 22/10/2026)
+const PAGES_AVEC_POLICES = 40; // 37 depuis Défi tables (audit 2, 30/09/2026), 38 depuis Défi calcul par modules (lot 1a, 03/10/2026), 39 depuis Flash Anzan (lot 1, 22/10/2026), 40 depuis Défi conversions (lot police, 25/11/2026)
 
 test("les pages qui utilisent une police du site la prennent dans assets/vendor/polices/", () => {
   const css = readFileSync(join(racine, "assets/vendor/polices/polices.css"), "utf8");

@@ -21,7 +21,12 @@ html { font-size: 16px; }
 :root {
   --ink: #143451; --muted: #506b7d; --line: #d4e3ed; --blue: #0755b8; --teal: #087a71; --green: #147447;
   --green-soft: #e5f7eb; --red: #a93030; --red-soft: #ffebeb; --violet: #5b2a86; --q-h: 4.625rem;
-  font-family: Inter, ui-rounded, "Segoe UI", sans-serif;
+  /* Lot « police » (25/11/2026) : Nunito sur tous les appareils, iPhone
+     compris, servie par le site (assets/vendor/polices/polices.css) ; avant,
+     Inter, que ni le site ni les appareils des élèves n'avaient : chaque
+     appareil prenait sa police. Segoe UI et la police du système seulement
+     si Nunito n'arrive pas (et pour les rares signes qu'elle n'a pas). */
+  font-family: Nunito, "Segoe UI", system-ui, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
@@ -94,7 +99,13 @@ h2 { margin: .125rem 0 .375rem; font-size: 1.4375rem; line-height: 1.15; }
 
 /* boutons */
 .btn { display: block; width: 100%; text-align: center; background: var(--blue); color: #fff; font-weight: 900; font-size: 1.125rem; border-radius: .875rem;
-  padding: .75rem; border: 0; cursor: pointer; text-decoration: none; flex: 0 0 auto; }
+  padding: .75rem; border: 0; cursor: pointer; text-decoration: none; flex: 0 0 auto;
+  /* Lot « police » : une hauteur de ligne fixée. Nunito n'a pas « → » ni
+     « ↻ » : l'appareil les dessine avec sa police (Segoe UI sur PC), plus
+     haute ; avec la hauteur « normale », le bouton grandissait d'un pixel
+     quand « Valider » devenait « Suivant → ». Fixée, seule Nunito compte
+     (24 px pour 18 px, la hauteur d'avant). */
+  line-height: 1.333; }
 .btn.cl { background: #fff; color: var(--blue); border: .125rem solid #c9dbe7; padding: .625rem; }
 .btn.rouge { background: var(--red); }
 .btn:disabled { opacity: .45; cursor: default; }
@@ -1055,6 +1066,13 @@ table.tab-hm td.trou { color: #a93030; background: #fffafa; }
 /* « Je prévois » en projection : « ↓ Il rapetisse » sur deux lignes sortait
    de son bouton (déjà sur main, vu par le robot à 1 920 × 1 080). */
 .prevois-choix button { line-height: 1.1; }
+/* Lot « police » (25/11/2026) : sur un écran large, « ↓ Il rapetisse »
+   passait sur deux lignes (« Il » seul en haut) et, en Nunito, touchait le
+   bord du bouton en projection (284 px pour 229). Les deux réponses tiennent
+   chacune sur une ligne, à la même taille (28 px en projection). */
+@media (min-width: 900px) and (min-aspect-ratio: 5/4) {
+  .prevois-choix button { font-size: 1.0625rem; white-space: nowrap; }
+}
 /* Lot B1-1 : « Qu'est-ce qui mesure 400 m ? », « Lequel pèse le plus ? » —
    les repères dessinés, côte à côte, leur nom court dessous. */
 .choix.objets { flex-direction: row; align-items: stretch; }

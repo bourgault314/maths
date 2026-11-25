@@ -16,7 +16,12 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261125-coh2">
+  <!-- Lot « police » (25/11/2026) : Nunito, servie par le site, sur tous
+       les appareils ; demandée tout de suite, pour que l'accueil s'écrive
+       déjà en Nunito. -->
+  <link rel="preload" href="../../assets/vendor/polices/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261125-pol">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -719,7 +724,18 @@
       }
       dedans.dataset.echelle = besoin > place + 1 && place > 0 ? (place / besoin).toFixed(2) : "1";
     }
-    if (window.ResizeObserver) new ResizeObserver(() => ajusterZone(cadre.querySelector(".zone"))).observe(cadre);
+    // (Lot « police », retour de Code n° 2 : en Nunito, C7 au petit iPhone,
+    // la zone se réduisait à 0,99, puis 0,98, et le cadre passait de 531,8 à
+    // 532 px et retour, sans fin : WebKit le signale (« ResizeObserver
+    // loop »). On ne réajuste que pour un vrai changement de taille, d'un
+    // pixel ou plus : un écran qui tourne, une fenêtre, une aide qui grandit.)
+    let cadreVu = null;
+    if (window.ResizeObserver) new ResizeObserver(([e]) => {
+      const r = e.contentRect;
+      if (cadreVu && Math.abs(r.width - cadreVu.l) < 1 && Math.abs(r.height - cadreVu.h) < 1) return;
+      cadreVu = {l: r.width, h: r.height};
+      ajusterZone(cadre.querySelector(".zone"));
+    }).observe(cadre);
 
     function remplirZone(zone, classe, etiquette) {
       zone.textContent = "";
@@ -2938,7 +2954,16 @@
       ajouter(d, bouton("Une autre série ↻", "", () => { etat.profSerie = {usage, graine: graine()}; voirSerie(); }));
     }
 
-    accueil();
+    // Lot « police » : l'appli mesure ses écrans (hauteur de la question, de
+    // l'aide) au début d'une série ; elle attend donc Nunito avant son
+    // premier écran, une seconde et demie au plus (sinon, elle part avec la
+    // police de secours, comme avant).
+    let parti = false;
+    const partir = () => { if (!parti) { parti = true; accueil(); } };
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load("900 1rem Nunito").then(partir, partir);
+      setTimeout(partir, 1500);
+    } else partir();
   })();
   </script>
 </body>
