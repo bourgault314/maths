@@ -2,8 +2,10 @@
 // calcul exact, tableau qui ne perd plus de chiffres, restes positifs, partages justes, « L ↔ m³ » avec des litres,
 // ordres de grandeur sans doublon ni faux vrai/faux, français, valeurs vraisemblables, tirage d'une série.
 // Lot 2 (21/11/2026) : le lien de partage (« ?cases=…&niveaux=…&questions=…&serie=… ») et l'écran d'ordinateur.
+// Lot 3 (25/11/2026) : le mode « Je m'entraîne » (réponse tapée ou touchée, validée par la page, score, bilan).
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
@@ -13,7 +15,7 @@ const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
   const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN };`, ctx);
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -248,8 +250,9 @@ const corps = (nom) => {
 
 test("le lien : lu, réécrit, et la même série que le menu (10 séries au hasard)", () => {
   const r = P.lireLien("?cases=longueurs,volumes,soustractions&niveaux=1,2&questions=10&serie=K7PM");
-  assert.deepEqual(JSON.parse(JSON.stringify(r)), { cases: ["length", "volM3", "prob_sub"], niveaux: [1, 2], questions: 10, serie: "K7PM" });
-  assert.equal(P.ecrireLien(r), "?cases=longueurs,volumes,soustractions&niveaux=1,2&questions=10&serie=K7PM");
+  // lot 3 : un lien sans mode ouvre « Je m'entraîne », avec l'aide à la demande
+  assert.deepEqual(JSON.parse(JSON.stringify(r)), { cases: ["length", "volM3", "prob_sub"], niveaux: [1, 2], questions: 10, serie: "K7PM", mode: "entrainement", aide: "demande" });
+  assert.equal(P.ecrireLien(r), "?cases=longueurs,volumes,soustractions&niveaux=1,2&questions=10&serie=K7PM&mode=entrainement&aide=demande");
   // l'ordre des cases du lien est celui du menu (le tirage dépend de cet ordre)
   const menu = [...html.matchAll(/<input type="checkbox" value="([a-zA-Z_0-9]+)">/g)].map((m) => m[1]);
   assert.deepEqual(Object.keys(P.CASES_LIEN), menu, "une case par ligne du menu, dans le même ordre");
@@ -312,6 +315,220 @@ test("ordinateur : après « Lancer diapo », le diaporama en haut et entier dan
   assert.match(css, /@media screen and \(min-width: 701px\) and \(max-height: 680px\)/);
   // l'étiquette du haut suit la hauteur réelle de son cadre (resserré sur un petit écran)
   assert.match(script, /handles\[0\]\.style\.top = `\$\{topPx - \(handles\[0\]\.offsetHeight \|\| 75\) - 14\}px`/);
-  // « Copier le lien » dans la colonne de « Lancer diapo »
-  assert.match(html, /<div class="lancer-col">\s*<button class="btn-main" onclick="generateQuiz\(\)">💻 Lancer diapo<\/button>\s*<button class="btn-lien" id="btnLien" type="button" onclick="copierLien\(\)">🔗 Copier le lien<\/button>\s*<\/div>/);
+  // « Copier le lien » dans la colonne de « Lancer diapo » (lot 3 : « Commencer » ou « Lancer diapo » selon le mode)
+  assert.match(html, /<div class="lancer-col">\s*<button class="btn-main" id="btnLancer" onclick="lancer\(\)">✍️ Commencer<\/button>\s*<button class="btn-lien" id="btnLien" type="button" onclick="copierLien\(\)">🔗 Copier le lien<\/button>\s*<\/div>/);
+  assert.match(script, /textContent = m === 'diapo' \? '💻 Lancer diapo' : '✍️ Commencer'/);
+});
+
+// ---- lot 3 : « Je m'entraîne » ----
+const plat = (t) => sansBalises(t).replace(/\s+/g, " ").trim();
+const versNombre = (t) => t.replace(/[\s ]/g, "");
+// la valeur en gras à la fin de la correction d'un problème : « … = <strong>2 600 g</strong>. »
+const resultatCorrige = (c) => { const m = [...c.matchAll(/<strong>([\d\u00a0 ,]+)[\u00a0 ](\S+?)<\/strong>/g)].pop(); return { val: versNombre(m[1]), unite: m[2] }; };
+
+test("je m'entraîne : la bonne réponse de chaque question tapée, juste avec des espaces ou un point, fausse si la virgule bouge (milliers de tirages)", () => {
+  let n = 0;
+  for (const t of TYPES) for (const lvl of [1, 2, 3]) {
+    P.setSeed(`J${t}${lvl}`);
+    for (let i = 0; i < 2000; i++) {
+      const q = P.buildQuestionLogic(t, lvl), b = P.bonneReponse(q);
+      assert.equal(P.genreDe(q), "nombre");
+      assert.equal(b.val, reference(q.valStr, q.targetPos - q.sourcePos));
+      assert.equal(b.unite, q.targetUnit);
+      assert.ok(b.val.length <= P.MAX_SAISIE, `${b.val} : la réponse tient dans la case`);
+      assert.ok(P.estJuste(q, b.val) && P.estJuste(q, P.ecrire(b.val)) && P.estJuste(q, b.val.replace(",", ".")), b.val);
+      assert.ok(!P.estJuste(q, P.decaler(b.val, 1)) && !P.estJuste(q, P.decaler(b.val, -1)), `${b.val} : la virgule déplacée est fausse`);
+      n++;
+    }
+  }
+  for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
+    P.setSeed(`JP${f}${lvl}`);
+    for (let i = 0; i < 2000; i++) {
+      const q = P.buildProblemLogic(lvl, f), b = P.bonneReponse(q), c = resultatCorrige(q.correctionText);
+      assert.equal(b.val, P.normaliser(c.val), `${plat(q.problemText)} → ${plat(q.correctionText)}`);
+      assert.equal(b.unite, c.unite);
+      assert.match(sansBalises(q.problemText), new RegExp(`en ${b.unite.replace(/[²³]/, ".")} \\?$`), "l'unité de la réponse est celle de la question");
+      assert.match(b.val, /^\d+(,\d+)?$/);
+      assert.ok(b.val.length <= P.MAX_SAISIE);
+      assert.ok(P.estJuste(q, P.ecrire(b.val)) && !P.estJuste(q, P.decaler(b.val, 1)));
+      n++;
+    }
+  }
+  assert.ok(n > 70000);
+});
+
+test("je m'entraîne : texte à trous juste de la moitié au double, associer et classer en données, choix et états", () => {
+  const tousLesObjets = Object.values(P.EST_DB).flat().flatMap((it) => it.items.map((x) => ({ n: x.n, v: P.valeurDe(it.val, it.unit) })));
+  for (const lvl of [1, 2, 3]) {
+    P.setSeed(`JT${lvl}`);
+    for (let i = 0; i < 3000; i++) {
+      const q = P.buildEstimationLogic(lvl, "est_trou", ["len", "mass", "cap", "area", "vol"]);
+      assert.equal(P.genreDe(q), "nombre");
+      assert.match(sansBalises(q.problemText), new RegExp(`\\.+ ${q.uniteReponse.replace(/[²³]/, ".")}\\.$`));
+      assert.equal(sansBalises(q.correctionText).match(/: (.*)\.$/)[1].replace(/ /g, ""), q.reponse);
+      // la vraie valeur, sa moitié et son double sont justes ; juste en dessous et juste au-dessus, non
+      for (const v of [q.reponse, P.moitie(q.reponse), P.double(q.reponse)]) assert.ok(P.estJuste(q, v), `${v} pour ${q.reponse}`);
+      const d = P.double(q.reponse), m = P.moitie(q.reponse);
+      assert.ok(!P.estJuste(q, d + (d.includes(",") ? "1" : ",1")), `juste au-dessus du double de ${q.reponse}`);
+      // juste en dessous de la moitié : on retire 1 au dernier chiffre d'une écriture plus fine
+      const fin = (m.split(",")[1] || "").length + 1, sous = P.decaler(String(BigInt(P.decaler(m, fin)) - 1n), -fin);
+      assert.ok(!P.estJuste(q, sous), `juste en dessous de la moitié de ${q.reponse} (${sous})`);
+      assert.ok(Number(P.valeurDe(P.moitie(q.reponse), q.uniteReponse).replace(",", ".")) > 0);
+    }
+    P.setSeed(`JA${lvl}`);
+    for (let i = 0; i < 2000; i++) {
+      const q = P.buildEstimationLogic(lvl, "est_assoc", ["len", "mass", "cap", "area", "vol"]);
+      assert.equal(P.genreDe(q), "associer");
+      assert.equal(q.objets.length, 3); assert.equal(q.valeurs.length, 3);
+      assert.deepEqual([...q.paires].sort(), [0, 1, 2]);
+      q.objets.forEach((nom, k) => {
+        const [, v, u] = q.valeurs[q.paires[k]].match(/^(.*)[\u00a0 ](\S+)$/);
+        assert.ok(tousLesObjets.some((o) => o.n === nom && o.v === P.valeurDe(v.replace(/[\u00a0 ]/g, ""), u)), `${nom} ↔ ${q.valeurs[q.paires[k]]}`);
+        // la combinaison du diaporama dit la même chose
+        assert.match(sansBalises(q.correctionText), new RegExp(`${k + 1} → ${"ABC"[q.paires[k]]}`));
+      });
+    }
+    P.setSeed(`JC${lvl}`);
+    for (let i = 0; i < 2000; i++) {
+      const q = P.buildEstimationLogic(lvl, "est_tri", []);
+      assert.equal(P.genreDe(q), "classer");
+      assert.deepEqual([...q.mesures].sort(), [...q.ordre].sort());
+      // 1 dm³ = 1 L, 1 cm³ = 1 mL, 1 m³ = 1 kL : une série de capacités peut mêler les deux écritures
+      const CAP = { "cm³": "mL", "dm³": "L", "m³": "kL" };
+      const v = q.ordre.map((m) => { let [, a, u] = m.match(/^(.*)[\u00a0 ](\S+)$/); if (q.ordre.some((x) => /L$/.test(x)) && CAP[u]) u = CAP[u]; return Number(P.valeurDe(a.replace(/[\u00a0 ]/g, ""), u).replace(",", ".")); });
+      for (let k = 1; k < v.length; k++) assert.ok(v[k] > v[k - 1], q.ordre.join(" < "));
+    }
+  }
+  for (const t of ["est_grandeur", "est_unit", "est_val", "est_tf", "est_pont"]) {
+    P.setSeed(`JX${t}`);
+    for (let i = 0; i < 500; i++) {
+      const q = P.buildEstimationLogic(1 + (i % 3), t, ["len", "mass", "cap", "area", "vol"]);
+      assert.equal(P.genreDe(q), "choix");
+      assert.ok(q.rappel && !/C'est (vrai|faux)/.test(q.rappel), q.rappel);
+      assert.doesNotMatch(P.resumeDe({ ...q, caseCochee: t }), /undefined/);
+    }
+  }
+  // trois états : juste (1er essai, sans aide ouverte), avec l'aide (aide ouverte ou 2e essai), à revoir
+  assert.equal(P.etatFinal({ essai: 1, aideVue: false }, true), "juste");
+  assert.equal(P.etatFinal({ essai: 1, aideVue: true }, true), "aide");
+  assert.equal(P.etatFinal({ essai: 2, aideVue: false }, true), "aide");
+  assert.equal(P.etatFinal({ essai: 2, aideVue: true }, false), "revoir");
+});
+
+test("je m'entraîne : saisies acceptées et refusées, moitié et double sans virgule flottante", () => {
+  const ok = { "2 770": "2770", "2 770": "2770", "2 770": "2770", "2770,": "2770", "2770,00": "2770", "0027,50": "27,5", "27.5": "27,5", ",5": "0,5", "0": "0", " 4 ": "4", "0,000000007": "0,000000007" };
+  for (const [s, v] of Object.entries(ok)) assert.equal(P.lireSaisie(s), v, JSON.stringify(s));
+  for (const s of ["", " ", ",", "1,2,3", "1.2.3", "1,2.3", "-4", "+4", "1e3", "4 kg", "½", "<b>4</b>", "12345678901234567", null, undefined, "Infinity", "0x10", "٣"]) assert.equal(P.lireSaisie(s), null, JSON.stringify(s));
+  assert.equal(P.lireSaisie("9".repeat(100000)), null, "une saisie énorme est refusée (lue sur 40 caractères)");
+  // moitié et double : calcul exact
+  assert.equal(P.moitie("4"), "2"); assert.equal(P.double("4"), "8");
+  assert.equal(P.moitie("1,5"), "0,75"); assert.equal(P.double("1,5"), "3");
+  assert.equal(P.moitie("0,001"), "0,0005"); assert.equal(P.double("2500"), "5000");
+  assert.equal(P.moitie("0,3"), "0,15");
+  // bornes comprises, juste en dehors refusé, même avec des décimales qui piègent les flottants (0,1 + 0,2…)
+  const F = P.dansLaFourchette;
+  assert.ok(F("2", "4") && F("8", "4") && F("4", "4") && F("1,999999", "4") === false && F("8,000001", "4") === false);
+  assert.ok(F("0,15", "0,3") && F("0,6", "0,3") && !F("0,14999", "0,3") && !F("0,60001", "0,3"));
+  assert.ok(F("0,0005", "0,001") && !F("0,0004", "0,001"));
+  assert.ok(!F("0", "4"));
+  for (const nom of ["dansLaFourchette", "estJuste", "lireSaisie", "fois"]) assert.doesNotMatch(corps(nom), /Number\(|parseFloat|parseInt|\* 0\.5|\/ 2/, nom);
+});
+
+test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle la série est celle du diaporama", () => {
+  assert.deepEqual([...P.typesEntrainement(["length", "est_action", "est_tri"])], ["length", "est_tri"]);
+  const toutes = Object.keys(P.CASES_LIEN);
+  for (let k = 0; k < 300; k++) {
+    const cases = toutes.filter((_, i) => (i * 5 + k) % 4 === 0 || i === 17);   // 17 : « Action en classe » toujours cochée
+    const s = P.tirerSerie(P.typesEntrainement(cases), [1, 2, 3].slice(k % 3), [5, 10, 15, 20][k % 4], `A${k}`);
+    assert.ok(s.length > 0 && s.every((q) => q.caseCochee !== "est_action" && q.qType !== 5));
+  }
+  // le tirage du mode : le même que celui du diaporama, cases filtrées avant
+  const g = corps("getQuizData");
+  assert.ok(g.indexOf("typesEntrainement(rawTypes)") > 0 && g.indexOf("typesEntrainement(rawTypes)") < g.indexOf("tirerSerie("));
+  assert.match(corps("commencerEntrainement"), /getQuizData\(true\)/);
+  assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
+});
+
+test("mêmes séries : pour un code, le diaporama redonne exactement les séries du main (#1297)", () => {
+  // empreintes calculées sur le main ea9ab92 avec les seuls champs du main
+  const MAIN = ["b0ad135bb7640065", "a7cd2420dc6c6b18", "5d30e0fb3f3d7322", "fef22afcb9963a65", "01bab2849c192393", "1d2ad40738bfceb6", "ea15edd9c37ad63a", "4f6ef7b3e5f0c640", "b8b7436d69be3224", "90304fe7170a6dc0", "bf8489d85a652448", "dc7754fa20c3eee8"];
+  const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
+  const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
+  const lot = [];
+  for (let k = 0; k < 12; k++) {
+    const cases = toutes.filter((_, i) => (i + k) % 3 === 0);
+    const serie = P.tirerSerie(cases, [1, 2, 3].slice(0, 1 + (k % 3)), [5, 10, 15, 20][k % 4], `EMP${k}`);
+    const p = serie.map((q) => CHAMPS.map((c) => (q[c] === undefined ? null : q[c])));
+    lot.push(createHash("sha256").update(JSON.stringify(p)).digest("hex").slice(0, 16));
+  }
+  assert.deepEqual(lot, MAIN);
+});
+
+test("je m'entraîne : le lien porte le mode et l'aide (listes fermées) ; « Copier le lien » écrit toujours le mode", () => {
+  const l = (a) => JSON.parse(JSON.stringify(P.lireLien(a)));
+  assert.equal(l("?cases=aires&mode=diapo").mode, "diapo");
+  assert.equal(l("?cases=aires&mode=diapo&aide=sans").aide, "demande", "pas d'aide dans le diaporama");
+  assert.equal(l("?cases=aires&mode=entrainement&aide=sans").aide, "sans");
+  assert.equal(l("?cases=aires&aide=debut").aide, "debut");
+  for (const m of ["DIAPO", "diapo ", "<script>", "__proto__", "entrainement,diapo", "1"]) assert.equal(l(`?cases=aires&mode=${encodeURIComponent(m)}`).mode, "entrainement", m);
+  for (const a of ["DEBUT", "toujours", "<img src=x onerror=alert(1)>", "constructor", ""]) assert.equal(l(`?cases=aires&aide=${encodeURIComponent(a)}`).aide, "demande", a);
+  for (const mode of P.MODES) for (const aide of P.AIDES) {
+    const r = { cases: ["area", "est_tri"], niveaux: [2], questions: 15, serie: "Z9", mode, aide };
+    const lu = l(P.ecrireLien(r));
+    assert.equal(lu.mode, mode); assert.equal(lu.aide, mode === "diapo" ? "demande" : aide);
+  }
+  assert.equal(P.ecrireLien({ cases: ["area"], niveaux: [1], questions: 5, serie: "A", mode: "diapo", aide: "sans" }), "?cases=aires&niveaux=1&questions=5&serie=A&mode=diapo");
+  assert.match(corps("copierLien"), /r\.mode = modeMenu; r\.aide = aideDuMenu\(\);/);
+  // le mode du lien vaut pour la visite : il n'écrase pas le mode retenu sur l'appareil
+  assert.match(corps("ouvrirLien"), /choisirMode\(r\.mode, false\)/);
+});
+
+test("et un pirate ? la saisie et le mot gardé sur l'appareil n'entrent jamais en HTML", () => {
+  // la saisie : écrite en texte dans la case, bornée, jamais dans innerHTML
+  assert.match(corps("majChamp"), /champ\.textContent = st\.saisie \? ecrire\(st\.saisie\) : ''/);
+  for (const ligne of script.split("\n")) if (/innerHTML|insertAdjacentHTML|outerHTML/.test(ligne)) assert.doesNotMatch(ligne, /saisie|\.liens|\.rangs|location|localStorage|getItem/, ligne.trim());
+  assert.match(corps("taper"), /nb < MAX_SAISIE/);
+  assert.equal(P.MAX_SAISIE, 14);
+  // le mode gardé sur l'appareil : lu sous try/catch, revérifié dans la liste fermée ; rien d'autre n'est gardé
+  assert.match(corps("lireModeRetenu"), /try \{ const m = window\.localStorage\.getItem\(CLE_MODE\); return MODES\.includes\(m\) \? m : null; \} catch/);
+  assert.equal((script.match(/localStorage\.setItem/g) || []).length, 1);
+  assert.equal((script.match(/sessionStorage|indexedDB|document\.cookie|fetch\(|XMLHttpRequest|sendBeacon/g) || []).length, 0, "aucune réponse ni aucun score ne part ni n'est gardé");
+  // le message : en texte, sauf les rappels des banques de la page
+  assert.match(corps("message"), /if \(enHtml\) el\.innerHTML = typo\(texteOuHtml\); else el\.textContent = texteOuHtml;/);
+  for (const m of script.matchAll(/message\(([^;]*), (true|false|ok), true\)/g)) assert.match(m[1], /q\.rappel/, m[0]);
+  // ✕ : une boîte dans la page, pas d'alert() ni de confirm()
+  assert.doesNotMatch(script, /\b(alert|confirm|prompt)\(/);
+  assert.match(html, /<h4 id="arretTitre">Arrêter la série&nbsp;\?<\/h4>\s*<p>Tes réponses ne sont pas gardées\.<\/p>/);
+});
+
+test("je m'entraîne : l'écran (pavé tactile seulement, « Valider » sous le doigt, flèches inactives, textes sans mot genré)", () => {
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert.match(css, /\.diapo-container:not\(\.tactile\) \.pave \{ display: none; \}/);
+  assert.match(css, /\.diapo-container\.entr \.entr-pied \{[^}]*position: sticky; bottom: 0;/);
+  assert.match(script, /matchMedia\('\(hover: none\) and \(pointer: coarse\)'\)/);
+  // la case de réponse n'est pas un vrai champ : le clavier du téléphone ne s'ouvre pas
+  assert.doesNotMatch(corps("champHTML"), /<input|contenteditable/);
+  assert.match(script, /if \(enEntrainement\(\)\) \{ toucheEntrainement\(e\); return; \}/);
+  assert.doesNotMatch(corps("toucheEntrainement"), /Arrow/);
+  // Entrée valide, même quand le focus est resté sur un bouton caché (« Continuer » après le ✕) ou grisé
+  assert.match(corps("toucheEntrainement"), /e\.key === 'Enter' && !\(cible === 'BUTTON' && e\.target\.offsetParent !== null && !e\.target\.disabled\)/);
+  assert.match(corps("fermerArret"), /document\.activeElement\.blur\(\)/);
+  // les textes vus par l'élève
+  const textes = [...script.matchAll(/(?:message|creer)\([^)]*?[`'"]([^`'"]{6,})[`'"]/g)].map((m) => m[1]).join(" | ");
+  const page = html.slice(html.indexOf("<body>"), html.indexOf("<script>"));
+  assert.doesNotMatch(textes + page, /\b(vous|votre|Cochez|Validez|Tapez|seul|seule|venu|prêt|prête)\b/);
+  assert.match(html, /Pas encore\. Regarde le tableau, puis réessaie\.|Pas encore\. Regarde le tableau, puis réessaie/);
+  assert.match(script, /Pas cette fois/);
+  assert.doesNotMatch(script, /dernier chiffre/);
+  // « Action en classe » grisée dans ce mode, intacte dans le diaporama
+  assert.match(corps("choisirMode"), /action\.disabled = m === 'entrainement';/);
+  // le trait qui se remplit, comme Défi tables et Défi calcul : pas de barre numérotée sous le pavé
+  assert.doesNotMatch(html, /entr-prog|entrProg/);
+  assert.match(html, /<div class="entr-piste" aria-hidden="true"><b id="entrPiste"><\/b><\/div>/);
+  assert.match(corps("majProgression"), /E\.st\.filter\(st => st\.fini\)\.length/);
+  // téléphone : le tableau qui arrive après une erreur remonte au-dessus du pavé, la case de réponse restant à l'écran
+  const t = corps("tableauAuDessusDuPied");
+  assert.match(t, /classList\.contains\('tactile'\)/);
+  assert.match(t, /window\.scrollBy\(0, Math\.min\(manque, marge\)\)/);
+  assert.match(corps("montrerTableau"), /requestAnimationFrame\(tableauAuDessusDuPied\)/);
 });
