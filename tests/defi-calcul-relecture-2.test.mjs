@@ -49,15 +49,17 @@ test("A1-1 : les compléments à 10, en barres ; l'aide de l'entraînement aussi
   assert.equal(a.ecris.dessins.length, a.ecris.etapes.length + 1);
   assert.ok(textesSvg(AIDES.dessinerImage(a.ecris.dessins[0])).includes("?"));
   assert.ok(textesSvg(AIDES.dessinerImage(a.ecris.dessins[1])).includes("2"));
-  // L'entraînement : les compléments en barres, les sommes sur la droite.
+  // L'entraînement : les compléments en barres ; les sommes aussi depuis le
+  // lot C4b (le tout « ? » en haut, les deux nombres dessous).
   const serie = CORE.genererSerie("A1-1", {graine: 2, total: 20});
   serie.forEach(c => {
-    const trou = c.forme !== "somme";
-    assert.equal(CORE.aideDe(c).outil, trou ? "deux-barres" : "droite-sauts", c.texte);
-    assert.equal(CORE.imageDe(c).outil, trou ? "deux-barres" : "droite-sauts", c.texte);
+    assert.equal(CORE.aideDe(c).outil, "deux-barres", c.texte);
+    assert.equal(CORE.imageDe(c).outil, "deux-barres", c.texte);
   });
-  // A1-2 et A1-3 gardent la droite (passer par 10).
-  CORE.genererSerie("A1-3", {graine: 2, total: 20}).forEach(c => assert.equal(CORE.aideDe(c).outil, "droite-sauts", c.texte));
+  // A1-3 : les trous qui passent 10 gardent la droite (passer par 10) ; les
+  // petites différences (9 − 4) prennent les deux barres (lot C4b).
+  CORE.genererSerie("A1-3", {graine: 2, total: 20}).forEach(c => assert.equal(CORE.aideDe(c).outil,
+    c.forme === "difference" && c.donnees.n <= 10 ? "deux-barres" : "droite-sauts", c.texte));
 });
 
 test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virgules", () => {
@@ -229,7 +231,7 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
   assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

@@ -36,8 +36,9 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // (Lot C4a : la ligne dit ce que vaut le nombre — « 768, c’est 76 dizaines
 // et 8 unités. », « 20, c’est 2 dizaines ; 100, c’est 10 dizaines. »,
 // « 350, c’est 35 dizaines. ».)
-const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
-const SANS_LIGNE = new Set(["A2-1", "M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
+// (Lot C4b : A2-1 a sa phrase « Dans 433, le chiffre des unités est 3. », comme A2-2 au lot C4a.)
+const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-1", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2"]);
+const SANS_LIGNE = new Set(["M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
 // « moitié de 28 », « 1/2 de 6 L » (l'unité s'en va), « 58 × 10 ÷ 2 ».
