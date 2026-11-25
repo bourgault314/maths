@@ -234,6 +234,13 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
       });
       if (calcul.module !== "F4") {
         const fin = ecris.dessins[ecris.dessins.length - 1];
+        // (Lot C4d : au-delà de 12 parts par unité, les flèches de la
+        // fraction à réécrire — la case est le numérateur réécrit, trouvé à
+        // la première ligne ; pas d'accolade.)
+        if (ecris.dessins[0].outil === "fois-fraction") {
+          assert.ok(ecris.dessins.every(d => d.outil === "fois-fraction") && !ecris.dessins[0].montre && fin.montre, `${t} : les flèches se remplissent`);
+          return;
+        }
         ecris.dessins.slice(0, -1).forEach((d, k) => assert.ok(!d.bas || String(d.bas.texte).includes("?"), `${t} : l'accolade garde « ? » au dessin ${k}`));
         // (Lot 6 : la fraction cherchée l'écrit sur ses crochets, « 2/3 ».)
         assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(x => x.trouve) || (fin.haut || []).some(h => h.trouve && h.texte === calcul.ecrite), `${t} : la dernière étape écrit la réponse`);
@@ -302,9 +309,11 @@ test("lot 7c : les annonces — trois fractions, nombres mixtes, la fraction che
   assert.equal(espaces(CORE.annonceDe(premier("F11-2", "produit-gauche"))), "Nouveau : les facteurs ont changé de place.");
   // (Lot 6 : la fraction cherchée.)
   assert.match(espaces(CORE.annonceDe(premier("F11-2", "fraction"))), /^Nouveau : la fraction cherchée, c’est le nombre qui, multiplié par (\d+), donne (\d+)\.$/);
-  // Au-delà de 30 parts : le calcul, annoncé, avec les deux flèches.
-  const grand = tous("F9-3").find(c => CORE.aideDe(c).outil === "fois-fraction");
+  // Au-delà de 30 parts : le calcul, annoncé, avec les deux flèches (au CM1,
+  // F9-2 ; lot C4d : en F9-3, la leçon est aux flèches, rien à annoncer).
+  const grand = CORE.genererSerie("F9-2", {graine: 3, total: 40}).find(c => CORE.aideDe(c).outil === "fois-fraction");
   assert.equal(espaces(CORE.nouveauteDe(grand).texte), "Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas.");
+  tous("F9-3").filter(c => CORE.aideDe(c).outil === "fois-fraction").forEach(c => assert.equal(CORE.nouveauteDe(c), null, c.texte));
   // F4 : une seule écriture, rien à annoncer (l'unité change, la méthode non).
   ["F4-1", "F4-2"].forEach(cle => tous(cle).forEach(c => {
     assert.equal(c.forme, "quantite");
@@ -344,7 +353,8 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
   assert.equal(bilan("F4-1"), "Pour 2/3 de 12 œufs, je partage en 3 parts égales : une part, c’est 4 œufs. 2 parts, c’est 8 œufs.");
   assert.equal(bilan("F4-2"), "Pour 3/4 de 10 m, je partage en 4 parts égales : une part, c’est 2,5 m. 3 parts, c’est 7,5 m.");
   assert.equal(bilan("F9-2"), "2/3 = 4/6. 2/3 + 5/6 = 4/6 + 5/6 = 9/6.");
-  assert.equal(bilan("F9-3"), "4/7 = 12/21. 4/7 − 2/21 = 12/21 − 2/21 = 10/21.");
+  // (Lot C4d : les flèches « × 3 » dessinées dessous, le calcul seul.)
+  assert.equal(bilan("F9-3"), "4/7 − 2/21 = 12/21 − 2/21 = 10/21.");
   assert.equal(bilan("F11-1"), "3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4.");
   assert.equal(bilan("F11-2"), "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.");
   assert.deepEqual(AIDES.bilanEnDeux(bilan("F11-1")), {phrase: "3 fois 5 quarts, c’est 15 quarts.", calcul: "3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4"});
@@ -352,8 +362,8 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-2/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261125-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
@@ -368,5 +378,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
   assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

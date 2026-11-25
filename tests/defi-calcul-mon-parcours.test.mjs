@@ -611,7 +611,10 @@ test("Mon module et la fin de séance : chaque niveau construit dit avec quoi il
     if (SANS_DROITE.includes(m.id)) assert.notEqual(cle, "aucun", `${m.id}-${n.n} : pas de droite`);
   }));
   assert.equal(detail[outil(CORE.niveauDe("D4-1").niveau.apprends)], "avec le tableau à jetons");
-  assert.equal(reprise[outil(CORE.niveauDe("F6-3").niveau.apprends)], "avec le schéma en barres");
+  // (Lot C4d : au-delà de 12 parts, la leçon de « Fractions égales : diviser » a les flèches.)
+  assert.equal(reprise[outil(CORE.niveauDe("F6-3").niveau.apprends)], "avec les flèches");
+  assert.equal(detail[outil(CORE.niveauDe("F6-3").niveau.apprends)], "avec les flèches en haut et en bas");
+  assert.equal(reprise[outil(CORE.niveauDe("F6-2").niveau.apprends)], "avec le schéma en barres");
   assert.equal(detail[outil(CORE.niveauDe("F2-1").niveau.apprends)], "avec les bandes de fractions");
   // Modules lot 6b : F1 les bandes, F3 les billes, puis le schéma (F3-3).
   assert.equal(detail[outil(CORE.niveauDe("F1-1").niveau.apprends)], "avec les bandes de fractions");

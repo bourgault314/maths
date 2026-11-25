@@ -269,6 +269,6 @@ test("les données ne changent pas : progression, compétences, clés des calcul
   // La copie du moteur pour la page prof, octet pour octet.
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-2/);
-  assert.match(html, /defi_calcul_aides\.js\?v=20261125-1/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
 });

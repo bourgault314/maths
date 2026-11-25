@@ -266,7 +266,8 @@ async function jouerBandes(s, m, cle) {
         await etapes(s.page, [{reponse: calcul.reponse}], t);
       }
       // Au-delà de 30 parts : annoncé, les deux flèches.
-      assert.equal(await appel(s.page, "nouveaute", "F9", 3, "trop de parts", "image"), true);
+      // (Lot C4d : au CM2, la leçon est aux flèches ; l'annonce reste au CM1.)
+      assert.equal(await appel(s.page, "nouveaute", "F9", 2, "trop de parts", "image"), true);
       await pause(s.page, 500);
       assert.match(await texte(s.page, "#annonce"), /Nouveau : trop de parts pour les dessiner : je multiplie en haut et en bas\./);
       assert.ok((await textesDessin(s.page)).some(x => /^× \d+$/.test(x)), "les deux flèches");

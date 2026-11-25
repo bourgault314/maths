@@ -57,7 +57,7 @@ const AUTRE_SORTE = Object.freeze({
   // (Lot 7e-2 : F3-3, la leçon et J'écris sur un quart, la moitié de la moitié.)
   "D1-2": "taille : chaque morceau dans sa colonne", "D1-3": "taille : chaque morceau dans sa colonne",
   "M4-1": "décidé : J'écris sur la division (remarque 61)", "M4-2": "décidé : J'écris sur la division (remarque 61)",
-  "F1-1": "décidé : 0,7 = 7/?", "F1-2": "décidé : 3/4 = ?/100",
+  "F1-1": "décidé : 0,7 = 7/?",
   // Lot 6 « fraction à deux cases » (18/11/2026, choix de Gwenaël) : On te
   // montre 7 × 3/7 = 3 (la définition), J'écris sur la fraction cherchée,
   // 3 × □ = 2.

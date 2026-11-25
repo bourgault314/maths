@@ -1073,7 +1073,8 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
         // Lot C4b : les sommes d'A1-1 (« ? » en haut ; 2 et 4 dessous ; 0 + 7 :
         // la barre de 7 seule) et les petites différences d'A1-3 (9 en haut ;
         // 4 et « ? » dessous).
-        assert.ok((cle === "A1-1" || cle === "A1-3") && aide.masque, `${cle} : ${c.texte}`);
+        // (Lot C4d : « 10 + 10 » de « Sommes jusqu'à 20 », le double de 10.)
+        assert.ok((cle === "A1-1" || cle === "A1-3" || (cle === "A1-2" && avecEspaces(c.texte) === "10 + 10 = □")) && aide.masque, `${cle} : ${c.texte}`);
         const etiquettes = textesSvg(AIDES.dessinerImage(aide));
         const {n, d, m} = c.donnees;
         const attendu = c.forme === "somme" ? ["?", ...(n === 0 ? [d] : d === 0 ? [n] : [n, d]).map(String)]
@@ -1092,7 +1093,10 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
         // (Un complément donne son arrivée, écrite dans le rang : 100 → 10.)
         const cases = [...aide.lignes, ...(aide.res.label ? [] : [aide.res])].flatMap(l => l.cells.filter(Boolean).map(cel => cel.t));
         assert.ok(cases.includes("?") && (c.reponse < 10 || !cases.includes(reponse)), `${cle} : ${c.texte} — ${cases.join(" ")}`);
-        assert.equal(nombreDuTableau(CORE.imageDe(c)), c.reponse, `${cle} : ${c.texte} — le tableau corrigé se lit`);
+        // (Lot C4d : les doubles et moitiés de décimaux se comptent en
+        // dixièmes, en centièmes — 272 dixièmes pour 27,2.)
+        const enRang = c.module === "D8" ? 10 ** (avecEspaces(CORE.imageDe(c).cols[0].nom) === "dixièmes" ? 1 : 2) : 1;
+        assert.ok(CORE.memeNombre(nombreDuTableau(CORE.imageDe(c)) / enRang, c.reponse), `${cle} : ${c.texte} — le tableau corrigé se lit`);
         assert.ok(textesSvg(AIDES.dessinerImage(aide)).includes("?"), `${cle} : la case dessinée`);
       } else {
         assert.equal(aide.outil, "tableau-fleches");
@@ -2349,18 +2353,24 @@ function verifierOutilLot5(c) {
   assert.equal(image.outil, "numeration");
   assert.ok(!image.inconnue);
   const lu = nombreDuBas(image);
-  assert.equal(c.forme === "numerateur" ? CORE.exact(lu * 10 ** c.k) : lu, c.reponse, `${c.texte} : la correction montre la réponse`);
+  // (Lot C4d : « 4,107 = 4 + □/10 + 7/1 000 » — la ligne des dixièmes écrite.)
+  if (c.decompose) assert.ok(image.lignes.some(l => avecEspaces(l.texte) === `+ ${c.reponse}/10`), `${c.texte} : la correction montre la réponse`);
+  else assert.equal(c.forme === "numerateur" ? CORE.exact(lu * 10 ** c.k) : lu, c.reponse, `${c.texte} : la correction montre la réponse`);
   // « 4,107 = 4 + □/10 + 7/1 000 » (lot « couverture ») : pas d'aide — le
   // tableau écrirait le chiffre cherché.
-  if (aide === null) assert.ok(c.module === "D1" && / \+ □\/10 \+ /.test(c.texte), `${c.texte} : une aide`);
-  else sansLaReponse(AIDES.dessinerImage(aide), c.reponse, c.texte, {aria: !(aide.outil === "carre" && c.forme === "numerateur")});
+  // (Lot C4d : « 4,107 = 4 + □/10 + 7/1 000 » a son tableau — le nombre
+  // écrit en bas, l'élève y lit le chiffre des dixièmes.)
+  assert.ok(aide !== null, `${c.texte} : une aide`);
+  if (!c.decompose) sansLaReponse(AIDES.dessinerImage(aide), c.reponse, c.texte, {aria: !(aide.outil === "carre" && c.forme === "numerateur")});
   if (c.module === "D1") {
     // Pas de carré au niveau 3 (millièmes), ni au-delà de 3 unités : à la
     // vraie taille, il ne tiendrait plus (décision du 04/11, planche choix-4).
     const sansCarre = c.niveau === 3 || avecEspaces(c.texte).includes("1 000") || Math.trunc(c.donnees.v) > 3;
     if (c.decompose) {
-      // « 4,107 = 4 + □/10 + 7/1 000 » (lot « couverture ») : pas d'aide.
-      assert.equal(aide, null, c.texte);
+      // « 4,107 = 4 + □/10 + 7/1 000 » (lot « couverture ») : lot C4d, la
+      // décomposition dans le tableau, la ligne des dixièmes à remplir.
+      assert.equal(aide.outil, "numeration", c.texte);
+      assert.equal(aide.lignes.filter(l => l.cherche).length, 1, c.texte);
       assert.equal(m, null, c.texte);
     } else if (sansCarre) {
       assert.equal(aide.outil, "numeration");
@@ -2636,7 +2646,7 @@ test("modules lot 5 : les dessins nouveaux tiennent leurs promesses", () => {
   assert.deepEqual(fractionsDe("8/100 + 4/10 + 3/1\u00a0000"), [["8", "100"], ["4", "10"], ["3", "1\u00a0000"]]);
   // Le niveau 3 de D1 (les millièmes) : le tableau seul, jamais le carré.
   // (« 4,107 = 4 + □/10 + 7/1 000 », lot « couverture » : pas d'aide.)
-  lot5("D1-3").forEach(c => (c.decompose ? assert.equal(CORE.aideDe(c), null, c.texte) : assert.equal(CORE.aideDe(c).outil, "numeration", c.texte)));
+  lot5("D1-3").forEach(c => assert.equal(CORE.aideDe(c).outil, "numeration", c.texte));
   // D2 et D3 : J'écris en une seule étape (décision du 04/11) ; plus rien
   // n'utilise les étapes « entiers » / « decimaux ».
   ["D2-1", "D2-2", "D2-3", "D3-1", "D3-2", "D3-3"].forEach(cle => {
@@ -2836,8 +2846,11 @@ function verifierApprendsLot6(fiche, niveau, cle) {
   // son membre de gauche, au moins.
   const calculImage = avecEspaces(a.textes[0]);
   assert.ok(avecEspaces(a.bilan).includes(calculImage.split(" = ")[0]), `${cle} : « ${a.bilan} » cite ${calculImage}`);
-  assert.equal(a.represente.outil, "barre-droite");
-  assert.equal(a.image.outil, "barre-droite");
+  // (Lot C4d : au-delà de 12 parts, « Fractions égales : diviser, le
+  // dénominateur » passent aux flèches dans la leçon aussi.)
+  const fleches = ["F6-3", "F6-4"].includes(cle);
+  assert.equal(a.represente.outil, fleches ? "fois-fraction" : "barre-droite", cle);
+  assert.equal(a.image.outil, fleches ? "fois-fraction" : "barre-droite", cle);
   // Les bandes : F2, F5-1, F5-2, F6-1, F8-1, F8-2 (décision du 04/11).
   const avecBandes = ["F2-1", "F2-2", "F5-1", "F5-2", "F6-1", "F8-1", "F8-2"].includes(cle);
   assert.equal(Boolean(a.manipule), avecBandes, `${cle} : des bandes à manipuler`);
@@ -3441,9 +3454,9 @@ test("modules lot 6b : les dessins, les bandes de F1 et les billes de F3 — la 
   assert.match(tp, /stroke="#0755b8" stroke-width="3.5"/);
   assert.equal(ariaDe(tp), "Schéma en barres. En haut, le tout : 60 kg. En dessous, 5 parts égales. La première part, à trouver : ?.");
   assert.doesNotMatch(tp, /clipPath|id="/);
-  // F1-2, J'écris 3/4 = □/100 (lot 3a) : le carré se colorie à chaque étape (le quart, puis les trois quarts).
-  const carres = CORE.niveauDe("F1-2").niveau.apprends.ecris.dessins.map(d => [d.dixiemes, d.centiemes]);
-  assert.deepEqual(carres, [[0, 0], [2, 5], [7, 5]]);
+  // F1-2, J'écris 7/2 = □ (lot C4d : 7/2 = 350/100 = 3,5) : le carré se colorie à chaque étape (le demi, puis les sept demis).
+  const carres = CORE.niveauDe("F1-2").niveau.apprends.ecris.dessins.map(d => [d.unites, d.dixiemes, d.centiemes]);
+  assert.deepEqual(carres, [[0, 0, 0], [0, 5, 0], [3, 5, 0], [3, 5, 0]]);
   // F1-1, J'écris 0,7 = 7/□ (lot 3a : des dixièmes) : « 7/? », puis « 7/10 » en vert.
   const tab = CORE.niveauDe("F1-1").niveau.apprends.ecris.dessins;
   assert.deepEqual(tab.map(d => [avecEspaces(d.resultat.texte), Boolean(d.resultat.trouve)]), [["7/?", false], ["7/?", false], ["7/10", true]]);
@@ -3555,10 +3568,14 @@ const OUTILS_7B = {D8: "barres", D9: "dix-fois", M13: "barres-fois"};
 function verifierOutilLot7b(c) {
   const aide = CORE.aideDe(c);
   const image = CORE.imageDe(c);
-  assert.equal(aide.outil, OUTILS_7B[c.module], c.texte);
-  assert.equal(image.outil, OUTILS_7B[c.module], c.texte);
+  // (Lot C4d : D8-2 à D8-5, comptés en dixièmes, en centièmes — le tableau ;
+  // la correction écrit le résultat dans le rang, 272 dixièmes.)
+  const compte = c.module === "D8" && c.niveau !== 1;
+  assert.equal(aide.outil, compte ? "tableau-rang" : OUTILS_7B[c.module], c.texte);
+  assert.equal(image.outil, compte ? "tableau-rang" : OUTILS_7B[c.module], c.texte);
   sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
-  assert.ok(textesSvg(AIDES.dessinerImage(image)).some(t => avecEspaces(t).split("= ").pop() === avecEspaces(CORE.formaterNombre(c.reponse))), `${c.texte} : la correction montre la réponse`);
+  if (compte) assert.ok(textesSvg(AIDES.dessinerImage(image)).map(avecEspaces).includes(avecEspaces(CORE.formaterNombre(image.valeur))), `${c.texte} : la correction montre le résultat dans le rang`);
+  else assert.ok(textesSvg(AIDES.dessinerImage(image)).some(t => avecEspaces(t).split("= ").pop() === avecEspaces(CORE.formaterNombre(c.reponse))), `${c.texte} : la correction montre la réponse`);
   const m = CORE.manipulationDe(c);
   if (c.module !== "D9") { assert.equal(m, null, `${c.texte} : pas d'outil à manipuler`); return; }
   // D9 : le glisse-nombres avec la virgule (× 10, × 100 pour × 50).
@@ -3571,7 +3588,8 @@ function verifierApprendsLot7b(fiche, niveau, cle) {
   const a = niveau.apprends;
   const montre = a.calculs.montre;
   assert.equal(CORE.sorteDansNiveau(cle, montre), CORE.sorteDansNiveau(cle, a.calculs.ecris), `${cle} : la leçon garde une seule sorte (On te montre, J'écris)`);
-  assert.equal(a.represente.outil, OUTILS_7B[fiche.id], cle);
+  // (Lot C4d : D8-2 à D8-5 comptés en dixièmes, en centièmes — le tableau.)
+  assert.equal(a.represente.outil, fiche.id === "D8" && cle !== "D8-1" ? "tableau-rang" : OUTILS_7B[fiche.id], cle);
   sansLaReponse(AIDES.dessinerImage(a.represente.image), a.represente.reponse, `${cle} : Avec le dessin`);
   if (fiche.id === "D9") assert.equal(a.manipule.outil, "glisse", cle);
   else assert.equal(a.manipule, null, `${cle} : pas de manipulation`);
@@ -3668,7 +3686,8 @@ function verifierOutilLot7c(c) {
 }
 function verifierApprendsLot7c(fiche, niveau, cle) {
   const a = niveau.apprends;
-  const outil = {F4: "tout-parts", F9: "barre-droite", F11: "barre-droite"}[fiche.id];
+  // (Lot C4d : « au-delà de 20 », une unité en 21 parts — les flèches.)
+  const outil = cle === "F9-3" ? "fois-fraction" : {F4: "tout-parts", F9: "barre-droite", F11: "barre-droite"}[fiche.id];
   assert.equal(a.represente.outil, outil, cle);
   assert.equal(a.image.outil, a.manipule && fiche.id === "F4" ? "tout-parts" : outil, cle);
   assert.equal(a.manipule ? a.manipule.outil : null, {"F4-1": "billes", "F9-1": "bandes", "F9-2": "bandes", "F11-1": "bandes"}[cle] || null, cle);

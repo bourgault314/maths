@@ -91,7 +91,10 @@ test("fractions égales : le dessin jusqu'à 12 parts, puis les deux flèches", 
     // (Correctif « programmes 2 » : au CM2, la leçon dépasse 20 parts — sa
     // barre en a 24 ou 21, au plus 30.)
     assert.ok(Math.ceil(montre.donnees.a / montre.donnees.d) * montre.donnees.k * montre.donnees.d <= (cle === "F6-1" ? 12 : 30), `${cle} : la leçon a trop de parts`);
-    assert.equal(a.image.outil, "barre-droite", cle);
+    // (Lot C4d, règle des 12 parts choisie par Gwenaël le 25/11 : au CM2,
+    // la leçon passe aussi aux flèches — À retenir et Je représente.)
+    assert.equal(a.image.outil, cle === "F6-1" ? "barre-droite" : "fois-fraction", cle);
+    assert.equal(a.represente.outil, cle === "F6-1" ? "barre-droite" : "fois-fraction", cle);
     // Lot 7e : F6-1 (programme du CE2) n'a plus que 12 parts au plus — J'écris sur les bandes.
     assert.ok(a.ecris.dessins.every(d => d.outil === (cle === "F6-1" ? "barre-droite" : "fois-fraction")), `${cle} : J'écris sur le calcul`);
     tirage(cle, 10).forEach(c => {

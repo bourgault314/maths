@@ -127,32 +127,28 @@ test("lot 7b (règle revue au lot 6 « programmes ») : la règle commune de M12
   assert.equal(espaces(CORE.niveauDe("M13-3").niveau.apprends.calculs.montre.texte), "260 ÷ 8 = □");
 });
 
-test("lot 7b : D8, le double et la moitié suivent le même chemin — deux morceaux, la partie entière et la partie décimale", () => {
-  // (Lot C1 : la première moitié de la série est la plus facile — « moitié
-  // de 0,6 », un seul morceau, sans J'écris ; on prend une moitié à deux
-  // morceaux.)
-  // (Lot C2 : la moitié a son niveau, D8-3, et sa leçon.)
+test("lot 7b : D8, le double et la moitié suivent le même chemin — compté en dixièmes, en centièmes (lot C4d)", () => {
+  // (Lot C4d, choix de Gwenaël du 21/11 : le double de 13,6 est le double de
+  // 136 dixièmes — calcul mental CM2, p. 18. Avant : deux morceaux, 13 et 0,6.)
   const moitie = CORE.genererSerie("D8-3", {graine: 3, total: 40}).find(c => c.forme === "moitie" && CORE.ecrisDuCalcul("D8-3", c));
   const ecris = CORE.ecrisDuCalcul("D8-3", moitie);
-  const {e, dec} = moitie.donnees;
-  assert.equal(espaces(ecris.consigne), espaces(`moitié de ${CORE.formaterNombre(moitie.donnees.n)} = ${e} ÷ 2 + ${CORE.formaterNombre(dec)} ÷ 2`));
-  assert.deepEqual(ecris.etapes.map(x => x.reponse), [e / 2, CORE.exact(dec / 2), moitie.reponse]);
+  const N = Math.round(moitie.donnees.n * 10);
+  assert.equal(espaces(ecris.consigne), espaces(`moitié de ${CORE.formaterNombre(moitie.donnees.n)} = ${N} dixièmes ÷ 2`));
+  assert.deepEqual(ecris.etapes.map(x => x.reponse), [N / 2, moitie.reponse]);
   const double = CORE.niveauDe("D8-2").niveau.apprends.ecris;
-  assert.equal(espaces(double.consigne), "double de 7,8 = 2 × 7 + 2 × 0,8");
-  // 8,10 : la partie décimale s'écrit aussi avec son zéro, partout.
+  assert.equal(espaces(double.consigne), "double de 7,8 = 2 × 78 dixièmes");
+  // 8,10 : compté en centièmes, avec son zéro.
   const huit = tous("D8-5").find(c => espaces(c.texte) === "moitié de 8,10 = □");
   const e810 = CORE.ecrisDuCalcul("D8-5", huit);
-  assert.equal(espaces(e810.consigne), "moitié de 8,10 = 8 ÷ 2 + 0,10 ÷ 2");
-  assert.deepEqual(textesSvg(AIDES.dessinerImage(CORE.aideDe(huit))).filter(t => t.includes(",")), ["8,10", "0,10"]);
-  // Lot C2 : la moitié n'est plus annoncée (c'est la leçon de son niveau) ;
-  // « ÷ 2 », l'écriture nouvelle, arrive avec le dessin de l'annonce :
-  // chaque morceau déjà coupé en deux.
+  assert.equal(espaces(e810.consigne), "moitié de 8,10 = 810 centièmes ÷ 2");
+  assert.deepEqual(textesSvg(AIDES.dessinerImage(CORE.aideDe(huit))).filter(t => t.includes(",")), ["8,10"]);
+  // Lot C2 : la moitié n'est plus annoncée (c'est la leçon de son niveau).
   assert.equal(CORE.nouveauteDe(moitie), null);
-  assert.equal(espaces(CORE.niveauDe("D8-3").niveau.apprends.ecris.consigne), "moitié de 15,8 = 15 ÷ 2 + 0,8 ÷ 2");
+  assert.equal(espaces(CORE.niveauDe("D8-3").niveau.apprends.ecris.consigne), "moitié de 15,8 = 158 dixièmes ÷ 2");
+  // « ÷ 2 », l'écriture nouvelle, arrive avec le tableau, sans la réponse.
   const division = CORE.genererSerie("D8-3", {graine: 3, total: 40}).find(c => c.forme === "division" && c.donnees.morceaux.length === 2);
   const dessin = CORE.aideDe(division, {nouveau: true});
-  assert.deepEqual([...dessin.trouves], [0, 1]);
-  assert.equal(dessin.fini, false);
+  assert.equal(dessin.outil, "tableau-rang");
   assert.ok(!textesSvg(AIDES.dessinerImage(dessin)).includes(espaces(CORE.formaterNombre(division.reponse))), "le dessin d'annonce ne dit pas la réponse");
   assert.match(espaces(CORE.nouveauteDe(huit).texte), /^Nouveau : 0,10, c’est 10 centièmes : leur moitié, c’est 5 centièmes\.$/);
   // La carte du niveau 1 : sous chaque nombre, sa moitié.

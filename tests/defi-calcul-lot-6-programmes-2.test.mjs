@@ -181,7 +181,8 @@ test("décimal × 5, × 50 ; doubles et moitiés de petits décimaux", () => {
   const d82 = textes("D8-2", 200);
   assert.ok(d82.has("double de 0,7 = □") || d82.has("2 × 0,7 = □"), "le double de 0,7");
   const double = tous("D8-2").find(c => c.donnees.n < 1 && !["moitie", "division"].includes(c.forme));
-  assert.match(espaces(CORE.diagnostiquer ? CORE.imageDe(double).outil : ""), /barres/);
+  // (Lot C4d : compté en dixièmes — 0,7 = 7 dixièmes, le tableau.)
+  assert.match(espaces(CORE.diagnostiquer ? CORE.imageDe(double).outil : ""), /tableau-rang/);
 });
 
 test("Remonter un calcul : l'égalité dans les deux sens, aux deux niveaux", () => {
@@ -258,7 +259,7 @@ test("la progression : version 9 (10 depuis le lot F4) ; une progression de vers
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261125-3/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");

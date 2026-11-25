@@ -828,9 +828,12 @@
     };
     const dire = l => {
       const morceaux = l.cells.map((cel, i) => (cel && cel.t !== "" ? cellule(cel, o.cols[i].nom) : null)).filter(Boolean);
+      // (Lot C4d : une ligne sans case — « ÷ 2 » — se lit seule, sans « : ».)
+      if (!morceaux.length) return l.label || "";
       return `${l.label ? `${l.label} : ` : ""}${morceaux.join(", ")}`;
     };
-    return `Tableau, en ${o.cols.find(c => c.large).nom}. ${[...o.lignes, o.res].map(dire).filter(t => t.trim()).join(". ")}.`;
+    const phrases = [...o.lignes, o.res].map(dire).filter(t => t.trim()).map(t => t.charAt(0).toUpperCase() + t.slice(1));
+    return `Tableau, en ${o.cols.find(c => c.large).nom}. ${phrases.join(". ")}.`;
   }
 
 
@@ -1364,20 +1367,24 @@
   function decrireTableau(o, plan = planTableau(o)) {
     const glisse = `chaque chiffre glisse de ${accorder(Math.abs(plan.k), "colonne", "colonnes")} ${versLeCote(plan.k)}`;
     const depart = o.haut === "cherche" ? "Tableau de numération. En haut, un nombre à trouver." : `Tableau de numération. En haut, ${ecritureLisible(o.depart)}.`;
-    if (o.masque && o.etiquetteTrouvee) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    if (o.masque && o.etiquetteTrouvee && !o.inconnue) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    // (Lot C4d : J'écris de « Entre eux » — la flèche dit « × ? » jusqu'à la
+    // ligne 10 × 10 : le lecteur d'écran ne dit ni 100 ni les colonnes.)
+    const cache = o.inconnue && o.masque && !o.etiquetteTrouvee;
+    const par = cache ? `${o.operation === "÷" ? "Divisé" : "Multiplié"} par un nombre à trouver` : `${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}`;
     const tout = Array.isArray(o.trouves) && [...plan.bas.keys()].every(rang => o.trouves.includes(rang));
-    if (o.inconnue && tout) return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    if (o.inconnue && tout) return `${depart} ${par}. En bas, ${ecritureLisible(o.arrivee)}.`;
     if (o.inconnue && Array.isArray(o.trouves) && o.trouves.length) {
       // Les chiffres déjà écrits par l'élève, chacun avec sa colonne.
       const lus = [...plan.bas.entries()].filter(([rang]) => o.trouves.includes(rang)).map(([rang, chiffre]) => `${chiffre} aux ${RANGS[rang].toLowerCase()}`);
-      return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas : ${lus.join(", ")}, le reste à trouver.`;
+      return `${depart} ${par}. En bas : ${lus.join(", ")}, le reste à trouver.`;
     }
-    if (o.masque) return `${depart} En bas, ${ecritureLisible(o.arrivee)}. On a multiplié par combien ? Compte les colonnes.`;
+    if (o.masque && !o.inconnue) return `${depart} En bas, ${ecritureLisible(o.arrivee)}. On a multiplié par combien ? Compte les colonnes.`;
     if (o.inconnue) {
-      const vides = plan.zeros.length ? ` ${accorder(plan.zeros.length, "case reste vide", "cases restent vides")}.` : "";
-      return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}.${vides}`;
+      const vides = plan.zeros.length && !cache ? ` ${accorder(plan.zeros.length, "case reste vide", "cases restent vides")}.` : "";
+      return `${depart} ${par}.${vides}`;
     }
-    return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
+    return `${depart} ${o.operation === "÷" ? "Divisé" : "Multiplié"} par ${nombre(o.p)} : ${glisse}. En bas, ${ecritureLisible(o.arrivee)}.`;
   }
 
   // ------------------------------------------------- le schéma en barres
@@ -3050,7 +3057,7 @@
   //   o : {op, carres, bleu (cases coloriées au départ), autre (cases
   //   hachurées ou barrées), cache (vrai : ce qui manque n'est pas encore
   //   hachuré), montre}
-  const CARRE_OP = Object.freeze({hachure: "#0755b8", barre: "#143451", enleve: "#e6ecf3"});
+  const CARRE_OP = Object.freeze({hachure: "#0755b8", barre: "#143451", enleve: "#e6ecf3", cassee: "#c86a12"});
   let compteurCarresOp = 0;
   function casesOpSvg(x0, y0, cote, debut, fin, rendu) {
     // Les cases [debut, fin[ d'UN carré (0 à 100), en rectangles : les
@@ -3108,7 +3115,11 @@
       s += `<line x1="${x + j * c}" y1="${y}" x2="${x + j * c}" y2="${y + cote}" stroke="${CARRE.trait}" stroke-width="1.1" opacity=".9"/>`;
       s += `<line x1="${x}" y1="${y + j * c}" x2="${x + cote}" y2="${y + j * c}" stroke="${CARRE.trait}" stroke-width=".5" opacity=".45"/>`;
     }
-    return s + `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="none" stroke="${CARRE.trait}" stroke-width="2.4"${o.montre ? ' class="dc-montre"' : ""}/>`;
+    // Lot C4d : un dixième cassé (1,6 − 1,51) — sa bande entourée en
+    // tirets épais : 1 bande = 10 petits carrés (lisible en noir et blanc).
+    const cassee = Number.isInteger(o.bandeCassee) && k === Math.floor(o.bandeCassee / 10)
+      ? `<rect x="${x + (o.bandeCassee % 10) * c - 1.5}" y="${y - 1.5}" width="${c + 3}" height="${cote + 3}" fill="none" stroke="${CARRE_OP.cassee}" stroke-width="3" stroke-dasharray="6 3" rx="2"/>` : "";
+    return s + `<rect x="${x}" y="${y}" width="${cote}" height="${cote}" fill="none" stroke="${CARRE.trait}" stroke-width="2.4"${o.montre ? ' class="dc-montre"' : ""}/>` + cassee;
   }
   // Les motifs : la hachure de ce qu'on ajoute (traits bleus sur blanc), le
   // barré de ce qu'on enlève (une croix sur un gris très clair) — lisibles
@@ -3144,7 +3155,8 @@
     const debut = `${o.carres > 1 ? "Deux carrés" : "Un carré"} de 100 : un carré entier est une unité, une bande un dixième, un petit carré un centième.`;
     if (o.op === "completer") return `${debut} Colorié : ${casesEnMots(o.bleu)}. ${o.cache ? "Le reste est blanc : il faut le compter." : `Hachuré, ce qui manque : ${casesEnMots(o.autre)}.`}`;
     if (o.op === "ajouter") return `${debut} Colorié : ${casesEnMots(o.bleu)}. ${o.cache ? "On ajoute des cases : il faut les compter." : `Hachuré, ce qu'on ajoute : ${casesEnMots(o.autre)}.`}`;
-    return `${debut} Colorié au départ : ${casesEnMots(o.bleu)}. ${o.cache ? "On enlève des cases : il faut les compter." : `Barré, ce qu'on enlève : ${casesEnMots(o.autre)}.`}`;
+    const cassee = Number.isInteger(o.bandeCassee) ? " Une bande est cassée en 10 petits carrés : elle est entourée." : "";
+    return `${debut} Colorié au départ : ${casesEnMots(o.bleu)}. ${o.cache ? "On enlève des cases : il faut les compter." : `Barré, ce qu'on enlève : ${casesEnMots(o.autre)}.`}${cassee}`;
   }
 
   // La règle des carrés qui calculent, sans page (testée par node --test) :
