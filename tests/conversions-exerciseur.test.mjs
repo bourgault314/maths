@@ -3,6 +3,8 @@
 // ordres de grandeur sans doublon ni faux vrai/faux, français, valeurs vraisemblables, tirage d'une série.
 // Lot 2 (21/11/2026) : le lien de partage (« ?cases=…&niveaux=…&questions=…&serie=… ») et l'écran d'ordinateur.
 // Lot 3 (25/11/2026) : le mode « Je m'entraîne » (réponse tapée ou touchée, validée par la page, score, bilan).
+// Lot 3b (25/11/2026) : à 360 × 640, l'étiquette du haut ne touche plus le message, et la page reprend sa place une fois la question finie ;
+// la carte du catalogue annonce les deux modes.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -531,4 +533,103 @@ test("je m'entraîne : l'écran (pavé tactile seulement, « Valider » sous le 
   assert.match(t, /classList\.contains\('tactile'\)/);
   assert.match(t, /window\.scrollBy\(0, Math\.min\(manque, marge\)\)/);
   assert.match(corps("montrerTableau"), /requestAnimationFrame\(tableauAuDessusDuPied\)/);
+});
+
+test("lot 3b : à 360 × 640, l'étiquette « L'unité de mesure » (avec sa pointe) tient au-dessus du tableau sans toucher le message", () => {
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  const bloc = css.split("@media screen and (max-width: 700px) and (max-height: 700px) {")[1].split("\n    }\n")[0];
+  const px = (re) => Number(bloc.match(re)[1]);
+  const haut = px(/\.entr \.inner \{ padding-top: (\d+)px;/);
+  const etiquette = px(/\.entr \.handle \{ height: (\d+)px;/);
+  // la pointe fait 14 px (handles[0].style.top = topPx - hauteur - 14 dans positionDiapoCursor)
+  assert.match(script, /handles\[0\]\.style\.top = `\$\{topPx - \(handles\[0\]\.offsetHeight \|\| 75\) - 14\}px`/);
+  assert.ok(etiquette + 14 <= haut, `étiquette ${etiquette} px + pointe 14 px > ${haut} px au-dessus du tableau`);
+  // les deux lignes du texte tiennent dans l'étiquette : 0,72 rem × 1,05 × 2 lignes ≤ hauteur − bordures − marges
+  assert.match(bloc, /\.entr \.handle \{ height: \d+px; width: 112px; padding: 2px 6px; \}/);
+  assert.match(bloc, /\.entr \.h-text \{ font-size: 0\.72rem; line-height: 1\.05; \}/);
+  assert.ok(0.72 * 16 * 1.05 * 2 <= etiquette - 4 - 4, "le texte de l'étiquette déborde");
+});
+
+test("lot 3b : la page remonte pour montrer le tableau, puis reprend sa place quand la question est finie", () => {
+  const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
+  vm.runInContext(script, ctx);
+  // un faux téléphone : le pied commence à 400 px, le bas du tableau est à 450 px, la case de réponse à 150 px
+  const fenetre = { scrollY: 1200, scrollBy(x, y) { this.scrollY += y; }, scrollTo(x, y) { this.scrollY = y; } };
+  const boite = (haut, bas) => ({ getBoundingClientRect: () => ({ top: haut, bottom: bas }) });
+  const el = { entrPied: boite(400, 640), champ: boite(150, 185), diapoContainer: { classList: { contains: (c) => c === "tactile" } } };
+  ctx.window = fenetre;
+  ctx.document = { getElementById: (id) => el[id] || null, querySelectorAll: () => [boite(380, 450)], addEventListener() {} };
+  vm.runInContext("E.place = null; tableauAuDessusDuPied();", ctx);
+  assert.equal(fenetre.scrollY, 1254, "la page remonte de 54 px (50 manquants + 4 de marge)");
+  assert.equal(vm.runInContext("E.place", ctx), 1200, "la place d'avant est gardée");
+  // un 2e appel (aide puis erreur) ne remplace pas la place d'origine
+  vm.runInContext("tableauAuDessusDuPied();", ctx);
+  assert.equal(vm.runInContext("E.place", ctx), 1200);
+  vm.runInContext("reprendreSaPlace();", ctx);
+  assert.equal(fenetre.scrollY, 1200, "la page reprend sa place");
+  assert.equal(vm.runInContext("E.place", ctx), null);
+  // sans remontée, reprendreSaPlace ne bouge rien (ordinateur, question sans tableau)
+  fenetre.scrollY = 900; vm.runInContext("reprendreSaPlace();", ctx);
+  assert.equal(fenetre.scrollY, 900);
+  // où c'est branché : en fin de question (juste, ou faux pour de bon), et remis à zéro à la question suivante et à chaque série
+  assert.match(corps("terminer"), /afficherQuestion\(true\);\n\s*reprendreSaPlace\(\);/);
+  assert.match(corps("suivante"), /\{\n\s*E\.place = null;/);
+  assert.match(corps("demarrerSerie"), /E\.place = null;/);
+});
+
+test("lot 3b : la carte du catalogue annonce les deux modes, et le cache du catalogue suit", () => {
+  const cat = readFileSync(new URL("../assets/js/catalogue-refonte-data.js", import.meta.url), "utf8");
+  const bloc = cat.split('"outils/conversions/conversions_exerciseur.html": {')[1].split("}")[0];
+  assert.match(bloc, /"cardDescription": "Projeter des questions de conversion et d’ordre de grandeur, ou laisser l’élève s’entraîner en autonomie, avec un score\."/);
+  assert.doesNotMatch(bloc, /\b(seul|seule)\b/);
+  assert.match(readFileSync(new URL("../outils/index.html", import.meta.url), "utf8"), /catalogue-refonte-data\.js\?v=exerciseur-conversions-20261125-1/);
+});
+
+test("lot 3b : les messages de « Je m'entraîne » ne passent jamais dans le diaporama", () => {
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  assert.match(css, /\.diapo-container:not\(\.entr\) \.entr-msg \{ display: none; \}/);
+  // « Lancer diapo » (après une série, avec ou sans le ✕) passe par quitterEntrainement, qui cache les deux messages
+  assert.match(corps("generateQuiz"), /quitterEntrainement\(\);/);
+  assert.match(corps("arreter"), /quitterEntrainement\(\);/);
+  const q = corps("quitterEntrainement");
+  assert.match(q, /getElementById\('entrMsgHaut'\)\.hidden = true;/);
+  assert.match(q, /getElementById\('entrMsgBas'\)\.hidden = true;/);
+});
+
+test("lot 3b : « Convertis : » sur sa ligne et la conversion en grand (diaporama et « Je m'entraîne »), le téléphone ne change pas", () => {
+  assert.match(script, /const CONSIGNE_CONV = `<span class="conv-consigne">Convertis\$\{NBSP\}:<\/span> `;/);
+  const u = corps("updateUI");
+  assert.match(u, /qText\.classList\.remove\('conv'\);/);
+  assert.equal((u.match(/qText\.innerHTML = `\$\{CONSIGNE_CONV\}/g) || []).length, 3, "les trois temps du diaporama (question, aide, correction)");
+  assert.equal((u.match(/qText\.classList\.add\('conv'\)/g) || []).length, 3);
+  assert.doesNotMatch(u, /Convertis\$\{NBSP\}: /);
+  const a = corps("afficherQuestion");
+  assert.match(a, /qText\.classList\.remove\('pb', 'conv'\);/);
+  assert.match(a, /qText\.innerHTML = `\$\{CONSIGNE_CONV\}<span class="nb">/);
+  assert.match(a, /qText\.classList\.add\('conv'\);/);
+  // la mise en page : seulement à partir de 701 px de large (ordinateur, tablette)
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  const blocs = [...css.matchAll(/@media([^{]*)\{((?:[^{}]*\{[^}]*\})*)\s*\}/g)];
+  const avecConv = blocs.filter((m) => /conv/.test(m[2])).map((m) => m[1].trim());
+  assert.ok(avecConv.length >= 3, "trois tailles d'écran");
+  for (const m of avecConv) assert.match(m, /min-width: 701px/, `« ${m} » touche le téléphone`);
+  assert.doesNotMatch(css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*\s*\}/g, ""), /conv-consigne|\.conv\b/, "aucune règle hors des tailles d'ordinateur");
+  assert.match(css, /\.diapo-container \.question-text\.conv \{ font-size: 3rem; line-height: 1\.2; \}/);
+  // diaporama : la question (problèmes compris) garde sa taille du 7 avril au 21 novembre, 2,2 rem, dans les fenêtres basses aussi
+  const bas800 = css.split("@media screen and (min-width: 701px) and (max-height: 800px) {")[1].split("\n    }\n")[0];
+  const bas680 = css.split("@media screen and (min-width: 701px) and (max-height: 680px) {")[1].split("\n    }\n")[0];
+  assert.match(bas800, /\n      \.question-text \{ font-size: 2\.2rem; line-height: 1\.3; \}/);
+  assert.match(bas680, /\n      \.question-text \{ font-size: 2\.2rem; \}/);
+  // « Je m'entraîne » sur ordinateur : la question à la taille du diaporama
+  assert.match(css, /\.entr \.question-text \{ font-size: 2\.2rem; line-height: 1\.3; \}/);
+  // l'impression n'est pas touchée
+  assert.match(script, /qTextHtml = `\$\{i\+1\}\) Convertis\$\{NBSP\}: <strong>/);
+});
+
+test("lot 3b : le plein écran ⛶ dans « Je m'entraîne », caché au téléphone", () => {
+  // « 💡 Aide » puis ⛶ : le ⛶ reste au bord droit, même quand l'aide est cachée
+  assert.match(html, /<div class="entr-entete">[\s\S]*?<div class="entr-droite"><button type="button" class="btn-nav" id="btnAide" onclick="ouvrirAide\(\)">💡 Aide<\/button><button type="button" class="btn-nav btn-icon entr-plein" onclick="toggleFullscreen\(\)" title="Passer en plein écran" aria-label="Plein écran">⛶<\/button><\/div>/);
+  const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+  const tel = css.split("@media screen and (max-width: 700px) {").slice(1).find((b) => b.includes(".entr-x-mot"));
+  assert.match(tel.split("\n    }\n")[0], /\.entr \.entr-plein \{ display: none; \}/);
 });

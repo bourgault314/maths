@@ -1086,7 +1086,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["conversions", "unites", "ordres-de-grandeur", "exerciseur", "diaporama"],
       "thumbnail": "assets/img/thumbnails/conversions/generateur-conversions.png?v=1",
-      "cardDescription": "Générer des questions de conversion et d’ordre de grandeur avec aides visuelles et correction."
+      "cardDescription": "Projeter des questions de conversion et d’ordre de grandeur, ou laisser l’élève s’entraîner en autonomie, avec un score."
     },
     "outils/conversions/conversions_materiel.html": {
       "primaryNotion": "conversions",
