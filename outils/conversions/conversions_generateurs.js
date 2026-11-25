@@ -1030,6 +1030,16 @@
   // « 1 m, c'est combien de fois 1 cm ? » (lot 3b ; évaluation de début de
   // 6e : 40 % d'échec, 24 % répondent « 100 fois » pour 1 m et 1 dm). Les
   // trois réponses : 10, 100, 1 000 fois.
+  // Lot « cohérence » (25/11, choix de Gwenaël) : l'outil d'une relation à
+  // savoir par cœur est l'OBJET de la leçon, que l'élève touche (le mètre
+  // qui s'ouvre, le verre doseur, la balance), plus le glisse-unité, qui
+  // donnait la réponse sans rien montrer. `haut` : vers l'unité plus
+  // grande, les petites unités se regroupent.
+  function objetP1(g, p, haut = false) {
+    if (g === "kg" && p === "g") return {type: "balance", nombre: 10};
+    if (g === "L") return {type: "verre", grande: "L", petite: p, facteur: Number(facteur(g, p))};
+    return Object.assign({type: "barres", n: 1, grande: g, petite: p, facteur: Number(facteur(g, p))}, haut ? {regrouper: true} : {});
+  }
   function questionFois(degre, g, p) {
     const f = facteur(g, p);
     const choix = ["10 fois", "100 fois", `1${FINE}000 fois`];
@@ -1041,7 +1051,7 @@
       // ligne, sous le glisse-unité, comme pour « 1 m = … cm ».)
       choix, bon, reponse: choix[bon], reponseTexte: CARTE.typo(`${choix[bon]} 1 ${p}`), unite: null,
       resume: CARTE.typo(`1 ${g} = ${choix[bon]} 1 ${p}`),
-      relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(MILLE, g, p), outilSansRelation: true,
+      relation: relationTexte(g, p), outil: "objet", objet: objetP1(g, p), glisse: glisse(MILLE, g, p), outilSansRelation: true,
       image: [sensDuPrefixe(g, p)],
       correction: [relationTexte(g, p), CARTE.typo(`Il faut ${choix[bon]} 1 ${p} pour faire 1 ${g}.`)],
       grandeur: grandeurDe(g), relationCle: `${g}-${p}`,
@@ -1119,7 +1129,7 @@
       return questionConversion("P1", degre, ecrit, valeur, de, vers, {
         // L'outil ne recopie pas la relation au-dessus du glisse-unité :
         // dans cette étape, elle EST la réponse (audit du 12/11).
-        relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(valeur, de, vers), outilSansRelation: true,
+        relation: relationTexte(g, p), outil: "objet", objet: objetP1(g, p, sens !== "bas"), glisse: glisse(valeur, de, vers), outilSansRelation: true,
         image: [sensDuPrefixe(g, p)],
         correction: sens === "bas" ? [relationTexte(g, p)] : [relationTexte(g, p), `donc ${mes(valeur, de)} = ${mes(MILLE, g)}`],
         grandeur: grandeurDe(g), relationCle: `${g}-${p}`,
@@ -3423,6 +3433,15 @@
     return `${ecrire(valeur)}${NB}${valeur < 2n * MILLE ? MOT[u] : MOTS[u]}`;
   }
 
+  // Lot « cohérence » (25/11) : l'outil d'une relation du CM1 (P2, P3, P4)
+  // est l'échelle des unités de la leçon, les deux unités marquées, et le
+  // nombre d'unités qui les séparent ; plus le glisse-unité, qui donnait la
+  // réponse sans rien montrer (il reste la correction).
+  function echelleOutil(g, p) {
+    const k = exposant(g) - exposant(p);
+    const note = k === 1 ? "Deux unités voisines : 10 fois." : `De ${g} à ${p} : ${k} unités plus loin, ${Array(k).fill("10").join(" × ")}.`;
+    return {grandeur: grandeurDe(g), marque: [g, p], note};
+  }
   // Une relation posée au pavé (« 1 hm = … m ») ou en phrase (« 1 hectomètre,
   // c'est combien de mètres ? » : les noms entiers, pour lire le préfixe).
   function questionRel(code, degre, ecrit, valeur, de, vers, extra = {}) {
@@ -3449,7 +3468,7 @@
       reponse: brut(rep), reponseTexte: mes(rep, vers), unite: vers, resume,
       // L'outil ne recopie pas la relation au-dessus du glisse-unité : elle
       // EST la réponse (comme à P1).
-      relation, outil: "glisse-unite", glisse: glisse(valeur, de, vers, {cm1: true}), outilSansRelation: true,
+      relation, outil: "echelle", echelleOutil: echelleOutil(g, p), glisse: glisse(valeur, de, vers, {cm1: true}), outilSansRelation: true,
       echelle: {grandeur, marque: [de, vers]}, image: lignesEchelle(grandeur),
       correction: resume === relation ? [relation] : [relation, `donc ${resume}`],
       grandeur, relationCle: `${g}-${p}`,
@@ -3537,7 +3556,7 @@
       code, degre, forme: "qcm", texte: phrase, morceaux: {phrase, apres: "", sorte: "fois"},
       choix, bon, pourquoi, reponse: choix[bon], reponseTexte: CARTE.typo(`${choix[bon]} 1 ${p}`), unite: null,
       resume: CARTE.typo(`1 ${g} = ${choix[bon]} 1 ${p}`),
-      relation: relationTexte(g, p), outil: "glisse-unite", glisse: glisse(MILLE, g, p, {cm1: true}), outilSansRelation: true,
+      relation: relationTexte(g, p), outil: "echelle", echelleOutil: echelleOutil(g, p), glisse: glisse(MILLE, g, p, {cm1: true}), outilSansRelation: true,
       echelle: {grandeur, marque: [g, p]}, image: lignesEchelle(grandeur),
       correction: [relationTexte(g, p), CARTE.typo(`Il faut ${choix[bon]} 1 ${p} pour faire 1 ${g}.`)],
       grandeur, relationCle: `${g}-${p}`,
@@ -14420,7 +14439,10 @@
   }
 
   // La série d'une étape. Même graine, même série.
-  function serie(code, {usage = "entraine", graine = 1, nombre = null, exclure = []} = {}) {
+  // (Lot « cohérence », 25/11 : `serieBrute` est la série d'avant ; `serie`
+  // range en plus « À toi » pour que toutes les sortes de l'étape passent
+  // dans les premières questions — voir LES SORTES, plus bas.)
+  function serieBrute(code, {usage = "entraine", graine = 1, nombre = null, exclure = []} = {}) {
     const etape = ETAPES[code];
     if (!etape) return [];
     const degres = plan(usage, nombre);
@@ -14479,6 +14501,205 @@
       if (s.length === degres.length && (!etape.valide || etape.valide(s, usage))) return s.map((x, i) => Object.assign(x, {place: i + 1}));
     }
     return [];
+  }
+
+  // ============================================================= LES SORTES
+  // Lot « cohérence » (25/11/2026) : ce qui est demandé a été montré.
+  // Une SORTE de question = une méthode (convertir vers plus grand, ranger,
+  // trouver l'heure de départ…), pas une forme : « 3 m = … cm », « Combien de
+  // centimètres dans 3 m ? » et la même au choix sont la même sorte.
+  // Pour chaque étape, ses sortes, de la plus particulière à la plus
+  // générale (la première règle qui convient donne la sorte) :
+  //   R(id, nom, montrée, motif, fait)
+  //   montrée : true (« On te montre » la montre), false (jamais montrée : un
+  //     exemple déjà fait la précède dans « À toi »), ou "acquis:CODE" (montrée
+  //     par une étape d'avant de la même ligne du parcours) ;
+  //   motif : sur le descripteur de la question,
+  //     forme|type|sorte|cherche|sens|S|somme|zero|dec
+  //     (S : > vers une unité plus petite, < vers une plus grande) ;
+  //   fait : un fait à savoir (très peu de questions), demandé dans « Je
+  //     valide », montré par la leçon, jamais dans « À toi ».
+  // Deux garanties, tenues par les tests :
+  //   1. « À toi » pose une question de chaque sorte dans ses premières
+  //      questions (TETE : les 9 qu'il faut au moins pour réussir) ;
+  //   2. une sorte jamais montrée a son exemple (`exemple`).
+  const nombreS = t => Number(String(t).replace(/[\s\u00a0\u202f]/g, "").replace(",", ".").replace("−", "-"));
+  function descripteur(q) {
+    const d = q.donnees || {};
+    let S = "";
+    if (d.valeur !== undefined && typeof q.reponse === "string" && !Number.isNaN(nombreS(d.valeur)) && !Number.isNaN(nombreS(q.reponse))) {
+      const a = nombreS(d.valeur);
+      const b = nombreS(q.reponse);
+      S = b > a ? ">" : b < a ? "<" : "=";
+    }
+    if (d.type === "argent") S = ["versC", "objet"].includes(d.sorte) || (d.sorte === "prix" && q.forme === "nombre") ? ">" : ["versE", "versEdec", "deux", "plus"].includes(d.sorte) ? "<" : "";
+    const nombres = [d.valeur].concat(q.reponse).filter(x => typeof x === "string");
+    const zero = nombres.some(n => /,0+[1-9]/.test(n));
+    const dec = nombres.some(n => /,\d/.test(n));
+    return [q.forme, d.type || "", d.sorte || "", d.cherche || "", d.sens || "", S, q.somme ? "somme" : "", zero ? "zero" : "", dec ? "dec" : ""].join("|");
+  }
+  const R = (id, nom, montree, motif, fait = false) => Object.freeze({id, nom, montree, motif, fait});
+  const REPERE = R("repere", "retrouver un repère", true, /\|(repere|repere-quoi|associer)\|/);
+  const REPERE_COMPARER = R("comparer", "comparer deux repères", false, /\|repere-comparer\|/);
+  const SORTES = {
+    R1: [R("regle", "lire une longueur sur la règle", false, /\|regle\|/), R("nom", "le nom et le symbole de l'unité", true, /\|nom\|/), REPERE],
+    R2: [R("grandeur", "dire ce qu'on mesure", true, /\|grandeur\|/), R("nombre", "choisir le nombre", true, /\|nombre\|/), R("unite", "choisir l'unité", true, /\|unite/)],
+    P1: [R("fois", "combien de fois", false, /\|fois\|/), R("grand", "vers l'unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers l'unité plus petite", true, /\|(conv|associer-rel)\|/)],
+    C1: [R("somme", "deux unités dans la mesure", false, /\|somme\|/), R("petit", "vers une unité plus petite", true, /\|conv\|/)],
+    C2: [R("ranger", "ranger des mesures", false, /^ranger\|/), R("deux", "en deux unités", false, /\|deux\|/), R("grand", "vers une unité plus grande", true, /\|conv\|/)],
+    D1: [R("min-h", "des minutes aux heures et minutes", true, /\|duree-deux\|/), R("h-min", "des heures aux minutes", true, /\|duree\|/)],
+    Q1: [R("vrai", "est-ce vraisemblable ?", true, /\|vrai\|/), R("pb", "ajouter ou retirer deux mesures", true, /\|pb\|/)],
+    R3: [REPERE, REPERE_COMPARER], R4: [REPERE, REPERE_COMPARER], R5: [REPERE, REPERE_COMPARER],
+    R6: [R("choisir", "choisir la mesure vraisemblable", false, /\|vraisemblance\|choix\|/), R("juger", "dire si c'est vraisemblable", true, /\|vraisemblance\|/)],
+    P2: [R("prefixe", "le sens d'un préfixe", true, /\|(prefixe-sens|prefixe-nom|associer-pref)\|/), R("fois", "combien de fois", true, /\|fois\|/), R("relation", "la relation entre deux unités", true, /\|conv\|/)],
+    P3: [R("grand", "vers l'unité voisine plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers l'unité voisine plus petite", true, /\|conv\|/)],
+    P4: [R("comparer", "comparer deux mesures", true, /\|comparer-mes\|/), R("fois", "combien de fois", "acquis:P2", /\|fois\|/), R("grand", "vers l'unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers l'unité plus petite", true, /\|(conv|associer-rel)\|/)],
+    C3: [R("zero", "un zéro juste après la virgule", false, /\|conv\|.*\|zero\|/), R("grand", "vers une unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers une unité plus petite", true, /\|conv\|/)],
+    C4: [R("zero", "un zéro juste après la virgule", false, /\|conv\|.*\|zero\|/), R("grand", "vers une unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers une unité plus petite", true, /\|conv\|/)],
+    C5: [R("somme", "deux unités vers une seule", false, /\|somme\|/), R("deux", "une mesure en deux unités", false, /\|deux\|/), R("decomp", "compléter une décomposition", false, /\|decomp\|/),
+      R("intrus", "trouver l'intrus", true, /\|intrus\|/), R("plusieurs", "cocher les écritures égales", false, /\|plusieurs\|/), R("conv", "convertir", true, /\|conv\|/)],
+    C6: [R("part", "retrouver la fraction", true, /\|frac-part\|/), R("frac", "une fraction d'unité", true, /\|(frac|bandes)\|/)],
+    C7: [R("cocher", "cocher les mesures plus grandes ou plus petites", false, /\|plus-que\|/), R("comparer", "comparer deux mesures", true, /\|comparer-c7\|/), R("ranger", "ranger des mesures", true, /\|ranger\|/)],
+    C8: [R("complement", "trouver le complément", false, /\|calc\|complement\|/), R("calcul", "calculer avec deux unités", true, /\|calc\|.*\|>?<?\|/)],
+    D2: [R("heure-mots", "une heure dite avec des mots", false, /\|heure-mots\|/), R("quarts", "compter les quarts d'heure", false, /\|quarts\|/), R("lire", "lire l'heure sur l'horloge", false, /\|heure-lue\|/), R("mots-min", "une demie, un quart en minutes", true, /\|duree-mots\|/)],
+    Q2: [R("perimetre", "le périmètre d'une figure", false, /\|q2\|perimetre\|/), R("deux", "un problème en deux étapes", false, /\|q2\|deux\|/), R("balance", "lire une balance", false, /\|q2\|balance\|/),
+      R("comparer", "de plus, de moins, l'écart", true, /\|q2\|comparer\|/), R("partie", "trouver une partie", true, /\|q2\|partie\|/), R("reunir", "trouver le tout", true, /\|q2\|(reunir|izmir)\|/)],
+    R7: [R("calcul", "estimer un calcul", true, /\|estimer-calcul\|/), R("reporte", "reporter un repère", true, /\|estimer\|reporte\|/), R("fois", "plusieurs fois un repère", true, /\|estimer\|fois\|/)],
+    R8: [REPERE, REPERE_COMPARER, R("ranger", "ranger des aires", false, /\|ranger-aires\|/)],
+    R9: [R("grandeur", "dire ce qu'on mesure", "acquis:R2", /\|grandeur5\|/), R("perim-aire", "périmètre ou aire ?", true, /\|perim-aire\|/), R("piege", "plus gros, plus lourd ?", true, /\|piege\|/)],
+    A1: [R("rangees", "des rangées coloriées", false, /\|rangees\|/), R("grand", "vers l'unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers l'unité plus petite", true, /\|conv\|/)],
+    A2: [R("zero", "un zéro juste après la virgule", false, /\|conv\|.*\|zero\|/), R("petit", "convertir une aire vers plus petit", true, /\|conv\|/)],
+    D3: [R("s-min", "des secondes aux minutes", false, /\|d3\|(s-min|choix)\|/), R("depart", "trouver l'heure de départ", false, /\|d3\|depart\|/), R("lire", "lire les trois aiguilles", false, /\|d3\|lire\|/), R("jours", "des heures aux jours", false, /\|d3\|jours\|/),
+      R("duree", "une durée avec des secondes", true, /\|d3\|(duree|triathlon)\|/), R("min-s", "des minutes aux secondes", true, /\|d3\|(min-s|fait)\|/)],
+    Q3: [R("deux", "multiplier puis partager", false, /\|q3\|deux\|/), R("planches", "des morceaux dans chaque planche", true, /\|q3\|planches\|/), R("diviser", "partager, combien de fois", true, /\|q3\|(partage|parts)\|/), R("multiplier", "plusieurs fois la même mesure", true, /\|q3\|(fois|fois-plus)\|/)],
+    Q4: [R("decimal", "une réponse à virgule", false, /\|q4\|.*\|dec\|?$/), R("fraction", "une fraction d'une quantité", true, /\|q4\|/)],
+    A3: [R("carre", "le carré et son unité d'aire", true, /\|fait-a3\|carre\|/, true), R("centieme", "le centième d'une unité d'aire", true, /\|fait-a3\|centieme\|/, true), R("zero", "un zéro juste après la virgule", false, /\|conv\|.*\|zero\|/), R("grand", "convertir une aire vers plus grand", true, /\|conv\|/)],
+    V1: [R("comparer", "comparer deux volumes", false, /\|v1\|comparer\|/), R("fait", "le cube de 1 cm de côté", true, /\|v1\|fait\|/, true), R("compter", "compter les cubes", true, /\|v1\|/)],
+    D4: [R("mult", "vers l'unité plus petite", false, /\|d4\|mult\|/), R("comparer", "comparer deux durées", true, /\|d4\|comparer\|/), R("fait", "les relations à connaître", true, /\|d4\|fait\|/, true), R("paquets", "faire des paquets", true, /\|d4\|(paquets|choix)\|/)],
+    D5: [R("comparer", "comparer, le piège de 1,3 h", false, /\|d5\|(comparer|piege)\|/), R("min-h", "des minutes aux heures décimales", true, /\|d5\|(inv|invhm|invtot)\|/), R("h-min", "des heures décimales aux minutes", true, /\|d5\|/)],
+    Q5: [R("perimetre", "le périmètre d'un rectangle", false, /\|q5\|perimetre\|/), R("carreaux", "combien de carreaux", false, /\|q5\|carreaux\|/), R("aire", "l'aire d'un rectangle", true, /\|q5\|(aire|sol)\|/), R("partager", "partager, combien de verres", true, /\|q5\|(verres|pleins)\|/), R("fois", "plusieurs fois", true, /\|q5\|tours\|/)],
+    Q6: [R("semaine", "une durée plusieurs fois", true, /\|q6\|semaine\|/), R("covoit", "lire le tableau des trajets", true, /\|q6\|(tot|rapide|cher|avant)\|/), R("duree", "trouver une durée", "acquis:Q10", /\|q6\|(bus|duree)\|/), R("arrivee", "trouver l'heure d'arrivée", true, /\|q6\|(cinema|dans)\|/)],
+    A4: [R("ranger", "ranger des aires", "acquis:R8", /\|ranger-a4\|/), R("fait", "les relations à connaître", true, /\|vraifaux-a4\|/), R("grand", "vers une unité plus grande", "acquis:A3", /\|conv\|.*\|<\|/), R("petit", "vers une unité plus petite", true, /\|conv\|/)],
+    R10: [REPERE, REPERE_COMPARER, R("objet", "choisir l'unité de volume", false, /\|objet-r10\|/)],
+    V2: [R("vraifaux", "vrai ou faux ?", false, /\|vraifaux-v2\|/), R("compter", "plaques, barres et cubes", true, /\|compter-v2\|/), R("grand", "vers l'unité plus grande", false, /\|conv\|.*\|<\|/), R("petit", "vers l'unité plus petite", true, /\|conv\|/)],
+    V3: [R("eau", "la masse de l'eau", true, /\|eau-v3\|/), R("pont", "les ponts à connaître", true, /\|(pont-v3|vraifaux-v3)\|/), R("conv", "du volume à la contenance", true, /\|conv-v3\|/)],
+    V4: [R("objet", "choisir l'unité", false, /\|objet-v4\|/), R("ranger", "ranger des contenances", false, /\|ranger-v4\|/), R("conv", "convertir volumes et contenances", true, /\|conv-v4\|/)],
+    Q7: [R("pignon", "une figure à découper", false, /\|q7\|pignon\|/), R("carre", "le carré d'aire connue", true, /\|q7\|carre\|/), R("figure", "parallélogramme, triangle", true, /\|q7\|figure\|/)],
+    Q8: [R("eau", "la masse de l'eau", false, /\|q8\|eau\|/), R("seaux", "combien de seaux", true, /\|q8\|seaux\|/), R("pave", "la contenance d'un pavé", true, /\|q8\|pave\|/)],
+    D6: [R("comparer", "comparer deux durées", false, /\|d6\|comparer\|/), R("tiers", "les tiers d'heure", false, /\|d6\|tiers\|/), R("secondes", "des minutes décimales aux secondes", false, /\|d6\|secondes\|/), R("min-h", "des minutes aux heures décimales", true, /\|d6\|(inv|invhm|invtot)\|/), R("h-min", "des heures décimales aux minutes", true, /\|d6\|/)],
+    G1: [R("comparer", "comparer deux vitesses", false, /\|g1\|comparer\|/), R("sens", "ce que veut dire m/s", true, /\|g1\|sens\|/), R("m-min", "passer par les mètres en 1 min", true, /\|g1\|(par|etape)\|/), R("ms-kmh", "de m/s à km/h", true, /\|g1\|(ms|situation)\|/), R("kmh-ms", "de km/h à m/s", true, /\|g1\|kmh\|/)],
+    P5: [R("prefixe", "le sens d'un préfixe", true, /\|(sens-p5|associer-p5)\|/), R("comparer", "comparer deux mesures", false, /\|comparer-p5\|/), R("pb", "combien de fois dans…", true, /\|pb-p5\|/), R("grand", "vers l'unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers l'unité plus petite", true, /\|conv\|/)],
+    P6: [R("comparer", "comparer deux écritures", false, /\|comparer-p6\|/), R("prefixe", "retrouver l'unité", false, /\|prefixe-p6\|/), R("grand", "un grand nombre en puissance de 10", false, /\|exposant\|grand\|/), R("volume", "les volumes en puissances de 10", false, /\|exposant\|volume\|/),
+      R("mantisse", "un nombre fois une puissance de 10", true, /\|(exposant\|mantisse|ecriture-p6)\|/), R("puiss", "le préfixe en puissance de 10", true, /\|exposant\|puiss\|/)],
+    Q9: [R("calcul", "choisir le calcul", false, /\|q9-calcul\|/), R("masse", "la masse volumique", false, /\|(q9-dense\||q9\|\|(g|kg|t)\|)/), R("prix", "un prix proportionnel", false, /\|(q9-cher\||q9\|\|€\|)/), R("pouce", "les pouces d'un écran", false, /\|q9\|\|m\|/),
+      R("vitesse", "une vitesse", true, /\|(q9-piege\||q9\|\|km\|)/), R("debit", "un débit", true, /\|q9\|/)],
+    E1: [R("pieces", "compter les pièces", false, /\|argent\|pieces\|/), R("etiquette", "lire une étiquette", true, /\|argent\|prix\|/), R("c-euro", "des centimes aux euros", true, /\|argent\|(versE|versEdec|deux|plus)\|/), R("euro-c", "des euros aux centimes", true, /\|argent\|/)],
+    D7: [R("depart", "trouver l'heure de départ", false, /\|entre\|\|depart\|/), R("arrivee", "trouver l'heure d'arrivée", true, /\|entre\|\|arrivee\|/), R("duree", "trouver la durée", true, /\|entre\|/)],
+    Q10: [R("tableau", "lire un tableau d'horaires", false, /\|q10\|(maree|car)\|/), R("depart", "trouver l'heure de départ", true, /\|q10\|depart\|/), R("arrivee", "trouver l'heure d'arrivée", true, /\|q10\|(arrivee|deux)\|/), R("duree", "trouver la durée", true, /\|q10\|duree\|/)],
+    A5: [R("encadrer", "encadrer une aire", false, /\|aire\|encadrer\|/), R("comparer", "comparer deux aires", true, /\|aire\|(comparer|meme)\|/), R("compter", "compter les carreaux", true, /\|aire\|compter\|/)],
+    C9: [R("arrondi", "arrondir à l'unité", true, /\|arrondi\|/), R("entiere", "le nombre d'unités entières", false, /\|entiere\|/), R("somme", "deux unités vers une seule", "acquis:C5", /\|somme\|/), R("deux", "une mesure en deux unités", "acquis:C5", /\|deux\|/), R("intrus", "trouver l'intrus", "acquis:C5", /\|intrus\|/),
+      R("grand", "vers une unité plus grande", true, /\|conv\|.*\|<\|/), R("petit", "vers une unité plus petite", true, /\|conv\|/)],
+    Q11: [R("inverse", "du vrai vers la carte", false, /\|q11\|inverse\|/), R("aire", "une aire sur un quadrillage", true, /\|q11\|aire\|/), R("carte", "de la carte au vrai", true, /\|q11\|(carte|plan|echelle)\|/)]
+  };
+  const SORTE_INCONNUE = Object.freeze({id: "?", nom: "", montree: true, fait: false});
+  // La sorte d'une question : {id, nom, montree, fait}.
+  function sorte(question) {
+    const regles = question && SORTES[question.code];
+    if (!regles) return SORTE_INCONNUE;
+    const d = descripteur(question);
+    return regles.find(r => r.motif.test(d)) || SORTE_INCONNUE;
+  }
+  function sortes(code) {
+    return (SORTES[code] || []).map(({id, nom, montree, fait}) => ({id, nom, montree, fait}));
+  }
+  // Les 9 questions qu'il faut au moins pour réussir « À toi » (2 avec
+  // l'outil, 2 avec l'image, 5 sans aide : SEUILS.entraine du parcours).
+  const TETE = 9;
+  // Une question de la sorte `id`, la plus facile trouvée, jamais une de
+  // `interdites` (des clés) : cherchée dans d'autres séries de l'étape.
+  function chercherSorte(code, id, graine, interdites) {
+    const base = x => x.cleBase || x.cle;
+    let meilleure = null;
+    for (let k = 1; k <= 40 && !(meilleure && (meilleure.degre === 1 || k > 6)); k += 1) {
+      const g = (graine + k * 0x51ed27) >>> 0;
+      const tirees = serieBrute(code, {usage: "entraine", graine: g}).concat(serieBrute(code, {usage: "valide", graine: g}));
+      tirees.forEach(x => {
+        if (sorte(x).id !== id || interdites.has(x.cle) || interdites.has(base(x))) return;
+        if (!meilleure || x.degre < meilleure.degre) meilleure = x;
+      });
+    }
+    return meilleure;
+  }
+  // « À toi » : toutes les sortes de l'étape dans les premières questions.
+  // La première question de chaque sorte est avancée dans la tête de la
+  // série (les 9 premières, ou autant que de sortes) ; une sorte absente des
+  // 25 questions tirées est cherchée ailleurs. La tête reste rangée du plus
+  // facile au plus difficile.
+  function couvrir(code, s, graine, exclure) {
+    const voulues = SORTES[code].filter(r => !r.fait).map(r => r.id);
+    const vues = new Set();
+    const premieres = [];
+    const autres = [];
+    s.forEach((q, i) => {
+      q.place0 = i;
+      const id = sorte(q).id;
+      if (voulues.includes(id) && !vues.has(id)) { vues.add(id); premieres.push(q); } else autres.push(q);
+    });
+    const interdites = new Set([...clesExemples(code), ...exclure, ...s.flatMap(q => [q.cle, q.cleBase || q.cle])]);
+    voulues.filter(id => !vues.has(id)).forEach(id => {
+      const q = chercherSorte(code, id, graine, interdites);
+      if (!q) return;
+      q.place0 = s.length;
+      premieres.push(q);
+      interdites.add(q.cle);
+      interdites.add(q.cleBase || q.cle);
+    });
+    const n = Math.max(0, Math.max(TETE, premieres.length) - premieres.length);
+    const tete = premieres.concat(autres.slice(0, n)).sort((a, b) => a.degre - b.degre || a.place0 - b.place0);
+    const liste = tete.concat(autres.slice(n)).slice(0, s.length);
+    // Jamais la même question deux fois de suite (la série d'avant le
+    // garantit ; rangée autrement, deux mêmes questions peuvent se toucher) :
+    // la seconde s'échange avec une question plus loin — dans la tête, de
+    // même degré, pour qu'elle continue de monter.
+    const N = tete.length;
+    const meme = (x, y) => Boolean(x && y && x.cle === y.cle);
+    for (let tour = 0; tour < 6; tour += 1) {
+      let change = false;
+      for (let i = 1; i < liste.length; i += 1) {
+        if (!meme(liste[i], liste[i - 1])) continue;
+        for (let j = i + 1; j < liste.length; j += 1) {
+          const a = liste[i];
+          const b = liste[j];
+          if (meme(b, liste[i - 1]) || (j > i + 1 && meme(b, liste[i + 1])) || (j > i + 1 && meme(a, liste[j - 1])) || meme(a, liste[j + 1])) continue;
+          if (i < N && b.degre !== a.degre) continue;
+          liste[i] = b;
+          liste[j] = a;
+          change = true;
+          break;
+        }
+      }
+      if (!change) break;
+    }
+    return liste.map((q, i) => { delete q.place0; return Object.assign(q, {place: i + 1}); });
+  }
+  function serie(code, options = {}) {
+    const s = serieBrute(code, options);
+    const usage = options.usage || "entraine";
+    if (usage !== "entraine" || options.nombre || !SORTES[code] || s.length < TETE) return s;
+    return couvrir(code, s, options.graine === undefined ? 1 : options.graine, options.exclure || []);
+  }
+  // L'exemple déjà fait d'une sorte (« Un exemple », avant la première
+  // question d'une sorte que la leçon n'a pas montrée) : une autre question
+  // de la même sorte, la plus facile, jamais une de `exclure`.
+  // `apres` : la clé de la question qui suit l'exemple. Quand l'étape n'a
+  // que trois ou quatre situations de cette sorte, toutes déjà dans la
+  // série (le pignon de Q7, l'eau de Q8), l'exemple en reprend une, jamais
+  // celle qui le suit.
+  function exemple(code, id, {graine = 1, exclure = [], apres = null} = {}) {
+    if (!SORTES[code]) return null;
+    const g = (graine ^ 0x2f6e2b1) >>> 0;
+    return chercherSorte(code, id, g, new Set([...clesExemples(code), ...exclure]))
+      || chercherSorte(code, id, g, new Set([...clesExemples(code), apres].filter(Boolean)));
   }
 
   // Une conversion posée en phrase ou en nombre (la forme imposée).
@@ -14665,6 +14886,11 @@
     etapePrete,
     clesExemples,
     carteDe,
+    // lot « cohérence » : les sortes de questions, l'exemple déjà fait
+    sorte,
+    sortes,
+    exemple,
+    serieBrute,
     // outils exposés pour les aides, les tests et l'exerciseur
     lireMilli,
     milli,

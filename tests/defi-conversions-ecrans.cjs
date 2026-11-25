@@ -150,7 +150,22 @@ function memesPlaces(a, b, ou) {
 async function ici(page) {
   return page.evaluate(() => window.MATHSGO_DEFI_CONVERSIONS_ECRAN.question());
 }
+// Lot « cohérence » (25/11) : « Un exemple », une question déjà faite avant
+// une sorte que la leçon n'a pas montrée. On le passe par « À toi → ».
+async function passerExemple(page) {
+  let n = 0;
+  for (let k = 0; k < 3; k += 1) {
+    const q = await ici(page);
+    if (!q || !q.exemple) break;
+    assert.equal((await page.locator("#cadre .action").textContent()).trim(), "À toi →", "un exemple finit par « À toi → »");
+    assert.equal(await page.locator("#cadre .zone.exemple .etiq.exemple").first().textContent(), "Un exemple");
+    await page.locator("#cadre .action").click();
+    n += 1;
+  }
+  return n;
+}
 async function repondre(page, juste = true) {
+  await passerExemple(page);
   const q = await ici(page);
   assert.ok(q, "une question à l'écran");
   // Relier, ranger (lot A2 bis) : au doigt, puis Valider.
@@ -532,15 +547,21 @@ async function scenarioConcret(navigateur, base, taille) {
   await page.waitForTimeout(1200);
   await caseRemplie("100");
   assert.equal(await page.locator(".dessin.verre").count(), 0, "on reste sur le mètre");
-  await page.getByText("Suivant").click();
-  assert.equal(await page.locator(".dessin.verre").count(), 1, "le verre doseur");
-  await tientEntier(page, `${ou}, verre doseur`);
-  await page.locator(".dessin.verre").click();
-  await caseRemplie("100");
-  await dessinEntier(page, `${ou}, verre doseur`);
-  await tientEntier(page, `${ou}, verre doseur gradué`);
-  await capture(page, taille, "14-verre-doseur");
-  await page.getByText("Suivant").click();
+  // Lot « cohérence » (25/11) : un temps par relation (11 temps). Les
+  // longueurs (temps 1 à 6 : le mètre, le décimètre… s'ouvrent), la balance
+  // (temps 7), la tonne (8), le verre doseur (9 et 10), l'autre sens (11).
+  const tempsSuivant = async () => { await page.getByText("Suivant").click(); await page.waitForTimeout(150); };
+  const chip = async () => (await page.locator(".chip").textContent()).replace(/\s/g, "");
+  await tempsSuivant();
+  for (const [n, attendu] of [[2, "10"], [3, "10"], [4, "10"], [5, "1000"], [6, "1000"]]) {
+    assert.equal(await chip(), `${n}/11`, `${ou} : le temps ${n}`);
+    await page.locator(".zone .metre").click();
+    await page.waitForTimeout(900);
+    await caseRemplie(attendu);
+    await tientEntier(page, `${ou}, relation ${n}`);
+    await tempsSuivant();
+  }
+  assert.equal(await chip(), "7/11");
   for (let k = 0; k < 9; k += 1) await page.locator(".dessin.balance").click();
   assert.equal((await page.locator(".q .case").first().textContent()).trim(), "", `${ou} : 9 tablettes, pas encore`);
   await page.locator(".dessin.balance").click();
@@ -548,7 +569,31 @@ async function scenarioConcret(navigateur, base, taille) {
   await dessinEntier(page, `${ou}, balance`);
   await tientEntier(page, `${ou}, balance`);
   await capture(page, taille, "15-balance");
-  await page.getByText("Suivant").click();
+  await tempsSuivant();
+  assert.equal(await chip(), "8/11");
+  await page.locator(".zone .metre").click();
+  await page.waitForTimeout(900);
+  await caseRemplie("1000");
+  await tempsSuivant();
+  assert.equal(await page.locator(".dessin.verre").count(), 1, "le verre doseur");
+  await tientEntier(page, `${ou}, verre doseur`);
+  await page.locator(".dessin.verre").click();
+  await caseRemplie("100");
+  await dessinEntier(page, `${ou}, verre doseur`);
+  await tientEntier(page, `${ou}, verre doseur gradué`);
+  await capture(page, taille, "14-verre-doseur");
+  await tempsSuivant();
+  await page.locator(".dessin.verre").click();
+  await caseRemplie("10");
+  await tientEntier(page, `${ou}, verre doseur en décilitres`);
+  await tempsSuivant();
+  assert.equal(await chip(), "11/11");
+  await page.locator(".zone .metre").click();
+  await page.waitForTimeout(900);
+  await caseRemplie("1");
+  await tientEntier(page, `${ou}, l'autre sens`);
+  await capture(page, taille, "15-autre-sens");
+  await tempsSuivant();
   // Heures et minutes : l'horloge, 4 quarts d'heure.
   await choisir("Heures et minutes");
   await page.getByText("J'apprends : on te montre").click();
@@ -569,6 +614,14 @@ async function scenarioConcret(navigateur, base, taille) {
     await page.getByText("J'apprends : à toi").click();
     const avant = await places(page);
     for (let i = 0; i < 6; i += 1) {
+      // (Lot « cohérence » : l'exemple tient entier, rien ne bouge autour.)
+      if ((await ici(page)).exemple) {
+        await page.waitForTimeout(600);
+        await tientEntier(page, `${ou}, ${code} un exemple`);
+        memesPlaces({q: avant.q, zone: avant.zone}, (({q, zone}) => ({q, zone}))(await places(page)), `${ou}, ${code} un exemple`);
+        await capture(page, taille, `17-${code}-un-exemple`);
+        await passerExemple(page);
+      }
       await questionEntiere(page, `${ou}, ${code} question ${i + 1}`);
       memesPlaces(avant, await places(page), `${ou}, ${code} question ${i + 1}`);
       await tientEntier(page, `${ou}, ${code} question ${i + 1}`);

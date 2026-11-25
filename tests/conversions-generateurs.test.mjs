@@ -929,9 +929,24 @@ for (const code of PRETES.filter((_, i) => PART && i % PARTS === PART - 1)) {
     for (let g = 1; g <= GRAINES; g += 1) {
       for (const [usage, nombre] of USAGES) {
         const ou = `${code} ${usage} graine ${g}`;
-        const s = G.serie(code, {usage, graine: g, nombre});
+        // (Lot « cohérence », 25/11 : « À toi » est la série d'avant, `serieBrute`,
+        // rangée pour que toutes les sortes passent dans les 9 premières
+        // questions. Le plan des degrés et les places se contrôlent sur la
+        // série d'avant ; la série rangée, question par question.)
+        const s = usage === "entraine" ? G.serieBrute(code, {usage, graine: g, nombre}) : G.serie(code, {usage, graine: g, nombre});
         controlerSerie(code, usage, nombre, s, ou);
         s.forEach(q => { controlerQuestion(q, ou); formes.add(q.forme); });
+        if (usage === "entraine") {
+          const rangee = G.serie(code, {usage, graine: g});
+          assert.equal(rangee.length, s.length, `${ou} : longueur d'À toi`);
+          const exemples = new Set(G.clesExemples(code));
+          rangee.forEach((q, i) => {
+            assert.ok(!exemples.has(q.cle) && !exemples.has(q.cleBase), `${ou} : exemple de J'apprends repris dans À toi (${q.cle})`);
+            assert.ok(i === 0 || q.cle !== rangee[i - 1].cle, `${ou} : la même question deux fois de suite dans À toi`);
+            controlerQuestion(q, ou);
+            formes.add(q.forme);
+          });
+        }
       }
     }
     const prevues = {R1: ["qcm", "associer", "phrase"], R2: ["qcm"], P1: ["nombre", "phrase", "qcm", "associer"], C1: ["nombre", "phrase", "qcm"],
