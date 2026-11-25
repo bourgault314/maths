@@ -5,6 +5,8 @@
 // Lot 3 (25/11/2026) : le mode « Je m'entraîne » (réponse tapée ou touchée, validée par la page, score, bilan).
 // Lot 3b (25/11/2026) : à 360 × 640, l'étiquette du haut ne touche plus le message, et la page reprend sa place une fois la question finie ;
 // la carte du catalogue annonce les deux modes.
+// Lot 4 (25/11/2026) : la relecture de toutes les questions — ce qui était faux corrigé d'un coup (zéro inutile, « Quelle grandeur ? »,
+// Associer, émojis, rappels, ponts, actions, énoncés), la série complétée par les autres cases ou annoncée plus courte, la saisie « 00810 ».
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -17,7 +19,7 @@ const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
   const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES };`, ctx);
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, convertTricky, seriePlusCourte };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -451,9 +453,14 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
 });
 
-test("mêmes séries : pour un code, le diaporama redonne exactement les séries du main (#1297)", () => {
-  // empreintes calculées sur le main ea9ab92 avec les seuls champs du main
-  const MAIN = ["b0ad135bb7640065", "a7cd2420dc6c6b18", "5d30e0fb3f3d7322", "fef22afcb9963a65", "01bab2849c192393", "1d2ad40738bfceb6", "ea15edd9c37ad63a", "4f6ef7b3e5f0c640", "b8b7436d69be3224", "90304fe7170a6dc0", "bf8489d85a652448", "dc7754fa20c3eee8"];
+test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 4)", () => {
+  // Empreintes recalculées au lot 4 (25/11/2026) : le contenu des banques a changé, donc 11 séries sur 12 aussi.
+  // Sur les 400 séries de series-lot4.mjs : 66 identiques, 276 aux mêmes questions dont seuls des mots changent
+  // (zéro inutile retiré, « Quelle grandeur ? », énoncés, émojis, rappels, niveau 3 resté en m ou en L),
+  // 58 dont le tirage change (additions de capacités du niveau 3 en mL, Associer à 3 fois au moins). Avant (main ea9ab92) :
+  // b0ad135bb7640065 a7cd2420dc6c6b18 5d30e0fb3f3d7322 fef22afcb9963a65 01bab2849c192393 1d2ad40738bfceb6
+  // ea15edd9c37ad63a 4f6ef7b3e5f0c640 b8b7436d69be3224 90304fe7170a6dc0 bf8489d85a652448 dc7754fa20c3eee8
+  const MAIN = ["7ea23a256e4ce84a", "3ff1044104a1459c", "3dba203c922ab7d9", "396ca0475cb90a45", "1882a290f925b597", "1093cdf615757fb3", "aebbf08878649521", "edf17416f518c1e2", "9f8433c35ad69b43", "561637ada18f0264", "bf8489d85a652448", "ded48cda8fe4b5a3"];
   const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
   const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
   const lot = [];
@@ -632,4 +639,111 @@ test("lot 3b : le plein écran ⛶ dans « Je m'entraîne », caché au téléph
   const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
   const tel = css.split("@media screen and (max-width: 700px) {").slice(1).find((b) => b.includes(".entr-x-mot"));
   assert.match(tel.split("\n    }\n")[0], /\.entr \.entr-plein \{ display: none; \}/);
+});
+
+// ---------------------------------------------------------------- lot 4 « relecture »
+const NOMS_OBJETS = () => Object.values(P.EST_DB).flat().flatMap((it) => it.items);
+
+test("lot 4 : plus de zéro inutile en fin de nombre (« 89,50 dam » → « 89,5 dam »)", () => {
+  for (const t of TYPES) {
+    P.setSeed(`Z${t}`);
+    for (let i = 0; i < 3000; i++) {
+      const q = P.buildQuestionLogic(t, 3);
+      assert.doesNotMatch(q.valStr, /,\d*0$/, `${q.valStr} ${q.sourceUnit}`);
+    }
+  }
+});
+
+test("lot 4 : « Quelle grandeur ? » ne nomme jamais la grandeur", () => {
+  for (const it of NOMS_OBJETS()) assert.ok(it.pour, `${it.n} : pas de phrase « pour »`);
+  P.setSeed("GRANDEUR");
+  for (let i = 0; i < 3000; i++) {
+    const q = P.buildEstimationLogic(1 + (i % 3), "est_grandeur", []);
+    const t = sansBalises(q.problemText);
+    assert.match(t, /^Pour savoir .+, quelle grandeur mesure-t-on \?$/, t);
+    assert.doesNotMatch(t.replace("quelle grandeur", ""), /\b(masse|longueur|surface|superficie|volume|capacité|aire|épaisseur|altitude)\b/i, t);
+  }
+});
+
+test("lot 4 : Associer, trois mesures au moins 3 fois plus grandes l'une que l'autre", () => {
+  const nb = (v) => { const [n, u] = v.replace(/[\s  ]/g, "").match(/^([\d,]+)(.*)$/).slice(1); return Number(P.valeurDe(n, u).replace(",", ".")); };
+  for (const lvl of [1, 2, 3]) {
+    P.setSeed(`ASSOC${lvl}`);
+    for (let i = 0; i < 6000; i++) {
+      const q = P.buildEstimationLogic(lvl, "est_assoc", ["len", "mass", "cap", "area", "vol"]);
+      assert.equal(q.objets.length, 3); assert.equal(q.valeurs.length, 3);
+      if (lvl === 1) continue;
+      const v = q.valeurs.map((x) => nb(sansBalises(x))).sort((a, b) => a - b);
+      assert.ok(v[1] >= 3 * v[0] - 1e-12 && v[2] >= 3 * v[1] - 1e-12, q.valeurs.join(" | "));
+    }
+  }
+});
+
+test("lot 4 : « Quelle unité ? » ne pose plus le lit ni le vélo (cm serait aussi juste)", () => {
+  P.setSeed("UNITE");
+  for (let i = 0; i < 4000; i++) {
+    const q = P.buildEstimationLogic(1 + (i % 3), "est_unit", ["len"]);
+    assert.ok(!/lit|vélo/.test(q.sujet), q.sujet);
+  }
+});
+
+test("lot 4 : émojis, rappels, ponts et actions corrigés", () => {
+  const e = (n) => NOMS_OBJETS().find((x) => x.n === n).e;
+  assert.equal(e("la masse d'un tube de colle"), "");
+  assert.equal(e("la quantité d'eau dans un grand arrosoir"), "");
+  assert.equal(e("l'espace pris par une grosse gomme"), "");
+  assert.equal(P.PONTS_DB.find((p) => /kilolitre/.test(p.q)).e, "📦");
+  const tout = JSON.stringify([P.EST_DB, P.PONTS_DB, P.ACTIONS_DB]);
+  assert.doesNotMatch(tout, /petit bassin|feuille de cahier|pèse exactement|épaule opposée|gourde pleine|comme une brique de lait|effaceur, un tube de colle/);
+  assert.match(tout, /un bassin de piscine municipale/);
+  assert.match(tout, /le même volume qu'une brique de lait de 1 L/);
+});
+
+test("lot 4 : les énoncés des problèmes (verbes, bouillon, bidon d'eau, multiplications, additions en mL)", () => {
+  const vus = new Set();
+  for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
+    P.setSeed(`L4${f}${lvl}`);
+    for (let i = 0; i < 1500; i++) vus.add({ f, lvl, t: sansBalises(P.buildProblemLogic(lvl, f).problemText) });
+  }
+  for (const { f, lvl, t } of vus) {
+    assert.doesNotMatch(t, /je verse|je vide|soupe|lessive|Quel est le total pour/, t);
+    if (f === "mult") assert.match(t, /(Quelle longueur font \d+ .+ identiques mis(es)? bout à bout|Quelle est la masse de \d+ .+ identiques|Combien contiennent \d+ .+ identiques), en (mm|cm|m|g|kg|mL|cL|L) \?$/, t);
+    if (/carreaux de faïence/.test(t)) assert.match(t, / mis bout/, t);
+    if (/(dalles|lattes|règles)/.test(t) && f === "mult") assert.match(t, / mises bout/, t);
+    if (f === "add" && lvl === 3 && / L et un autre/.test(t)) assert.match(t, /\d mL\. Quel est le total en mL \?$/, t);
+  }
+});
+
+test("lot 4 : au niveau 3, 10 m et plus restent en m, 10 L et plus restent en L", () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(100, "m"))), { val: "100", unit: "m" });
+  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(25, "m"))), { val: "25", unit: "m" });
+  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(1.5, "m"))), { val: "150", unit: "cm" });
+  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(50, "L"))), { val: "50", unit: "L" });
+  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(1.5, "L"))), { val: "150", unit: "cL" });
+  P.setSeed("NIV3");
+  for (let i = 0; i < 3000; i++) for (const t of ["est_val", "est_trou"]) {
+    const q = P.buildEstimationLogic(3, t, ["len", "cap"]);
+    // la bonne réponse (les fausses peuvent être énormes : c'est leur rôle)
+    const bonne = t === "est_val" ? sansBalises(q.choices[q.correctIndex]) : `${q.reponse} ${q.uniteReponse}`;
+    assert.doesNotMatch(bonne, /^\d{1,3}( \d{3})+ (cm|cL)$|^\d{4,} (cm|cL)$/, bonne);
+  }
+});
+
+test("lot 4 : une case épuisée laisse sa place aux autres ; sinon la série est annoncée plus courte", () => {
+  for (let k = 0; k < 30; k++) {
+    assert.equal(P.tirerSerie(["area", "est_unit"], [1], 10, `C${k}`).length, 10);
+    assert.equal(P.tirerSerie(["volM3", "est_unit"], [1], 10, `D${k}`).length, 10);
+  }
+  // toutes les cases épuisées : la série reste courte, sans doublon, et le message le dit
+  const p = P.tirerSerie(["est_pont"], [1], 20, "PONT");
+  assert.equal(p.length, 8);
+  assert.equal(new Set(p.map((q) => q.textId)).size, 8);
+  assert.equal(P.seriePlusCourte(10, 10), "");
+  assert.match(P.seriePlusCourte(8, 20), /que 8 questions différentes : la série n'en a que 8 \(sur 20\)\.$/);
+  assert.match(corps("getQuizData"), /const court = seriePlusCourte\(quizData\.length, targetCount\);\s*if \(court\) montrerMessage\(court\);/);
+  assert.match(corps("copierLien"), /seriePlusCourte\(tirerSerie\(casesDuMode/);
+});
+
+test("lot 4 : la case de réponse fait comme une calculatrice (« 00810 » ne s'écrit plus)", () => {
+  assert.match(corps("taper"), /else if \(\/\^\[0-9\]\$\/\.test\(c\) && st\.saisie === '0'\) st\.saisie = c;/);
 });
