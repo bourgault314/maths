@@ -5406,6 +5406,11 @@
     // dit les écritures égales, sans glisse-unité qui glisse.)
     if (question.outil === "glisse-unite" && (question.glisse || question.glisseOutil)) {
       if (question.relation && !question.outilSansRelation) zone.appendChild(el("div", "rel petite", question.relation));
+      // (Lot « la multiplication », choix de Gwenaël du 25/11 : sous la
+      // relation, « donc 3 L = 3 × 10 dL », la ligne que la correction
+      // écrira, sans son résultat.)
+      const donc = gen().doncOutil(question);
+      if (donc) zone.appendChild(el("div", "rel-donc", carte().typo(donc)));
       const g = question.glisse || question.glisseOutil;
       glisseUnite(zone, {grandeur: g.grandeur, valeur: g.valeur, de: g.de, vers: g.vers, pale: g.pale !== false, colonnes: g.colonnes || null, aires: Boolean(g.aires), sous: g.sous || null, cases: g.cases || 0, litres: Boolean(g.litres)}, fini);
       if (question.plus) zone.appendChild(el("div", "note", carte().typo(`Puis j'ajoute ${question.plus}.`)));

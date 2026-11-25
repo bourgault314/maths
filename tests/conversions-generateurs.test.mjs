@@ -3436,3 +3436,47 @@ test("lot B5-2 : V4, Q7, Q8, Q11 — recalculés à part, l'outil sans la répon
   // Le palier 5 s'ouvre.
   assert.equal(CARTE.palierPret(5), true);
 });
+
+// ------------------------------------- lot « la multiplication » (25/11/2026)
+// Dans « À toi », sous la relation du glisse-unité, la ligne que la correction
+// écrira, sans son résultat (choix de Gwenaël) : « donc 3 L = 3 × 10 dL » vers
+// une unité plus petite, « donc 30 dL = 30 ÷ 10 L » vers une plus grande.
+test("lot la multiplication : la ligne « donc » de l'outil, recalculée à part", () => {
+  const SANS = new Set(["deux", "decomp", "intrus", "plusieurs"]);
+  const sp = t => String(t).replace(/[  ]/g, " ");
+  const vus = {};
+  ["C1", "C2", "P4", "C3", "C4", "C5", "C8", "A4", "V4", "P5", "C9"].forEach(code => {
+    for (let g = 1; g <= 40; g += 1) {
+      G.serie(code, {usage: "entraine", graine: g}).forEach(q => {
+        const d = G.doncOutil(q);
+        const so = G.sorte(q).id;
+        const ou = `${code} ${g} ${q.cle}`;
+        if (q.outil !== "glisse-unite") { assert.equal(d, null, `${ou} : une ligne sans glisse-unité`); return; }
+        if (SANS.has(so)) assert.equal(d, null, `${ou} : « ${so} » ne convertit pas toute la mesure`);
+        if (!d) return;
+        vus[code] = (vus[code] || 0) + 1;
+        // L'écriture : « × » et « ÷ » entre deux espaces insécables, un
+        // nombre jamais séparé de son unité.
+        assert.match(d, /^donc \S+(?: \S+)* \S+ = \S+(?: \S+)* [×÷] \d{1,3}(?: \d{3})* \S+$/, `${ou} : écriture de « ${d} »`);
+        const m = /^donc (.+) (\S+) = (.+) ([×÷]) (.+) (\S+)$/.exec(sp(d));
+        const [, n1, u1, n2, op, f, u2] = m;
+        assert.equal(n1, n2, `${ou} : le même nombre des deux côtés`);
+        // La relation est celle de l'outil, le facteur le sien.
+        const r = /^1 (\S+) = (.+) (\S+)$/.exec(sp(q.relation));
+        assert.equal(sp(f), r[2], `${ou} : le facteur de la relation`);
+        assert.deepEqual(op === "×" ? [u1, u2] : [u2, u1], [r[1], r[3]], `${ou} : les unités de la relation`);
+        // Recalculé à part : n × f (ou n ÷ f) est la conversion de l'outil.
+        const v = lire(n1.replace(/ /g, "")), F = BigInt(f.replace(/ /g, ""));
+        const attendu = op === "×" ? v * F : (assert.equal(v % F, 0n, `${ou} : division exacte en millièmes`), v / F);
+        const gl = q.glisse || q.glisseOutil;
+        assert.equal(attendu, versUnite(lire(gl.valeur), gl.de, gl.vers), `${ou} : « ${d} » ne donne pas la conversion de l'outil`);
+        assert.equal(lire(gl.valeur), v, `${ou} : le nombre du glisse-unité`);
+        assert.notEqual(v, 1000n, `${ou} : pas de ligne pour 1`);
+      });
+    }
+  });
+  // Les étapes où la ligne s'écrit ; V4 garde « 1 L = 1 dm³ » seule (l'outil
+  // passe par le tableau, pas par une relation entre les deux unités).
+  ["C1", "C2", "P4", "C3", "C4", "C5", "C8", "A4", "P5", "C9"].forEach(c => assert.ok(vus[c] > 20, `${c} : la ligne « donc » s'écrit`));
+  assert.equal(vus.V4, undefined);
+});

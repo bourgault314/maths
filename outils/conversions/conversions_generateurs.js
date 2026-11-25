@@ -14612,6 +14612,32 @@
   function sortes(code) {
     return (SORTES[code] || []).map(({id, nom, montree, fait}) => ({id, nom, montree, fait}));
   }
+  // Lot « la multiplication » (25/11/2026, choix de Gwenaël) : dans « À
+  // toi », sous la relation de l'outil (« 1 L = 10 dL »), la ligne que la
+  // correction écrira, sans son résultat : « donc 3 L = 3 × 10 dL » vers
+  // une unité plus petite, « donc 30 dL = 30 ÷ 10 L » vers une plus grande.
+  // Seulement quand le glisse-unité convertit exactement les deux unités de
+  // la relation (l'hectare et l'are y sont hm² et dam²), jamais pour 1, ni
+  // pour les sortes qui ne convertissent pas toute la mesure (une mesure en
+  // deux unités, décomposer, l'intrus, cocher les écritures égales).
+  const SANS_DONC = new Set(["deux", "decomp", "intrus", "plusieurs"]);
+  const MEME_UNITE = {ha: "hm²", a: "dam²"};
+  function doncOutil(question) {
+    const q = question;
+    if (!q || q.outil !== "glisse-unite" || !q.relation || q.outilSansRelation) return null;
+    const g = q.glisse || q.glisseOutil;
+    if (!g || SANS_DONC.has(sorte(q).id)) return null;
+    const m = /^1[ \u00a0\u202f]+(\S+)[ \u00a0\u202f]+=[ \u00a0\u202f]+(\d{1,3}(?:[ \u00a0\u202f]\d{3})*)[ \u00a0\u202f]+(\S+)$/.exec(q.relation);
+    if (!m) return null;
+    const [, grande, f, petite] = m;
+    const u = x => MEME_UNITE[x] || x;
+    const v = milli(String(g.valeur));
+    if (v === MILLE || facteur(u(grande), u(petite)) !== BigInt(f.replace(/\D/g, ""))) return null;
+    const n = ecrire(v);
+    if (u(g.de) === u(grande) && u(g.vers) === u(petite)) return `donc ${n}${NB}${grande} = ${n}${NB}×${NB}${f}${NB}${petite}`;
+    if (u(g.de) === u(petite) && u(g.vers) === u(grande)) return `donc ${n}${NB}${petite} = ${n}${NB}÷${NB}${f}${NB}${grande}`;
+    return null;
+  }
   // Les 9 questions qu'il faut au moins pour réussir « À toi » (2 avec
   // l'outil, 2 avec l'image, 5 sans aide : SEUILS.entraine du parcours).
   const TETE = 9;
@@ -14891,6 +14917,8 @@
     sortes,
     exemple,
     serieBrute,
+    // lot « la multiplication » : la ligne sous la relation de l'outil
+    doncOutil,
     // outils exposés pour les aides, les tests et l'exerciseur
     lireMilli,
     milli,

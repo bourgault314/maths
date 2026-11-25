@@ -21,7 +21,7 @@
        déjà en Nunito. -->
   <link rel="preload" href="../../assets/vendor/polices/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="../../assets/vendor/polices/polices.css">
-  <link rel="stylesheet" href="./defi_conversions.css?v=20261125-pol">
+  <link rel="stylesheet" href="./defi_conversions.css?v=20261125-mul">
   <script>
     // Un code d'élève ou un billet dans l'adresse n'est pas lu (lot 1) : il
     // est seulement effacé, pour qu'il ne reste ni dans l'historique ni au
@@ -45,9 +45,9 @@
   </div>
 
   <script src="./conversions_carte.js?v=20261125-coh2"></script>
-  <script src="./conversions_generateurs.js?v=20261125-coh2"></script>
+  <script src="./conversions_generateurs.js?v=20261125-mul"></script>
   <script src="./defi_conversions_parcours.js?v=20261118-r1"></script>
-  <script src="./defi_conversions_aides.js?v=20261125-coh2"></script>
+  <script src="./defi_conversions_aides.js?v=20261125-mul"></script>
   <script>
   (function () {
     "use strict";
@@ -734,7 +734,12 @@
       const r = e.contentRect;
       if (cadreVu && Math.abs(r.width - cadreVu.l) < 1 && Math.abs(r.height - cadreVu.h) < 1) return;
       cadreVu = {l: r.width, h: r.height};
-      ajusterZone(cadre.querySelector(".zone"));
+      // (Lot « la multiplication » : au grand écran, le cadre grandit quand
+      // On te montre joue son geste ; réajuster tout de suite, dans
+      // l'observateur, changeait encore la page : « ResizeObserver loop »,
+      // vu par le robot dans C3 et C5 à 1440 × 900, déjà sur main. On
+      // réajuste à l'image suivante.)
+      requestAnimationFrame(() => ajusterZone(cadre.querySelector(".zone")));
     }).observe(cadre);
 
     function remplirZone(zone, classe, etiquette) {
