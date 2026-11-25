@@ -62,7 +62,9 @@ function servir() {
 }
 
 // DEFI_CONVERSIONS_POLICE="DejaVu Sans" : jouer avec une autre police, plus
-// large qu'Inter (lot 3a : sans Inter, l'accueil dépassait chez Code).
+// large (lot 3a : sans Inter, l'accueil dépassait chez Code). À la main
+// seulement depuis le lot « police » (25/11/2026) : la page apporte Nunito
+// sur tous les appareils, et la recette vérifie qu'elle s'écrit en Nunito.
 const POLICE = (process.env.DEFI_CONVERSIONS_POLICE || "").replace(/[^\w \-]/g, "");
 async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} = {}) {
   const contexte = await navigateur.newContext({viewport: {width: taille.largeur, height: taille.hauteur}});
@@ -83,6 +85,13 @@ async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} 
   }, [parcours ? JSON.stringify(parcours) : null, POLICE]);
   await page.goto(`${base}${PAGE}${prof ? "?prof=1" : ""}`);
   await page.waitForSelector("#cadre > *");
+  if (!POLICE) {
+    const police = await page.evaluate(() => ({
+      declaree: getComputedStyle(document.querySelector("#cadre")).fontFamily,
+      chargee: document.fonts.check("900 16px Nunito") && [...document.fonts].some(f => f.family.replace(/"/g, "") === "Nunito" && f.status === "loaded")
+    }));
+    if (!/^"?Nunito"?,/.test(police.declaree) || !police.chargee) erreurs.push(`La page ne s'écrit pas en Nunito (${police.declaree} ; Nunito ${police.chargee ? "chargée" : "pas chargée"})`);
+  }
   return {page, contexte, erreurs};
 }
 

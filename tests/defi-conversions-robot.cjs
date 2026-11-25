@@ -41,7 +41,7 @@
 //   DEFI_CONVERSIONS_ETAPES=R1,C1          (quelques étapes ; « commun » pour les écrans communs)
 //   DEFI_CONVERSIONS_TAILLES=1440x900      (quelques tailles)
 //   DEFI_CONVERSIONS_ECRANS=/dossier        (lot 3b-2 : chaque écran dans son fichier)
-//   DEFI_CONVERSIONS_POLICE="DejaVu Sans"   (une autre police, plus large)
+//   DEFI_CONVERSIONS_POLICE="DejaVu Sans"   (à la main seulement : une autre police, plus large)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome
 // WebKit s'installe une fois : PLAYWRIGHT_SKIP_BROWSER_GC=1 npx playwright install webkit
 //
@@ -87,8 +87,11 @@ const TOUTES_TAILLES = [
 // joue dans WebKit.
 const IPHONE_CHROMIUM = process.env.DEFI_CONVERSIONS_IPHONE_CHROMIUM === "1";
 // Lot 3a (retour de Code : sans Inter, l'accueil dépassait) : jouer avec une
-// autre police, plus large, DEFI_CONVERSIONS_POLICE="DejaVu Sans" (Claude
-// vérifie ainsi dans son espace, où Inter est installée).
+// autre police, plus large, DEFI_CONVERSIONS_POLICE="DejaVu Sans".
+// Lot « police » (25/11/2026) : la page apporte sa police, Nunito (servie
+// par le site), sur tous les appareils : le robot joue UN passage, en
+// Nunito, sur toutes les machines, et vérifie à chaque ouverture que la page
+// s'écrit vraiment en Nunito. L'autre police reste possible à la main.
 const POLICE = (process.env.DEFI_CONVERSIONS_POLICE || "").replace(/[^\w \-]/g, "");
 const tailleDans = (taille, moteur) => !taille.moteurs || taille.moteurs.includes(moteur)
   || (IPHONE_CHROMIUM && moteur === "chromium" && taille.moteurs.includes("webkit"));
@@ -286,7 +289,19 @@ async function controler(page, taille) {
           if (!n.textContent.trim() || !visible(e) || tropDedans(e)) continue;
           const rg = document.createRange();
           rg.selectNodeContents(n);
-          [...rg.getClientRects()].filter(b => b.width > 1 && b.height > 1).forEach(b => boites.push({e, texte: n.textContent.trim().slice(0, 24), b}));
+          // (Lot « police » : la boîte d'un morceau de texte est celle de la
+          // police — 1,36 fois la taille des lettres en Nunito, qui garde de
+          // la place pour les accents des majuscules. Deux lignes serrées
+          // (interligne 1,1) se recouvraient de 2 à 4 px sans se toucher à
+          // l'écran. On garde la ligne elle-même : la boîte, réduite
+          // également en haut et en bas à la hauteur de ligne, comme le
+          // navigateur pose les lignes. Deux éléments qui se recouvrent
+          // vraiment se trouvent toujours.)
+          const lh = parseFloat(getComputedStyle(e).lineHeight);
+          [...rg.getClientRects()].filter(b => b.width > 1 && b.height > 1).forEach(b => {
+            const rogne = Number.isFinite(lh) && b.height > lh ? (b.height - lh) / 2 : 0;
+            boites.push({e, texte: n.textContent.trim().slice(0, 24), b: {left: b.left, right: b.right, top: b.top + rogne, bottom: b.bottom - rogne}});
+          });
         }
       });
       // (Lot 3b-2 : les illustrations des repères, .ill, comme les dessins.)
@@ -428,6 +443,10 @@ async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} 
   const erreurs = [];
   page.on("pageerror", e => erreurs.push(String(e)));
   page.on("console", m => { if (m.type() === "error") erreurs.push(m.text()); });
+  // (Lot « police », retour de Code n° 2 : WebKit écrit « ResizeObserver loop
+  // completed… » dans sa console, Chromium seulement en événement : le robot
+  // le relève aussi dans Chromium.)
+  if (page.moteur !== "webkit") await page.addInitScript(() => window.addEventListener("error", e => { if (/ResizeObserver/.test(e.message)) console.error(e.message); }));
   await page.clock.install({time: new Date(`${JOUR}T10:00:00`)});
   await page.addInitScript(([p, cle, police]) => {
     Math.random = () => 0.5;
@@ -442,6 +461,13 @@ async function ouvrir(navigateur, base, taille, {prof = false, parcours = null} 
   }, [parcours ? JSON.stringify(parcours) : null, CLE, POLICE]);
   await page.goto(`${base}${PAGE}${prof ? "?prof=1" : ""}`);
   await page.waitForSelector("#cadre > *");
+  if (!POLICE) {
+    const police = await page.evaluate(() => ({
+      declaree: getComputedStyle(document.querySelector("#cadre")).fontFamily,
+      chargee: document.fonts.check("900 16px Nunito") && [...document.fonts].some(f => f.family.replace(/"/g, "") === "Nunito" && f.status === "loaded")
+    }));
+    if (!/^"?Nunito"?,/.test(police.declaree) || !police.chargee) erreurs.push(`La page ne s'écrit pas en Nunito (${police.declaree} ; Nunito ${police.chargee ? "chargée" : "pas chargée"})`);
+  }
   return {page, contexte, erreurs};
 }
 async function attendre(page, ms = 1000) {
