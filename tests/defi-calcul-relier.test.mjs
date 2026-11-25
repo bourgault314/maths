@@ -104,8 +104,10 @@ test("J'écris : les morceaux attendus, module par module", () => {
     "Droite : on part de 236. plus 4 : 240. Puis plus 3 : 243."]);
   assert.deepEqual(a10.map(d => Boolean(d.directCache)), [true, true, true, false], "le saut direct vient avec la dernière égalité");
   assert.deepEqual(a10.map(d => d.inconnues), [[1, 2], [2], [], []]);
-  // A10-1 : 4 + 3 = 7 (le saut), puis 254 + 3 = 257 (son point).
-  assert.deepEqual(lus("A10-1"), ["Droite : on part de 254.", "Droite : on part de 254. plus 3 : un nombre à trouver.", "Droite : on part de 254. plus 3 : 257."]);
+  // A10-1 : 4 + 3 = 7, puis 254 + 3 = 257 — le tableau du chiffre qui
+  // change, aux unités (lot C4b).
+  const t254 = "Tableau, en unités. 254 : 2 centaines, 5 dizaines, 4 unités. + 3 : 3 unités. 2 centaines, 5 dizaines, ";
+  assert.deepEqual(lus("A10-1"), [`${t254}un nombre à trouver unités.`, `${t254}7 unités.`, `${t254}7 unités.`]);
   // A2-3, un trou : les points sont là, chaque étape écrit son saut, puis le
   // complément entier (+ 76) dessous.
   const a2 = ecris("A2-3").dessins;

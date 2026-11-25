@@ -1070,10 +1070,16 @@ test("l'outil de l'entraînement : l'image avec ses « ? », l'outil à manipule
         assert.ok(!AIDES.decrireBarres(aide).includes(reponse), `${cle} : le lecteur d'écran ne dit pas la réponse`);
       } else if (aide.outil === "deux-barres") {
         // Relecture 2 : les compléments d'A1-1 (10 en haut ; 4 et « ? » dessous).
-        assert.ok(cle === "A1-1" && aide.masque, `${cle} : ${c.texte}`);
+        // Lot C4b : les sommes d'A1-1 (« ? » en haut ; 2 et 4 dessous ; 0 + 7 :
+        // la barre de 7 seule) et les petites différences d'A1-3 (9 en haut ;
+        // 4 et « ? » dessous).
+        assert.ok((cle === "A1-1" || cle === "A1-3") && aide.masque, `${cle} : ${c.texte}`);
         const etiquettes = textesSvg(AIDES.dessinerImage(aide));
-        assert.deepEqual(etiquettes, [String(c.donnees.m), String(c.donnees.n), "?"], `${cle} : ${c.texte} — ${etiquettes.join(" ")}`);
-        assert.deepEqual([...aide.haut], [c.donnees.m]);
+        const {n, d, m} = c.donnees;
+        const attendu = c.forme === "somme" ? ["?", ...(n === 0 ? [d] : d === 0 ? [n] : [n, d]).map(String)]
+          : c.forme === "difference" ? [String(n), String(-d), "?"] : [String(m), String(n), "?"];
+        assert.deepEqual(etiquettes, attendu, `${cle} : ${c.texte} — ${etiquettes.join(" ")}`);
+        assert.deepEqual([...aide.haut], [c.forme === "difference" ? n : m]);
       } else if (aide.outil === "presque-double") {
         // Lot 3b : les presque-doubles de « Sommes jusqu'à 20 » (7 + 7 + 1 = ?).
         assert.ok(cle === "A1-2" && !aide.revele, `${cle} : ${c.texte}`);
@@ -1267,7 +1273,8 @@ test("J'apprends : trois temps cohérents pour chaque niveau construit", () => {
       assert.doesNotMatch(a.bilan, /\d et \d/, "plus de « 1 et 9, 2 et 8 »");
     } else if (a.represente.outil === "tableau-rang") {
       // Lot C4a : le tableau des rangs — sa case cherchée est « ? ».
-      assert.ok(["A2", "A3"].includes(fiche.id), cle);
+      // (Lot C4b : aussi « Ajouter / Retrancher un chiffre sans passage ».)
+      assert.ok(["A2", "A3", "A10", "A11"].includes(fiche.id), cle);
       assert.ok([...a.represente.image.lignes, a.represente.image.res].some(l => l.cells.some(cel => cel && cel.e === "cherche" && cel.t === "?")), `${cle} : la case à trouver`);
     } else {
       assert.equal(a.represente.outil, "droite-sauts");
@@ -1386,8 +1393,10 @@ test("l'image d'une erreur montre la réponse, le pas oublié en gras", () => {
   assert.match(svg, />67</);
   const a2 = CORE.diagnostiquer(complement(37, 100), 3);
   assert.deepEqual(a2.image, {outil: "droite-sauts", depart: 37, sauts: [{val: 3}, {val: 60}], gras: 2});
-  // Un complément à un seul saut n'a rien à mettre en gras.
-  assert.equal(CORE.diagnostiquer(complement(433, 440, true), 440).image.gras, 0);
+  // Un complément à un seul saut n'a rien à mettre en gras. (Lot C4b : le
+  // complément à la dizaine suivante, 433 + □ = 440, se fait au tableau.)
+  assert.equal(CORE.diagnostiquer(complement(433, 440, true), 440).image.outil, "tableau-rang");
+  assert.equal(CORE.diagnostiquer(complement(37, 40, true), 40).image.outil, "tableau-rang");
 });
 
 test("lire une réponse, écrire un nombre, la clé d'un calcul", () => {
@@ -1814,7 +1823,8 @@ test("modules lot 2 : les défauts du lot 1 corrigés (phrase de 50 − 2, « à
   const d50 = CORE.diagnostiquer(c50, c50.reponse + 10);
   assert.equal(d50.c, 2);
   assert.doesNotMatch(d50.texte, /NaN|On passe 0/);
-  assert.match(d50.texte, /En reculant depuis \d+, on passe sous \d+\.$/);
+  // (Lot C4b : depuis une dizaine entière, je casse une dizaine — le tableau.)
+  assert.match(d50.texte, /Je casse une dizaine\u00a0: \d+ = \d+ \+ 10\.$/);
   // 9 + □ = 10 → 2 : avant, « fais les sauts : + 1 », la réponse.
   const c9 = calculDe("A1-1", c => c.forme === "complement" && c.donnees.n === 9);
   const d9 = CORE.diagnostiquer(c9, 2);
@@ -2030,7 +2040,17 @@ const nombreDuTableau = image => {
   const ligne = [...image.lignes, image.res].find(l => l.cells.some(cel => cel && cel.e === "trouve"));
   if (!ligne) return null;
   const cases = ligne === image.res ? image.res.cells : [ligne.cells.find(cel => cel && cel.e === "trouve"), ...image.res.cells.slice(1)];
-  return Number(cases.filter(Boolean).map(cel => cel.t).join("").replace(/\s/g, ""));
+  const colle = Number(cases.filter(Boolean).map(cel => cel.t).join("").replace(/\s/g, ""));
+  // Lot C4b : la case des unités peut dire 10 (36 + 4 : 3 dizaines et 10
+  // unités) et la case des dizaines 59 (600 − 4 : 59 dizaines et 6 unités) —
+  // le tableau se lit alors par la valeur de ses colonnes.
+  const VALEURS = {"unités": 1, "dizaines": 10, "centaines": 100, "milliers": 1000, "dizaines de milliers": 10000, "centaines de milliers": 100000};
+  const vaut = (cel, i) => (cel ? Number(String(cel.t).replace(/\s/g, "")) * (VALEURS[image.cols[i].nom] || NaN) : 0);
+  const parColonnes = ligne === image.res ? image.res.cells.reduce((s, cel, i) => s + vaut(cel, i), 0)
+    : ligne.cells.reduce((s, cel, i) => s + (cel && cel.e === "trouve" ? vaut(cel, i) : 0), 0);
+  const casesC4b = image.res.cells.some(cel => cel && /^10$/.test(cel.t)) || image.res.cells.some((cel, i) => cel && i < image.res.cells.length - 1 && String(cel.t).replace(/\s/g, "").length > 1)
+    || (ligne !== image.res && Boolean(image.res.label));
+  return casesC4b && Number.isFinite(parColonnes) ? parColonnes : colle;
 };
 const lot4 = cle => Array.from({length: 60}, (_, g) => ["valide", "entraine"].flatMap(genre => CORE.genererSerie(cle, {graine: g * 37 + 11, genre}))).flat();
 // Un texte du dessin qui dit la réponse : la réponse seule, ou « … = réponse ».

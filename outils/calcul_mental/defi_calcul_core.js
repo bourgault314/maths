@@ -453,6 +453,91 @@
     };
   }
 
+  // ------------------------------------- lot C4b : les petits calculs des bases
+  //
+  // Lot C4b (25/11/2026) : les calculs des bases qui se faisaient d'un seul
+  // saut prennent le tableau des rangs de C4a, cas par cas d'après le
+  // calcul mental CP-CM2 (2025) :
+  //  - sans passage (32 + 4 ; 157 − 5) : le chiffre des unités change, les
+  //    autres non (CP p. 4 : « 32 + 4 = 36 car 2 + 4 = 6 » ; CE1 p. 6 :
+  //    « 7 − 5 = 2. Donc 157 − 5 = 152 ») ; pile sur la dizaine (36 + 4), la
+  //    case des unités dit 10 : 3 dizaines et 10 unités (« 10 unités font 1
+  //    dizaine », l'annonce du niveau) ;
+  //  - depuis une dizaine entière (50 − 6 ; 730 − 4 ; 600 − 4) : je casse une
+  //    dizaine (CP p. 5 : « 50 c'est 5 dizaines, je casse une dizaine, il y a
+  //    alors 4 dizaines et 10 unités »), compté en dizaines (600, c'est 60
+  //    dizaines : 59 dizaines et 10 unités ; Oak National Academy, « 100 is
+  //    10 tens », 600 − 4) ;
+  //  - le complément à la dizaine (74 + □ = 80) : CP p. 4, « 74, c'est 7
+  //    dizaines et 4 unités. Le complément à 10 de 4 est 6 ».
+  const colonnesTout = (rs, large) => rs.map(x => ({nom: NOMS_RANGS_TABLEAU[x], large: x === large}));
+  const labTout = rs => (rs.length >= 5 ? 112 : 122);
+  function tableauUnites(n, d) {
+    const rs = rangsJusqua(n);
+    const u = n % 10;
+    const k = Math.abs(d);
+    return {
+      cols: colonnesTout(rs, 1), lab: labTout(rs),
+      lignes: [{label: formaterNombre(n), cells: rs.map(x => celT(chiffreTexte(n, x)))},
+        {label: `${signeT(d)} ${k}`, cells: rs.map(x => (x === 1 ? celT(k) : null))}],
+      res: {cells: rs.map(x => (x === 1 ? CIBLE_T : celT(chiffreTexte(n, x), "garde")))},
+      valeur: u + d, etape: {texte: `${u} ${signeT(d)} ${k} = ${CASE}`, reponse: u + d}
+    };
+  }
+  // Je casse une dizaine, compté en dizaines : 600 − 4 → 60 dizaines ; 59
+  // dizaines et 10 unités ; 10 − 4 = 6.
+  function tableauCasserDizaine(n, d) {
+    const c = n / 10;
+    const k = Math.abs(d);
+    return {
+      cols: colonnesCompter(10),
+      lignes: [{label: formaterNombre(n), cells: [celT(formaterNombre(c)), celT(0)]},
+        {label: "", cells: [celT(formaterNombre(c - 1), "garde"), celT(10)]},
+        {label: `− ${k}`, cells: [null, celT(k)]}],
+      res: {cells: [celT(formaterNombre(c - 1), "garde"), CIBLE_T]},
+      valeur: 10 - k, etape: {texte: `10 − ${k} = ${CASE}`, reponse: 10 - k}
+    };
+  }
+  // Le complément à la dizaine : 74 + □ = 80 → 4 + □ = 10.
+  function tableauDizaineSuivante(a, cible) {
+    const rs = rangsJusqua(cible);
+    const u = a % 10;
+    return {
+      cols: colonnesTout(rs, 1), lab: labTout(rs),
+      lignes: [{label: formaterNombre(a), cells: rs.map(x => (x > a ? null : celT(chiffreTexte(a, x))))},
+        {label: "+ ?", cells: rs.map(x => (x === 1 ? CIBLE_T : null))}],
+      res: {label: formaterNombre(cible), cells: rs.map(x => celT(chiffreTexte(cible, x)))},
+      valeur: 10 - u, etape: {texte: `${u} + ${CASE} = 10`, reponse: 10 - u}
+    };
+  }
+  // Ajouter ou retrancher un chiffre d'un seul saut (A10, A11, leurs leçons
+  // comprises) : le tableau, ou null (deux sauts : la droite).
+  function unSautTableau(calcul) {
+    if (!calcul || (calcul.module !== "A10" && calcul.module !== "A11") || estTrou(calcul)) return null;
+    const {n, d} = calcul.donnees;
+    if (n < 10 || sautsDuCalcul(calcul).palier !== null) return null;
+    if (d < 0 && n % 10 === 0) return tableauCasserDizaine(n, d);
+    const r = n % 10 + d;
+    return r >= 0 && r <= 10 ? tableauUnites(n, d) : null;
+  }
+  function a10Image(calcul, gras = 0) {
+    const t = unSautTableau(calcul);
+    return t ? tableauEtat(t, "trouve") : plusImage(calcul, gras);
+  }
+  function a10Aide(calcul) {
+    const t = unSautTableau(calcul);
+    return t ? tableauEtat(t, "aide") : plusAide(calcul);
+  }
+  // La phrase d'un calcul au tableau (la réponse donnée, J'écris, l'exemple).
+  function unSautPhrase(calcul) {
+    const {n, d, m} = calcul.donnees;
+    const fin = `${formaterNombre(n)} ${signeT(d)} ${Math.abs(d)} = ${formaterNombre(m)}`;
+    if (d < 0 && n % 10 === 0) return `Je casse une dizaine\u00a0: ${formaterNombre(n)} = ${formaterNombre(n - 10)} + 10. 10 − ${-d} = ${10 + d}, donc ${fin}.`;
+    const u = n % 10;
+    if (u + d === 10) return `${u} + ${d} = 10\u00a0: 10\u00a0unités font 1\u00a0dizaine. ${fin}.`;
+    return `Dans ${formaterNombre(n)}, le chiffre des unités est ${u}. ${u} ${signeT(d)} ${Math.abs(d)} = ${u + d}\u00a0: ${fin}.`;
+  }
+
   // ------------------------------------------------- A2 : compléments à 10, 100, 1 000
 
   function a2Complement(niveau, a, cible, extra) {
@@ -672,10 +757,22 @@
     const u = ecart % 100 === 0 && a % 100 === 0 ? 100 : 10;
     return a % u || cible % u || ecart % u || ecart < u ? null : u;
   }
-  const a2Tableau = calcul => tableauComplement(calcul.donnees.a, calcul.donnees.cible, a2RangTableau(calcul), calcul.forme);
+  const a2Tableau = calcul => (a2Unites(calcul)
+    ? tableauDizaineSuivante(calcul.donnees.a, calcul.donnees.cible)
+    : tableauComplement(calcul.donnees.a, calcul.donnees.cible, a2RangTableau(calcul), calcul.forme));
+  // Lot C4b : le complément à la dizaine suivante (74 + □ = 80), dans le
+  // tableau, en unités (calcul mental CP p. 4).
+  function a2Unites(calcul) {
+    const {a, cible} = calcul.donnees;
+    return calcul.module === "A2" && calcul.forme === "complement" && a % 10 !== 0 && cible === dizaineSuivante(a);
+  }
+  // Le tableau d'un complément : en unités (C4b) ou en dizaines, centaines (C4a).
+  const a2AuTableau = calcul => a2Unites(calcul) || Boolean(a2RangTableau(calcul));
   // « 20, c'est 2 dizaines ; 100, c'est 10 dizaines. »
   function a2EnRang(calcul) {
     const {a, cible} = calcul.donnees;
+    // (Lot C4b : comme « Dans 234, le chiffre des dizaines est 3. » de C4a.)
+    if (a2Unites(calcul)) return `Dans ${formaterNombre(a)}, le chiffre des unités est ${a % 10}.`;
     const u = a2RangTableau(calcul);
     const dire = x => `${formaterNombre(x)}, c’est ${formaterNombre(x / u)} ${NOMS_RANG_A2[u][x / u >= 2 ? 1 : 0]}`;
     return calcul.forme === "difference" ? `${dire(cible)}\u00a0; ${dire(a)}.` : `${dire(a)}\u00a0; ${dire(cible)}.`;
@@ -683,7 +780,7 @@
   const NOMS_RANG_A2 = Object.freeze({10: ["dizaine", "dizaines"], 100: ["centaine", "centaines"]});
 
   function a2Image(calcul, gras = 0) {
-    if (a2RangTableau(calcul)) return tableauEtat(a2Tableau(calcul), "trouve");
+    if (a2AuTableau(calcul)) return tableauEtat(a2Tableau(calcul), "trouve");
     const {a} = calcul.donnees;
     const {sauts} = a2Sauts(calcul);
     return {outil: "droite-sauts", depart: a, sauts: sauts.map(val => ({val})), gras: sauts.length > 1 ? gras : 0};
@@ -750,7 +847,7 @@
   // est dessinée, ses points aussi (62, 70, 100), mais les sauts disent
   // « + ? » — c'est eux qu'on cherche.
   function a2Aide(calcul) {
-    if (a2RangTableau(calcul)) return tableauEtat(a2Tableau(calcul), "aide");
+    if (a2AuTableau(calcul)) return tableauEtat(a2Tableau(calcul), "aide");
     const image = a2Image(calcul);
     return Object.assign({}, image, {sauts: image.sauts.map(saut => ({val: saut.val, masque: true}))});
   }
@@ -786,7 +883,7 @@
     const {paliers} = a2Sauts(calcul);
     const etape = (texte, reponse) => Object.freeze({texte, reponse});
     // (Lot C4a : le tableau, en deux étapes — 2 + □ = 10, puis 20 + □ = 100.)
-    if (a2RangTableau(calcul)) {
+    if (a2AuTableau(calcul)) {
       const premiere = a2Tableau(calcul).etape;
       return Object.freeze([etape(premiere.texte, premiere.reponse), etape(calcul.texte, calcul.reponse)]);
     }
@@ -800,6 +897,7 @@
 
   function a2Phrase(calcul) {
     const {a, cible} = calcul.donnees;
+    if (a2Unites(calcul)) return `${a2EnRang(calcul)} ${a % 10} + ${cible - a} = 10, donc ${formaterNombre(a)} + ${cible - a} = ${formaterNombre(cible)}.`;
     const {paliers, sauts} = a2Sauts(calcul);
     if (!paliers.length) return `De ${formaterNombre(a)} à ${formaterNombre(cible)}, c’est + ${formaterNombre(cible - a)}.`;
     return `Regarde\u00a0: ${sauts.map(formaterNombre).join(" puis ")}, ça fait ${formaterNombre(cible - a)}.`;
@@ -1210,7 +1308,7 @@
       exemple: Object.freeze({texte: premier.texte.replace(CASE, "?"), reponse: premier.reponse}),
       manipule: cM ? a2Perles(cM, consigneManipule) : null,
       represente: Object.freeze({
-        outil: a2RangTableau(cR) ? "tableau-rang" : "droite-sauts", consigne,
+        outil: a2AuTableau(cR) ? "tableau-rang" : "droite-sauts", consigne,
         texte: cR.texte, reponse: cR.reponse,
         image: Object.freeze(a2Aide(cR)),
         solution: Object.freeze({image: a2Image(cR), phrase: a2Phrase(cR)})
@@ -1220,7 +1318,7 @@
       ecris: ecrisAvecDessins(Object.assign({
         etapes: a2Etapes(cE), reponse: cE.reponse,
         solution: Object.freeze({image: a2Image(cE), phrase: a2Phrase(cE)})
-      }, a2RangTableau(cE) ? {consigne: a2EnRang(cE)} : a2Etapes(cE).length > 1 ? {consigne: cE.texte.replace(CASE, "?")} : {}), a2Dessins(cE)),
+      }, a2AuTableau(cE) ? {consigne: a2EnRang(cE)} : a2Etapes(cE).length > 1 ? {consigne: cE.texte.replace(CASE, "?")} : {}), a2Dessins(cE)),
       bilan,
       // Relecture 2 : A2-2 retient les paires de dizaines (comme A1-1).
       // Lot 3a : sinon, le calcul montré.
@@ -1234,7 +1332,7 @@
   // Le dessin de « J'écris » d'un complément : les points sont donnés, chaque
   // étape écrit son saut, la dernière le complément entier (dessous).
   function a2Dessins(calcul) {
-    if (a2RangTableau(calcul)) return rangDessins(a2Aide(calcul));
+    if (a2AuTableau(calcul)) return rangDessins(a2Aide(calcul));
     const {sauts} = a2Sauts(calcul);
     return droiteDessins({depart: calcul.donnees.a, sauts, direct: sauts.length > 1 ? calcul.reponse : undefined,
       trou: true, etapes: a2Etapes(calcul).length});
@@ -2119,20 +2217,22 @@
     return Object.freeze({
       exemple: Object.freeze({texte: estTrou(premier) ? premier.texte.replace(CASE, "?") : premier.texte.replace(` = ${CASE}`, ""), reponse: premier.reponse}),
       manipule: manipule ? plusPerles(manipule) : null,
+      // (Lot C4b : un seul saut — sans passage, depuis une dizaine entière —
+      // le tableau des rangs.)
       represente: Object.freeze({
-        outil: "droite-sauts", consigne,
+        outil: unSautTableau(represente) ? "tableau-rang" : "droite-sauts", consigne,
         texte: represente.texte, reponse: represente.reponse,
-        image: Object.freeze(plusAide(represente)),
-        solution: Object.freeze({image: plusImage(represente), phrase: plusPhrase(represente)})
+        image: Object.freeze(a10Aide(represente)),
+        solution: Object.freeze({image: a10Image(represente), phrase: unSautTableau(represente) ? unSautPhrase(represente) : plusPhrase(represente)})
       }),
       ecris: ecrisAvecDessins(Object.assign({
         etapes: Object.freeze(etapes.map(([texte, reponse]) => Object.freeze({texte, reponse}))),
         reponse: ecris.reponse,
-        solution: Object.freeze({image: plusImage(ecris), phrase: plusPhrase(ecris)})
-      }, consigneEcris ? {consigne: consigneEcris} : {}), plusDessins(ecris, etapes.length)),
+        solution: Object.freeze({image: a10Image(ecris), phrase: unSautTableau(ecris) ? unSautPhrase(ecris) : plusPhrase(ecris)})
+      }, consigneEcris ? {consigne: consigneEcris} : {}), unSautTableau(ecris) ? rangDessins(a10Aide(ecris)) : plusDessins(ecris, etapes.length)),
       bilan,
       ...autreDe(autre),
-      image: Object.freeze(plusImage(premier)),
+      image: Object.freeze(a10Image(premier)),
       // Lot 3a : les calculs de « On te montre » et de J'écris (pour les tests).
       calculs: Object.freeze({montre: premier, ecris: ecris}),
       textes: Object.freeze([premier.texte, represente.texte, ecris.texte])
@@ -2159,7 +2259,8 @@
   function pasChange(calcul, reponse, quoi) {
     const {n, d} = calcul.donnees;
     const {palier, sauts} = sautsDuCalcul(calcul);
-    if (palier === null) return `${formaterNombre(reponse)} : ${quoi} n’a pas changé. En reculant depuis ${formaterNombre(n)}, on passe sous ${formaterNombre(n)}.`;
+    // (Lot C4b : depuis une dizaine entière, le tableau casse une dizaine.)
+    if (palier === null) return `${formaterNombre(reponse)}\u00a0: ${quoi} n’a pas changé. Je casse une dizaine\u00a0: ${formaterNombre(n)} = ${formaterNombre(n - 10)} + 10.`;
     return `${formaterNombre(reponse)} : ${quoi} n’a pas changé. On passe ${formaterNombre(palier)} : ${formaterNombre(n)} ${signe(d)} ${Math.abs(sauts[0])} = ${formaterNombre(palier)}, puis ${signe(d)} ${Math.abs(sauts[1])}.`;
   }
 
@@ -2181,6 +2282,7 @@
       },
       retour: (calcul, reponse) => {
         const {n, d, m} = calcul.donnees;
+        if (calcul.forme === "difference" && a1DiffBarres(calcul)) return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} + ${-d}. Ici, on retire\u00a0: ${formaterNombre(n)}, c’est ${-d} et ce qui reste.`;
         if (calcul.forme === "difference") return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} + ${-d}. Ici, on retire : on recule.`;
         return `${formaterNombre(reponse)}, c’est ${formaterNombre(n)} + ${formaterNombre(m)}. On cherche ce qui manque pour aller de ${formaterNombre(n)} à ${formaterNombre(m)}.`;
       },
@@ -2224,6 +2326,12 @@
         // Sur un trou, les sauts sont ce qu'on cherche : on ne les dit pas
         // (« 9 + □ = 10 » : « + 1 » serait la réponse).
         if (estTrou(calcul)) return `C’est à 1 près. Pars de ${formaterNombre(n)} et avance jusqu’à ${formaterNombre(m)}, sans compter le départ.`;
+        // (Lot C4b : les deux barres, le tableau.)
+        const {d} = calcul.donnees;
+        if (a1SommeBarres(calcul)) return `C’est à 1 près. En bas, ${n} et ${d}\u00a0: ensemble, ils font la barre du haut.`;
+        if (a1DiffBarres(calcul)) return `C’est à 1 près. En bas, ${-d} et ce qui reste font ${n}.`;
+        if (unSautTableau(calcul) && d < 0 && n % 10 === 0) return `C’est à 1 près. Je casse une dizaine\u00a0: ${formaterNombre(n)} = ${formaterNombre(n - 10)} + 10, puis 10 − ${-d}.`;
+        if (unSautTableau(calcul)) return `C’est à 1 près. Dans ${formaterNombre(n)}, le chiffre des unités est ${n % 10}\u00a0: ${n % 10} ${signe(d)} ${Math.abs(d)}.`;
         const {sauts} = sautsDuCalcul(calcul);
         const texte = sauts.map(s => `${signe(s)} ${Math.abs(s)}`).join(", puis ");
         return `C’est à 1 près. Pars de ${formaterNombre(n)} et fais les sauts sans compter le départ : ${texte}.`;
@@ -2404,13 +2512,29 @@
       traces: Object.freeze([Object.freeze({apres: 1, attente: `${a} + ${a} + 1 = …`, texte: `${n} + ${d} = ${a} + ${a} + 1 = ${m}`})])
     });
   }
+  // Lot C4b (tri du 21/11, choix de Gwenaël du 08/11 étendu) : les deux
+  // barres aussi pour les sommes de « Sommes jusqu'à 10 » (le haut cherché :
+  // 4 et 2, en bas, font la barre du haut) et pour les petites différences
+  // de « Différences et trous jusqu'à 20 » (9 − 4 : 9 en haut ; en bas, 4 et
+  // ce qui reste) — un seul saut sur la droite ne montrait que la question.
+  // Les trous qui passent 10 gardent la droite (7 → 10 → 12 : la méthode du
+  // niveau). (Une somme avec 0 : la barre de 0 n'a pas de largeur à elle.)
+  const a1SommeBarres = calcul => calcul.module === "A1" && calcul.niveau === 1 && calcul.forme === "somme";
+  const a1DiffBarres = calcul => calcul.module === "A1" && calcul.niveau === 3 && calcul.forme === "difference" && calcul.donnees.n <= 10;
+  function a1BarresC4b(calcul) {
+    const {n, d, m} = calcul.donnees;
+    if (a1SommeBarres(calcul)) return Object.freeze({outil: "deux-barres", sorte: "tout", haut: Object.freeze([m]), bas: Object.freeze(n === 0 ? [d] : d === 0 ? [n] : [n, d]), cherche: Object.freeze(["haut", 0])});
+    if (a1DiffBarres(calcul)) return Object.freeze({outil: "deux-barres", sorte: "tout", haut: Object.freeze([n]), bas: Object.freeze([-d, m]), cherche: Object.freeze(["bas", 1])});
+    return null;
+  }
   function a1Image(calcul, gras) {
     if (presqueDouble(calcul)) return presqueDoubleImage(calcul, true);
-    return a1EnBarres(calcul) ? a1Barres(calcul) : plusImage(calcul, gras);
+    return a1EnBarres(calcul) ? a1Barres(calcul) : a1BarresC4b(calcul) || plusImage(calcul, gras);
   }
   function a1Aide(calcul) {
     if (presqueDouble(calcul)) return presqueDoubleImage(calcul, false);
-    return a1EnBarres(calcul) ? Object.freeze(Object.assign({}, a1Barres(calcul), {masque: true})) : plusAide(calcul);
+    const barres = a1EnBarres(calcul) ? a1Barres(calcul) : a1BarresC4b(calcul);
+    return barres ? Object.freeze(Object.assign({}, barres, {masque: true})) : plusAide(calcul);
   }
   const a1Perles = calcul => (presqueDouble(calcul) ? presqueDoublePerles(calcul) : plusPerles(calcul));
   const PAIRES_DIX = Object.freeze([[1, 9], [2, 8], [3, 7], [4, 6], [5, 5]].map(p => Object.freeze(p)));
@@ -2505,7 +2629,7 @@
     id: "A10", nom: "Ajouter un nombre à un chiffre", exemple: "47 + 8",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A10_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    erreurs: A10_ERREURS, image: a10Image, aide: a10Aide, manipulation: plusPerles, difficulte: plusDifficulte,
     niveaux: [
       {
         n: 1, titre: "sans passage", nom: "Ajouter un chiffre sans passage", palier: 1, type: "P",
@@ -2517,7 +2641,7 @@
           ecris: ligne("A10", 0, 254, 3),
           etapes: etapesDe(["4 + 3 = ?", 7], ["254 + 3 = ?", 257]),
           consigneEcris: "254 + 3 = 250 + 4 + 3",
-          consigne: "J’avance de 5 : seul le chiffre des unités change.",
+          consigne: "Seul le chiffre des unités change\u00a0: 3\u00a0+\u00a05.",
           // Lot 7e : le niveau arrive aussi pile sur la dizaine (79 + 1 = 80).
           bilan: "Sans passer la dizaine, seul le chiffre des unités change (pile sur la dizaine, 10 unités font 1 dizaine) : 32 + 4 = 36."
         })
@@ -2557,7 +2681,7 @@
     id: "A11", nom: "Retrancher un nombre à un chiffre", exemple: "523 − 7",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A11_ERREURS, image: plusImage, aide: plusAide, manipulation: plusPerles, difficulte: plusDifficulte,
+    erreurs: A11_ERREURS, image: a10Image, aide: a10Aide, manipulation: plusPerles, difficulte: plusDifficulte,
     niveaux: [
       {
         n: 1, titre: "sans passage", nom: "Retrancher un chiffre sans passage", palier: 1, type: "P",
@@ -2569,7 +2693,7 @@
           ecris: ligne("A11", 0, 486, -3),
           etapes: etapesDe(["6 − 3 = ?", 3], ["486 − 3 = ?", 483]),
           consigneEcris: "486 − 3 = 480 + 6 − 3",
-          consigne: "Je recule de 6 : seul le chiffre des unités change.",
+          consigne: "Seul le chiffre des unités change\u00a0: 9\u00a0−\u00a06.",
           bilan: "Sans passer la dizaine, seul le chiffre des unités change : 68 − 4 = 64."
         })
       },
@@ -3211,7 +3335,7 @@
           ecris: chemin("A3", 234, 60),
           etapes: [["3 + 6 = ?", 9], ["234 + 60 = ?", 294]],
           consigneEcris: "Dans 234, le chiffre des dizaines est 3.",
-          consigne: "J’avance de 5 centaines : seul le chiffre des centaines change.",
+          consigne: "Seul le chiffre des centaines change\u00a0: 3\u00a0+\u00a05.",
           bilan: "Quand j’ajoute des dizaines sans passer la centaine, seul le chiffre des dizaines change : 46 + 30 = 76."
         })
       },
@@ -3259,7 +3383,7 @@
           ecris: chemin("A3", 21462, 3000),
           etapes: [["1 + 3 = ?", 4], [`21${ESPACE_FINE}462 + 3${ESPACE_FINE}000 = ?`, 24462]],
           consigneEcris: `Dans 21${ESPACE_FINE}462, le chiffre des milliers est 1.`,
-          consigne: "J’avance de 2 milliers\u00a0: seul le chiffre des milliers change.",
+          consigne: "Seul le chiffre des milliers change\u00a0: 7\u00a0+\u00a02.",
           bilan: `Dans un grand nombre, je repère le chiffre qui change\u00a0: 47${ESPACE_FINE}530 + 2${ESPACE_FINE}000 = 49${ESPACE_FINE}530.`,
           // Lot C4a (planche 4) : la retenue des milliers (calcul mental CM, p. 17).
           autre: {phrase: "Avec une retenue, je compte en milliers\u00a0:", calcul: `47 + 6 = 53\u00a0; 47${ESPACE_FINE}530 + 6${ESPACE_FINE}000 = 53${ESPACE_FINE}530`}
@@ -10202,9 +10326,11 @@
         apprends: fracApprends({
           fiche: "F8",
           manipule: pourApprendre(f8(1, "3/8 + 3/8 = □/8")),
-          represente: pourApprendre(f8(1, "5/8 − 2/8 = □/8")),
+          // (Lot C4b, tri du 21/11 : une addition, comme les deux autres
+          // temps de la leçon — la soustraction vient à l'entraînement.)
+          represente: pourApprendre(f8(1, "5/8 + 2/8 = □/8")),
           ecris: pourApprendre(f8(1, "4/9 + 3/9 = □/9")),
-          consigne: "On enlève 2 huitièmes.",
+          consigne: "On ajoute 2 huitièmes.",
           consigneEcris: "4/9 + 3/9 = ?/9",
           etapes: [["4 + 3 = ?", 7], ["4/9 + 3/9 = ?/9", 7]],
           morceaux: [{}, {bas: true}],
@@ -11437,7 +11563,9 @@
         imposes: [f9(1, `2/5 + 3/10 = ${CASE}/10`), f9(1, `5/6 − 1/12 = ${CASE}/12`)],
         apprends: f9Apprends({
           manipule: pourApprendre(f9(1, `1/3 + 1/6 = ${CASE}/6`)),
-          represente: pourApprendre(f9(1, `3/4 − 1/8 = ${CASE}/8`)),
+          // (Lot C4b, tri du 21/11 : une addition, comme les deux autres
+          // temps de la leçon.)
+          represente: pourApprendre(f9(1, `3/4 + 1/8 = ${CASE}/8`)),
           ecris: pourApprendre(f9(1, `1/4 + 5/12 = ${CASE}/12`)),
           consigne: "Chaque quart, c’est 2 huitièmes.",
           bilan: "1/3 = 2/6. 1/3 + 1/6 = 2/6 + 1/6 = 3/6. Quand les parts ont la même taille, je peux les ajouter ou les enlever."
@@ -12231,7 +12359,11 @@
     // (Lot C4a, choix de Gwenaël : les nombres en 5 sont partis dans
     // « Compléments à 100 », qui va déjà à la dizaine : plus d'annonce.)
     // Lot 7e : arriver pile sur la dizaine change deux chiffres.
-    "A10-1": [["jusqu’à la dizaine", "j’arrive pile sur la dizaine : 10 unités font 1 dizaine"]],
+    "A10-1": [["jusqu’à la dizaine", "j’arrive pile sur la dizaine : 10\u00a0unités font 1\u00a0dizaine"]],
+    // Lot C4b : depuis une dizaine entière, une centaine ronde, je casse une
+    // dizaine (le tableau ; calcul mental CP p. 5).
+    "A11-2": [["depuis une dizaine", "on part d’une dizaine entière\u00a0: je casse une dizaine"]],
+    "A11-3": [["depuis une centaine", "on part d’une centaine ronde\u00a0: je casse une dizaine"]],
     "A3-1": [["+ centaines", "on ajoute des centaines : seul le chiffre des centaines change"],
       ["− dizaines", "on retire des dizaines : seul le chiffre des dizaines change"],
       ["− centaines", "on retire des centaines : seul le chiffre des centaines change"]],
@@ -13590,8 +13722,8 @@
     return ecrisFait({
       consigne: `${f3c(n)} ${op} ${Math.abs(d)} = ${f3c(n - u)} + ${u} ${op} ${Math.abs(d)}`,
       etapes: [etapeT(`${u} ${op} ${Math.abs(d)} = ${CASE}`, u + d), etapeT(calcul.texte, m)],
-      reponse: m, image: plusImage(calcul), phrase: plusPhrase(calcul)
-    }, plusDessins(calcul, 2));
+      reponse: m, image: a10Image(calcul), phrase: unSautPhrase(calcul)
+    }, rangDessins(a10Aide(calcul)));
   }
   // Sommes jusqu'à 10 : 10 = 8 + □, sur le schéma en barres.
   function recetteDixBarres(calcul) {
@@ -13611,7 +13743,7 @@
   function recetteComplement(calcul) {
     const etapes = a2Etapes(calcul);
     return ecrisFait({
-      consigne: a2RangTableau(calcul) ? a2EnRang(calcul) : etapes.length > 1 ? avecQuestion(calcul) : null,
+      consigne: a2AuTableau(calcul) ? a2EnRang(calcul) : etapes.length > 1 ? avecQuestion(calcul) : null,
       etapes: [...etapes], reponse: calcul.reponse, image: a2Image(calcul), phrase: a2Phrase(calcul)
     }, a2Dessins(calcul));
   }

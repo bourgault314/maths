@@ -230,7 +230,7 @@ test("les copies pour la page prof, les adresses de cache", async () => {
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261122-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-1/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261122-2/);
 });
 
