@@ -1762,8 +1762,8 @@ test("modules lot 2 : les erreurs connues, reconnues avec leur phrase, sans la r
         if (!d) return;
         assert.doesNotMatch(d.texte, /NaN|undefined|null/, `${c.texte} → ${reponse}`);
         assert.ok(!nombresDe(d.texte).includes(c.reponse), `${c.texte} → ${reponse} : la phrase donne la réponse (${d.texte})`);
-        // (Lot C4a : A3, le tableau des rangs.)
-        assert.equal(d.image.outil, id === "A3" ? "tableau-rang" : "droite-sauts");
+        // (Lot C4a : A3, le tableau des rangs ; lot C4c : A8, pile sur le nombre rond.)
+        assert.equal(d.image.outil, id === "A3" || (id === "A8" && CORE.aideDe(c).outil === "tableau-rang") ? "tableau-rang" : "droite-sauts");
       });
     });
   }));
@@ -2065,10 +2065,9 @@ const ariaDe = svg => (svg.match(/aria-label="([^"]*)"/) || [, ""])[1];
 // la correction qui montre la réponse, l'outil à manipuler.
 function verifierOutilLot4(c) {
   const aide = CORE.aideDe(c);
-  if (c.module === "M10" && ["trou-regroupe", "moitie-double"].includes(c.forme)) {
-    // Le dessin écrirait la réponse (10 ; 12) : pas d'aide, la correction seulement.
-    assert.equal(aide, null, c.texte);
-  } else {
+  // (Lot C4c : le nombre manquant de M10 a son aide, sans la réponse — 2 × 5 = ?,
+  // 24 = ? × 2 — vérifiée comme les autres ci-dessous.)
+  {
     assert.ok(aide && LOT4_IMAGES.includes(aide.outil) && aide.masque, `${c.texte} : une aide`);
     const svg = AIDES.dessinerImage(aide);
     assert.ok(!ditLaReponse(textesSvg(svg), c.reponse), `${c.texte} : la réponse est sur l'aide`);
@@ -2803,6 +2802,13 @@ function verifierOutilLot6(c) {
   // dessine en calcul (« × 4 en haut et en bas »), sans bandes ; dans
   // l'aide, les flèches portent « × ? » et la case reste vide (lot 7e :
   // « × ? » et la case ne sont pas le même nombre), la correction l'écrit.
+  // (Lot C4c : F9-2, une unité en plus de 12 parts — les flèches « × 2 »
+  // sont connues, la case cherchée porte « ? » ; pas de bandes non plus.)
+  if (CORE.aideDe(c) && CORE.aideDe(c).outil === "fois-fraction" && c.module === "F9") {
+    assert.equal(CORE.manipulationDe(c), null, c.texte);
+    assert.ok(!CORE.aideDe(c).montre && CORE.imageDe(c).montre, c.texte);
+    return;
+  }
   if (CORE.aideDe(c) && CORE.aideDe(c).outil === "fois-fraction") {
     assert.equal(c.module, "F6", c.texte);
     assert.equal(CORE.manipulationDe(c), null, c.texte);
@@ -3639,7 +3645,9 @@ function verifierOutilLot7c(c) {
     assert.equal(m, null, c.texte);
     assert.ok(!aide.montre && image.montre, c.texte);
     assert.match(AIDES.dessinerImage(aide), />[×÷][\s\u00a0]\d+</, c.texte);
-    sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
+    // (Lot C4c : au CM1, les flèches dès 13 parts par unité ; « 9/20 − 1/4 »
+    // : le 4 de 1/4 est la réponse par hasard — il est déjà dans le calcul.)
+    if (!nombresDuTexte(c.texte).includes(c.reponse)) sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
     return;
   }
   if (c.module === "F11" && c.forme.startsWith("fraction")) {

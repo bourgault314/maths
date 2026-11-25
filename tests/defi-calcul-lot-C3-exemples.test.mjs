@@ -222,12 +222,12 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // L'annonce : « Nouveau : … » sur l'exemple, « À toi : … » ensuite.
   assert.match(pose, /question\.annonceAToi = String\(annonce\)\.replace\(\/\^Nouveau\/, "À toi"\);/);
   // Les adresses de cache, les copies pour la page prof, le manifeste.
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-2/);
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
   assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {
@@ -298,5 +298,5 @@ test("le dessin révélé de chaque exemple se dessine : aucune case de largeur 
   const neuf = vivier("C3-1").find(c => c.forme === "difference-quotient" && c.donnees.k === 9);
   assert.ok(neuf);
   assert.doesNotMatch(AIDES.dessinerImage(CORE.imageDe(neuf)), /width="-/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_aides\.js\?v=20261122-2/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_aides\.js\?v=20261125-1/);
 });

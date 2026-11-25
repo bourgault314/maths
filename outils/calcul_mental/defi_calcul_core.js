@@ -520,6 +520,24 @@
     const r = n % 10 + d;
     return r >= 0 && r <= 10 ? tableauUnites(n, d) : null;
   }
+  // Lot C4c (reste noté par C4b) : un écart qui arrive pile sur le nombre
+  // rond (4 000 − 3 992, 4 000 − □ = 3 999) se faisait d'un seul saut — la
+  // droite ne montrait que la question. Comme « Compléments à la dizaine »
+  // (C4b) : le tableau, 2 + □ = 10, puis 3 992 + □ = 4 000.
+  function a8Tableau(calcul) {
+    if (!calcul || calcul.module !== "A8") return null;
+    const {n, m} = calcul.donnees;
+    if (sautsDuCalcul(calcul).sauts.length !== 1 || n % 10 === 0 || m !== dizaineSuivante(n)) return null;
+    return tableauDizaineSuivante(n, m);
+  }
+  function a8Image(calcul, gras = 0) {
+    const t = a8Tableau(calcul);
+    return t ? tableauEtat(t, "trouve") : plusImage(calcul, gras);
+  }
+  function a8Aide(calcul) {
+    const t = a8Tableau(calcul);
+    return t ? tableauEtat(t, "aide") : plusAide(calcul);
+  }
   function a10Image(calcul, gras = 0) {
     const t = unSautTableau(calcul);
     return t ? tableauEtat(t, "trouve") : plusImage(calcul, gras);
@@ -1898,7 +1916,9 @@
         apprends: a2Apprends({
           manipule: null, represente: {a: 368, cible: 1000}, ecris: {a: 748, cible: 1200},
           consigne: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000.",
-          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’à 1\u00a0000 : 368 + 632 = 368 + 2 + 30 + 600 = 1\u00a0000."
+          // (Lot C4c : À retenir est dit pour tout le niveau — J'écris va
+          // jusqu'à 1 200.)
+          bilan: "Je vais à la dizaine, puis à la centaine, puis jusqu’au nombre à atteindre : 368 + 632 = 368 + 2 + 30 + 600 = 1\u00a0000."
         })
       }
     ]
@@ -1971,14 +1991,19 @@
         n: 2, titre: "× 1 000, nombres en 0, nombre manquant, divisions", nom: "× 1\u00a0000, trous, divisions", palier: 2, type: "P",
         composer: m2Niveau2,
         imposes: [produit("M2", 2, 30, 100), trouFacteur("M2", 2, 35, 100), division("M2", 2, 48, 10)],
+        // Lot C4c (tri C4-0 ; calcul mental CP-CM2, p. 14 du PDF : « lors d'une
+        // multiplication par 1 000, une unité devient un millier… ») : la
+        // leçon montre le produit, × 1 000 (le nom du niveau) ; l'outil, le
+        // dessin et J'écris multiplient. Les divisions et les nombres
+        // manquants ont leur exemple résolu (lot C3).
         apprends: glisseApprends({
-          calcul: division("M2", 2, 48, 10), exemple: "480 ÷ 10", colonnes: COLONNES_M2,
+          calcul: produit("M2", 2, 250, 1000), exemple: "250 × 1\u00a0000", colonnes: COLONNES_M2,
           represente: produit("M2", 2, 30, 100),
-          ecris: {calcul: division("M2", 2, 35, 100), etapes: [etapeDe(`3${ESPACE_FINE}500 ÷ 100 = ${CASE}`, 35)]},
-          consigne: "Chaque chiffre vaut 10 fois moins.", consigneTableau: "Chaque chiffre vaut 100 fois plus.",
-          refus: "Chaque chiffre doit valoir 10 fois moins\u00a0: 1 colonne.",
-          trace: ["480 ÷ 10 = …", "480 ÷ 10 = 48"],
-          bilan: "Quand je divise par 10, chaque chiffre prend une valeur 10 fois plus petite : 480 ÷ 10 = 48."
+          ecris: {calcul: produit("M2", 2, 470, 1000), etapes: [etapeDe(`470 × 1${ESPACE_FINE}000 = ${CASE}`, 470000)]},
+          consigne: "Chaque chiffre vaut 1\u00a0000 fois plus.", consigneTableau: "Chaque chiffre vaut 100 fois plus.",
+          refus: "Chaque chiffre doit valoir 1\u00a0000 fois plus\u00a0: 3 colonnes.",
+          trace: ["250 × 1 000 = …", "250 × 1 000 = 250 000"],
+          bilan: "Quand je multiplie par 1\u00a0000, chaque chiffre prend une valeur 1\u00a0000 fois plus grande : 250 × 1\u00a0000 = 250\u00a0000."
         })
       }
     ]
@@ -3888,7 +3913,7 @@
     id: "A8", nom: "Soustraire par l’écart (nombres proches)", exemple: "73 − 68",
     famille: "A", construit: true,
     aide_entraine: "droite-sauts",
-    erreurs: A8_ERREURS, image: plusImage, aide: plusAide, manipulation: a8Perles, difficulte: a8Difficulte,
+    erreurs: A8_ERREURS, image: a8Image, aide: a8Aide, manipulation: a8Perles, difficulte: a8Difficulte,
     niveaux: [
       {
         n: 1, titre: "deux chiffres proches", nom: "Écart entre deux nombres proches", palier: 1, type: "P",
@@ -5499,7 +5524,17 @@
   // Le trou (« = 137 × □ », « = □ × 10 ») n'a pas d'aide : le dessin
   // écrirait la réponse. La correction, elle, montre tout.
   const estMoitieDouble = calcul => calcul.donnees.double !== undefined;
-  const m10Aide = calcul => (["trou-regroupe", "moitie-double"].includes(calcul.forme) ? null : Object.assign(m10Image(calcul), {masque: true}));
+  // Lot C4c (tri C4-0, Codex : « 42 × 5 = □ × 10 » sans aide) : le nombre
+  // manquant a son aide, sans la réponse — 2 × 5 = ? (le groupe), ou
+  // 42 = ? × 2 (la moitié, comme l'exemple résolu).
+  const m10Aide = calcul => {
+    if (calcul.forme === "trou-regroupe" || calcul.forme === "moitie-double") {
+      return estMoitieDouble(calcul)
+        ? Object.assign(m10Image(calcul), {masque: true, trou: "reste", coupe: calcul.donnees.a})
+        : Object.assign(m10Image(calcul), {masque: true, groupeConnu: false, trou: "groupe"});
+    }
+    return Object.assign(m10Image(calcul), {masque: true});
+  };
   function m10Phrase(calcul) {
     const {facteurs, paire, groupe, reste} = calcul.image;
     const [i, j] = paire;
@@ -9593,6 +9628,58 @@
   // environ 300 px : une part de 10 px se compte encore).
   const FRAC_BARRE_MAX = 30;
   const tientSurLaBarre = (valeur, d) => Math.ceil(valeur - 1e-9) * d <= FRAC_BARRE_MAX;
+  // Lot C4c (tri C4-0, règle des 12 parts de Gwenaël, 12/11) : au-delà de
+  // 12 parts, les unités entières que le calcul ne coupe pas deviennent des
+  // blocs pleins (`entiers`, le dessin d'« encadrer » depuis le lot
+  // « couverture ») — le geste de la leçon, « 5 cinquièmes font 1 » ;
+  // seules les unités où le calcul se passe gardent leurs parts. Les
+  // niveaux du CM1 ; ceux du CM2 et de la 6e (F9-3, F11, F6) : lot C4d.
+  const BLOCS_PARTS = 12;
+  const NIVEAUX_BLOCS = Object.freeze(new Set(["F5-1", "F5-2", "F8-3", "F9-2"]));
+  // Les unités pleines possibles au début d'une barre : jusqu'à la première
+  // limite (parts prises, enlevées, crochets, accolade) qui tombe au milieu
+  // d'une unité ; la dernière unité garde toujours ses parts.
+  function blocsDe(barre) {
+    const a = barre.a || 1;
+    const d = barre.d || 1;
+    const limites = [barre.pris || 0, (barre.pris || 0) - (barre.retire || 0)];
+    (barre.haut || []).forEach(h => limites.push(h.de, h.a));
+    if (barre.bas) limites.push(barre.bas.de, barre.bas.a);
+    const coupees = limites.filter(x => x > 0 && x % d !== 0);
+    const premiere = coupees.length ? Math.min(...coupees) : a * d;
+    return Math.max(0, Math.min(a - 1, Math.floor(premiere / d)));
+  }
+  const tropDeParts = barre => barre && barre.outil === "barre-droite" && ((barre.a || 1) - (barre.entiers || 0)) * (barre.d || 1) > BLOCS_PARTS;
+  // Les barres d'un dessin, d'une leçon, d'un J'écris : elles prennent
+  // toutes le même nombre de blocs (d'une étape à l'autre, le dessin ne
+  // saute pas).
+  function barresDans(objet, liste = []) {
+    if (!objet || typeof objet !== "object") return liste;
+    if (Array.isArray(objet)) { objet.forEach(x => barresDans(x, liste)); return liste; }
+    if (objet.outil === "barre-droite") liste.push(objet);
+    Object.values(objet).forEach(v => barresDans(v, liste));
+    return liste;
+  }
+  function copierAvec(objet, remplacer) {
+    if (!objet || typeof objet !== "object" || !barresDans(objet).length) return objet;
+    const neuf = remplacer(objet);
+    if (neuf !== objet) return neuf;
+    if (Array.isArray(objet)) return Object.freeze(objet.map(x => copierAvec(x, remplacer)));
+    return Object.freeze(Object.fromEntries(Object.entries(objet).map(([cle, v]) => [cle, copierAvec(v, remplacer)])));
+  }
+  function avecBlocs(objet) {
+    if (!objet) return objet;
+    const trop = barresDans(objet).filter(tropDeParts);
+    const k = trop.length ? Math.min(...trop.map(blocsDe)) : 0;
+    const marque = o => Object.freeze(Object.assign({}, o, {entiers: Math.max(o.entiers || 0, tropDeParts(o) ? k : 0), blocs: true}));
+    // Les blocs déjà là (« encadrer ») portent aussi « 5/5 ».
+    if (!barresDans(objet).some(o => (tropDeParts(o) && k > 0) || o.entiers)) return objet;
+    return copierAvec(objet, o => (o.outil === "barre-droite" && ((tropDeParts(o) && k > 0) || o.entiers) ? marque(o) : o));
+  }
+  // Une leçon : chaque temps à part (Je représente, J'écris, À retenir) —
+  // ses calculs sont « pour apprendre » (niveau 0).
+  const blocsLecon = apprends => Object.freeze(Object.fromEntries(Object.entries(apprends).map(([cle, v]) => [cle, cle === "calculs" ? v : avecBlocs(v)])));
+  const blocsSi = (calcul, objet) => (calcul && NIVEAUX_BLOCS.has(`${calcul.module}-${calcul.niveau}`) ? avecBlocs(objet) : objet);
   const enUnites = n => `${n} unité${n > 1 ? "s" : ""}`;
   // Les nombres « numérateurs seuls » : le calcul refait avec les
   // numérateurs comme s'ils étaient des parts de la même taille.
@@ -9711,7 +9798,9 @@
         apprends: apprendsCaches(fracApprends({
           fiche: "F2",
           manipule: pourApprendre(f2(1, "1/4 + 1/4 = □/2")),
-          represente: pourApprendre(f2(1, "1 − 1/2 = □/2")),
+          // (Lot C4c : le Je représente est une addition, comme la leçon ;
+          // la soustraction a son exemple résolu, lot C3.)
+          represente: pourApprendre(f2(1, "1/2 + 1/2 = □/2")),
           // Lot 3b : J'écris est une addition, comme la leçon.
           ecris: pourApprendre(f2(1, "1/2 + 2/4 = □")),
           consigne: "Une unité, c’est 2 demis.",
@@ -9881,8 +9970,8 @@
     // Lot « couverture » : au-delà de 6 unités (58/7 = 8 + 2/7), pas de
     // dessin — la droite n'en tient pas plus ; la table suffit (8 × 7 = 56).
     erreurs: F5_ERREURS, phrase: fracPhrase, difficulte: f5Difficulte,
-    image: calcul => (f5Grande(calcul) ? null : fracImage(calcul)),
-    aide: calcul => (f5Grande(calcul) ? null : fracAide(calcul)),
+    image: calcul => (f5Grande(calcul) ? null : blocsSi(calcul, fracImage(calcul))),
+    aide: calcul => (f5Grande(calcul) ? null : blocsSi(calcul, fracAide(calcul))),
     // « Encadrer » n'a pas de bandes à manipuler (décision du 04/11) ; ni
     // les fractions trop grandes pour la barre (lot « couverture »).
     manipulation: calcul => (calcul.lu.entre || !f5SurLaBarre(calcul) ? null : fracManipulation(calcul)),
@@ -9891,7 +9980,7 @@
         n: 1, titre: "décomposer", nom: "Fraction : entier et reste", palier: 2, type: "P",
         composer: vivierNiveau(F5_VIVIERS[1], [8, 2]),
         imposes: [f5(1, "13/4 = 3 + □/4"), f5(1, "8/3 = 2 + □/3")],
-        apprends: fracApprends({
+        apprends: blocsLecon(fracApprends({
           fiche: "F5",
           manipule: pourApprendre(f5(1, "17/5 = 3 + □/5")),
           represente: pourApprendre(f5(1, "11/4 = 2 + □/4")),
@@ -9901,13 +9990,13 @@
           etapes: [["3 = ?/6", 18], ["23/6 = 18/6 + ?/6", 5], ["23/6 = 3 + ?/6", 5]],
           morceaux: [{ecrit: 3, texte: "18/6"}, {bas: true}, {}],
           bilan: "15/5 = 3. 17/5 = 15/5 + 2/5 = 3 + 2/5."
-        })
+        }))
       },
       {
         n: 2, titre: "décomposer, recomposer, encadrer", nom: "Fraction : décomposer, recomposer, encadrer", palier: 2, type: "P",
         composer: vivierNiveau(F5_VIVIERS[2], [3, 3, 1, 1, 2]),
         imposes: [f5(2, "1 + 3/4 = □/4"), f5(2, "11/3 = □ + 2/3")],
-        apprends: fracApprends({
+        apprends: blocsLecon(fracApprends({
           fiche: "F5",
           manipule: pourApprendre(f5(2, "2 + 2/3 = □/3")),
           represente: pourApprendre(f5(2, "9/4 = □ + 1/4")),
@@ -9919,7 +10008,7 @@
           bilan: "2 = 6/3. 2 + 2/3 = 6/3 + 2/3 = 8/3.",
           // Lot 6 « programmes 2 » (relecture de Codex : E1, p. 5).
           autre: {phrase: "8/3, c’est 2 et encore 2/3\u00a0: entre 2 et 3.", calcul: "2 < 8/3 < 3"}
-        })
+        }))
       }
       // (Lot « couverture », 06/11/2026 : l'ancien niveau 3, encadrer, est
       // dans le niveau 2. Les identifiants restent : F5-3 n'existe plus.)
@@ -10315,7 +10404,7 @@
     id: "F8", nom: "Additionner, soustraire : même dénominateur", exemple: "3/7 + 3/7",
     famille: "F", construit: true,
     aide_entraine: "barre-droite",
-    erreurs: F8_ERREURS, image: fracImage, aide: fracAide, phrase: fracPhrase, difficulte: f8Difficulte,
+    erreurs: F8_ERREURS, image: c => blocsSi(c, fracImage(c)), aide: c => blocsSi(c, fracAide(c)), phrase: fracPhrase, difficulte: f8Difficulte,
     // Le niveau 3 n'a pas de bandes à manipuler (décision du 04/11).
     manipulation: calcul => (calcul.niveau === 3 ? null : fracManipulation(calcul)),
     niveaux: [
@@ -10359,7 +10448,7 @@
         n: 3, titre: "au-delà de 1\u00a0: entier moins une fraction, sommes, différences", nom: "Fractions au-delà de 1", palier: 2, type: "P",
         composer: vivierNiveau(F8_VIVIERS[3], [4, 2, 2, 2]),
         imposes: [f8(3, "3 − 1/2 = □/2"), f8(3, "11/3 − 2 = □/3")],
-        apprends: fracApprends({
+        apprends: blocsLecon(fracApprends({
           fiche: "F8",
           represente: pourApprendre(f8(3, "2 − 1/4 = □/4")),
           ecris: pourApprendre(f8(3, "3 − 2/5 = □/5")),
@@ -10368,7 +10457,7 @@
           etapes: [["3 = ?/5", 15], ["15/5 − 2/5 = ?/5", 13]],
           morceaux: [{ecrit: 3, texte: "15/5"}, {bas: true}],
           bilan: "2 = 8/4. 2 − 1/4 = 8/4 − 1/4 = 7/4."
-        })
+        }))
       }
     ]
   };
@@ -10676,7 +10765,9 @@
           ecris: pourApprendre(f1(1, "0,7 = 7/□")),
           consigne: "Un petit carré sur 100.",
           consigneEcris: "0,7 = 7/?",
-          etapes: [["7/10 = ?", 0.7], ["0,7 = 7/?", 10]],
+          // (Lot C4c : la première ligne est le dixième, « 1/10 = 0,1 » —
+          // « 7/10 = ? » écrivait la réponse avant de la demander.)
+          etapes: [["0,1 = 1/?", 10], ["0,7 = 7/?", 10]],
           // Le tableau : la ligne de 0,7, le 7 rangé aux dixièmes ; la
           // 2e étape écrit « 7/10 » en vert (lot 3a : des dixièmes, comme la leçon).
           dessins: (k, revele) => {
@@ -11399,7 +11490,11 @@
     const plein = remplir(calcul.lu, calcul.reponse);
     return Math.max(...[valeurCote(plein[0]), ...plein[0].map(valeurTermeF)].map(qValeur));
   };
-  const f9Grand = calcul => calcul.module === "F9" && !tientSurLaBarre(f9Valeur(calcul), Math.max(...densDe(calcul.lu)));
+  // (Lot C4c : au CM1, une unité n'est jamais coupée en plus de 12 parts —
+  // au-delà, les flèches « × 2 en haut et en bas », comme les fractions
+  // égales.)
+  const f9Grand = calcul => calcul.module === "F9" && (!tientSurLaBarre(f9Valeur(calcul), Math.max(...densDe(calcul.lu)))
+    || (NIVEAUX_BLOCS.has(`F9-${calcul.niveau}`) && Math.max(...densDe(calcul.lu)) > BLOCS_PARTS));
   // La fraction à réécrire (celle aux grandes parts) : a/d → A/D.
   function f9Conversion(calcul) {
     const termes = calcul.lu.cotes[0].filter(t => t.d > 1);
@@ -11431,12 +11526,13 @@
       haut: Object.freeze(haut.map(Object.freeze)), cache: null,
       bas: Object.freeze({de: E * D, a: x, texte: revele ? `${r}/${D}` : `?/${D}`, cherche: !revele})};
   }
-  const f9Aide = calcul => (calcul.forme === "mixtes" ? Object.freeze(f9MixtesBarre(calcul)) : f9Grand(calcul) ? f9Fleches(calcul) : fracAide(calcul));
-  const f9Image = calcul => (calcul.forme === "mixtes" ? Object.freeze(f9MixtesBarre(calcul, {revele: true, conv: true})) : f9Grand(calcul) ? f9Fleches(calcul, {revele: true}) : fracImage(calcul));
+  const f9Aide = calcul => (calcul.forme === "mixtes" ? Object.freeze(f9MixtesBarre(calcul)) : f9Grand(calcul) ? f9Fleches(calcul) : blocsSi(calcul, fracAide(calcul)));
+  const f9Image = calcul => (calcul.forme === "mixtes" ? Object.freeze(f9MixtesBarre(calcul, {revele: true, conv: true})) : f9Grand(calcul) ? f9Fleches(calcul, {revele: true}) : blocsSi(calcul, fracImage(calcul)));
   const f9Phrase = calcul => fr(`Regarde : ${calcul.texte.replace(CASE, f(calcul.reponse))}.`);
   // Les bandes (Je manipule, et l'entraînement après deux erreurs) : on pose
   // les deux fractions, on coupe les grandes parts — quand ça tient.
-  const f9Manipulation = calcul => (calcul.forme === "somme" || calcul.forme === "difference" ? fracManipulation(calcul) : null);
+  // (Lot C4c : pas de bandes quand le dessin est le calcul — les flèches.)
+  const f9Manipulation = calcul => ((calcul.forme === "somme" || calcul.forme === "difference") && !f9Grand(calcul) ? fracManipulation(calcul) : null);
   const F9_RANGS = Object.freeze({somme: 0, difference: 1, trois: 2, mixtes: 3});
   const f9Difficulte = calcul => F9_RANGS[calcul.forme] * 10000 + (f9Grand(calcul) ? 5000 : 0) + Math.max(...densDe(calcul.lu)) * 20 + calcul.reponse;
   const F9_LETTRES = Object.freeze(["zéro", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix", "onze"]);
@@ -11575,14 +11671,14 @@
         n: 2, titre: "au-delà de 1, jusqu’à 20", nom: "Dénominateurs multiples\u00a0: jusqu’à 20", palier: 2, type: "P",
         composer: vivierNiveau(F9_VIVIERS[2], [1, 1]),
         imposes: [f9(2, `2/5 + 3/20 = ${CASE}/20`), f9(2, `11/4 − 7/20 = ${CASE}/20`)],
-        apprends: f9Apprends({
+        apprends: blocsLecon(f9Apprends({
           manipule: pourApprendre(f9(2, `2/3 + 5/6 = ${CASE}/6`)),
           represente: pourApprendre(f9(2, `3/2 + 7/4 = ${CASE}/4`)),
           // (Lot 6 « programmes 2 » : 1/5 + 7/10 = 9/10 est au CE2, niveau 1.)
           ecris: pourApprendre(f9(2, `3/5 + 7/10 = ${CASE}/10`)),
           consigne: "Chaque demi, c’est 2 quarts.",
           bilan: "2/3 = 4/6. 2/3 + 5/6 = 4/6 + 5/6 = 9/6."
-        })
+        }))
       },
       {
         n: 3, titre: "au-delà de 20, trois fractions, nombres mixtes", nom: "Dénominateurs multiples : au-delà de 20", palier: 3, type: "P",
@@ -12344,6 +12440,8 @@
   const f6Verbe = calcul => (F6_MULTIPLIE[calcul.forme] ? "je multiplie" : "je divise");
   const glisseDe = (signe, p, colonnes) => `${signe} ${formaterNombre(p)}, chaque chiffre glisse de ${colonnes} colonnes`;
   const NOUVEAUTES = Object.freeze({
+    // Lot C4c : l'écart qui arrive pile sur le nombre rond (le tableau).
+    "A8-2": [[c => a8Tableau(c) !== null, "j’arrive pile sur le nombre rond\u00a0: je complète les unités à 10"]],
     // Lot 7d : × 19 (on va à 20), × 98 (on retire deux fois le nombre).
     "M9-1": [["× 19", "19, c’est 20 − 1 : je fais × 20, puis je retire le nombre"]],
     "M9-2": [["× 98", "98, c’est 100 − 2 : je retire 2 fois le nombre"]],
@@ -12378,7 +12476,9 @@
     "A3-4": [["milliers avec une retenue", "on passe la dizaine de mille\u00a0: je compte en milliers"]],
     "M2-1": [["× 100", glisseDe("×", 100, 2)]],
     // Lot 7e : × 1 000 arrive au CM1 (niveau 2), quelle que soit l'écriture.
-    "M2-2": [[c => c.donnees && c.donnees.p === 1000, calcul => glisseDe(calcul.forme === "division" ? "÷" : "×", 1000, 3)]],
+    // (Lot C4c : la leçon montre × 1 000 ; seules les autres écritures en
+    // × 1 000 — division, nombre manquant — sont annoncées.)
+    "M2-2": [[c => c.donnees && c.donnees.p === 1000 && c.forme !== "produit", calcul => glisseDe(calcul.forme === "division" ? "÷" : "×", 1000, 3)]],
     "D2-2": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D2-3": [["× 1 000", glisseDe("×", 1000, 3)]],
     "D3-2": [["÷ 1 000", glisseDe("÷", 1000, 3)]],
@@ -13298,6 +13398,12 @@
       const colonnes = String(p).length - 1;
       return `× ${exC3(p)} : chaque chiffre glisse de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la gauche, sa valeur devient ${exC3(p)} fois plus grande. ${resoluC3(calcul)}.`;
     },
+    // (Lot C4c : la leçon montre le produit ; la division a son exemple.)
+    "M2-2|division": calcul => {
+      const {p} = calcul.donnees;
+      const colonnes = String(p).length - 1;
+      return `÷ ${exC3(p)} : chaque chiffre glisse de ${colonnes === 1 ? "1 colonne" : `${colonnes} colonnes`} vers la droite, sa valeur devient ${exC3(p)} fois plus petite. ${resoluC3(calcul)}.`;
+    },
     "M2-2|trou-facteur": calcul => {
       const {n, p, m} = calcul.donnees;
       const colonnes = String(p).length - 1;
@@ -13627,7 +13733,9 @@
     const interdits = new Set([calcul.texte, ...exclure]);
     // (Lot C4a : en A3, l'exemple a la méthode de « À toi » — 300 − 80 avant
     // 400 − 20, compté en dizaines avant 532 − 60.)
-    const memeMethode = c => calcul.module !== "A3" || a3SorteDe(c) === a3SorteDe(calcul);
+    // (Lot C4c : en M2, le même nombre de colonnes — ÷ 1 000 avant ÷ 1 000.)
+    const memeMethode = c => (calcul.module !== "A3" || a3SorteDe(c) === a3SorteDe(calcul))
+      && (calcul.module !== "M2" || !c.donnees || c.donnees.p === calcul.donnees.p);
     const libres = liste => (liste || []).filter(c => c && c.forme === calcul.forme && !interdits.has(c.texte) && c.cle !== calcul.cle && memeMethode(c) && methodeExemple(c));
     // Le même dessin, de préférence : les mêmes chiffres nuls aux mêmes
     // places (« double de □ = 12 » avant « double de □ = 18 », pas
@@ -14161,10 +14269,14 @@
     }, {dessins: Object.freeze(Array.from({length: n + 1}, (_, k) => Object.freeze(dessins(k, false)))), revele: Object.freeze(dessins(n, true))});
   }
   // 0,7 = 7/□ : des dixièmes, comme la leçon.
+  // Lot C4c (tri C4-0, Codex : « 7/10 = □ » écrivait la réponse avant de la
+  // demander) : la première ligne est le dixième lui-même (calcul mental
+  // CP-CM2, p. 13 du PDF : « 1/10 = 0,1 »), puis le calcul.
+  // (Choix de Gwenaël du 25/11, planche 4.)
   function recetteDixiemes(calcul) {
-    const {v, n} = calcul.f1 || {};
+    const {n} = calcul.f1 || {};
     if (calcul.forme !== "denominateur" || calcul.reponse !== 10 || !n) return null;
-    return ecrisF1(calcul, avecQuestion(calcul), [[`${n}/10 = ?`, v], [avecQuestion(calcul), 10]], (k, revele) => {
+    return ecrisF1(calcul, avecQuestion(calcul), [["0,1 = 1/?", 10], [avecQuestion(calcul), 10]], (k, revele) => {
       const tableau = f1Tableau(calcul, revele || k >= 2);
       return k >= 2 && !revele ? Object.assign(tableau, {resultat: Object.assign({}, tableau.resultat, {trouve: true})}) : tableau;
     });
@@ -14234,8 +14346,8 @@
     "D4-1": recetteRang10, "D4-2": recetteRang10, "D4-3": recetteRang10,
     "C1-1": c => recetteParentheses(c, "D’abord la parenthèse."), "C1-2": c => recetteParentheses(c, "Chaque parenthèse d’abord."),
     "C1-3": c => recetteParentheses(c, "La parenthèse la plus à l’intérieur d’abord."),
-    "F8-1": recetteMemeDenominateur, "F8-2": recetteEntierMoins, "F8-3": recetteEntierMoins,
-    "F5-1": recetteDecomposerFraction, "F5-2": recetteRecomposer,
+    "F8-1": recetteMemeDenominateur, "F8-2": recetteEntierMoins, "F8-3": c => avecBlocs(recetteEntierMoins(c)),
+    "F5-1": c => avecBlocs(recetteDecomposerFraction(c)), "F5-2": c => avecBlocs(recetteRecomposer(c)),
     "F2-1": recetteDemiEnQuarts, "F2-2": recetteDemiEnQuarts,
     "F6-1": recetteFoisFraction, "F6-2": recetteFoisFraction, "F6-3": recetteFoisFraction, "F6-4": recetteFoisFraction,
     "F3-1": c => recetteQuantite(c), "F3-2": c => recetteQuantite(c), "F3-3": c => recetteQuantite(c, true),
@@ -14248,7 +14360,7 @@
     "D9-1": recetteDixFois, "D9-2": recetteDixFois,
     "M13-1": recetteMoitieMoitie, "M13-2": recetteMoitieMoitie, "M13-3": recetteMoitieMoitie,
     // Lot 7c.
-    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": f9Ecris, "F9-3": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris,
+    "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": c => avecBlocs(f9Ecris(c)), "F9-3": f9Ecris, "F11-1": f11Ecris, "F11-2": f11Ecris,
     // Lot 7d.
     "M11-1": recetteQuotientReste, "M11-2": recetteQuotientReste, "A9-1": recetteRegrouperTermes, "A9-2": recetteRegrouperTermes,
     "C4-1": recetteRemonter, "C4-2": recetteRemonter, "M9-1": recetteRetrancher, "M9-2": recetteRetrancher

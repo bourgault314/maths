@@ -98,9 +98,9 @@ const DESSINS = [
   ["A11", 1, "157 − 5 = □", "tableau", "7 − 5 =", "Tableau, en unités. 157 :", ""],
   ["A2", 1, "74 + □ = 80", "tableau", "4 + = 10", "Tableau, en unités. 74 : 7 dizaines, 4 unités. + ? :", ""],
   ["A2", 1, "95 + □ = 100", "tableau", "5 + = 10", "Tableau, en unités. 95 :", ""],
-  ["A11", 2, "50 − 6 = □", "tableau", "10 − 6 =", "Tableau, en dizaines. 50 : 5 dizaines, 0 unités. 4 dizaines, 10 unités.", "Nouveau : on part d’une dizaine entière : je casse une dizaine."],
-  ["A11", 2, "730 − 4 = □", "tableau", "10 − 4 =", "Tableau, en dizaines. 730 : 73 dizaines, 0 unités. 72 dizaines, 10 unités.", "Nouveau : on part d’une dizaine entière : je casse une dizaine."],
-  ["A11", 3, "600 − 4 = □", "tableau", "10 − 4 =", "Tableau, en dizaines. 600 : 60 dizaines, 0 unités. 59 dizaines, 10 unités.", "Nouveau : on part d’une centaine ronde : je casse une dizaine."],
+  ["A11", 2, "50 − 6 = □", "tableau", "10 − 6 =", "Tableau, en dizaines. 50 : 5 dizaines, 0 unité. 4 dizaines, 10 unités.", "Nouveau : on part d’une dizaine entière : je casse une dizaine."],
+  ["A11", 2, "730 − 4 = □", "tableau", "10 − 4 =", "Tableau, en dizaines. 730 : 73 dizaines, 0 unité. 72 dizaines, 10 unités.", "Nouveau : on part d’une dizaine entière : je casse une dizaine."],
+  ["A11", 3, "600 − 4 = □", "tableau", "10 − 4 =", "Tableau, en dizaines. 600 : 60 dizaines, 0 unité. 59 dizaines, 10 unités.", "Nouveau : on part d’une centaine ronde : je casse une dizaine."],
   ["A11", 2, "523 − 7 = □", "droite", "523 − 3 =", "Droite : on part de 523.", ""]
 ];
 const LECONS = [["A10", 1], ["A11", 1], ["A2", 1]];

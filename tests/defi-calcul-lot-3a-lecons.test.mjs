@@ -100,7 +100,8 @@ test("les leçons du cahier 3a : la sorte du calcul montré et de J'écris", () 
     [["moitié de 30 = □", 15], ["moitié de 4 = □", 2], ["moitié de 34 = □", 17]]);
   // × 10 et ÷ 10 (décision 6).
   assert.equal(espaces(CORE.niveauDe("M2-1").niveau.apprends.exemple.texte), "45 × 10");
-  assert.equal(espaces(CORE.niveauDe("M2-2").niveau.apprends.exemple.texte), "480 ÷ 10");
+  // (Lot C4c : la leçon du niveau 2 multiplie, × 1 000 — le nom du niveau.)
+  assert.equal(espaces(CORE.niveauDe("M2-2").niveau.apprends.exemple.texte), "250 × 1 000");
   // L'exemple de « Garder l'égalité, grands nombres » : avec son « = ».
   assert.equal(espaces(CORE.niveauDe("C3-3").niveau.apprends.exemple.texte), "144 + 237 = ? + 239");
 });

@@ -47,7 +47,9 @@ test("lot 7e : × 1 000 au CM1, et son annonce", () => {
   assert.equal(net(CORE.nomCompetence("M2-2")), "× 1 000, trous, divisions");
   const mille = tirage("M2-2").filter(c => c.donnees.p === 1000);
   assert.ok(mille.length > 20);
-  mille.forEach(c => assert.match(net(CORE.nouveauteDe(c).texte), /^Nouveau : [×÷] 1 000, chaque chiffre glisse de 3 colonnes\.$/));
+  // (Lot C4c : la leçon montre × 1 000 ; le produit n'est plus annoncé.)
+  mille.forEach(c => (c.forme === "produit" ? assert.equal(CORE.nouveauteDe(c), null, c.texte)
+    : assert.match(net(CORE.nouveauteDe(c).texte), /^Nouveau : [×÷] 1 000, chaque chiffre glisse de 3 colonnes\.$/)));
   assert.ok(mille.some(c => c.forme === "division") && mille.some(c => c.forme === "produit"));
 });
 
