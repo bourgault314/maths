@@ -107,7 +107,7 @@ test("J'écris : les morceaux attendus, module par module", () => {
   // A10-1 : 4 + 3 = 7, puis 254 + 3 = 257 — le tableau du chiffre qui
   // change, aux unités (lot C4b).
   const t254 = "Tableau, en unités. 254 : 2 centaines, 5 dizaines, 4 unités. + 3 : 3 unités. 2 centaines, 5 dizaines, ";
-  assert.deepEqual(lus("A10-1"), [`${t254}un nombre à trouver unités.`, `${t254}7 unités.`, `${t254}7 unités.`]);
+  assert.deepEqual(lus("A10-1"), [`${t254}les unités à trouver.`, `${t254}7 unités.`, `${t254}7 unités.`]);
   // A2-3, un trou : les points sont là, chaque étape écrit son saut, puis le
   // complément entier (+ 76) dessous.
   const a2 = ecris("A2-3").dessins;
@@ -157,10 +157,10 @@ test("J'écris : les morceaux attendus, module par module", () => {
   const d4 = ecris("D4-2").dessins;
   assert.deepEqual(d4.map(d => d.trouves), [[], [-3], [0, -1, -2, -3]]);
   assert.deepEqual(d4[0].garder.sort(), [-1, -2, 0], "les chiffres qui ne changent pas, en gris dès le début");
-  // M2-2 (lot 3a : J'écris 3 500 ÷ 100, comme la leçon sur ÷ 10) : les
-  // chiffres glissent vers la droite, « ? » puis le résultat.
+  // M2-2 (lot C4c : J'écris 470 × 1 000, comme la leçon sur × 1 000) : les
+  // chiffres glissent vers la gauche, « ? » puis le résultat.
   const m2 = ecris("M2-2").dessins.map(AIDES.dessinerImage);
-  assert.match(m2[0], /÷ 100/);
+  assert.match(m2[0], /× 1\u00a0?000|× 1 000/);
   assert.match(m2[0], />\?</);
   assert.doesNotMatch(m2[1], />\?</);
 });

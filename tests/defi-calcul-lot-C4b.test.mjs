@@ -244,8 +244,8 @@ test("les données ne changent pas : progression en version 11, clés des calcul
   Object.entries(CLES).forEach(([cle, cles]) => assert.deepEqual(CORE.niveauDe(cle).niveau.imposes.map(x => x.cle), cles, cle));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-1/);
-  assert.match(html, /defi_calcul_aides\.js\?v=20261122-2/, "le fichier des dessins ne change pas");
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-2/);
+  assert.match(html, /defi_calcul_aides\.js\?v=20261125-1/, "le fichier des dessins (lot C4c : les blocs, le tableau des rangs lu)");
   assert.match(await lire("../_serveur/public/VERSION"), /^lot \S+$/m);
 });
 

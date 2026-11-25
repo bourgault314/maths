@@ -818,8 +818,16 @@
 
   // Le même tableau, en mots, pour un lecteur d'écran.
   function decrireTableauRang(o) {
+    // (Lot C4c : « les unités à trouver », « 1 centaine » — plus « un nombre
+    // à trouver unités » ni « 1 centaines ».)
+    const singulier = nom => String(nom).replace(/^(\S+?)s\b/, "$1");
+    const cellule = (cel, nom) => {
+      if (cel.t === "?") return `les ${nom} à trouver`;
+      const valeur = Number(String(cel.t).replace(/[\s\u00a0\u202f]/g, "").replace(",", "."));
+      return `${cel.t} ${Number.isFinite(valeur) && Math.abs(valeur) < 2 ? singulier(nom) : nom}`;
+    };
     const dire = l => {
-      const morceaux = l.cells.map((cel, i) => (cel && cel.t !== "" ? `${cel.t === "?" ? "un nombre à trouver" : cel.t} ${o.cols[i].nom}` : null)).filter(Boolean);
+      const morceaux = l.cells.map((cel, i) => (cel && cel.t !== "" ? cellule(cel, o.cols[i].nom) : null)).filter(Boolean);
       return `${l.label ? `${l.label} : ` : ""}${morceaux.join(", ")}`;
     };
     return `Tableau, en ${o.cols.find(c => c.large).nom}. ${[...o.lignes, o.res].map(dire).filter(t => t.trim()).join(". ")}.`;
@@ -2038,14 +2046,21 @@
     const y1 = 74;
     const avantTexte = o.avant ? `${o.avant} =` : "";
     const avantLargeur = avantTexte ? avantTexte.length * 12.4 + 10 : 0;
-    const y2 = y1 + 92;
-    const H = y2 + 104;
+    // Lot C4c : le nombre manquant (« 2 × 199 × 5 = 199 × ? », « 42 × 5 =
+    // ? × 10 ») a son aide. `trou` : "groupe" (2 × 5 = ?) ou "reste" (le
+    // facteur coupé : 42 = ? × 2, l'accolade « 42 » sous les deux tuiles) ;
+    // pas d'accolade du produit (on ne le demande pas).
+    const trou = cache && !finiVu ? o.trou || null : null;
+    const coupe = trou === "reste" && o.coupe !== undefined;
+    const y2 = y1 + 92 + (coupe ? 40 : 0);
+    const H = y2 + (trou ? 60 : 104);
     const largeurTuile = t => Math.max(tuile, String(t).length * 15 + 26);
     const rangee = (valeurs, y, etats, decale = 0) => {
       const ws = valeurs.map(largeurTuile);
       const total = ws.reduce((a, b) => a + b, 0) + signe * (valeurs.length - 1);
       let x = (W - total) / 2 + decale;
       const centres = [];
+      const bords = [];
       let s = "";
       valeurs.forEach((v, i) => {
         const etat = etats[i] || "";
@@ -2053,16 +2068,20 @@
         s += `<rect x="${x}" y="${y}" width="${ws[i]}" height="50" rx="10" fill="${fond}" stroke="${bord}" stroke-width="${etat ? 3 : 2.5}"/>`
           + `<text x="${x + ws[i] / 2}" y="${y + 34}" text-anchor="middle" font-size="25" font-weight="700" fill="${encre}">${v}</text>`;
         centres.push(x + ws[i] / 2);
+        bords.push([x, x + ws[i]]);
         x += ws[i];
         if (i < valeurs.length - 1) { s += `<text x="${x + signe / 2}" y="${y + 33}" text-anchor="middle" font-size="24" fill="#143451">×</text>`; x += signe; }
       });
-      return {s, centres, gauche: (W - total) / 2 + decale, droite: (W + total) / 2 + decale};
+      return {s, centres, bords, gauche: (W - total) / 2 + decale, droite: (W + total) / 2 + decale};
     };
     // À sa taille, comme l'escalier de C1 : étroit, il deviendrait trop haut.
     let s = `<svg class="dc-escalier" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${decrireFacteurs(o)}">`;
     const [i, j] = o.paire;
-    const haut = rangee(o.facteurs.map(nombre), y1, o.facteurs.map((_, k) => (k === i || k === j ? "groupe" : "")), avantLargeur / 2);
+    const haut = trou === "reste"
+      ? rangee(o.facteurs.map((v, k) => (k === 0 ? "?" : nombre(v))), y1, o.facteurs.map((_, k) => (k === 0 ? "cherche" : k === i || k === j ? "groupe" : "")), avantLargeur / 2)
+      : rangee(o.facteurs.map(nombre), y1, o.facteurs.map((_, k) => (k === i || k === j ? "groupe" : "")), avantLargeur / 2);
     s += haut.s;
+    if (coupe) s += accolade(haut.bords[0][0] + 2, haut.bords[1][1] - 2, y1 + 54, nombre(o.coupe), false);
     if (avantTexte) s += `<text x="${haut.gauche - 10}" y="${y1 + 33}" text-anchor="end" font-size="22" font-weight="700" fill="#5b7286">${avantTexte}</text>`;
     // L'arc au-dessus des deux facteurs qui vont ensemble.
     const xa = haut.centres[i];
@@ -2073,15 +2092,20 @@
     s += `<text x="${W / 2 + avantLargeur / 2}" y="${y2 - 14}" text-anchor="middle" font-size="22" fill="#5b7286">=</text>`;
     const tuileGroupe = groupeVu ? nombre(o.groupe) : "?";
     const etatGroupe = cache && !groupeVu ? "cherche" : "groupe";
-    const bas = o.groupeDevant
-      ? rangee([tuileGroupe, nombre(o.reste)], y2, [etatGroupe, ""], avantLargeur / 2)
-      : rangee([nombre(o.reste), tuileGroupe], y2, ["", etatGroupe], avantLargeur / 2);
+    const bas = trou === "reste"
+      ? rangee(["?", tuileGroupe], y2, ["cherche", etatGroupe], avantLargeur / 2)
+      : o.groupeDevant
+        ? rangee([tuileGroupe, nombre(o.reste)], y2, [etatGroupe, ""], avantLargeur / 2)
+        : rangee([nombre(o.reste), tuileGroupe], y2, ["", etatGroupe], avantLargeur / 2);
     s += bas.s;
-    s += accolade(bas.gauche + 2, bas.droite - 2, y2 + 54, finiVu ? nombre(o.reste * o.groupe) : "?", !finiVu, ecrit && finiVu);
+    if (!trou) s += accolade(bas.gauche + 2, bas.droite - 2, y2 + 54, finiVu ? nombre(o.reste * o.groupe) : "?", !finiVu, ecrit && finiVu);
     return s + "</svg>";
   }
   function decrireFacteurs(o) {
     const vu = !o.masque || Boolean(o.fini);
+    // (Lot C4c : le nombre manquant.)
+    if (!vu && o.trou === "reste") return `${o.avant ? `${o.avant} = ` : ""}un nombre à trouver × ${o.facteurs.slice(1).map(nombre).join(" × ")} : ${nombre(o.coupe)}, c’est ce nombre × ${nombre(o.facteurs[1])}. ${nombre(o.facteurs[o.paire[0]])} × ${nombre(o.facteurs[o.paire[1]])} = ${nombre(o.groupe)}, puis un nombre à trouver × ${nombre(o.groupe)}.`;
+    if (!vu && o.trou === "groupe") return `${o.facteurs.map(nombre).join(" × ")} : ${nombre(o.facteurs[o.paire[0]])} × ${nombre(o.facteurs[o.paire[1]])} = un nombre à trouver, puis ${nombre(o.reste)} × ce nombre.`;
     const [i, j] = o.paire;
     const groupeVu = !o.masque || (o.trouves !== undefined ? Boolean(o.trouves) : o.groupeConnu !== false);
     const groupe = groupeVu ? nombre(o.groupe) : "un nombre à trouver";
@@ -3657,6 +3681,9 @@
       s += `<line x1="${(G + k * w).toFixed(2)}" y1="${yb}" x2="${(G + k * w).toFixed(2)}" y2="${yb + R}" stroke="${surBleu ? "#fff" : encre}" stroke-width="${surBleu ? 2.4 : epais}"/>`;
     }
     s += `<rect x="${G}" y="${yb}" width="${L}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
+    // Lot C4c (au-delà de 12 parts) : chaque bloc plein porte « 5/5 » — une
+    // unité, c'est 5 cinquièmes (le geste de la leçon).
+    if (o.blocs) for (let k = 0; k < entiers; k += 1) s += etiquetteSvg(G + (k + .5) * d * w, yb + R / 2 - 6, `${d}/${d}`, {taille: 14, encre: "#fff"});
     haut.forEach(h => {
       // Un crochet caché (J'écris : il apparaît à son étape) garde sa place.
       if (h.masque) return;
@@ -3689,6 +3716,7 @@
   // « 3/4 » se lit « 3 sur 4 ».
   function decrireBarreDroite(o) {
     const morceaux = ["Schéma en barres posé sur la droite graduée.", lireDroite(o.a || 1, o.cache, o.ecrits || {}, o.nombres || null)];
+    if (o.blocs && o.entiers) morceaux.push(o.entiers === 1 ? `La première unité est un bloc plein : ${lireFraction(`${o.d}/${o.d}`)}.` : `Les premières unités sont des blocs pleins : ${lireFraction(`${o.d}/${o.d}`)} chacune.`);
     morceaux.push(o.retire ? "Des parts sont en bleu, d’autres sont hachurées : on les enlève." : "Des parts sont en bleu.");
     const hauts = (o.haut || []).filter(h => !h.masque);
     if (hauts.length) morceaux.push(`Au-dessus : ${hauts.map(h => lireFraction(h.texte)).join(", ")}.`);
