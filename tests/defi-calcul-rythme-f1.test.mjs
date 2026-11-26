@@ -52,7 +52,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-2/, "le moteur change d'adresse");
 });
 
 test("page élève : la carte n'a d'étage ouvert que jusqu'au réglage du professeur (lot K1)", async () => {
@@ -80,7 +80,10 @@ test("page prof : « Régler Défi calcul » — la durée et le palier pour la 
   assert.match(page, /"15 minutes : plus de temps pour apprendre, pour une classe qui en a besoin\."/);
   assert.match(page, /"Au-delà, ni test ni leçon\. Ce qui est déjà appris continue de revenir\."/);
   assert.match(page, /el\("h3", "", "Autrement pour quelques élèves"\), el\("p", "aide", "Le choix de l’élève l’emporte sur celui de la classe\."\)/);
-  assert.match(page, /const PALIERS_CALCUL = \[\[1, "Les bases", "Jusqu’aux bases"\], \[2, "CM1", "Jusqu’au CM1"\], \[3, "CM2", "Jusqu’au CM2"\], \[4, "Vers la 6e \(tout\)", "Jusqu’à la 6e"\]\];/);
+  // (Lot K1b : six étages, un par classe ; le réglage part sous le nom « etage ».)
+  assert.match(page, /const PALIERS_CALCUL = \[\[1, "CP", "Jusqu’au CP"\], \[2, "CE1", "Jusqu’au CE1"\], \[3, "CE2", "Jusqu’au CE2"\], \[4, "CM1", "Jusqu’au CM1"\], \[5, "CM2", "Jusqu’au CM2"\],\s+\[6, "Vers la 6e \(tout\)", "Jusqu’à la 6e"\]\];/);
+  assert.match(page, /const palier = palierValable\(r\.etage\);/);
+  assert.doesNotMatch(page, /r\.palier\b|propre\.palier\b|pourLAppli\.palier\b/, "plus rien ne part ni ne se lit sous l'ancien nom");
   // Une ligne par valeur différente de celle de la classe.
   assert.match(page, /MINUTES_CALCUL\.filter\(n => n !== c\.minutes\)\.forEach/);
   assert.match(page, /PALIERS_CALCUL\.filter\(\(\[n\]\) => n !== c\.palier\)\.forEach/);
@@ -88,7 +91,7 @@ test("page prof : « Régler Défi calcul » — la durée et le palier pour la 
   assert.match(page, /calcul: cle === "defi-calcul" \? calculDeLaClasse\(\) : null,/);
   assert.match(page, /calcul: etat\.calcul \? copierCalcul\(etat\.calcul\) : null,/);
   assert.match(page, /if \(b\.cle === "defi-calcul" && b\.calcul\.minutes !== depart\.calcul\.minutes\) pourLAppli\.minutes = b\.calcul\.minutes;/);
-  assert.match(page, /if \(b\.cle === "defi-calcul" && b\.calcul\.palier !== depart\.calcul\.palier\) pourLAppli\.palier = b\.calcul\.palier;/);
+  assert.match(page, /if \(b\.cle === "defi-calcul" && b\.calcul\.palier !== depart\.calcul\.palier\) pourLAppli\.etage = b\.calcul\.palier;/);
   assert.match(page, /if \("minutes" in voulu && neuf\.calcul\.minutes !== b\.calcul\.minutes\) return false;/, "relu après une réponse perdue");
   assert.match(page, /await appelBorne\("eleves\.reglages", \{eleve_id: eleve\.id, avant: eleve\.reglages \|\| \{\}, reglages\}\);/, "un élève : avec « avant »");
   assert.match(page, /if \(cle === "defi-calcul"\) details\.push\(\.\.\.texteCalcul\(calculDeLaClasse\(\)\)\);/, "la ligne du haut");
@@ -111,9 +114,10 @@ test("serveur : une page d'avant le lot 1 (version 6) ne réécrit pas la progre
   // Lot C2 : 11 (M1 et D8 en deux niveaux, doubles puis moitiés).
   // Lot K1 « la carte chez l'élève » : 12 (des étoiles, leur compteur ; plus
   // de `ok`, `f`, `t`, `l`).
-  assert.match(moteur, /const VERSION = 12;/);
+  // Lot K1b « les bases en trois classes » : 13 (six étages, neuf étoiles de plus).
+  assert.match(moteur, /const VERSION = 13;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 12,/);
+  assert.match(bloc, /'version_min' => 13,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   assert.ok(api.indexOf("$versionMin") > api.indexOf("if (!empty($corps['lire']))"));

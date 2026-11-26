@@ -25,17 +25,17 @@ function tous(cle) {
 }
 const textesSvg = svg => [...svg.matchAll(/<text[^>]*>([^<]*)<\/text>/g)].map(m => espaces(m[1]));
 
-test("lot 7b : 8 compétences construites, au palier 3 ; le palier 3 en a 33, la carte 111 (lot 7c : 37 et 117)", () => {
+test("lot 7b : 8 compétences construites, au CM2 (l'étage 5 depuis le lot K1b, le palier 3 avant) ; le CM2 en a 43, la carte 141", () => {
   NIVEAUX.forEach(cle => {
     const t = CORE.niveauDe(cle);
     assert.ok(t && t.module.construit, cle);
-    assert.equal(t.niveau.palier, 3, cle);
+    assert.equal(t.niveau.palier, 5, cle);
     assert.ok(t.niveau.apprends, `${cle} : sa leçon`);
   });
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 132); // (lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
-  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 3).length, 43); // (lot C2 : D8 en cinq niveaux, F3-3 au CM2 ; lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
+  assert.equal(construits.length, 141); // (lot K1b : neuf de plus, 132 avant) // (lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)
+  assert.equal(construits.filter(c => P.palierDe(carte, c.module, c.niveau) === 5).length, 43); // (lot C2 : D8 en cinq niveaux, F3-3 au CM2 ; lot 7c : F4-1, F4-2, F9-2, F11-1 ; F9-1 au CM1, F11-2 en 6e ; lot 7d : A9-1, C4-1, C4-2 ; M11 au CM1)
   assert.equal(CORE.moduleDe("D8").niveaux[0].type, "F", "la moitié des impairs jusqu'à 15 : un fait à savoir");
 });
 

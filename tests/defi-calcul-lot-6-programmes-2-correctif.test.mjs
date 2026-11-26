@@ -34,7 +34,8 @@ test("J'écris : une ligne qui attend son tour cache le nombre que l'élève doi
   const vu = cle => enAttente(lecon(cle).ecris.etapes, lecon(cle).calculs.ecris.texte);
   assert.deepEqual(vu("A1-2"), ["7 + 3 = □", "▒ + 2 = □", "7 + 5 = □"]);
   assert.deepEqual(vu("A11-1"), ["6 − 3 = □", "486 − 3 = □"], "le 3 de 486 − 3 est donné");
-  assert.deepEqual(vu("F8-2"), ["1 = □/12", "▒/12 − 5/12 = □/12"], "le numérateur seul");
+  // (Lot K1b : au CE1, les dénominateurs 2, 3, 4, 5, 6, 8 et 10 — la leçon passe des douzièmes aux dixièmes.)
+  assert.deepEqual(vu("F8-2"), ["1 = □/10", "▒/10 − 3/10 = □/10"], "le numérateur seul");
   assert.deepEqual(vu("F9-1"), ["1/4 = □/12", "▒/12 + 5/12 = □/12"]);
   assert.deepEqual(vu("C1-2"), ["5 + 3 = □", "10 − 4 = □", "▒ × ▒ = □"]);
   assert.deepEqual(vu("M13-2"), ["280 ÷ 2 = □", "▒ ÷ 2 = □", "▒ ÷ 2 = □"]);
@@ -134,8 +135,8 @@ test("ordinateur : « Avec le dessin » prend sa place dans la ligne, après « 
   assert.match(css, /#play \.status \.seance-fil \{ position: static; min-height: 0; margin: 0; \}/);
   assert.doesNotMatch(css, /#play \.status \.seance-fil \{ position: absolute; top: 0; left: 150px;/);
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(page, /defi_calcul\.css\?v=20261126-2/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
 });

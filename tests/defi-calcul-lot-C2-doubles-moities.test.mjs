@@ -31,31 +31,46 @@ const tous = (cle, n = 40) => {
 const rang = cle => CORE.ORDRE.indexOf(cle);
 const DOUBLES = ["double", "double-fois", "trou-double"];
 
-test("la carte : 132 compétences (44, 33, 43, 12) ; M1 en six niveaux, D8 en cinq, le double puis la moitié", () => {
+test("la carte : 141 compétences en six étages (lot K1b ; 132 avant) ; M1 en neuf niveaux (six au lot C2), D8 en cinq, le double puis la moitié", () => {
   const construits = P.parcoursConstruit(CARTE);
-  assert.equal(construits.length, 132);
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(CARTE, c.module, c.niveau) === p).length), [44, 33, 43, 12]);
-  assert.deepEqual([P.NIVEAUX.M1, P.NIVEAUX.D8], [6, 5]);
-  assert.deepEqual(CORE.moduleDe("M1").niveaux.map(n => espaces(n.nom)), ["Doubles jusqu’à 40 et des dizaines", "Moitiés jusqu’à 40 et des dizaines",
-    "Doubles en découpant", "Moitiés en découpant", "Doubles des nombres usuels", "Moitiés des nombres usuels"]);
+  assert.equal(construits.length, 141);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(CARTE, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]);
+  // Lot K1b : trois niveaux de M1 coupés en deux, la moitié du haut à la fin du module —
+  // M1-7 (les doubles de 11 à 20, CE2), M1-8 (les moitiés de 22 à 40, CE2), M1-9 (les
+  // moitiés en découpant avec une dizaine impaire, CE1).
+  assert.deepEqual([P.NIVEAUX.M1, P.NIVEAUX.D8], [9, 5]);
+  assert.deepEqual(CORE.moduleDe("M1").niveaux.map(n => espaces(n.nom)), ["Doubles jusqu’à 10 et des dizaines", "Moitiés jusqu’à 20 et des dizaines",
+    "Doubles en découpant", "Moitiés en découpant", "Doubles des nombres usuels", "Moitiés des nombres usuels",
+    "Doubles de 11 à 20", "Moitiés de 22 à 40", "Moitiés en découpant : avec 50, 70, 90"]);
+  assert.deepEqual(CORE.moduleDe("M1").niveaux.map(n => n.palier), [1, 1, 2, 1, 3, 3, 3, 3, 2]);
   assert.deepEqual(CORE.moduleDe("D8").niveaux.map(n => espaces(n.nom)), ["Moitié des impairs jusqu’à 15", "Doubles : dixièmes", "Moitiés : dixièmes",
     "Doubles : centièmes", "Moitiés : centièmes"]);
   // Chaque niveau : seulement des doubles, ou seulement des moitiés
   // (« double de □ = 12 » et « 2 × □ = 300 » cherchent un nombre qu'on a
   // doublé : l'écriture à l'envers, dans le niveau de son écriture).
   const moities = {"M1-1": false, "M1-2": true, "M1-3": false, "M1-4": true, "M1-5": false, "M1-6": true,
+    "M1-7": false, "M1-8": true, "M1-9": true,
     "D8-2": false, "D8-3": true, "D8-4": false, "D8-5": true};
+  // (« double de □ = 12 » est rangé avec les doubles, à M1-1 et, depuis le lot K1b, à M1-7.)
+  const avecTrou = cle => cle === "M1-1" || cle === "M1-7";
   Object.entries(moities).forEach(([cle, moitie]) => tous(cle).forEach(c => {
     const ecrit = espaces(c.texte);
     const estMoitie = /^moitié de|÷ 2/.test(ecrit) || /^2 × □/.test(ecrit);
-    assert.equal(estMoitie || c.forme === "trou-double" && cle === "M1-1", moitie || cle === "M1-1" && c.forme === "trou-double", `${cle} : ${ecrit}`);
-    if (!moitie && cle !== "M1-1") assert.ok(DOUBLES.includes(c.forme), `${cle} : ${ecrit}`);
+    assert.equal(estMoitie || c.forme === "trou-double" && avecTrou(cle), moitie || avecTrou(cle) && c.forme === "trou-double", `${cle} : ${ecrit}`);
+    if (!moitie && !avecTrou(cle)) assert.ok(DOUBLES.includes(c.forme), `${cle} : ${ecrit}`);
   }));
   // Les doubles jusqu'à 40 : jamais le signe × (pas encore vu au 6e rang ;
   // les tables arrivent au 12e) ; le nom dit ce que le niveau demande.
   tous("M1-1").forEach(c => assert.doesNotMatch(espaces(c.texte), /×/, c.texte));
   tous("M1-1").forEach(c => assert.ok(c.reponse <= 100, c.texte));
-  tous("M1-2").forEach(c => assert.ok(c.donnees.n <= 100 && (c.donnees.n <= 40 || c.donnees.n % 10 === 0), c.texte));
+  // Lot K1b : au CP, les doubles jusqu'à 10 et les moitiés jusqu'à 20, et les dizaines entières
+  // (calcul mental CP) ; de 11 à 20 et de 22 à 40, au CE2 (M1-7, M1-8).
+  tous("M1-1").filter(c => c.forme === "double").forEach(c => assert.ok(c.donnees.n <= 10 || (c.donnees.n % 10 === 0 && c.donnees.n <= 50), c.texte));
+  tous("M1-2").filter(c => c.forme === "moitie").forEach(c => assert.ok(c.donnees.n <= 20 || (c.donnees.n % 20 === 0 && c.donnees.n <= 100), c.texte));
+  tous("M1-7").filter(c => c.forme === "double").forEach(c => assert.ok(c.donnees.n >= 11 && c.donnees.n <= 19, c.texte));
+  tous("M1-8").filter(c => c.forme === "moitie").forEach(c => assert.ok(c.donnees.n >= 22 && c.donnees.n <= 38 && c.donnees.n % 2 === 0, c.texte));
+  assert.ok(rang("M1-1") < rang("M1-7") && rang("M1-2") < rang("M1-8") && rang("M1-4") < rang("M1-9"), "la moitié du bas avant celle du haut");
+  assert.ok(rang("M4-1") < rang("M1-7") && rang("M4-1") < rang("M1-9"), "« 2 × 17 » et « 56 ÷ 2 » : après les tables");
   assert.ok(rang("M1-1") < rang("M4-1") && rang("M1-2") < rang("M4-1"), "avant les tables");
   // Les écritures officielles du CP : « double de □ = 12 », « moitié de □ = 8 ».
   assert.ok(tous("M1-1").some(c => espaces(c.texte).startsWith("double de □")));
@@ -66,7 +81,10 @@ test("la carte : 132 compétences (44, 33, 43, 12) ; M1 en six niveaux, D8 en ci
 
 test("chaque niveau a sa leçon : la moitié montrée par la moitié, À retenir reprend le calcul montré", () => {
   const lecons = {
-    "M1-2": ["moitié de 34", 17, "moitié de 38"], "M1-4": ["moitié de 76", 38, "moitié de 58"], "M1-6": ["moitié de 150", 75, "moitié de 1 400"],
+    // (Lot K1b : M1-2 au CP, jusqu'à 20 ; M1-8, sa moitié du CE2 ; M1-4 au CP, deux chiffres
+    // pairs ; M1-9, sa moitié du CE1, garde la leçon d'avant.)
+    "M1-2": ["moitié de 12", 6, "moitié de 18"], "M1-8": ["moitié de 26", 13, "moitié de 38"],
+    "M1-4": ["moitié de 46", 23, "moitié de 68"], "M1-9": ["moitié de 76", 38, "moitié de 58"], "M1-6": ["moitié de 150", 75, "moitié de 1 400"],
     "D8-3": ["moitié de 13,6", 6.8, "moitié de 15,8"], "D8-5": ["1,22 ÷ 2", 0.61, "3,48 ÷ 2"]
   };
   Object.entries(lecons).forEach(([cle, [montre, reponse, ecris]]) => {
@@ -75,19 +93,22 @@ test("chaque niveau a sa leçon : la moitié montrée par la moitié, À retenir
     assert.equal(a.exemple.reponse, reponse, cle);
     assert.equal(espaces(a.calculs.ecris.texte).replace(" = □", ""), ecris, cle);
     assert.ok(espaces(a.bilan).includes(montre), `${cle} : À retenir reprend ${montre}`);
-    assert.equal(a.autre, undefined, `${cle} : plus de « deuxième façon »`);
+    // (Lot K1b : M1-2 montre en plus la moitié d'une dizaine entière — toujours une moitié.)
+    if (cle === "M1-2") assert.equal(espaces(a.autre.calcul), "moitié de 8 = 4 ; moitié de 80 = 40");
+    else assert.equal(a.autre, undefined, `${cle} : plus de « deuxième façon »`);
     assert.equal(a.manipule, null, `${cle} : la moitié commence au schéma`);
   });
   // Les leçons des doubles ne parlent plus de la moitié.
-  ["M1-1", "M1-3", "M1-5", "D8-2", "D8-4"].forEach(cle => {
+  ["M1-1", "M1-3", "M1-5", "M1-7", "D8-2", "D8-4"].forEach(cle => {
     const a = CORE.niveauDe(cle).niveau.apprends;
     assert.doesNotMatch(espaces(a.bilan), /moitié/, cle);
-    // (Lot C4a : M1-5 dit le double d'un nombre rond, jamais la moitié.)
-    if (cle === "M1-5") assert.doesNotMatch(espaces(a.autre.phrase + a.autre.calcul), /moitié/, cle);
+    // (Lot C4a : M1-5 dit le double d'un nombre rond, jamais la moitié. Lot K1b : M1-1, le
+    // double d'une dizaine entière.)
+    if (cle === "M1-5" || cle === "M1-1") assert.doesNotMatch(espaces(a.autre.phrase + a.autre.calcul), /moitié/, cle);
     else assert.equal(a.autre, undefined, cle);
   });
   // J'écris tiré : une moitié, jamais plus facile que l'exemple (lot C1).
-  ["M1-2", "M1-4", "M1-6", "D8-3", "D8-5"].forEach(cle => {
+  ["M1-2", "M1-4", "M1-6", "M1-8", "M1-9", "D8-3", "D8-5"].forEach(cle => {
     for (let graine = 1; graine <= 30; graine += 1) {
       const t = CORE.ecrisTire(cle, {graine});
       assert.ok(t, `${cle} graine ${graine}`);
@@ -97,9 +118,11 @@ test("chaque niveau a sa leçon : la moitié montrée par la moitié, À retenir
   // Les cartes « par cœur » : les doubles d'un côté, les moitiés de l'autre.
   assert.equal(CORE.carteParCoeur("M1-1").titre, "Sous chaque nombre, son double");
   assert.equal(CORE.carteParCoeur("M1-2").titre, "Sous chaque nombre, sa moitié");
+  assert.equal(CORE.carteParCoeur("M1-7").titre, "Sous chaque nombre, son double");
+  assert.equal(CORE.carteParCoeur("M1-8").titre, "Sous chaque nombre, sa moitié");
   assert.equal(CORE.carteParCoeur("M1-5").titre, "Sous chaque nombre, son double");
   assert.equal(CORE.carteParCoeur("M1-6").titre, "Sous chaque nombre, sa moitié");
-  ["M1-3", "M1-4", "D8-2", "D8-3", "D8-4", "D8-5"].forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, `${cle} : une procédure`));
+  ["M1-3", "M1-4", "M1-9", "D8-2", "D8-3", "D8-4", "D8-5"].forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, `${cle} : une procédure`));
 });
 
 // ------------------------------------------------------------ la progression

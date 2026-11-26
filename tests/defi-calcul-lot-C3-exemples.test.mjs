@@ -72,13 +72,18 @@ test("les phrases de la planche validée, mot pour mot", () => {
   const trouver = (cle, texte) => vivier(cle).find(c => espaces(c.texte) === texte);
   assert.equal(espaces(CORE.methodeExemple(trouver("M1-1", "double de □ = 12"), "M1-1")),
     "12, c’est 10 et 2. Je coupe chaque morceau en deux : 5 et 1. 5 + 1 = 6 : le double de 6, c’est 12.");
-  assert.equal(espaces(CORE.methodeExemple(trouver("F8-1", "7/12 − 5/12 = □/12"), "F8-1")),
-    "Je retire des douzièmes : 7 douzièmes − 5 douzièmes = 2 douzièmes.");
+  // (Lot K1b : au CE1, les dénominateurs 2, 3, 4, 5, 6, 8 et 10 — plus de douzièmes ; la même phrase en dixièmes.)
+  assert.equal(espaces(CORE.methodeExemple(trouver("F8-1", "7/10 − 5/10 = □/10"), "F8-1")),
+    "Je retire des dixièmes : 7 dixièmes − 5 dixièmes = 2 dixièmes.");
   const egalite = vivier("C3-1").find(c => c.forme === "retire" && /^\d \d{2}6 − □ = \d \d{2}2?6$/.test(espaces(c.texte)) && c.reponse === 10);
   assert.match(espaces(CORE.methodeExemple(egalite, "C3-1")), /^De .+, seul le chiffre des dizaines change : \d dizaines − \d dizaines? = 1 dizaine\. On a retiré 10\.$/);
   // Compter en dizaines, en centaines (choix 3 de Gwenaël, tri C4-0).
   const dizaines = vivier("A3-1").find(c => c.forme === "difference" && espaces(c.texte) === "92 − 40 = □");
-  if (dizaines) assert.equal(espaces(CORE.methodeExemple(dizaines, "A3-1")), "92, c’est 9 dizaines et 2 unités. 9 dizaines − 4 dizaines = 5 dizaines : 92 − 40 = 52.");
+  // (Lot K1b : avant, 92 − 40 ne sortait pas du vivier d'A3-1 — cette ligne ne tournait jamais,
+  // et gardait la phrase d'avant le lot C4a. Au CP, A3-1 le tire : la phrase est celle que le
+  // moteur dit depuis le lot C4a, « Dans 77, le chiffre des dizaines est 7… », inchangée ici.)
+  assert.ok(dizaines, "92 − 40 est un calcul d'A3-1, au CP");
+  assert.equal(espaces(CORE.methodeExemple(dizaines, "A3-1")), "Dans 92, le chiffre des dizaines est 9. 9 − 4 = 5 : 92 − 40 = 52.");
   // F11-2 : la fraction, c'est une division.
   assert.equal(espaces(CORE.methodeExemple(trouver("F11-2", "6/3 = □"), "F11-2")), "La fraction, c’est une division : 6/3 = 6 ÷ 3 = 2.");
 });
@@ -225,18 +230,21 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // L'annonce : « Nouveau : … » sur l'exemple, « À toi : … » ensuite.
   assert.match(pose, /question\.annonceAToi = String\(annonce\)\.replace\(\/\^Nouveau\/, "À toi"\);/);
   // Les adresses de cache, les copies pour la page prof, le manifeste.
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-7/);
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261126-2/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261126-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261126-2/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {
   // Les leçons changées (l'exemple était dans le tiers du haut, ou J'écris
   // retombait sous lui) : l'exemple est un calcul moyen.
-  const changees = {"M1-1": "double de 12 = □", "M1-3": "double de 38 = □", "M8-2": "28 × 7 = □", "F6-1": "1/2 = □/8", "C4-2": "6 + (2 × □) = 19"};
+  // (Lot K1b : au CP, « Doubles jusqu'à 10 et des dizaines » montre double de 7 — un calcul moyen
+  // du niveau ; double de 12 reste l'exemple de « Doubles de 11 à 20 », M1-7, au CE2.)
+  assert.equal(espaces(lecon("M1-7").montre.texte), "double de 12 = □");
+  const changees = {"M1-1": "double de 7 = □", "M1-3": "double de 38 = □", "M8-2": "28 × 7 = □", "F6-1": "1/2 = □/8", "C4-2": "6 + (2 × □) = 19"};
   Object.entries(changees).forEach(([cle, texte]) => {
     const m = lecon(cle).montre;
     assert.equal(espaces(m.texte), texte, cle);
@@ -255,7 +263,8 @@ test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction 
     }
   });
   // À retenir reprend le calcul de « On te montre ».
-  assert.match(espaces(CORE.niveauDe("M1-1").niveau.apprends.bilan), /double de 12 = 12 \+ 12 = 24\.$/);
+  assert.match(espaces(CORE.niveauDe("M1-1").niveau.apprends.bilan), /double de 7 = 7 \+ 7 = 14\.$/);
+  assert.match(espaces(CORE.niveauDe("M1-7").niveau.apprends.bilan), /double de 12 = 12 \+ 12 = 24\.$/);
   assert.match(espaces(CORE.niveauDe("M1-3").niveau.apprends.bilan), /double de 38 = 2 × 30 \+ 2 × 8 = 76\.$/);
   assert.match(espaces(CORE.niveauDe("M8-2").niveau.apprends.bilan), /28 × 7 = 20 × 7 \+ 8 × 7 = 140 \+ 56 = 196\.$/);
   assert.match(espaces(CORE.niveauDe("F6-1").niveau.apprends.bilan), /1\/2 = 4\/8/);

@@ -106,7 +106,7 @@ test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mo
     "Mes calculs du jour. Mes étoiles reviennent pour voir si elles tiennent : demain, puis dans 3 jours, 7 jours… Un calcul faux ? Un autre, pour vérifier. Deux faux : l’étoile part, je peux la regagner quand je veux.",
     "Je tente. 6 calculs sans aide. 5 justes : l’étoile est à moi.",
     "J’apprends. On me montre, puis je fais avec l’aide ; c’est réussi à 5 justes sur les 6 derniers, sans aide. Ici, se tromper ne compte pas.",
-    "Mes ceintures. Toutes les étoiles d’une ceinture gagnées : la ceinture est à moi, et la suivante s’ouvre (jaune, orange, verte, puis bleue). Je sais déjà tout ? « Tente toute la ceinture » : 12 calculs."
+    "Mes ceintures. Toutes les étoiles d’une ceinture gagnées : la ceinture est à moi, et la suivante s’ouvre. Six ceintures, de la blanche-jaune à la bleue. Je sais déjà tout ? « Tente toute la ceinture » : 12 calculs."
   ].join(" "));
   // Un nombre et son unité ne se séparent jamais : les textes de la page passent par soude.
   assert.match(SCRIPT, /\$\("acc-minutes"\)\.textContent = soude\(`\$\{s\.minutes\}\u00a0minutes`\);/);
@@ -161,8 +161,11 @@ test("4. le temps est versé avant chaque étape appliquée ; le professeur n'en
 // ------------------------------------------------------------------ 5.
 
 test("5. la ceinture du noyau : le nœud dessiné après les pans ; rempli quart par quart ; vide", () => {
+  // Lot K1b : sept ceintures — la jaune a le numéro 2 (1 avant) ; la 1 et la 3 ont deux couleurs
+  // (tests/defi-calcul-lot-K1b-carte.test.mjs) ; une ceinture fermée a son pointillé dans la
+  // couleur de son étage (gris pour la blanche seulement).
   const dessin = (n, o) => CORE.dessinCeinture(n, o);
-  const moitie = dessin(1, {rempli: .5});
+  const moitie = dessin(2, {rempli: .5});
   // L'ordre des calques : fond des pans, couleur, trait ; PUIS fond du nœud, couleur, trait.
   const fonds = [...moitie.matchAll(/<g fill="#ffffff">/g)].map(m => m.index);
   const traits = [...moitie.matchAll(/<g fill="none" stroke="#143451"/g)].map(m => m.index);
@@ -171,16 +174,19 @@ test("5. la ceinture du noyau : le nœud dessiné après les pans ; rempli quart
   assert.ok(traits[0] < fonds[1], "le trait des pans est posé AVANT le fond du nœud : il ne se voit plus à travers");
   assert.ok(moitie.indexOf('x="24.5"') > traits[0], "le nœud vient après");
   // Rempli à moitié : la couleur coupée à 32 sur 64 ; plein : sans coupe ; zéro : aucune couleur.
-  const jaune = CORE.CEINTURES[1].couleur;
+  const jaune = CORE.CEINTURES[2].couleur;
+  assert.deepEqual([CORE.CEINTURES[2].court, jaune], ["jaune", "#f9bf3b"]);
   assert.match(moitie, /<clipPath id="mgc\d+"><rect x="0" y="0" width="32.00" height="40"\/><\/clipPath>/);
   assert.equal((moitie.match(new RegExp(`<g fill="${jaune}" clip-path="url\\(#mgc\\d+\\)">`, "g")) || []).length, 2);
-  assert.ok(!dessin(1, {rempli: 1}).includes("clipPath") && dessin(1, {rempli: 1}).includes(`fill="${jaune}"`));
-  assert.ok(!dessin(1, {rempli: 0}).includes(jaune) && !dessin(1, {rempli: 0}).includes("clipPath"));
-  [.25, .5, .75].forEach(r => assert.match(dessin(2, {rempli: r}), new RegExp(`width="${(64 * r).toFixed(2)}"`)));
-  // Vide : blanche, au trait gris en pointillés.
-  const vide = dessin(3, {vide: true});
-  assert.match(vide, /stroke="#9fb4c4"[^>]*stroke-dasharray="3 2\.4"/);
-  assert.ok(!vide.includes(CORE.CEINTURES[3].couleur));
+  assert.ok(!dessin(2, {rempli: 1}).includes("clipPath") && dessin(2, {rempli: 1}).includes(`fill="${jaune}"`));
+  assert.ok(!dessin(2, {rempli: 0}).includes(jaune) && !dessin(2, {rempli: 0}).includes("clipPath"));
+  [.25, .5, .75].forEach(r => [2, 4, 1, 3].forEach(n => assert.match(dessin(n, {rempli: r}), new RegExp(`width="${(64 * r).toFixed(2)}"`))));
+  // Vide : blanche dedans, au trait en pointillés — gris pour la ceinture blanche, dans la
+  // couleur de l'étage pour les autres (lot K1b ; toutes grises au lot K1) ; jamais d'aplat.
+  assert.match(dessin(0, {vide: true}), /stroke="#9fb4c4"[^>]*stroke-dasharray="3 2\.4"/);
+  const vide = dessin(4, {vide: true});
+  assert.match(vide, new RegExp(`fill="none" stroke="${CORE.CEINTURES[4].couleur}" stroke-width="2"[^>]*stroke-dasharray="3 2\\.4"`));
+  assert.ok(!vide.includes(`fill="${CORE.CEINTURES[4].couleur}"`) && !vide.includes("#143451") && !vide.includes("#9fb4c4"));
   // La page : l'étage gagné plein, en cours rempli, fermé vide.
   const etage = corps("ceintureDeLEtage");
   assert.match(etage, /\{vide: true, taille\}/);

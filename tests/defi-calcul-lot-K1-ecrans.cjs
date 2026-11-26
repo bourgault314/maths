@@ -12,10 +12,11 @@
 // l'ordinateur, le cadre tient entier dans l'écran (la carte comprise, même
 // au CM2 avec « Tente toute la ceinture ») ; au téléphone, la carte défile
 // et son bas (« Continuer ») reste collé en bas de l'écran.
-//   accueil      la ceinture, « Ceinture jaune · 17 étoiles sur 44 », le but
+//   accueil      la ceinture, « Ceinture jaune · 3 étoiles sur 20 » (lot K1b :
+//                six étages ; Léa a fini le CP), le but
 //                du jour, « Avant : tes N calculs du jour. », « Commencer » ;
 //                « Tout est gagné. » ;
-//   carte        les 4 étages, la ceinture et son compte, les lignes, « Mes
+//   carte        les 6 étages (lot K1b), la ceinture et son compte, les lignes, « Mes
 //                calculs du jour — encore N », « Continuer » ; le CM2 neuf ;
 //   panneau      à gagner, fermée, déjà tentée, gagnée, professeur ; il se
 //                pose par-dessus : la carte ne bouge pas, et le défilement est
@@ -66,10 +67,10 @@ const ELEVES = {
   // Léa : 17 étoiles des bases gagnées hier ; elles reviennent aujourd'hui.
   lea: () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -1)),
   // Les bases et le CM1 gagnés il y a longtemps (et revus) : le CM2 s'ouvre, neuf.
+  // (Lot K1b : les bases sont les trois premiers étages, le CM1 le 4e.)
   cm2: () => {
     let p = P.creerParcours();
-    p = gagner(p, clesDeLEtage(p, 1), P.ajouterJours(JOUR, -40));
-    p = gagner(p, clesDeLEtage(p, 2), P.ajouterJours(JOUR, -40));
+    for (let e = 1; e <= 4; e += 1) p = gagner(p, clesDeLEtage(p, e), P.ajouterJours(JOUR, -40));
     return p;
   },
   // Toutes les bases gagnées aujourd'hui, le professeur arrête aux bases : tout est gagné.
@@ -189,7 +190,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : l'accueil (Léa, 17 étoiles ; puis tout gagné)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
-        assert.equal(await texte(s.page, "#acc-compte"), "Ceinture jaune · 17 étoiles sur 44");
+        assert.equal(await texte(s.page, "#acc-compte"), "Ceinture jaune · 3 étoiles sur 20");
         assert.match(await texte(s.page, "#acc-but"), /^Aujourd’hui : l’étoile .+ Avant : tes \d+ calculs du jour\.$/);
         assert.equal(await texte(s.page, "#acc-commencer"), "Commencer");
         assert.equal(await texte(s.page, "#acc-bas"), "10 minutes La carte Comment ça marche ?");
@@ -198,7 +199,7 @@ async function cas(nom, f) {
         await photo(s.page, `${f}-accueil`);
         assert.deepEqual(s.erreurs, []);
         await s.ctx.close();
-        const t = await ouvrir(nav, base, Object.assign({parcours: toutGagne, reglages: {"defi-calcul": {palier: 1}}}, o));
+        const t = await ouvrir(nav, base, Object.assign({parcours: toutGagne, reglages: {"defi-calcul": {etage: 1}}}, o));
         assert.ok(await t.page.isVisible("#acc-tout"), "« Tout est gagné. »");
         assert.match(await texte(t.page, "#acc-tout"), /^Tout est gagné\. Tes étoiles reviennent demain, pour voir si elles tiennent\. Je m’entraîne encore La carte S’entraîner ne fait perdre aucune étoile\.$/);
         assert.equal(await t.page.isVisible("#acc-commencer"), false);
@@ -212,8 +213,8 @@ async function cas(nom, f) {
         const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
         await s.page.click("#acc-porte");
         await pause(s.page, 300);
-        assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-etages > *").length), 4, "4 étages");
-        assert.match(await texte(s.page, "#carte-porteur"), /Ceinture jaune.*17 étoiles sur 44/);
+        assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-etages > *").length), 6, "6 étages");
+        assert.match(await texte(s.page, "#carte-porteur"), /Ceinture jaune.*3 étoiles sur 20/);
         assert.match(await texte(s.page, "#carte-jour"), /^Mes calculs du jour ?encore \d+ →?$/);
         assert.ok(await s.page.isVisible("#carte-continuer"));
         await tient(s.page, largeur, hauteur, "carte");
@@ -225,7 +226,8 @@ async function cas(nom, f) {
         await s.page.evaluate(() => window.scrollTo(0, 260));
         await pause(s.page, 100);
         const avant = await s.page.evaluate(() => ({y: window.scrollY, ligne: document.querySelector("#carte-lignes").getBoundingClientRect().top}));
-        await s.page.click('#carte-lignes [data-cle="A6-1"]');
+        // (Lot K1b : Léa est au CE1 ; la première étoile à gagner de sa carte.)
+        await s.page.click("#carte-lignes .ck-case.aGagner");
         await pause(s.page, 300);
         assert.ok(await s.page.isVisible("#carte-panneau"), "le panneau s'ouvre");
         const pendant = await s.page.evaluate(() => ({y: window.scrollY, ligne: document.querySelector("#carte-lignes").getBoundingClientRect().top}));
@@ -249,7 +251,7 @@ async function cas(nom, f) {
         await s.page.click("#panneau-fermer");
         await pause(s.page, 200);
         // Gagnée : « Je m'entraîne encore ».
-        await s.page.click('#carte-lignes [data-cle="A1-1"]');
+        await s.page.click('#carte-lignes [data-cle="A10-4"]');
         await pause(s.page, 300);
         assert.match(await texte(s.page, "#panneau-corps"), /Je m’entraîne encore/);
         await s.page.click("#carte-voile", {position: {x: 5, y: 5}});
@@ -264,7 +266,7 @@ async function cas(nom, f) {
         await s.page.click("#acc-porte");
         await pause(s.page, 300);
         const c = await T(s.page, "carte");
-        assert.equal(c.courant, 3, "l'étage du CM2");
+        assert.equal(c.courant, 5, "l'étage du CM2");
         assert.ok(await s.page.isVisible("#carte-tente"), "« Tente toute la ceinture »");
         assert.match(await texte(s.page, "#carte-tente"), /Tu sais déjà tout ça \? ?Tente toute la ceinture : 12 calculs\. ?Je tente/);
         await tient(s.page, largeur, hauteur, "carte du CM2");
@@ -336,7 +338,7 @@ async function cas(nom, f) {
         await s.ctx.close();
       });
 
-      await cas(`${f} : « Tente toute la ceinture » réussi — l'écran de la ceinture, puis la carte du CM1`, async () => {
+      await cas(`${f} : « Tente toute la ceinture » réussi — l'écran de la ceinture, puis la carte du CE1`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: neuf}, o));
         await s.page.click("#acc-porte");
         await pause(s.page, 300);
@@ -346,7 +348,7 @@ async function cas(nom, f) {
         await tient(s.page, largeur, hauteur, "toute la ceinture");
         for (let k = 0; k < 13 && await enJeu(s.page); k += 1) await repondre(s.page, true);
         await pause(s.page, 600);
-        assert.match(await texte(s.page, "#result-ceinture"), /^Toutes les étoiles sont gagnées Ceinture jaune ! Tu as gagné les 44 étoiles\. La ceinture orange s’ouvre\./i);
+        assert.match(await texte(s.page, "#result-ceinture"), /^Toutes les étoiles sont gagnées Ceinture blanche-jaune ! Tu as gagné les 14 étoiles\. La ceinture jaune s’ouvre\./i);
         await tient(s.page, largeur, hauteur, "l'écran de la ceinture");
         await photo(s.page, `${f}-ceinture`);
         await s.page.click("#ceinture-boutons >> text=Ceinture suivante");
@@ -358,13 +360,13 @@ async function cas(nom, f) {
         await s.ctx.close();
       });
 
-      await cas(`${f} : le professeur — « Ceinture jaune · CP · CE1 · CE2 », les trois boutons, rien d'enregistré`, async () => {
+      await cas(`${f} : le professeur — « Ceinture blanche-jaune · CP », les trois boutons, rien d'enregistré`, async () => {
         const s = await ouvrir(nav, base, Object.assign({prof: true}, o));
         await s.page.click("#acc-porte");
         await pause(s.page, 300);
-        assert.match(await texte(s.page, "#carte-porteur"), /CP · CE1 · CE2/);
+        assert.match(await texte(s.page, "#carte-porteur"), /Ceinture blanche-jaune · CP/);
         assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-lignes .ck-case.fermee").length), 0, "toutes les étoiles ouvertes");
-        await s.page.click('#carte-lignes [data-cle="A2-3"]');
+        await s.page.click('#carte-lignes [data-cle="A2-1"]');
         await pause(s.page, 300);
         const corps = await texte(s.page, "#panneau-corps");
         ["Je tente", "J’apprends", "Je m’entraîne encore"].forEach(b => assert.ok(corps.includes(b), b));

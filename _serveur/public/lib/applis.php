@@ -281,6 +281,10 @@ const CATALOGUE_APPLIS = [
         // (« 2026-11-26 » passait pour une valeur permise) n'est plus gardée.
         // `parts` : ce que chaque onglet a fait dans la séance ouverte (onze
         // nombres par onglet : sa source, puis ses dix comptes).
+        // Lot K1b (26/11/2026), version 13 : aucune clé de plus — les listes
+        // par étoile de six modules s'allongent, `ceintures`, `paliers` et
+        // `quarts` ont six places (une liste ne compte pas dans les clés : le
+        // pire cas reste à 1 954 clés ; 35 972 octets, 670 de plus).
         'cles' => ['version', 'epoque', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
             'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'parts', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],
@@ -299,7 +303,30 @@ const CATALOGUE_APPLIS = [
         // élève, reglages_eleve_recus(). « nouveautes » (lot F1) n'existe
         // plus : relu dans une vieille ligne, il est ignoré, et disparaît au
         // prochain enregistrement de la classe.
-        'reglages' => ['minutes' => ['choix' => [10, 15]], 'palier' => ['choix' => [4, 1, 2, 3]]],
+        // Lot K1b « les bases en trois classes » (26/11/2026) : l'appli a SIX
+        // étages (1 le CP, 2 le CE1, 3 le CE2, 4 le CM1, 5 le CM2, 6 vers la
+        // 6e : tout). Le réglage change de NOM avec la numérotation —
+        // « etage » — pour qu'un numéro rangé avant le lot ne soit jamais lu
+        // dans la nouvelle : {"defi-calcul": {"minutes": 15, "etage": 2}}.
+        // L'ancien « palier » (1 les bases, 2 CM1, 3 CM2), resté dans une
+        // ligne de classe ou d'élève, se relit encore, dans SA numérotation
+        // (« reglages_anciens » : 1 → 3, 2 → 4, 3 → 5 — un 2 d'avant veut
+        // dire CM1 et le dit encore) ; il disparaît au prochain
+        // enregistrement de la classe ou de l'élève. Envoyé par une page du
+        // professeur restée ouverte, il est refusé (« Réglage inconnu. ») :
+        // elle se recharge. Voir reglages_anciens_repris().
+        // Correctif K1b (relecture de Codex du 26/11) : « rendu » — ce qu'une
+        // page d'AVANT le lot (version 12), encore ouverte, doit recevoir en
+        // plus pour garder le plafond du professeur : l'ancien « palier »,
+        // dans SA numérotation, à côté d'« etage ». Elle ne connaît pas
+        // « etage » et retombait sur « tout ». Par étage : 4 (CM1) → 2, 5
+        // (CM2) → 3, 6 (tout, quand il est écrit pour un élève) → 4 ; les
+        // étages 1 à 3 (CP, CE1, CE2), qu'elle ne sait pas distinguer → 1
+        // (les bases : son plafond le plus bas). Voir
+        // reglages_pour_les_pages_d_avant().
+        'reglages' => ['minutes' => ['choix' => [10, 15]], 'etage' => ['choix' => [6, 1, 2, 3, 4, 5]]],
+        'reglages_anciens' => ['palier' => ['vers' => 'etage', 'valeurs' => [1 => 3, 2 => 4, 3 => 5, 4 => 6],
+            'rendu' => [1 => 1, 2 => 1, 3 => 1, 4 => 2, 5 => 3, 6 => 4]]],
         // Lot F1 « rythme » (07/11/2026, relecture de Codex) : la version la
         // plus basse qu'on accepte À L'ÉCRITURE (api/parcours.php). Une page
         // d'avant F1 (version 3), restée ouverte dans un onglet, lirait une
@@ -333,7 +360,14 @@ const CATALOGUE_APPLIS = [
         // en entier (des étoiles, leur compteur, plus de `ok`, `f`, `t`, `l`,
         // un plan de séance à 5 nombres) : une page de version 11 ne saurait
         // ni le lire ni l'écrire.
-        'version_min' => 12,
+        // Lot K1b « les bases en trois classes » (26/11/2026) : 13. Six
+        // étages, neuf étoiles de plus (A10, A11, A2, A3, A5 et M1 ont des
+        // niveaux de plus, à la fin) : une page de version 12 couperait les
+        // dernières cases de leurs listes et lirait `ceintures`, `paliers` et
+        // `quarts` avec les anciens numéros d'étage. (Le moteur de la version
+        // 13 relit une ligne de version 12 sans rien perdre : aucune remise à
+        // zéro.)
+        'version_min' => 13,
         // Lot K1 (relecture de Codex du 22/11, B1) : la LECTURE aussi est
         // protégée. Une page dit sa version en lisant (« version » dans le
         // corps) ; le serveur ne lui sert pas une progression d'une version
@@ -639,6 +673,57 @@ function mondes_lus(mixed $liste, int $nombre): ?array
     return liste_lue($liste, $nombre);
 }
 
+// Lot K1b de Défi calcul (26/11/2026) : un réglage qui a changé de NOM parce
+// que ses valeurs ont changé de sens. Le catalogue le déclare
+// (« reglages_anciens » : l'ancien nom, le nouveau, et la valeur d'aujourd'hui
+// de chaque ancienne valeur). Une ligne de la base qui porte encore l'ancien
+// nom se relit sous le nouveau, avec la valeur traduite ; l'ancien nom n'est
+// jamais réécrit, ni rendu au professeur (à l'élève : voir
+// reglages_pour_les_pages_d_avant). Quand le nouveau nom est déjà là, il fait foi
+// (l'ancien est un reste) ; une ancienne valeur qui n'est pas dans la table
+// ne donne rien (le défaut). Ne sert qu'à la LECTURE de ce qui est rangé : ce
+// qu'une page envoie se lit strictement (reglages_recus, reglages_eleve_recus),
+// et l'ancien nom y est un réglage inconnu.
+// Correctif K1b (relecture de Codex du 26/11) : une ancienne valeur écrite
+// « 2.0 » dans le texte de la base vaut 2. PHP la décode en nombre à virgule,
+// le navigateur (JSON.parse) en entier : le moteur et l'onglet y lisaient le
+// CM1 quand le serveur ne lisait rien. Une seule règle pour les trois
+// lecteurs — un nombre ENTIER, quelle que soit son écriture ; « 2.5 », un
+// texte, une liste ne donnent toujours rien.
+function reglages_anciens_repris(string $cle, array $brut): array
+{
+    foreach (CATALOGUE_APPLIS[$cle]['reglages_anciens'] ?? [] as $ancien => $regle) {
+        if (!array_key_exists($ancien, $brut)) continue;
+        $valeur = $brut[$ancien];
+        unset($brut[$ancien]);
+        if (array_key_exists($regle['vers'], $brut)) continue;
+        if (is_float($valeur) && is_finite($valeur) && floor($valeur) === $valeur && abs($valeur) < 1000) $valeur = (int)$valeur;
+        if (is_int($valeur) && array_key_exists($valeur, $regle['valeurs'])) $brut[$regle['vers']] = $regle['valeurs'][$valeur];
+    }
+    return $brut;
+}
+
+// Correctif K1b (relecture de Codex du 26/11) : ce que reçoit L'ÉLÈVE (par son
+// code ou son billet, api/eleve.php) porte, à côté d'un réglage qui a changé
+// de nom, l'ANCIEN nom dans l'ancienne numérotation (« rendu » dans
+// « reglages_anciens »). Une page d'avant le lot restée ouverte ne connaît
+// que lui : sans cela elle ignorait « etage » et ouvrait tout, par-dessus le
+// plafond du professeur. La page d'aujourd'hui lit le nouveau nom, qui fait
+// foi quand les deux sont là. Rien n'est écrit en base, rien ne part vers la
+// page du professeur ; quand le réglage est au défaut (rien d'écrit), rien
+// n'est ajouté — l'ancien défaut était « tout », lui aussi.
+function reglages_pour_les_pages_d_avant(array $reglages): array
+{
+    foreach ($reglages as $cle => $reglage) {
+        if (!is_array($reglage)) continue;
+        foreach (CATALOGUE_APPLIS[$cle]['reglages_anciens'] ?? [] as $ancien => $regle) {
+            $valeur = $reglage[$regle['vers']] ?? null;
+            if (is_int($valeur) && isset($regle['rendu'][$valeur])) $reglages[$cle][$ancien] = $regle['rendu'][$valeur];
+        }
+    }
+    return $reglages;
+}
+
 // Les réglages d'une classe tels qu'on les relit de la base : seulement ce que
 // le catalogue déclare, et — si on la donne — seulement pour les activités de
 // la liste de la classe (l'élève ne reçoit rien d'une activité qu'il n'a pas).
@@ -653,6 +738,7 @@ function reglages_lus(?string $json, ?array $applis = null): array
         $declares = CATALOGUE_APPLIS[$cle]['reglages'] ?? [];
         if ($declares === []) continue;
         if ($applis !== null && !in_array($cle, $applis, true)) continue;
+        $reglageBrut = reglages_anciens_repris($cle, $reglageBrut);
         $reglage = [];
         foreach ($declares as $nom => $defaut) {
             // Une liste de numéros ouverts (les mondes de SPLAT!, les niveaux
@@ -1563,7 +1649,7 @@ function acces_json(array $acces): array
 // la classe (« Autrement pour quelques élèves »). Rangés à part, dans
 // eleves.reglages_eleve — PAS dans eleves.ajouts : un ajout ouvre l'appli à
 // l'élève, un réglage ne fait que la régler. {"defi-calcul": {"minutes": 15,
-// "palier": 1}} : seulement des réglages « choix » déclarés, avec une de
+// "etage": 1}} : seulement des réglages « choix » déclarés, avec une de
 // leurs valeurs. Écrit seulement par le propriétaire de la classe
 // (eleves.reglages), avec le même « avant » (409) que eleves.acces.
 
@@ -1588,6 +1674,8 @@ function reglages_eleve_lus(?string $json): array
     $sortie = [];
     foreach (array_keys(CATALOGUE_APPLIS) as $cle) {
         if (!isset($brut[$cle]) || !is_array($brut[$cle])) continue;
+        // (Lot K1b : l'ancien « palier » de Défi calcul, relu sous « etage ».)
+        $brut[$cle] = reglages_anciens_repris($cle, $brut[$cle]);
         $reglage = [];
         foreach (choix_declares($cle) as $nom => $choix) {
             $valeur = $brut[$cle][$nom] ?? null;

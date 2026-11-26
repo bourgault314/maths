@@ -170,7 +170,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
 // Lot 4 « les ceintures » (14/11/2026) : la ceinture devant le compte, et le
 // compte sur ce que l'appli propose (les modules construits, 95), jusqu'au
 // palier réglé pour l'élève — plus sur les 125 de la carte.
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture jaune · N étoiles sur 44 » dès la première (lot K1)", () => {
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture blanche-jaune · N étoiles sur 14 » dès la première (lot K1 ; lot K1b : six étages)", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
@@ -184,17 +184,21 @@ test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit 
   const gagner = (p, cles) => cles.reduce((q, k) => { const [m, n] = k.split("-"); const r = CALCUL.appliquerTentative(q, {module: m, niveau: Number(n), reponses: SIX}, {aujourdhui: JOUR, carte}); return r.refuse ? q : r.parcours; }, p);
   let p = CALCUL.creerParcours();
   assert.equal(jauge.lecteur(CALCUL, p), null, "aucune étoile : pas de jauge (une barre vide ressemble à un reproche)");
+  // (Lot K1b : le premier étage est le CP, 14 étoiles, la ceinture blanche-jaune ; le suivant, le CE1, la jaune.)
   p = gagner(p, carte.ordre.slice(0, 1));
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 1, total: 44, compte: "Ceinture jaune · 1 étoile sur 44", ceinture: {n: 1, rempli: 0}, bonus: ""});
-  p = gagner(p, carte.ordre.slice(1, 11));
-  assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, rempli: .25}, "11 étoiles sur 44 : un quart");
-  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture jaune · 11 étoiles sur 44", "jusqu’à l’étage réglé : les bases");
-  // Tout l'étage gagné : l'étage orange s'ouvre, sans étoile ; l'insigne montre la jaune, pleine.
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 1, total: 14, compte: "Ceinture blanche-jaune · 1 étoile sur 14", ceinture: {n: 1, rempli: 0}, bonus: ""});
+  p = gagner(p, carte.ordre.slice(1, 4));
+  assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, rempli: .25}, "4 étoiles sur 14 : un quart");
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {etage: 1}}).compte, "Ceinture blanche-jaune · 4 étoiles sur 14", "jusqu’à l’étage réglé : le CP");
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche-jaune · 4 étoiles sur 14", "l'ancien réglage (1 : les bases, jusqu'au CE2) : le même étage en cours");
+  // Tout l'étage gagné : l'étage jaune s'ouvre, sans étoile ; l'insigne montre la blanche-jaune, pleine.
   const bases = CALCUL.carteEleve(p, carte, {aujourdhui: JOUR}).etages[0].lignes.flatMap(l => l.etoiles.map(e => e.cle));
   p = gagner(p, carte.ordre.filter(k => bases.includes(k)));
   const plein = jauge.lecteur(CALCUL, p);
-  assert.match(plein.compte, /^Ceinture orange · /);
+  assert.equal(plein.compte, "Ceinture jaune · 0 étoile sur 20");
   assert.deepEqual(plein.ceinture, {n: 1, rempli: 1});
+  // Réglé jusqu'au CP : il n'y a pas d'étage suivant — le compte reste celui du CP, plein.
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {etage: 1}}).compte, "Ceinture blanche-jaune · 14 étoiles sur 14");
   assert.match(fonction("chargerMoteur", espace), /jauge\.avant \? chargerScript\(jauge\.avant\.url, jauge\.avant\.global\)/, "le script d'avant, puis le moteur");
   assert.match(fonction("chargerMoteur", espace), /prealable \? chargerScript\(jauge\.url, jauge\.global\) : null/, "sans le noyau, pas de moteur ni de jauge");
 });
@@ -204,12 +208,15 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.equal(o.nomCompetenceCalcul("A2", 3), "Compléments à 100");
   assert.equal(o.nomCompetenceCalcul("A5", 1), "ajouter 9");
   assert.equal(o.nomModuleCalcul("M2"), "× 10, × 100, × 1 000 (entiers)");
-  assert.equal(o.nomPalierCalcul(1), "Les bases (CP · CE1 · CE2)");
-  assert.equal(o.nomPalierCalcul(2), "Le CM1", "les classes ne sont pas répétées quand le nom les dit");
-  assert.equal(o.nomPalierCalcul(4), "Vers la 6e");
+  // (Lot K1b : six étages, un par classe — plus de « Les bases (CP · CE1 · CE2) ».)
+  assert.equal(o.nomPalierCalcul(1), "Le CP");
+  assert.equal(o.nomPalierCalcul(3), "Le CE2");
+  assert.equal(o.nomPalierCalcul(4), "Le CM1", "les classes ne sont pas répétées quand le nom les dit");
+  assert.equal(o.nomPalierCalcul(6), "Vers la 6e");
   assert.equal(o.nomCauseCalcul("A5", 1), "retour oublié");
   assert.equal(o.nomCauseCalcul("A5", 9), "", "une cause inconnue de la fiche : rien");
-  assert.equal(o.nomCourtPalier(3), "CM2");
+  assert.equal(o.nomCourtPalier(3), "CE2");
+  assert.equal(o.nomCourtPalier(5), "CM2");
   assert.equal(o.jourCourtCalcul("2026-11-27"), "ven. 27/11");
   assert.equal(o.jourCourtCalcul(null), "");
   const lien = o.lienOuvrirEnClasse("A2", 3);

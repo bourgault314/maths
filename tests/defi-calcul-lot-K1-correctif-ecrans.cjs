@@ -23,8 +23,9 @@
 //    7  à 9 minutes, après un « Je tente » raté, « Continuer » propose une
 //       étoile qui tient encore (un autre « Je tente »), et la lance ;
 //   15  Mon espace, avec le VRAI serveur PHP (serveur intégré, base de test,
-//       vrai filtre) : la ceinture jaune remplie d'un quart, « ↑ +17 étoiles
-//       cette semaine » ; la semaine suivante, « 17 étoiles sur 44 ».
+//       vrai filtre) : la ceinture blanche-jaune remplie d'un quart, « ↑ +4
+//       étoiles cette semaine » ; la semaine suivante, « 4 étoiles sur 14 »
+//       (lot K1b : six étages ; avant, la ceinture jaune et 17 sur 44).
 
 const assert = require("node:assert/strict");
 const childProcess = require("node:child_process");
@@ -58,6 +59,8 @@ function gagner(p, cles, jour) {
 }
 // Léa : 17 étoiles des bases gagnées hier (mardi) ; elles reviennent aujourd'hui.
 const lea = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -1));
+// (Lot K1b : pour Mon espace, 4 étoiles du CP — la ceinture blanche-jaune remplie d'un quart.)
+const leaCP = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 4), P.ajouterJours(JOUR, -1));
 
 function servir() {
   const serveur = http.createServer((requete, reponse) => {
@@ -267,8 +270,9 @@ async function cas(nom, f) {
     await s.page.click("#acc-effacer");
     await pause(s.page, 200);
     assert.ok(await s.page.isVisible("#acc-confirm-oui"));
-    // Pendant que la question est posée, un autre onglet (mis à jour) écrit la version 13.
-    const recente = JSON.stringify({version: 13, epoque: 0, modules: {A1: {b: [7, 7, 7]}}, futur: "ce que cette page ne sait pas lire"});
+    // Pendant que la question est posée, un autre onglet (mis à jour) écrit la version d'après.
+    // (Lot K1b : la page est en version 13 ; « plus récente » se calcule, P.VERSION + 1.)
+    const recente = JSON.stringify({version: P.VERSION + 1, epoque: 0, modules: {A1: {b: [7, 7, 7]}}, futur: "ce que cette page ne sait pas lire"});
     await s.page.evaluate(d => localStorage.setItem("mathsgo-defi-calcul-parcours", d), recente);
     await s.page.click("#acc-confirm-oui");
     await pause(s.page, 300);
@@ -292,12 +296,12 @@ async function cas(nom, f) {
     await pause(s.page, 200);
     await s.page.evaluate(() => [...document.querySelectorAll("#panneau-corps button")].find(b => /Commencer|Je tente/.test(b.textContent)).click());
     await s.page.waitForTimeout(150);
-    // Avant que l'envoi parte, un autre onglet écrit la version 13 dans la même case.
-    const recente = JSON.stringify({version: 13, epoque: 0, modules: {}, futur: 1});
+    // Avant que l'envoi parte, un autre onglet écrit la version d'après dans la même case.
+    const recente = JSON.stringify({version: P.VERSION + 1, epoque: 0, modules: {}, futur: 1});
     await s.page.evaluate(([k, d]) => localStorage.setItem(k, d), [caseDuCode[0], recente]);
     const reperes = (await cles()).filter(([k]) => k.startsWith("mathsgo-defi-calcul-sync"));
     await pause(s.page, 3500);
-    assert.equal(s.serveur.ecrits.length, ecritsAvant, "rien n'est parti au serveur après l'arrivée de la version 13");
+    assert.equal(s.serveur.ecrits.length, ecritsAvant, "rien n'est parti au serveur après l'arrivée de la version d'après");
     assert.equal(await s.page.evaluate(k => localStorage.getItem(k), caseDuCode[0]), recente, "la case est intacte");
     assert.deepEqual((await cles()).filter(([k]) => k.startsWith("mathsgo-defi-calcul-sync")), reperes, "les repères de synchronisation n'ont pas été réécrits");
     assert.equal(await texte(s.page, "#suivi-repere"), "Page ancienne : recharge la page.");
@@ -465,17 +469,17 @@ async function cas(nom, f) {
   });
 
   if (!phpPresent()) console.log("  – 15. Mon espace avec le vrai serveur : PHP absent sur ce poste, trajet non joué ici");
-  else await cas("15. Mon espace, avec le VRAI serveur PHP : la ceinture jaune remplie d'un quart, « ↑ +17 étoiles cette semaine », puis « 17 étoiles sur 44 »", async () => {
+  else await cas("15. Mon espace, avec le VRAI serveur PHP : la ceinture blanche-jaune remplie d'un quart, « ↑ +4 étoiles cette semaine », puis « 4 étoiles sur 14 »", async () => {
     const suivi = await monterSuivi();
     try {
-      const ecrit = await suivi.api("/api/parcours.php", {code: suivi.code, appli: "defi-calcul", parcours: lea(), base_revision: 0});
-      assert.equal(ecrit.statut, 200, "la progression de version 12 est enregistrée par le vrai filtre");
+      const ecrit = await suivi.api("/api/parcours.php", {code: suivi.code, appli: "defi-calcul", parcours: leaCP(), base_revision: 0});
+      assert.equal(ecrit.statut, 200, `la progression de version ${P.VERSION} est enregistrée par le vrai filtre`);
       const relu = await suivi.api("/api/parcours.php", {code: suivi.code, appli: "defi-calcul", lire: true, version: P.VERSION});
-      assert.equal(relu.json.parcours.version, 12);
+      assert.equal(relu.json.parcours.version, P.VERSION);
       assert.equal((await suivi.api("/api/parcours.php", {code: suivi.code, appli: "defi-calcul", lire: true})).statut, 400, "sans dire sa version, le serveur refuse (c'est ce que Mon espace envoyait)");
       // La semaine où les étoiles ont été gagnées (mercredi), au téléphone et à l'ordinateur ; puis la semaine suivante.
-      for (const [largeur, hauteur, jour, attendu] of [[390, 844, JOUR, /^Défi calcul ↑ \+17 étoiles cette semaine jaune$/], [1366, 768, JOUR, /^Défi calcul ↑ \+17 étoiles cette semaine jaune$/],
-        [390, 844, P.ajouterJours(JOUR, 7), /^Défi calcul 17 étoiles sur 44 jaune$/]]) {
+      for (const [largeur, hauteur, jour, attendu] of [[390, 844, JOUR, /^Défi calcul ↑ \+4 étoiles cette semaine blanche-jaune$/], [1366, 768, JOUR, /^Défi calcul ↑ \+4 étoiles cette semaine blanche-jaune$/],
+        [390, 844, P.ajouterJours(JOUR, 7), /^Défi calcul 4 étoiles sur 14 blanche-jaune$/]]) {
         const ctx = await nav.newContext({viewport: {width: largeur, height: hauteur}, timezoneId: "Indian/Reunion", locale: "fr-FR"});
         const page = await ctx.newPage();
         await page.clock.install({time: new Date(`${jour}T17:00:00+04:00`)});
@@ -497,11 +501,11 @@ async function cas(nom, f) {
         }
         const quoi = `${largeur} × ${hauteur}, le ${jour}`;
         const calcul = lectures.filter(([, corps]) => corps.appli === "defi-calcul");
-        assert.deepEqual(calcul.map(([statut, corps]) => [statut, corps.version]), [[200, 12]], `${quoi} : Mon espace lit Défi calcul en annonçant la version 12, et le serveur répond`);
+        assert.deepEqual(calcul.map(([statut, corps]) => [statut, corps.version]), [[200, P.VERSION]], `${quoi} : Mon espace lit Défi calcul en annonçant la version ${P.VERSION}, et le serveur répond`);
         assert.ok(tuile, `${quoi} : la tuile Défi calcul`);
         assert.match(espaces(tuile.texte), attendu, `${quoi} : la ligne de la tuile`);
-        assert.deepEqual([tuile.ceinture, tuile.nom], [1, "Ceinture jaune"], `${quoi} : la ceinture de l'étage en cours est dessinée`);
-        // Remplie d'un quart : 17 étoiles sur 44 (la couleur coupée au quart de la largeur).
+        assert.deepEqual([tuile.ceinture, tuile.nom], [1, "Ceinture blanche-jaune"], `${quoi} : la ceinture de l'étage en cours est dessinée`);
+        // Remplie d'un quart : 4 étoiles sur 14 (la couleur coupée au quart de la largeur).
         const coupe = await page.evaluate(() => { const r = document.querySelector('[data-cle="defi-calcul"] .insigne svg clipPath rect'); return r ? Number(r.getAttribute("width")) : null; });
         assert.equal(coupe, 16, `${quoi} : remplie d'un quart (17 sur 44)`);
         if (SORTIE) { fs.mkdirSync(SORTIE, {recursive: true}); await page.waitForTimeout(500); await page.screenshot({path: path.join(SORTIE, `${largeur}x${hauteur}-mon-espace-${jour}.png`)}); }

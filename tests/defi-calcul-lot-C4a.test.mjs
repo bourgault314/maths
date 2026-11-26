@@ -139,12 +139,19 @@ test("A3 : les leçons — On te montre, J'écris, À retenir — et J'écris ti
   assert.equal(espaces(a("A3-4").autre.phrase), "Avec une retenue, je compte en milliers :");
   assert.equal(espaces(a("A3-4").autre.calcul), "47 + 6 = 53 ; 47 530 + 6 000 = 53 530");
   // A3-1 : aucun texte ne change ; À retenir dessine 46 + 30 (le chiffre qui change).
-  assert.equal(espaces(a("A3-1").ecris.consigne), "Dans 234, le chiffre des dizaines est 3.");
+  // (Lot K1b : au CP, J'écris sur 34 + 60 ; « Dans 234… » est dans sa moitié du CE1, A3-5,
+  // qui commence au tableau — pas de perles au-delà de 100.)
+  assert.equal(espaces(a("A3-1").ecris.consigne), "Dans 34, le chiffre des dizaines est 3.");
+  assert.equal(espaces(a("A3-5").ecris.consigne), "Dans 234, le chiffre des dizaines est 3.");
+  assert.equal(espaces(a("A3-5").represente.consigne), "Seul le chiffre des dizaines change : 2 + 4.");
+  assert.equal(a("A3-5").manipule, null);
+  assert.equal(a("A3-5").image.outil, "tableau-rang");
+  assert.equal(lu(a("A3-5").image), 365);
   assert.equal(a("A3-1").image.outil, "tableau-rang");
   assert.equal(lu(a("A3-1").image), 76);
   assert.equal(a("A3-1").manipule.outil, "perles", "les perles de « On te montre » restent");
   // J'écris tiré : deux étapes, la méthode de la sorte, jamais la droite.
-  ["A3-1", "A3-2", "A3-3", "A3-4"].forEach(cle => {
+  ["A3-1", "A3-2", "A3-3", "A3-4", "A3-5"].forEach(cle => {
     for (let graine = 1; graine <= 30; graine += 1) {
       const t = CORE.ecrisTire(cle, {graine});
       if (!t) continue;
@@ -262,14 +269,14 @@ test("le dessin à étapes : le résultat tapé à la première case est juste (
 
 test("les données ne changent pas : progression, compétences, clés des calculs", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12.)
-  assert.match(parcours, /VERSION\s*=\s*12\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1)");
+  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12 ; lot K1b : 13.)
+  assert.match(parcours, /VERSION\s*=\s*13\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1, 13 depuis le lot K1b)");
   // Les clés des calculs (les boîtes de Mes calculs du jour) : inchangées.
   assert.equal(CORE.niveauDe("A3-2").niveau.imposes[1].cle, "A3-2-534-70-x");
   assert.equal(CORE.genererSerie("A2-2", {graine: 1, genre: "valide"}).find(c => c.forme === "difference").cle.split("-").slice(0, 3).join("-"), "A2-2-100");
   // La copie du moteur pour la page prof, octet pour octet.
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261126-2/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
 });

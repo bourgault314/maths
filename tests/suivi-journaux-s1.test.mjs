@@ -370,14 +370,15 @@ test("Défi tables et Défi calcul, fusion : trois appareils qui jouent chacun d
   }
 });
 
-test("Défi calcul, version 12 (lot K1 « la carte chez l'élève ») : chaque séance a son numéro ; un journal d'une version d'avant repart de zéro ; une copie sans journal n'efface rien", () => {
-  assert.equal(D.VERSION, 12, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11 ; lot K1 « la carte » : 12");
+// (Lot K1b « les bases en trois classes » : la version 13 ; une version 12 se relit, les versions d'avant repartent de zéro.)
+test("Défi calcul, version 13 (lot K1b « les bases en trois classes ») : chaque séance a son numéro ; un journal d'une version d'avant repart de zéro ; une copie sans journal n'efface rien", () => {
+  assert.equal(D.VERSION, 13, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11 ; lot K1 « la carte » : 12 ; lot K1b « les bases en trois classes » : 13");
   assert.deepEqual(D.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero", "seuls", "seulsJustes", "tests", "testsRates"]);
   // Un journal d'une version d'avant (ici 5, lot G1) : la carte repart de zéro, lui avec.
   const v5 = {version: 5, seances: ["2026-11-02", MERCREDI, MERCREDI],
     journal: {calculs: [-1, 10, 6], justes: [-1, 9, 6], nouveautes: [-1, 1, 0], prouvees: [-1, 0, 2], rouges: [-1, 0, 1], minutes: [-1, 6, 4]}};
   const p = D.normaliserParcours(v5);
-  assert.equal(p.version, 12);
+  assert.equal(p.version, 13);
   assert.deepEqual([p.seances, p.journal.calculs], [[], []], "rien d'une version d'avant n'est relu");
   assert.deepEqual(D.normaliserParcours(v5), p, "le même à chaque relecture, sur chaque appareil");
   // Deux séances jouées le même jour : rang 1, puis rang 2.
@@ -704,7 +705,9 @@ test("resumeSuivi, Anzan : une séance avec un calcul fait = un jour de travail 
 
 test("resumeSuivi, Défi calcul : les séances du journal ; à aider : à voir en classe, étoiles perdues ; à féliciter : 5 étoiles devenues solides ou plus cette semaine", () => {
   // (Lot K1 « la carte chez l'élève », version 12.)
-  const p = D.normaliserParcours({version: 12, seances: [LUNDI, MERCREDI],
+  // (Lot K1b : version 13 — le test porte sur le résumé, pas sur la reprise d'une version 12, où une étoile coupée
+  // et perdue compte pour ses deux moitiés : c'est vérifié dans defi-calcul-lot-K1b-donnees.)
+  const p = D.normaliserParcours({version: 13, seances: [LUNDI, MERCREDI],
     journal: {calculs: [10, 8], justes: [9, 8], nouveautes: [1, 0], prouvees: [0, 2], rouges: [0, 1], minutes: [6, 7], numero: [10007, 10008]},
     modules: {
       A2: {vu: LUNDI, b: [4, 4, 4, 4, 4], e: [null, null, null, null, null], a: [1, 1, 1, 1, 1],
@@ -773,7 +776,7 @@ test("serveur : version_min 5 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 4 
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
   assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 4,/, "Coffres : version 4 depuis le lot « le jour vert »");
   const calcul = bloc("defi-calcul", "automatismes");
-  assert.match(calcul, /'version_min' => 12,/, "Défi calcul : une page d'avant la carte (version 11 ou moins) lirait des étoiles avec ses anciennes règles (lot K1)");
+  assert.match(calcul, /'version_min' => 13,/, "Défi calcul : une page d'avant les six étages (version 12 ou moins) écrirait avec quatre étages (lot K1b ; lot K1 : 12)");
   ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
   assert.match(bloc("splat", "soley"), /'version_min' => 2,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
@@ -797,7 +800,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261122-1"/);
-  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261126-1"/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261126-2"/);
 });
 
 // ============================================================ la page Défi tables

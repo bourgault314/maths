@@ -108,6 +108,9 @@ export const RECETTES = [
   // poste, ce trajet-là est sauté, et dit).
   { fichier: "tests/defi-calcul-lot-K1-correctif-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"],
     garde: [...DEFI_CALCUL, "_serveur/public/index.php", "_serveur/public/api/parcours.php", "_serveur/public/lib/applis.php", "_serveur/public/lib/progression.php", "_serveur/public/prof/defi_calcul"] },
+  // Lot K1b de Défi calcul (26/11/2026) : les bases en trois classes — six onglets sur une rangée (320 px à
+  // l'ordinateur), les progressions de version 12 relues, le réglage à chaque étage, les six ceintures, le professeur.
+  { fichier: "tests/defi-calcul-lot-K1b-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

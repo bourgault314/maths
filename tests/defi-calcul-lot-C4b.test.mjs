@@ -126,10 +126,16 @@ test("« Compléments à la dizaine » : le tableau en unités, 4 + □ = 10 pui
     assert.equal(etapes[0].reponse, 10 - u);
     assert.equal(c.reponse, 10 - u, `${c.texte} : complément = 10 − ${u}`);
   });
+  // (Lot K1b : au CP, à 2 chiffres ; 433 + □ = 440 est dans sa moitié du CE1, A2-6.)
   const ecris = CORE.niveauDe("A2-1").niveau.apprends.ecris;
-  assert.equal(espaces(ecris.consigne), "Dans 433, le chiffre des unités est 3.");
-  assert.deepEqual(ecris.etapes.map(e => espaces(e.texte)), ["3 + □ = 10", "433 + □ = 440"]);
+  assert.equal(espaces(ecris.consigne), "Dans 34, le chiffre des unités est 4.");
+  assert.deepEqual(ecris.etapes.map(e => espaces(e.texte)), ["4 + □ = 10", "34 + □ = 40"]);
   assert.equal(CORE.niveauDe("A2-1").niveau.apprends.represente.outil, "tableau-rang");
+  const ce1 = CORE.niveauDe("A2-6").niveau.apprends;
+  assert.equal(espaces(ce1.ecris.consigne), "Dans 433, le chiffre des unités est 3.");
+  assert.deepEqual(ce1.ecris.etapes.map(e => espaces(e.texte)), ["3 + □ = 10", "433 + □ = 440"]);
+  assert.equal(ce1.represente.outil, "tableau-rang");
+  assert.equal(ce1.manipule, null, "pas de perles au-delà de 100");
 });
 
 test("les sommes et les petites différences en deux barres ; les trous qui passent 10 gardent la droite", () => {
@@ -187,17 +193,24 @@ test("les phrases d'erreur : le tableau, les barres, la dizaine cassée", () => 
 test("les annonces « Nouveau » : pile sur la dizaine, depuis une dizaine entière, une centaine ronde", () => {
   const annonce = (cle, f) => { const c = TIRAGES[cle].find(f); return c && CORE.nouveauteDe(c, cle); };
   assert.equal(annonce("A10-1", c => c.donnees.n % 10 + c.donnees.d === 10).texte, "Nouveau\u00a0: j’arrive pile sur la dizaine\u00a0: 10\u00a0unités font 1\u00a0dizaine.");
-  assert.equal(annonce("A11-2", c => c.donnees.n % 10 === 0).texte, "Nouveau\u00a0: on part d’une dizaine entière\u00a0: je casse une dizaine.");
+  // (Lot K1b : « depuis une dizaine entière » est toute la leçon d'A11-2, au CP — plus d'annonce
+  // là ; elle est dans sa moitié du CE1, A11-4.)
+  const a114 = Array.from({length: 12}, (_, g) => CORE.niveauDe("A11-4").niveau.composer(CORE.mulberry32((g + 1) * 7919), 40, [])).flat();
+  assert.equal(CORE.nouveauteDe(a114.find(c => c.donnees.n % 10 === 0), "A11-4").texte, "Nouveau\u00a0: on part d’une dizaine entière\u00a0: je casse une dizaine.");
+  assert.equal(CORE.nouveauteDe(a114.find(c => c.donnees.n % 10 !== 0), "A11-4"), null);
+  assert.ok(TIRAGES["A11-2"].every(c => c.donnees.n % 10 === 0 && CORE.nouveauteDe(c, "A11-2") === null), "au CP : toujours depuis une dizaine entière, sans annonce");
   assert.equal(annonce("A11-3", c => c.donnees.n % 100 === 0).texte, "Nouveau\u00a0: on part d’une centaine ronde\u00a0: je casse une dizaine.");
   // Le calcul ordinaire du niveau n'a pas d'annonce.
-  assert.equal(annonce("A11-2", c => c.donnees.n % 10 !== 0), null);
+  assert.equal(annonce("A11-2", c => c.donnees.n % 10 !== 0), undefined, "au CP, aucun calcul ne part d'ailleurs que d'une dizaine");
 });
 
 test("les phrases des leçons : insécables (règle du 13/11), « Seul le chiffre des … change : x + y »", () => {
   const consigne = cle => CORE.niveauDe(cle).niveau.apprends.represente.consigne;
   assert.equal(consigne("A10-1"), "Seul le chiffre des unités change\u00a0: 3\u00a0+\u00a05.");
   assert.equal(consigne("A11-1"), "Seul le chiffre des unités change\u00a0: 9\u00a0−\u00a06.");
-  assert.equal(consigne("A3-1"), "Seul le chiffre des centaines change\u00a0: 3\u00a0+\u00a05.");
+  // (Lot K1b : A3-1, au CP, n'a que des dizaines — 23 + 50 ; A3-5, au CE1, 325 + 40.)
+  assert.equal(consigne("A3-1"), "Seul le chiffre des dizaines change\u00a0: 2\u00a0+\u00a05.");
+  assert.equal(consigne("A3-5"), "Seul le chiffre des dizaines change\u00a0: 2\u00a0+\u00a04.");
   assert.equal(consigne("A3-4"), "Seul le chiffre des milliers change\u00a0: 7\u00a0+\u00a02.");
   // La phrase de la correction au tableau : « 10 unités », « 1 dizaine » ne se coupent pas.
   const pile = TIRAGES["A10-1"].find(c => c.donnees.n % 10 + c.donnees.d === 10);
@@ -234,18 +247,24 @@ test("les fractions : le Je représente de la leçon est une addition (F8-1, F9-
 
 test("les données ne changent pas : progression en version 11, clés des calculs, copie serveur, cache", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12.)
-  assert.match(parcours, /VERSION\s*=\s*12\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1)");
+  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12 ; lot K1b : 13.)
+  assert.match(parcours, /VERSION\s*=\s*13\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1, 13 depuis le lot K1b)");
   // Les clés des calculs (les boîtes de Mes calculs du jour) : inchangées.
   // (Relevées sur le main ea9ab921 : les séries tirées, 40 graines, sont
   // aussi les mêmes, calcul pour calcul.)
-  const CLES = {"A1-1": ["A1-1-3-x-10", "A1-1-10-7-x"], "A1-3": ["A1-3-14-6", "A1-3-7-x-12"], "A10-1": ["A10-1-153-5"], "A11-1": ["A11-1-157-5"],
-    "A2-1": ["A2-1-433-x-440"], "A10-2": ["A10-2-58-6", "A10-2-425-9"], "A11-2": ["A11-2-70-4", "A11-2-734-8"], "A11-3": ["A11-3-601-4", "A11-3-3005-8"],
-    "F8-1": ["F8-1-1-2-7-1-3-7-1-q-x-7-1", "F8-1-2-9-10-1-4-10-2-q-x-10-1"], "F9-1": ["F9-1-1-2-5-1-3-10-1-q-x-10-1", "F9-1-2-5-6-1-1-12-2-q-x-12-1"]};
+  const CLES = {"A1-1": ["A1-1-3-x-10", "A1-1-10-7-x"], "A1-3": ["A1-3-14-6", "A1-3-7-x-12"], "A11-1": ["A11-1-157-5"], "A11-3": ["A11-3-601-4", "A11-3-3005-8"],
+    // Lot K1b : cinq de ces niveaux sont coupés en deux. La moitié du bas (CP) garde son numéro
+    // et prend des calculs à 2 chiffres ; les calculs d'avant passent à la moitié du haut (CE1),
+    // sous son numéro neuf — 153 + 5 est « A10-4-153-5 ». Aucune clé de calcul n'est gardée
+    // dans une progression (version 12 comme 13) : rien à reprendre. F8-1 : plus de septièmes.
+    "A10-1": ["A10-1-43-5"], "A10-4": ["A10-4-153-5"], "A2-1": ["A2-1-26-x-30"], "A2-6": ["A2-6-567-x-570"],
+    "A10-2": ["A10-2-58-6", "A10-2-25-9"], "A10-5": ["A10-5-358-6", "A10-5-425-9"],
+    "A11-2": ["A11-2-30-8"], "A11-4": ["A11-4-470-4", "A11-4-734-8"],
+    "F8-1": ["F8-1-1-2-5-1-2-5-1-q-x-5-1", "F8-1-2-9-10-1-4-10-2-q-x-10-1"], "F9-1": ["F9-1-1-2-5-1-3-10-1-q-x-10-1", "F9-1-2-5-6-1-1-12-2-q-x-12-1"]};
   Object.entries(CLES).forEach(([cle, cles]) => assert.deepEqual(CORE.niveauDe(cle).niveau.imposes.map(x => x.cle), cles, cle));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261126-2/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/, "le fichier des dessins (lot C4c : les blocs, le tableau des rangs lu)");
   assert.match(await lire("../_serveur/public/VERSION"), /^lot \S+$/m);
 });
@@ -264,7 +283,9 @@ test("Mon module : « J'apprends » dit avec quoi on apprend (les perles, puis l
   const dit = cle => detail[outil(CORE.niveauDe(cle).niveau.apprends)];
   ["A10-1", "A11-1", "A2-1"].forEach(cle => assert.equal(dit(cle), "avec les perles et le tableau de numération", cle));
   // (Les leçons à deux sauts gardent la droite ; A11-3 n'a pas de perles.)
-  ["A11-2", "A1-3"].forEach(cle => assert.equal(dit(cle), "avec les perles et la droite", cle));
+  // (Lot K1b : A11-2, au CP, casse une dizaine sur le tableau ; sa moitié du CE1, A11-4, garde la droite.)
+  ["A11-4", "A1-3"].forEach(cle => assert.equal(dit(cle), "avec les perles et la droite", cle));
+  assert.equal(dit("A11-2"), "avec les perles et le tableau de numération");
   assert.equal(dit("A11-3"), "avec la droite");
   assert.equal(dit("F8-1"), "avec les bandes de fractions");
 });

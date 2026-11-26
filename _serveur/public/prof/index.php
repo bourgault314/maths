@@ -1064,6 +1064,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .dc-paliers-choix button { min-height: 36px; padding: 0 14px; color: var(--blue-dark); background: var(--paper);
                              border: 1px solid var(--line); border-radius: 999px; font-size: .9rem; }
   .dc-paliers-choix button[aria-pressed="true"] { color: #fff; background: var(--blue); border-color: var(--blue); }
+  .dc-paliers-choix .dc-court { display: none; }
+  @media (max-width: 700px) {
+    #dc-ouest-paliers { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+    #dc-ouest-paliers button { display: grid; place-content: center; min-height: 44px; padding: 2px 0; border-radius: 12px; font-size: .82rem; line-height: 1.1; white-space: nowrap; }
+    #dc-ouest-paliers .dc-long { display: none; }
+    #dc-ouest-paliers .dc-court { display: block; }
+    #dc-ouest-paliers small.dc-court { font-size: .72rem; color: inherit; opacity: .85; }
+  }
   .dc-ouest-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
   .dc-ouest-liste li { display: grid; grid-template-columns: minmax(150px, 230px) 1fr; align-items: center; gap: 12px; }
   .dc-ouest-nom { font-size: .86rem; line-height: 1.25; }
@@ -4594,9 +4602,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // classe, sur le modèle de lignePlus. Le choix de l'élève l'emporte.
   // « Nouveautés par séance » (lot F1) n'existe plus.
   const MINUTES_CALCUL = [10, 15];
-  const PALIERS_CALCUL = [[1, "Les bases", "Jusqu’aux bases"], [2, "CM1", "Jusqu’au CM1"], [3, "CM2", "Jusqu’au CM2"], [4, "Vers la 6e (tout)", "Jusqu’à la 6e"]];
+  // Lot K1b « les bases en trois classes » (26/11/2026) : l'appli a six
+  // étages, un par classe. Le réglage part au serveur sous le nom « etage »
+  // (1 le CP … 6 vers la 6e : tout) ; l'ancien « palier » (1 à 4), encore dans
+  // une ligne de la base, nous revient déjà traduit (lib/applis.php,
+  // reglages_anciens_repris). Dans ce fichier, l'état de la fenêtre garde son
+  // nom d'avant (`palier`, `elevePalier`) : c'est le numéro de l'étage.
+  const PALIERS_CALCUL = [[1, "CP", "Jusqu’au CP"], [2, "CE1", "Jusqu’au CE1"], [3, "CE2", "Jusqu’au CE2"], [4, "CM1", "Jusqu’au CM1"], [5, "CM2", "Jusqu’au CM2"],
+    [6, "Vers la 6e (tout)", "Jusqu’à la 6e"]];
   const minutesValable = n => (MINUTES_CALCUL.includes(n) ? n : 10);
-  const palierValable = n => (Number.isInteger(n) && n >= 1 && n <= 4 ? n : 4);
+  const palierValable = n => (Number.isInteger(n) && n >= 1 && n <= PALIERS_CALCUL.length ? n : PALIERS_CALCUL.length);
 
   // Ce que la classe a (classe.reglages), et ce que chaque élève a de
   // différent (eleve.reglages, rangé à part par le serveur) : deux tables
@@ -4604,13 +4619,13 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   function calculDeLaClasse() {
     const r = (classe && classe.reglages && classe.reglages["defi-calcul"]) || {};
     const minutes = minutesValable(r.minutes);
-    const palier = palierValable(r.palier);
+    const palier = palierValable(r.etage);
     const eleveMinutes = new Map();
     const elevePalier = new Map();
     (eleves || []).forEach(eleve => {
       const propre = (eleve.reglages && eleve.reglages["defi-calcul"]) || {};
       if (MINUTES_CALCUL.includes(propre.minutes) && propre.minutes !== minutes) eleveMinutes.set(eleve.id, propre.minutes);
-      if (Number.isInteger(propre.palier) && propre.palier >= 1 && propre.palier <= 4 && propre.palier !== palier) elevePalier.set(eleve.id, propre.palier);
+      if (Number.isInteger(propre.etage) && propre.etage >= 1 && propre.etage <= PALIERS_CALCUL.length && propre.etage !== palier) elevePalier.set(eleve.id, propre.etage);
     });
     return {minutes, palier, eleveMinutes, elevePalier};
   }
@@ -4739,10 +4754,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   function reglagesVoulus(eleve, c, d) {
     const actuels = eleve.reglages && typeof eleve.reglages === "object" && !Array.isArray(eleve.reglages) ? eleve.reglages : {};
     const propre = Object.assign({}, actuels["defi-calcul"] && typeof actuels["defi-calcul"] === "object" ? actuels["defi-calcul"] : {});
-    ["minutes", "palier"].forEach(nom => {
+    // (Lot K1b : l'étage part sous le nom « etage ».)
+    [["minutes", "minutes"], ["palier", "etage"]].forEach(([nom, envoye]) => {
       const voulu = valeurPropre(c, nom, eleve.id);
       if (voulu === valeurPropre(d, nom, eleve.id)) return;
-      if (voulu === undefined) delete propre[nom]; else propre[nom] = voulu;
+      if (voulu === undefined) delete propre[envoye]; else propre[envoye] = voulu;
     });
     const tout = Object.assign({}, actuels);
     if (Object.keys(propre).length) tout["defi-calcul"] = propre; else delete tout["defi-calcul"];
@@ -4840,7 +4856,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
       const pourLAppli = {};
       if (b.cle === "defi-tables" && b.records !== depart.records) pourLAppli.records = b.records;
       if (b.cle === "defi-calcul" && b.calcul.minutes !== depart.calcul.minutes) pourLAppli.minutes = b.calcul.minutes;
-      if (b.cle === "defi-calcul" && b.calcul.palier !== depart.calcul.palier) pourLAppli.palier = b.calcul.palier;
+      if (b.cle === "defi-calcul" && b.calcul.palier !== depart.calcul.palier) pourLAppli.etage = b.calcul.palier;
       // L'appli Cours : les trois listes partent ensemble dès que l'une change.
       if (b.cle === "cours" && !memesCours(b.cours, depart.cours)) Object.assign(pourLAppli, coursEnvoye(b.cours));
       (LISTES_PAR_ELEVE[b.cle] || []).forEach(liste => {
@@ -4938,10 +4954,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     if (!voulu) return true;
     if ("records" in voulu && neuf.records !== b.records) return false;
     if ("minutes" in voulu && neuf.calcul.minutes !== b.calcul.minutes) return false;
-    if ("palier" in voulu && neuf.calcul.palier !== b.calcul.palier) return false;
+    if ("etage" in voulu && neuf.calcul.palier !== b.calcul.palier) return false;
     if (("chapitres" in voulu || "sans" in voulu || "avec" in voulu) && !memesCours(neuf.cours, b.cours)) return false;
     return Object.keys(voulu).every(nom => {
-      if (nom === "records" || nom === "minutes" || nom === "palier" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
+      if (nom === "records" || nom === "minutes" || nom === "etage" || nom === "chapitres" || nom === "sans" || nom === "avec") return true;
       const a = [...b.listes[nom]].sort((x, y) => x - y).join(",");
       const c = [...(neuf.listes[nom] || [])].sort((x, y) => x - y).join(",");
       return a === c;
@@ -6893,13 +6909,18 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return fiche ? fiche.nom : id;
   }
 
-  // « Les bases (CP · CE1 · CE2) », « Le CM1 », « Le CM2 », « Vers la 6e » :
-  // les classes ne sont écrites que là où le nom ne les dit pas.
+  // « Le CP », « Le CE1 », … « Vers la 6e » : les classes ne sont écrites que
+  // là où le nom ne les dit pas (plus aucun depuis le lot K1b : un palier par
+  // classe ; le dernier, « Vers la 6e », ne dit pas « choix pédagogiques »).
   function nomPalierCalcul(numero) {
     const palier = CALCUL_CORE ? CALCUL_CORE.PALIERS.find(p => p.n === numero) : null;
     if (!palier) return `Palier ${numero}`;
-    return palier.nom.includes(palier.classes) || numero === 4 ? palier.nom : `${palier.nom} (${palier.classes})`;
+    return palier.nom.includes(palier.classes) || numero === CALCUL_CORE.PALIERS.length ? palier.nom : `${palier.nom} (${palier.classes})`;
   }
+  // Les numéros des paliers du noyau (six depuis le lot K1b).
+  const numerosDesPaliers = () => (CALCUL_CORE ? CALCUL_CORE.PALIERS.map(p => p.n) : []);
+  // La ceinture portée, bornée à celles du noyau.
+  const ceinturePortee = c => Math.max(0, Math.min(CALCUL_CORE.CEINTURES.length - 1, Math.floor(Number(c && c.porte) || 0)));
 
   // Le nom d'une cause d'erreur du module (« retour oublié »), ou "".
   function nomCauseCalcul(id, cause) {
@@ -7118,7 +7139,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const td = document.createElement("td");
     const c = lu && lu.ceintures;
     if (!lu || !lu.commence || !c || !CALCUL_CORE || !CALCUL_CORE.CEINTURES) { td.textContent = "—"; td.className = "sans"; return td; }
-    const porte = Math.max(0, Math.min(4, Math.floor(Number(c.porte) || 0)));
+    const porte = ceinturePortee(c);
     const barrettes = Math.max(0, Math.min(3, Math.floor(Number(c.barrettes) || 0)));
     const bloc = document.createElement("span");
     bloc.className = "dc-ceinture";
@@ -7134,16 +7155,16 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   }
   function texteCeinture(c) {
     if (!c || !CALCUL_CORE || !CALCUL_CORE.CEINTURES) return "";
-    const porte = Math.max(0, Math.min(4, Math.floor(Number(c.porte) || 0)));
+    const porte = ceinturePortee(c);
     const date = porte && Array.isArray(c.dates) ? jourCourtCalcul(c.dates[porte - 1]) : "";
     const barrettes = Math.max(0, Math.min(3, Math.floor(Number(c.barrettes) || 0)));
     return [CALCUL_CORE.CEINTURES[porte].nom + (date ? `, gagnée le ${date}` : ""),
       c.prochaine && barrettes ? `${barrettes} barrette${barrettes > 1 ? "s" : ""} vers la ${CALCUL_CORE.CEINTURES[c.prochaine].nom.toLowerCase()}` : ""].filter(Boolean).join(" · ");
   }
 
-  // « bases », « CM1 », « CM2 », « 6e » : le palier, en un mot, sous le compte.
+  // « CP », « CE1 », … « vers la 6e » : le palier, en un mot, sous le compte.
   function nomCourtPalier(numero) {
-    return ({1: "bases", 2: "CM1", 3: "CM2", 4: "vers la 6e"})[numero] || `palier ${numero}`;
+    return ({1: "CP", 2: "CE1", 3: "CE2", 4: "CM1", 5: "CM2", 6: "vers la 6e"})[numero] || `palier ${numero}`;
   }
 
   // « ven. 27/11 » : le dernier jour de travail, une date du parcours.
@@ -7306,7 +7327,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const ceinture = lu.ceintures && CALCUL_CORE.CEINTURES ? lu.ceintures : null;
     const ceintureDetail = ceinture ? texteCeinture(ceinture).split(" · ") : [];
     cellule.append(ficheChiffres([
-      ...(ceinture ? [["Ceinture", CALCUL_CORE.CEINTURES[Math.max(0, Math.min(4, Math.floor(Number(ceinture.porte) || 0)))].court,
+      ...(ceinture ? [["Ceinture", CALCUL_CORE.CEINTURES[ceinturePortee(ceinture)].court,
         [ceintureDetail[0].replace(/^Ceinture \S+(, )?/, ""), (ceintureDetail[1] || "").replace(/ vers la .*$/, "")].filter(Boolean).join(" · ")]] : []),
       ["Compétences sues", `${ouvert.sues} / ${ouvert.total}`, `${ouvert.entrees - ouvert.sues} en route · ${ouvert.total} ouverte${ouvert.total > 1 ? "s" : ""} sur ${lu.total}`],
       ["À revoir", String(revoir), lu.aVoir ? `dont ${lu.aVoir} à voir en classe` : ""],
@@ -7429,7 +7450,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     table.append(thead);
     const tbody = document.createElement("tbody");
     const carte = CALCUL_CORE.carte();
-    [1, 2, 3, 4].forEach(numero => {
+    numerosDesPaliers().forEach(numero => {
       const modules = (lu.modules || []).filter(m => m.construit && m.paliers.includes(numero));
       const rang = m => { const i = m.paliers.indexOf(numero); return carte.ordre.indexOf(`${m.id}-${i + 1}`); };
       modules.sort((p, q) => rang(p) - rang(q)).forEach((m, index) => {
@@ -9079,8 +9100,12 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
         f.filter(x => x.type === "grade").forEach(x => liste.push({appli: cle, texte: `${ANZAN && ANZAN.nomGrade ? ANZAN.nomGrade(x.grade) : `grade ${x.grade}`}${ANZAN && ANZAN.estGradeColonne && ANZAN.estGradeColonne(x.grade) ? " en Colonne" : ""} réussi`, rang: 2}));
       } else if (cle === "defi-calcul") {
         // Lot 6-0 (livré avec le lot F4) : la ceinture gagnée cette semaine.
-        const NOMS_CEINTURES = ["ceinture jaune", "ceinture orange", "ceinture verte", "ceinture bleue"];
-        f.filter(x => x.type === "ceinture" && NOMS_CEINTURES[x.ceinture - 1]).forEach(x => liste.push({appli: cle, texte: `${NOMS_CEINTURES[x.ceinture - 1]} gagnée`, rang: 2}));
+        // (Lot K1b : six ceintures à gagner, dans l'ordre du noyau.)
+        const NOMS_CEINTURES = ["ceinture blanche-jaune", "ceinture jaune", "ceinture jaune-orange", "ceinture orange", "ceinture verte", "ceinture bleue"];
+        // (Lot K1b, choix de Gwenaël le 26/11 : la classe entre parenthèses,
+        // « ceinture blanche-jaune (CP) gagnée » — sept couleurs à retenir sinon.)
+        const CLASSES_CEINTURES = ["CP", "CE1", "CE2", "CM1", "CM2", "6e"];
+        f.filter(x => x.type === "ceinture" && NOMS_CEINTURES[x.ceinture - 1]).forEach(x => liste.push({appli: cle, texte: `${NOMS_CEINTURES[x.ceinture - 1]} (${CLASSES_CEINTURES[x.ceinture - 1]}) gagnée`, rang: 2}));
         f.filter(x => x.type === "competences").forEach(x => liste.push({appli: cle, texte: `${x.competences} compétences sues cette semaine`, rang: 3, nombre: x.competences}));
       } else if (cle === "coffres") {
         // Lot S4a : Coffres n'avait aucune règle. Un trésor, c'est 10 clés
@@ -9953,10 +9978,15 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     paliers.textContent = "";
     const modulesDu = palier => carte.modules.filter(m => m.construit && m.paliers.includes(palier))
       .sort((p, q) => carte.ordre.indexOf(`${p.id}-${p.paliers.indexOf(palier) + 1}`) - carte.ordre.indexOf(`${q.id}-${q.paliers.indexOf(palier) + 1}`));
-    const numeros = [1, 2, 3, 4].filter(n => modulesDu(n).length);
+    const numeros = numerosDesPaliers().filter(n => modulesDu(n).length);
     if (!numeros.includes(palierOuEnEst)) palierOuEnEst = numeros[0] || 1;
     numeros.forEach(n => {
-      const bouton = el("button", "", `${({1: "Les bases", 2: "Le CM1", 3: "Le CM2", 4: "Vers la 6e"})[n]} · ${modulesDu(n).length}`);
+      // (Lot K1b : six onglets. Au téléphone, ils tiennent sur une rangée :
+      // la classe en un mot, le nombre de modules dessous.)
+      const bouton = el("button", "", "");
+      bouton.append(el("span", "dc-long", `${nomPalierCalcul(n)} · ${modulesDu(n).length}`),
+        el("span", "dc-court", ({1: "CP", 2: "CE1", 3: "CE2", 4: "CM1", 5: "CM2", 6: "6e"})[n] || String(n)), el("small", "dc-court", String(modulesDu(n).length)));
+      bouton.setAttribute("aria-label", `${nomPalierCalcul(n)}, ${modulesDu(n).length} modules`);
       bouton.type = "button";
       bouton.setAttribute("aria-pressed", String(n === palierOuEnEst));
       bouton.addEventListener("click", () => { palierOuEnEst = n; fermerPopOuEnEst(); dessinerOuEnEst(); });
@@ -10236,7 +10266,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     const titre = el("h3", "", "Ses compétences");
     fragment.append(titre);
     const replies = [];
-    [1, 2, 3, 4].forEach(numero => {
+    numerosDesPaliers().forEach(numero => {
       const modules = (lu.modules || []).filter(m => m.construit && m.paliers.includes(numero));
       if (!modules.length) return;
       const compte = (ouvert.paliers || []).find(p => p.palier === numero) || {sues: 0, entrees: 0, total: 0};

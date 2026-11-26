@@ -217,6 +217,29 @@ try {
     // la rendra avec son prochain envoi, et le serveur saura si elle écrit
     // par-dessus un état qu'elle n'a pas vu.
     if (!empty($corps['lire'])) {
+        // Correctif K1b de Défi calcul (relecture de Codex du 26/11) : une
+        // page d'une version que le serveur n'accepte plus à l'écriture
+        // (« version_min ») n'est plus servie non plus, quelle que soit la
+        // progression enregistrée — et qu'il y en ait une ou non : même
+        // réponse, rien de plus n'est révélé. Avant, une page de version 12
+        // lisait encore une ligne de version 12, jouait, enregistrait dans
+        // l'appareil, et n'apprenait qu'à son premier envoi qu'elle était
+        // trop ancienne. Elle le sait maintenant dès sa lecture : elle passe
+        // en lecture seule (« Page ancienne : recharge la page. ») et garde
+        // son travail dans l'appareil ; rechargée, elle le renverra, repris.
+        // Ne vaut que pour une appli dont la lecture est protégée
+        // (« version_sans_declaration ») : les autres ne changent pas.
+        // La version du lecteur se lit UNE fois, ici, pour les deux contrôles
+        // (celui-ci et celui du lot K1, plus bas) : un entier, sinon « rien dit ».
+        $sansDeclaration = CATALOGUE_APPLIS[$appli]['version_sans_declaration'] ?? null;
+        $versionMinLue = CATALOGUE_APPLIS[$appli]['version_min'] ?? null;
+        $lecteur = null;
+        if (is_int($sansDeclaration)) {
+            $lecteur = is_int($corps['version'] ?? null) ? $corps['version'] : $sansDeclaration;
+            if (is_int($versionMinLue) && $lecteur < $versionMinLue) {
+                erreur("Page ancienne : recharge la page.", 400);
+            }
+        }
         $ligne = lire_progression($pdo, $eleveId, $appli);
         if ($ligne === null) {
             repondre(['ok' => true, 'existe' => false, 'parcours' => null, 'maj_le' => null, 'revision' => 0]);
@@ -231,9 +254,7 @@ try {
         // son travail dans l'appareil (pour elle, c'est une panne du
         // réseau) ; rechargée, elle lira. Les applis qui ne déclarent rien
         // ne changent pas.
-        $sansDeclaration = CATALOGUE_APPLIS[$appli]['version_sans_declaration'] ?? null;
-        if (is_int($sansDeclaration)) {
-            $lecteur = is_int($corps['version'] ?? null) ? $corps['version'] : $sansDeclaration;
+        if ($lecteur !== null) {
             $enregistree = is_object($ligne['parcours']) ? ($ligne['parcours']->version ?? null) : null;
             if (is_int($enregistree) && $enregistree > $lecteur) {
                 erreur("Page ancienne : recharge la page.", 400);

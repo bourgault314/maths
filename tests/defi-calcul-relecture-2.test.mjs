@@ -85,10 +85,16 @@ test("A1-1, « À retenir » : les cinq paires en rangées du boulier, sans virg
 test("M1 : « Je représente » par étapes dans les trois niveaux (le double comme la moitié)", () => {
   const attendus = {
     // (Lot C3 : des calculs moyens — double de 12, double de 38.)
-    "M1-1": ["double de 12 = 12 + 12", ["10 + 10", "2 + 2", "double de 12"], 24],
-    "M1-2": ["moitié de 34 = moitié de 30 + moitié de 4", ["moitié de 30", "moitié de 4", "moitié de 34"], 17],
+    // (Lot K1b : neuf niveaux. Au CP — M1-1, M1-2, M1-4 —, des nombres plus petits, en mots ;
+    // les leçons d'avant sont dans les moitiés du haut — M1-7, M1-8 (un exemple moyen, moitié
+    // de 26), M1-9.)
+    "M1-1": ["double de 7 = 7 + 7", ["7 + 7", "double de 7"], 14],
+    "M1-2": ["moitié de 12 = moitié de 10 + moitié de 2", ["moitié de 10", "moitié de 2", "moitié de 12"], 6],
     "M1-3": ["double de 38 = 2 × 38", ["2 × 30", "2 × 8", "double de 38"], 76],
-    "M1-4": ["moitié de 76 = 70 ÷ 2 + 6 ÷ 2", ["70 ÷ 2", "6 ÷ 2", "moitié de 76"], 38],
+    "M1-4": ["moitié de 46 = moitié de 40 + moitié de 6", ["moitié de 40", "moitié de 6", "moitié de 46"], 23],
+    "M1-7": ["double de 12 = 12 + 12", ["10 + 10", "2 + 2", "double de 12"], 24],
+    "M1-8": ["moitié de 26 = moitié de 20 + moitié de 6", ["moitié de 20", "moitié de 6", "moitié de 26"], 13],
+    "M1-9": ["moitié de 76 = 70 ÷ 2 + 6 ÷ 2", ["70 ÷ 2", "6 ÷ 2", "moitié de 76"], 38],
     // (Lot 3a, décision 5 : la leçon sur le double, double de 75.)
     "M1-5": ["double de 75 = 2 × 75", ["2 × 70", "2 × 5", "double de 75"], 150],
     "M1-6": ["moitié de 150 = 150 ÷ 2", ["100 ÷ 2", "50 ÷ 2", "moitié de 150"], 75]
@@ -145,12 +151,19 @@ test("lot 7b : D8, « Je représente » par étapes comme M1 — les deux morcea
   });
 });
 
-test("A11-2 : J'écris garde la méthode de la leçon", () => {
-  const e = apprends("A11-2").ecris;
+test("A11-4 (A11-2 avant le lot K1b) : J'écris garde la méthode de la leçon ; A11-2, au CP, casse une dizaine", () => {
+  // Lot K1b : « Retrancher un chiffre en passant la dizaine » est la moitié du CE1, A11-4 ; au
+  // CP, A11-2 part toujours d'une dizaine entière — c'est sa leçon, du début à la fin.
+  const e = apprends("A11-4").ecris;
   assert.equal(espaces(e.consigne), "532 − 7 = 532 − 2 − 5");
   assert.deepEqual(e.etapes.map(x => [espaces(x.texte), x.reponse]), [["532 − 2 = □", 530], ["530 − 5 = □", 525], ["532 − 7 = □", 525]]);
-  assert.ok(!apprends("A11-2").textes.some(t => espaces(t).startsWith("50 − 6")), "50 − 6 reste dans l'entraînement");
-  assert.ok(CORE.genererSerie("A11-2", {graine: 1, total: 20}).length > 0);
+  assert.ok(!apprends("A11-4").textes.some(t => /^\d+0 − /.test(espaces(t))), "depuis une dizaine entière : dans l'entraînement, annoncé");
+  assert.ok(CORE.genererSerie("A11-4", {graine: 1, total: 20}).length > 0);
+  const cp = apprends("A11-2");
+  assert.equal(espaces(cp.ecris.consigne), "80 − 4 = 70 + 10 − 4");
+  assert.deepEqual(cp.ecris.etapes.map(x => [espaces(x.texte), x.reponse]), [["10 − 4 = □", 6], ["80 − 4 = □", 76]]);
+  assert.ok(cp.textes.every(t => /^\d0 − \d = □$/.test(espaces(t))), cp.textes.join(" | "));
+  CORE.genererSerie("A11-2", {graine: 1, total: 20}).forEach(c => assert.ok(c.donnees.n % 10 === 0 && c.donnees.n <= 90 && c.donnees.d < 0 && c.donnees.d > -10, c.texte));
 });
 
 test("A2 : chaque « À retenir » écrit son calcul ; A2-2, les paires de dizaines", () => {
@@ -229,9 +242,9 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261126-2/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261126-2/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261125-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

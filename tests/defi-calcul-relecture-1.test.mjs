@@ -37,7 +37,8 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 // et 8 unités. », « 20, c’est 2 dizaines ; 100, c’est 10 dizaines. »,
 // « 350, c’est 35 dizaines. ».)
 // (Lot C4b : A2-1 a sa phrase « Dans 433, le chiffre des unités est 3. », comme A2-2 au lot C4a.)
-const GARDEES = new Set(["A3-1", "A3-2", "A3-3", "A3-4", "A2-1", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2",
+// (Lot K1b : A3-5 et A2-6, les moitiés du CE1 d'A3-1 et d'A2-1, gardent leur phrase — « Dans 234, le chiffre des dizaines est 3. »)
+const GARDEES = new Set(["A3-1", "A3-5", "A3-2", "A3-3", "A3-4", "A2-1", "A2-6", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2",
   // (Lot C4d : je compte dans le rang, comme C4a — « 5,73 + 0,6 : 7 dixièmes
   // + 6 dixièmes », « moitié de 15,8 = 158 dixièmes ÷ 2 ».)
   "D4-3", "D8-2", "D8-3", "D8-4", "D8-5"]);
@@ -91,7 +92,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 132, "132 niveaux construits (lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
+  assert.equal(NIVEAUX.length, 141, "141 niveaux construits (lot K1b : neuf de plus ; 132 avant — lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
@@ -134,14 +135,21 @@ test("J'écris annonce le but : une ligne pour chaque niveau construit, en égal
 
 test("J'écris : les égalités d'exemple de la décision du 05/11", () => {
   const ligne = cle => espaces(CORE.niveauDe(cle).niveau.apprends.ecris.consigne);
-  assert.equal(ligne("A10-2"), "236 + 7 = 236 + 4 + 3");
+  // (Lot K1b : A10-2 au CP, à 2 chiffres ; l'égalité du 05/11 est dans sa moitié du CE1, A10-5.)
+  assert.equal(ligne("A10-2"), "36 + 7 = 36 + 4 + 3");
+  assert.equal(ligne("A10-5"), "236 + 7 = 236 + 4 + 3");
+  assert.equal(ligne("A5-5"), "128 + 9 = 128 + 10 − 1");
+  assert.equal(ligne("A11-2"), "80 − 4 = 70 + 10 − 4", "au CP : je casse une dizaine, en une égalité");
+  assert.equal(ligne("A11-4"), "532 − 7 = 532 − 2 − 5");
   assert.equal(ligne("A1-2"), "7 + 5 = 7 + 3 + 2");
   assert.equal(ligne("M8-1"), "6 × 14 = 10 × 6 + 4 × 6", "dans l’ordre des étapes et du dessin (10 × 6, puis 4 × 6)");
   assert.equal(ligne("A5-1"), "28 + 9 = 28 + 10 − 1");
   assert.equal(ligne("A2-3"), "24 + ? = 100");
   assert.equal(ligne("A8-1"), "81 − 76 = ?");
   // Lot 3a (décision 5) : la leçon et J'écris sur le double.
-  assert.equal(ligne("M1-1"), "double de 14 = 10 + 10 + 4 + 4");
+  // (Lot K1b : au CP, M1-1 écrit le double d'une dizaine entière ; double de 14 est à M1-7, au CE2.)
+  assert.equal(ligne("M1-1"), "double de 40 = 40 + 40");
+  assert.equal(ligne("M1-7"), "double de 14 = 10 + 10 + 4 + 4");
 });
 
 test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne change pas)", () => {
@@ -175,7 +183,8 @@ test("« À retenir » : la règle en phrase, puis le calcul seul (le bilan ne c
   // Lot C4a : A3-2, A3-3 et M12-1 écrivent deux égalités, une par ligne
   // (« 74 + 8 = 82. », puis « 746 + 80 = 826. ») : 3 de moins ici.
   // (Lot C4d : « au-delà de 20 » devient un calcul seul, sous ses flèches.)
-  assert.equal(coupes, 80, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
+  // (Lot K1b : les neuf niveaux neufs écrivent chacun leur calcul — 89.)
+  assert.equal(coupes, 89, "les bilans qui finissent par « : calcul. », et ceux qui ne sont qu'un calcul");
   ["A3-2", "A3-3", "M12-1"].forEach(cle => {
     const lignes = espaces(CORE.niveauDe(cle).niveau.apprends.bilan).split(/(?<=\.)\s+(?=[A-ZÀ-ÖØ-Þ\d])/).map(t => AIDES.bilanEnDeux(t));
     assert.equal(lignes.length, 2, cle);

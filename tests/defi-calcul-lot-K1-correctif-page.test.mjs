@@ -153,11 +153,13 @@ test("Codex 15 — Mon espace, joué : la lecture de Défi calcul annonce la ver
     return {ok: true, json: async () => ({ok: true, existe: true, parcours: {version: P.VERSION}})};
   };
   const lireParcours = new Function("window", "fetch", `${jaugesEspace()}\n${fonctionEspace("lireParcours")}\nreturn lireParcours;`)({MATHSGO_DEFI_CALCUL_CORE: CORE}, fetchFaux);
-  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 12});
+  // (Lot K1b : le moteur est en version 13 — la page annonce toujours celle de SON moteur.)
+  assert.equal(P.VERSION, 13);
+  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 13});
   await lireParcours("7K3M9P", "defi-tables");
   await lireParcours("7K3M9P", "splat");
   assert.deepEqual(envois, [
-    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 12}],
+    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 13}],
     ["api/parcours.php", {code: "7K3M9P", appli: "defi-tables", lire: true}],
     ["api/parcours.php", {code: "7K3M9P", appli: "splat", lire: true}]
   ]);

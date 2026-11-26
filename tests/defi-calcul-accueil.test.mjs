@@ -63,10 +63,12 @@ test("« La carte » ouvre un écran à part (lot K1 : il remplace Mon parcours)
 
 test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché tant que le serveur n'a pas répondu", () => {
   assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\) \.panel > #intro \{ width: 100%; margin: auto; padding-top: 14px; \}/);
-  assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-parcours:not\(\.fullscreen-active\) \.shell, body\.sur-notice:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
+  // (Lot K1b, passe 3 : Mon parcours est parti au lot K1, sa règle « sur-parcours » aussi.)
+  assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-notice:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
+  assert.ok(!/sur-parcours/.test(CSS), "plus aucune règle de Mon parcours");
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261126-2/);
 });
 
 test("la question « Effacer » s'ouvre dans la même case que « La carte » et les liens", () => {

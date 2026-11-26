@@ -26,7 +26,10 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     "A1-2": ["on ajoute 10", "les deux nombres se suivent"],
     // (Lot C4a : les nombres en 5 sont partis d'A2-2 ; A3 compte en dizaines,
     // casse une centaine depuis une centaine ronde.)
-    "A3-1": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
+    // (Lot K1b : au CP, A3-1 n'a que des dizaines ; les trois annonces d'avant
+    // sont dans sa moitié du CE1, A3-5.)
+    "A3-1": ["on retire des dizaines"],
+    "A3-5": ["on ajoute des centaines", "on retire des dizaines", "on retire des centaines"],
     "A3-2": ["on retire des dizaines : je compte en dizaines", "on part d’une centaine ronde : je casse une centaine"],
     // (Lot 6 « programmes 2 », choix de Gwenaël : trois sortes.)
     "A3-3": ["on retire et on passe sous le millier", "on part d’un nombre rond : je casse un millier"],
@@ -36,7 +39,8 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     "D2-2": ["× 1 000"], "D2-3": ["× 1 000"], "D3-2": ["÷ 1 000"], "D3-3": ["÷ 100", "÷ 1 000"],
     "C3-1": ["un calcul de l’autre côté"],
     // (Lot 7e : F6-1 au programme du CE2, tout se dessine ; A10-1 arrive pile sur la dizaine.)
-    "A10-1": ["j’arrive pile sur la dizaine"],
+    // (Lot K1b : et sa moitié du CE1, A10-4, à 3 chiffres.)
+    "A10-1": ["j’arrive pile sur la dizaine"], "A10-4": ["j’arrive pile sur la dizaine"],
     // (Correctif « programmes 2 » : le CM2 n'a plus que des égalités au-delà
     // de 20 parts — le schéma s'annonce au CM1, dans les deux sens.)
     "F6-2": ["trop de parts pour les dessiner : je multiplie", "trop de parts pour les dessiner : je divise"]
@@ -49,7 +53,8 @@ test("chaque sorte annoncée a sa phrase, et la sorte de la leçon n'est jamais 
     assert.equal(CORE.nouveauteDe(lecon, cle), null, `${cle} : la leçon montre une sorte annoncée`);
   });
   // Une sorte où seuls les nombres grandissent n'est pas annoncée.
-  ["A5-2", "A10-2", "M7-1", "D2-1"].forEach(cle => tirage(cle, 5).forEach(c => assert.equal(CORE.nouveauteDe(c, cle), null, `${cle} ${c.texte}`)));
+  // (Lot K1b : A10-5, la moitié CE1 d'A10-2 ; A2-1 et A2-6, où seul l'écart grandit.)
+  ["A5-2", "A10-2", "A10-5", "A2-1", "A2-6", "M7-1", "D2-1"].forEach(cle => tirage(cle, 5).forEach(c => assert.equal(CORE.nouveauteDe(c, cle), null, `${cle} ${c.texte}`)));
 });
 
 test("la page annonce une sorte nouvelle, même au premier calcul après la leçon, et fait revenir le dessin", async () => {
@@ -137,7 +142,10 @@ test("niveaux « par cœur » : À retenir avec son schéma, puis « Ma carte à
     assert.ok(schema, cle);
     assert.ok(AIDES.dessinerImage(schema).startsWith("<svg"), cle);
   });
-  assert.deepEqual([...CORE.schemaParCoeur(CORE.niveauDe("M1-1").niveau.apprends).rangees], [10, 2, 10, 2]); // (lot C3 : 12, plus 17)
+  // (Lot C3 : 12, plus 17. Lot K1b : au CP, M1-1 montre 7 et encore 7 ; « Doubles de 11 à 20 », M1-7, garde 12.)
+  assert.deepEqual([...CORE.schemaParCoeur(CORE.niveauDe("M1-1").niveau.apprends).rangees], [7, 7]);
+  assert.deepEqual([...CORE.schemaParCoeur(CORE.niveauDe("M1-7").niveau.apprends).rangees], [10, 2, 10, 2]);
+  ["M1-7", "M1-8"].forEach(cle => assert.ok(AIDES.dessinerImage(CORE.schemaParCoeur(CORE.niveauDe(cle).niveau.apprends)).startsWith("<svg"), cle));
   assert.deepEqual(CORE.schemaParCoeur(CORE.niveauDe("A2-2").niveau.apprends).paires.map(p => [...p]), [[40, 60]]);
 });
 

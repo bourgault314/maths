@@ -24,13 +24,14 @@ const tous = (cle, n = 120) => {
 const textes = cle => new Set(tous(cle).map(c => espaces(c.texte)));
 const fractions = texte => [...espaces(texte).matchAll(/(\d+)\/(\d+)/g)].map(m => [Number(m[1]), Number(m[2])]);
 
-test("la carte : 132 compétences (41, 34, 40, 12) ; F9 et F6 ont un niveau de plus, posé à sa place", () => {
+test("la carte : 141 compétences en six étages depuis le lot K1b (14, 20, 19, 33, 43, 12 ; 132 en quatre avant) ; F9 et F6 ont un niveau de plus, posé à sa place", () => {
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 132);
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [44, 33, 43, 12]);
-  assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, espaces(n.nom)]), [[1, "Dénominateurs multiples : dans l’unité"], [2, "Dénominateurs multiples : jusqu’à 20"], [3, "Dénominateurs multiples : au-delà de 20"]]);
-  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => [n.palier, espaces(n.nom)]), [[1, "Fractions égales : multiplier"], [2, "Fractions égales : jusqu’à 20"], [3, "Fractions égales : diviser"], [3, "Fractions égales : le dénominateur"]]);
+  assert.equal(construits.length, 141);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]);
+  // (Lot K1b : les étages ont changé de numéro — 3 le CE2, 4 le CM1, 5 le CM2.)
+  assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, espaces(n.nom)]), [[3, "Dénominateurs multiples : dans l’unité"], [4, "Dénominateurs multiples : jusqu’à 20"], [5, "Dénominateurs multiples : au-delà de 20"]]);
+  assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => [n.palier, espaces(n.nom)]), [[3, "Fractions égales : multiplier"], [4, "Fractions égales : jusqu’à 20"], [5, "Fractions égales : diviser"], [5, "Fractions égales : le dénominateur"]]);
   assert.deepEqual([P.NIVEAUX.F6, P.NIVEAUX.F9], [4, 3]);
   const o = [...CORE.ORDRE];
   assert.ok(o.indexOf("F6-1") < o.indexOf("F9-1") && o.indexOf("F9-1") < o.indexOf("F9-2"), "F9-1 après F6-1 (les fractions égales des bases)");
@@ -212,18 +213,27 @@ test("les nombres à 4 et 5 chiffres : 1 462 + 300 au CM1, 47 530 + 6 000 au CM2
 
 test("les cinq exemples guidés, sous « À retenir » ; le niveau « ajouter 9 » tire 60 + 9", () => {
   const autre = cle => { const a = CORE.niveauDe(cle).niveau.apprends.autre; return espaces(`${a.phrase} ${a.calcul}`); };
-  assert.match(autre("A11-2"), /50 − 6 = 40 \+ 10 − 6 = 44/);
-  assert.match(autre("A5-1"), /60 \+ 9 = 69 ; 61 \+ 9 = 70/);
+  // (Lot K1b : « depuis une dizaine entière » est toute la leçon d'A11-2, au CP ; l'exemple
+  // guidé est dans sa moitié du CE1, A11-4, à 3 chiffres. « Ajouter 9 » : A5-1 au CP garde le
+  // sien (40 + 9 depuis la passe 3), A5-5 au CE1 a le même à 3 chiffres.)
+  assert.equal(CORE.niveauDe("A11-2").niveau.apprends.autre, undefined);
+  assert.match(espaces(CORE.niveauDe("A11-2").niveau.apprends.bilan), /je casse une dizaine en 10 unités : 40 − 3 = 30 \+ 10 − 3 = 37\.$/);
+  assert.match(autre("A11-4"), /730 − 4 = 720 \+ 10 − 4 = 726/);
+  // (Lot K1b, choix de Gwenaël le 26/11 : plus de 69 sur l'exemple mis en avant.)
+  assert.match(autre("A5-1"), /40 \+ 9 = 49 ; 41 \+ 9 = 50/);
+  assert.doesNotMatch(autre("A5-1"), /69/);
+  assert.match(autre("A5-5"), /240 \+ 9 = 249 ; 241 \+ 9 = 250/);
   assert.match(autre("C3-2"), /121 − 24 = 118 − 21/);
   assert.match(autre("F5-2"), /2 < 8\/3 < 3/);
   assert.match(autre("M10-1"), /24 × 5 = 12 × 2 × 5 = 12 × 10 = 120/);
   assert.ok(tous("A5-1").some(c => c.donnees.n % 10 === 0), "60 + 9");
+  assert.ok(tous("A5-5").some(c => c.donnees.n % 10 === 0), "260 + 9");
 });
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
 });
