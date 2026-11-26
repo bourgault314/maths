@@ -11,6 +11,8 @@
 // leur nom dans le menu ; au téléphone, la case de réponse ne bouge plus et les unités des aires et des volumes coiffent leurs cases.
 // Lot 5b (26/11/2026) : la dernière étiquette (« mm³ ») centrée comme les autres, une marge égale des deux côtés au téléphone,
 // et la même étiquette sur tablette (jusqu'à 1 121 px de large) ; au-dessus, le tableau de l'ordinateur, inchangé.
+// Lot 5c (26/11/2026) : jusqu'à 1 121 px, les petits noms (kL… mL ; ha, a) passent sous les cases ; la case et le nom restent dessinés
+// dans la fenêtre ; le litre demandé est plus vif et plus grand ; hL, daL, dL, cL : la fenêtre encadre la case seule ; le cadre du nom en fondu.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -993,8 +995,9 @@ test("lot 5b, téléphone : les noms des aires et des volumes ont la même taill
   assert.match(tel, /\n      \.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ font-size: min\(1\.05rem, 4\.7vw\); \}/);
   // 4,7vw ne joue que sous 358 px de large (petits téléphones de 320 px) : à 360 px et plus, c'est 1,05rem = 16,8 px
   assert.ok(4.7 * 3.6 >= 16.8 && 4.7 * 3.2 < 16.8);
-  // la taille n'est fixée que là : sur tablette, les noms gardent les 1,25rem de la page
-  assert.doesNotMatch(etiquette5b(), /font-size: (?!inherit)/);
+  // la taille n'est fixée que là : sur tablette, les noms gardent les 1,25rem de la page (lot 5c : seul le petit nom demandé grossit)
+  assert.doesNotMatch(etiquette5b(), /font-size: (?!inherit|1\.15em)/);
+  assert.equal((etiquette5b().match(/font-size: 1\.15em/g) || []).length, 1);
   assert.match(css5, /\n    \.unitBtn \{ background: color-mix\(in srgb, var\(--accent\) 12%, #fff\); border: 2px solid var\(--accent\); border-radius: 8px; font-size: 1\.25rem;/);
 });
 
@@ -1063,7 +1066,7 @@ test("lot 5b : la fenêtre de l'unité fait le tour du nom (étiquette), puis de
   assert.match(p, /cursor\.classList\.toggle\('nom', etiquette\);/);
   // avec l'étiquette, le trait passe exactement sur le contour (0 px autour) ; sans elle, 2 px autour comme avant (w + gap, x - gap/2)
   assert.match(p, /let gap = 4;/);
-  assert.match(p, /const autour = etiquette \? 0 : gap\/2;/);
+  assert.match(p, /const autour = \(etiquette \|\| caseSeule\) \? 0 : gap\/2;/);
   assert.match(p, /cursor\.style\.width = `\$\{w \+ 2 \* autour\}px`;\n\s*cursor\.style\.transform = `translateX\(\$\{x - autour\}px\)`;/);
   // le cadre du nom : exactement le nom (jamais plus étroit que la colonne) ; la colonne part du bas du nom et s'arrête au bas de la case
   assert.match(p, /const basNom = headRect\.bottom - innerRect\.top;/);
@@ -1073,14 +1076,12 @@ test("lot 5b : la fenêtre de l'unité fait le tour du nom (étiquette), puis de
   assert.match(p, /cursor\.style\.top = `\$\{basNom - 3\}px`;\n\s*cursor\.style\.height = `\$\{bottomPx - \(basNom - 3\)\}px`;/);
   // sans étiquette (ordinateur, autres tableaux, petit nom « hL ») : exactement le rectangle d'avant, du haut du nom au bas de la case
   assert.match(p, /\} else \{\n\s*cursor\.style\.top = `\$\{topPx - gap\/2\}px`;\n\s*cursor\.style\.height = `\$\{\(bottomPx - topPx\) \+ gap\}px`;\n\s*\}/);
-  // un seul trait : le contour du nom choisi et celui de la case s'effacent sous la fenêtre, et seulement sous elle
-  assert.match(p, /forEach\(b => b\.classList\.remove\('unit-highlight-text', 'nom-choisi'\)\);\n\s*texteUnite\.classList\.add\('unit-highlight-text'\);\n\s*if \(etiquette\) headBtn\.classList\.add\('nom-choisi'\);/);
-  assert.match(css5, /\n    \.cursor\.nom ~ \.board-columns \.unitBtn\.nom-choisi, \.cursor\.nom ~ \.board-columns \.digit\.unit-highlight \{ border-color: transparent; \}/);
-  assert.equal((css5.match(/nom-choisi/g) || []).length, 1);
+  // lot 5c : le contour du nom choisi et celui de la case ne s'effacent plus sous la fenêtre (voir les tests du lot 5c)
+  assert.match(p, /forEach\(b => b\.classList\.remove\('unit-highlight-text'\)\);\n\s*texteUnite\.classList\.add\('unit-highlight-text'\);/);
   assert.match(html, /<div class="cursor" id="diapoCursor"><\/div>\s*<div class="handle handle-top"[\s\S]*?<div class="board-columns" id="diapoBoardColumns"><\/div>/);
   // la mise en page : la colonne perd son bord du haut, le cadre du nom est posé dessus, centré, ouvert en bas sur la largeur de la colonne
-  assert.match(css5, /\n    \.cursor\.nom \{ border-color: var\(--accent-dark\); border-top: 0; border-radius: 0 0 8px 8px; \}/);
-  const avant = css5.match(/\n    \.cursor\.nom::before \{([^}]*)\}/)[1];
+  assert.match(css5, /\n    \.cursor\.nom \{ border-color: var\(--accent-dark\); border-top-width: 0; border-radius: 0 0 8px 8px; \}/);
+  const avant = css5.match(/\n    \.cursor::before \{([^}]*)\}/)[1];
   assert.match(avant, /left: 50%; bottom: calc\(100% - 3px\); width: var\(--nom-l\); height: var\(--nom-h\); transform: translateX\(-50%\);/);
   assert.match(avant, /background: inherit; border: 3px solid var\(--accent-dark\);/);
   assert.match(avant, /--epaule: calc\(\(var\(--nom-l\) - var\(--col-l\)\) \/ 2\); border-radius: 8px 8px min\(8px, var\(--epaule\)\) min\(8px, var\(--epaule\)\);/);
@@ -1092,8 +1093,79 @@ test("lot 5b : la fenêtre de l'unité fait le tour du nom (étiquette), puis de
   assert.match(avant, /pointer-events: none; transition: inherit;/);
   // la virgule reste à sa place : la fenêtre est plus étroite de 2 px à droite et en bas (11 + 2, 32 - 2)
   assert.match(css5, /\n    \.cursor::after \{ content: ","; position: absolute; bottom: 32px; right: -11px;/);
-  assert.match(css5, /\n    \.cursor\.nom::after \{ right: -13px; bottom: 30px; \}/);
+  assert.match(css5, /\n    \.cursor\.nom::after, \.cursor\.case-seule::after \{ right: -13px; bottom: 30px; \}/);
   // la fenêtre d'avant n'est pas touchée
   assert.match(css5, /\n    \.cursor \{ position: absolute; left: 0; box-sizing: border-box; background: color-mix\(in srgb, var\(--accent\) 15%, transparent\); border: 3px solid color-mix\(in srgb, var\(--accent-dark\) 60%, transparent\); border-radius: 8px;/);
-  assert.equal((css5.match(/\.cursor\.nom/g) || []).length, 5);
+  assert.equal((css5.match(/\.cursor\.nom/g) || []).length, 3);
+});
+
+// ---- lot 5c (26/11/2026) : les petits noms sous les cases, jusqu'à 1 121 px ----
+test("lot 5c : jusqu'à 1 121 px, la ligne des petits noms passe sous les cases, noms alignés en haut ; l'ordinateur ne change pas", () => {
+  const eti = etiquette5b();
+  assert.match(eti, /\n      \.board\.multi \.family-col > \.cell \{ order: 2; \}/);
+  assert.match(eti, /\n      \.board\.multi \.family-col > \.subhead-group \{ order: 3; \}/);
+  assert.match(eti, /\n      \.board\.multi \.sub-lab-wrapper \{ align-items: flex-start; \}/);
+  // hors du bloc de l'étiquette : l'ordre de la page (nom, petits noms, case) et les petits noms alignés en bas, comme avant
+  const hors = css5.replace(/@media screen and \(max-width: (?:700|1121)px\) \{(?:[^{}]*\{[^}]*\})*\s*\}/g, "");
+  assert.doesNotMatch(hors, /[\s;{]order:/);
+  assert.match(hors, /\n    \.sub-lab-wrapper \{ display: flex; justify-content: center; align-items: flex-end; \}/);
+  assert.match(script, /html \+= `<div class="family-col">`;[\s\S]*?head-group[\s\S]*?subhead-group[\s\S]*?<div class="cell">/);
+  // la flèche « Le chiffre des unités » descend sous la ligne des petits noms (sa hauteur + 6 px d'écart) quand ils sont sous les cases
+  const p = corps("positionDiapoCursor");
+  assert.match(p, /const sousNoms = colDiv\.querySelector\('\.subhead-group'\);\n\s*const nomsDessous = !!sousNoms && sousNoms\.getBoundingClientRect\(\)\.top >= cellRect\.bottom;/);
+  assert.match(p, /const basFleche = nomsDessous \? sousNoms\.getBoundingClientRect\(\)\.bottom - innerRect\.top : bottomPx;\n\s*handles\[1\]\.style\.top = `\$\{basFleche \+ 14\}px`;/);
+  assert.match(css5, /\n    \.family-col \{ display: flex; flex-direction: column; gap: 6px; \}/);
+  assert.match(css5, /\n    \.subhead-group \{ display: grid; gap: 4px; height: 22px;/);
+  // la flèche du haut ne bouge pas : au-dessus de la ligne des étiquettes (elle ne cache jamais « dm³ » ni « cm³ »)
+  assert.match(p, /handles\[0\]\.style\.top = `\$\{topPx - \(handles\[0\]\.offsetHeight \|\| 75\) - 14\}px`;/);
+  assert.match(p, /let topPx = headRect\.top - innerRect\.top;/);
+});
+
+test("lot 5c : la case et le nom restent dessinés dans la fenêtre (leur contour rose), pour toutes les fenêtres", () => {
+  assert.doesNotMatch(css5, /nom-choisi|border-color: transparent; \}\n/);
+  assert.doesNotMatch(html, /nom-choisi/);
+  assert.doesNotMatch(css5, /unit-highlight[^{]*\{[^}]*border/);
+  assert.match(css5, /\n    \.digit \{[^}]*border: 2px solid var\(--accent\);/);
+  assert.match(css5, /\n    \.unitBtn \{[^}]*border: 2px solid var\(--accent\);/);
+});
+
+test("lot 5c : le litre demandé (L, mL ; hL, daL, dL, cL) est plus vif et plus grand, jusqu'à 1 121 px", () => {
+  assert.match(etiquette5b(), /\n      \.board\.multi \.sub-lab\.unit-highlight-text \{ color: var\(--accent\) !important; font-size: 1\.15em; \}/);
+  // au téléphone, les petits noms ont leur propre taille (min(0.9rem, 4vw)) : le nom demandé en vaut 1,15 fois, pas 1,15 fois le texte
+  // de la page (18,4 px au lieu de 14,7 px à 320 px de large : « hL » touchait « daL »)
+  assert.match(telephone5b(), /\n      \.board\.multi \.sub-lab \{ font-size: min\(0\.9rem, 4vw\); \}\n[^\n]*\n      \.board\.multi \.sub-lab\.unit-highlight-text \{ font-size: calc\(1\.15 \* min\(0\.9rem, 4vw\)\); \}/);
+  assert.ok(1.15 * Math.min(0.9 * 16, 0.04 * 320) - 0.04 * 320 < 2.1, "à 320 px, le nom demandé grandit de moins de 2,1 px");
+  // c'est bien le petit nom qui porte la marque quand il est l'unité demandée
+  const p = corps("positionDiapoCursor");
+  assert.match(p, /const texteUnite = \(labEl && labEl\.textContent === unite\) \? labEl : headBtn;/);
+  assert.match(p, /texteUnite\.classList\.add\('unit-highlight-text'\);/);
+  // seuls les litres sont des petits noms demandés : kL, ha et a ne sont jamais l'unité de départ ni d'arrivée
+  const demandes = (cas, niv) => { const d = new Set(); P.setSeed(`5c${cas}${niv}`);
+    for (let i = 0; i < 2000; i++) { const q = P.buildQuestionLogic(cas, niv); d.add(q.sourceUnit); d.add(q.targetUnit); } return d; };
+  for (const cas of ["cross", "area"]) for (const niv of [1, 2, 3]) for (const u of ["kL", "ha", "a"]) assert.ok(!demandes(cas, niv).has(u), `${u} demandé`);
+  for (const u of ["L", "mL"]) assert.ok(demandes("cross", 1).has(u), `${u} jamais demandé au niveau 1`);
+  for (const niv of [2, 3]) for (const u of ["hL", "dL", "cL"]) assert.ok(demandes("cross", niv).has(u), `${u} jamais demandé au niveau ${niv}`);
+});
+
+test("lot 5c : hL, daL, dL, cL — la fenêtre encadre la case seule, le même trait foncé de 3 px, exactement sur son contour", () => {
+  const p = corps("positionDiapoCursor");
+  assert.match(p, /const caseSeule = !etiquette && nomsDessous && texteUnite === labEl;/);
+  assert.match(p, /const autour = \(etiquette \|\| caseSeule\) \? 0 : gap\/2;/);
+  assert.match(p, /cursor\.classList\.toggle\('case-seule', caseSeule\);/);
+  assert.match(p, /\} else if \(caseSeule\) \{\n\s*cursor\.style\.top = `\$\{cellRect\.top - innerRect\.top\}px`;\n\s*cursor\.style\.height = `\$\{cellRect\.height\}px`;\n\s*\} else \{/);
+  assert.match(css5, /\n    \.cursor\.case-seule \{ border-color: var\(--accent-dark\); \}/);
+  assert.match(css5, /\n    \.cursor \{[^}]*border: 3px solid/);
+  // la page ne recopie aucune largeur d'écran dans le script : tout se lit sur la mise en page
+  assert.equal((script.match(/max-width: \d+px/g) || []).length, 1);
+});
+
+test("lot 5c : le cadre du nom apparaît et disparaît en fondu pendant le glissement (1 s), il ne surgit pas avant le départ", () => {
+  const avant = css5.match(/\n    \.cursor::before \{([^}]*)\}/)[1];
+  assert.match(avant, /content: ""; position: absolute;/);
+  assert.match(avant, /transition: inherit; opacity: 0;/);
+  assert.match(css5, /\n    \.cursor\.nom::before \{ opacity: 1; \}/);
+  assert.doesNotMatch(css5, /\.cursor\.nom::before \{ content/);
+  const p = corps("positionDiapoCursor");
+  assert.match(p, /const trans = animate \? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out, opacity 1s ease-in-out, border-top-width 1s ease-in-out, border-radius 1s ease-in-out' : 'none';/);
+  assert.match(p, /cursor\.style\.transition = trans;/);
 });
