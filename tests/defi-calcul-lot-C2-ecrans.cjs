@@ -41,23 +41,6 @@ function servir() {
   return new Promise(fini => serveur.listen(0, "127.0.0.1", () => fini(serveur)));
 }
 
-// Tout ce qui vient avant `jusqua` dans l'ordre du parcours est entré (boîte
-// 4, revient dans 9 jours : pas de calculs du jour aujourd'hui).
-function parcoursAvant(arret, ceintures = [null, null, null, null]) {
-  const brut = {version: P.VERSION, modules: {}, ceintures, jours: ["2026-11-12", "2026-11-13"], seances: ["2026-11-12", "2026-11-13"]};
-  for (const c of P.parcoursConstruit(CARTE)) {
-    if (arret(c)) break;
-    const k = P.NIVEAUX[c.module];
-    const m = brut.modules[c.module] || (brut.modules[c.module] = {vu: "2026-11-13", b: Array(k).fill(0), e: Array(k).fill(null), d: Array(k).fill(null), s: Array(k).fill(null), a: Array(k).fill(0), f: Array(k).fill(0)});
-    m.b[c.niveau - 1] = 4;
-    m.e[c.niveau - 1] = "2026-11-25";
-    m.d[c.niveau - 1] = "2026-11-01";
-    m.s[c.niveau - 1] = "2026-11-10";
-    m.a[c.niveau - 1] = 1;
-  }
-  return P.normaliserParcours(brut);
-}
-
 async function ouvrir(nav, base, {largeur, hauteur, parcours = null}) {
   const ctx = await nav.newContext({viewport: {width: largeur, height: hauteur}, deviceScaleFactor: 1, hasTouch: largeur <= 620, isMobile: largeur <= 620, timezoneId: "Indian/Reunion", locale: "fr-FR"});
   const page = await ctx.newPage();

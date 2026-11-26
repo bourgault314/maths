@@ -76,13 +76,15 @@ function avecBoites(boites, base = sansTestDePalier(P.creerParcours())) {
 
 test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules", () => {
   assert.deepEqual(P.parcoursConstruit(CARTE).map(c => `${c.module}-${c.niveau}`),
-    ["A2-1", "A2-2", "M2-1", "A5-1", "A2-3", "A5-2", "A5-3", "A2-4", "M2-2", "D2-1", "A2-5", "A5-4", "D2-2", "D2-3", "D2-4"]);
-  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 132);
+    // (Lot K1b : A2-6 et A5-5, les moitiés du CE1 ; l'ordre des trois étages des bases.)
+    ["A2-1", "A5-1", "A2-6", "A2-2", "A5-5", "A2-3", "M2-1", "A5-2", "A5-3", "A2-4", "M2-2", "D2-1", "A2-5", "A5-4", "D2-2", "D2-3", "D2-4"]);
+  assert.equal(P.parcoursConstruit(CARTE_PLEINE).length, 141); // (lot K1b : neuf de plus, 132 avant)
   assert.deepEqual(P.parcoursConstruit(CARTE_PLEINE).slice(0, 4).map(c => `${c.module}-${c.niveau}`), ["A1-1", "A1-2", "A1-3", "A10-1"]);
-  // Le palier est celui du niveau : A5 « + 9 » aux bases, « + 98 » au CM2.
+  // Le palier est celui du niveau : A5 « + 9 » au CP, « + 98 » au CM2 (l'étage 5 depuis le lot K1b).
   assert.equal(P.palierDe(CARTE, "A5", 1), 1);
-  assert.equal(P.palierDe(CARTE, "A5", 4), 3);
-  assert.equal(P.palierDe(CARTE, "D2", 4), 4);
+  assert.equal(P.palierDe(CARTE, "A5", 5), 2, "sa moitié du CE1, à la fin du module");
+  assert.equal(P.palierDe(CARTE, "A5", 4), 5);
+  assert.equal(P.palierDe(CARTE, "D2", 4), 6);
   // (Lot 7e-2 : « Compléments à la dizaine » et « … à 100 : dizaines » sont des procédures.)
   assert.equal(P.typeDe(CARTE, "A2", 1), "P");
   assert.equal(P.typeDe(CARTE, "A2", 2), "P");
@@ -90,8 +92,8 @@ test("l'ordre de la carte v3 : la séance suit les compétences, pas les modules
   assert.equal(P.typeDe(CARTE, "A2", 3), "P");
   const compte = P.compter(sansTestDePalier(P.creerParcours()), CARTE);
   // (Lot 7e-2 : F8-3 passe du CM2 au CM1.)
-  assert.deepEqual(compte.paliers.map(p => p.total), [44, 33, 43, 12]); // (lot 7c : F4-2 au CM2 ; lot 7d : M11 au CM1 ; lot 6 « programmes 2 »)
-  assert.equal(compte.total, 132);
+  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 12]); // (lot K1b : six étages ; [44, 33, 43, 12] avant) // (lot 7c : F4-2 au CM2 ; lot 7d : M11 au CM1 ; lot 6 « programmes 2 »)
+  assert.equal(compte.total, 141);
 });
 
 test("l'entraînement à couches : les perles 2 justes, l'image 2 justes, puis rien ; une erreur ramène l'image, deux les perles ; réussi à 5 justes de suite sans outil, raté à 25 ; « encore » : l'image d'abord, fini à 3", () => {

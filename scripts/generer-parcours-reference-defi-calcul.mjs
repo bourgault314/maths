@@ -1,6 +1,7 @@
 // La progression de référence de Défi calcul : une progression COMPLÈTE telle
-// que defi_calcul_mon_parcours.js la produit, dans son format (version 12
-// depuis le lot K1 « la carte chez l'élève », 25/11/2026) — les 74 modules,
+// que defi_calcul_mon_parcours.js la produit, dans son format (version 13
+// depuis le lot K1b « les bases en trois classes », 26/11/2026 : six étages,
+// neuf étoiles de plus) — les 74 modules,
 // toutes les étoiles dans une boîte (1 à 7), toutes les causes, la séance et
 // son plan, les dates. Elle sert de garde-fou entre l'appli et le serveur
 // (lot 2b) : le serveur ne garde que ce qu'il connaît (lib/progression.php),
@@ -118,12 +119,12 @@ export function parcoursComplet({causes = 8, entier = false, pire = false} = {})
     // Le numéro de chaque séance (les plus grands, le pire cas).
     numero: Array.from({length: garder}, (_, i) => 999999 - i),
     seuls: Array(garder).fill(999), seulsJustes: Array(garder).fill(999), tests: Array(garder).fill(999), testsRates: Array(garder).fill(999)};
-  // Deux ceintures gagnées, deux pas encore (une date, puis null : le
-  // serveur doit garder les null à leur place) ; deux tests de ceinture
-  // joués ; un remplissage gardé.
-  p.ceintures = ["2026-10-02", "2026-10-20", null, null];
-  p.paliers = ["2026-10-01", "2026-10-19", null, null];
-  p.quarts = [0, 0, 2, 3];
+  // Lot K1b : six étages. Trois ceintures gagnées, trois pas encore (une
+  // date, puis null : le serveur doit garder les null à leur place) ; trois
+  // tests de ceinture joués, pas à la suite ; un remplissage gardé.
+  p.ceintures = ["2026-10-02", "2026-10-08", "2026-10-20", null, null, null];
+  p.paliers = ["2026-10-01", null, "2026-10-19", "2026-10-21", null, null];
+  p.quarts = [0, 0, 0, 1, 2, 3];
   // Une séance dont rien n'est connu : -1 partout, gardé par le filtre.
   Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));

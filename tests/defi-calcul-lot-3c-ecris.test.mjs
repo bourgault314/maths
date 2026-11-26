@@ -215,7 +215,7 @@ function verifierEcris(cle, tire, lecon) {
 }
 
 test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul", () => {
-  assert.equal(NIVEAUX.length, 132, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.equal(NIVEAUX.length, 141, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
   const memes = x => blanc(JSON.stringify(x));
   NIVEAUX.forEach(cle => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;
@@ -290,7 +290,15 @@ test("lot 3c : jamais un calcul de la série en cours", () => {
 test("lot 3c : les décisions de la recette (calculs écartés)", () => {
   const tous = (cle, n = 300) => new Set(Array.from({length: n}, (_, g) => CORE.ecrisTire(cle, {graine: g + 1}).calcul.texte));
   // Doubles : deux morceaux, comme la leçon (pas « double de 8 », pas « double de 124 »).
-  for (const t of tous("M1-1")) assert.match(t, /^double de 1\d = /);
+  // (Lot K1b : les doubles de 11 à 19 sont dans « Doubles de 11 à 20 », M1-7 ;
+  // au CP, M1-1 tire un seul morceau, comme sa leçon — double de 9, de 50.)
+  for (const t of tous("M1-7")) assert.match(t, /^double de 1\d = /);
+  for (const t of tous("M1-1")) assert.match(t, /^double de (\d|10|[2-5]0) = /);
+  // Moitiés du CP : 14, 16 (on coupe 10 et le reste), jamais une moitié jusqu'à 10 (un fait).
+  for (const t of tous("M1-2")) assert.match(t, /^moitié de 1[46] = /);
+  // « Retrancher un chiffre d'une dizaine » : jamais un calcul où le chiffre des
+  // dizaines gardées est aussi la réponse de la première étape (70 − 4 : 6 et 6).
+  for (const t of tous("A11-2")) { const [n, d] = nombresDe(t); assert.ok(n % 10 === 0 && n / 10 - 1 !== 10 - d, t); }
   for (const t of tous("M1-3")) assert.match(t, /^double de \d\d = /);
   // Repères : au-delà de 4 fois 25 (100 = 4 × 25).
   for (const t of tous("M5-1")) assert.ok(nombresDe(t).some(x => x >= 5 && x <= 7), t);

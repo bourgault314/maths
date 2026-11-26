@@ -1358,7 +1358,8 @@ try {
       lecteur: (P, brut, reglages) => {
         const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
         if (!CORE || typeof P.carteEleve !== "function") return null;
-        const jusqua = typeof P.reglagesDeSeance === "function" ? P.reglagesDeSeance(reglages).palier : 4;
+        // (Lot K1b : six étages ; le défaut est celui du moteur.)
+        const jusqua = typeof P.reglagesDeSeance === "function" ? P.reglagesDeSeance(reglages).palier : P.SEUILS.seance.paliers;
         const carte = P.carteEleve(brut, CORE.carte(), {palier: jusqua});
         // Rien tant qu'aucune étoile n'est gagnée — sauf une ceinture déjà
         // acquise (elle ne se reprend jamais : correctif K1, elle
@@ -1789,7 +1790,8 @@ try {
     const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
     if (cle === "defi-calcul" && jauge.ceinture && CORE && typeof CORE.elementCeinture === "function") {
       // Lot K1 : la ceinture de l'étage en cours, remplie quart par quart.
-      const n = Math.max(1, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 1)));
+      // (Lot K1b : six étages — la borne est celle du noyau, plus un 4 écrit ici.)
+      const n = Math.max(1, Math.min((CORE.CEINTURES || []).length - 1, Math.floor(Number(jauge.ceinture.n) || 1)));
       const rempli = Math.max(0, Math.min(1, Number(jauge.ceinture.rempli) || 0));
       const ceinture = CORE.CEINTURES && CORE.CEINTURES[n];
       if (!ceinture) return null;

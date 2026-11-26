@@ -38,7 +38,8 @@ test("la carte : la ligne de suivi se range sous « ← Accueil · La carte », 
 test("« Comment ça marche ? » : à l'ordinateur, le cadre prend la hauteur de l'écran (plus 650 px fixes)", () => {
   assert.match(PAGE, /document\.body\.classList\.toggle\("sur-notice", name === "notice"\);/);
   assert.match(CSS, /body\.sur-notice:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
-  assert.match(CSS, /body\.sur-parcours \.shell > \.panel, body\.sur-notice \.shell > \.panel \{ flex: 1 1 auto; min-height: 0; \}/);
+  // (Lot K1b, passe 3 : « sur-parcours » est parti avec Mon parcours.)
+  assert.match(CSS, /\n  body\.sur-notice \.shell > \.panel \{ flex: 1 1 auto; min-height: 0; \}/);
 });
 
 test("le calcul reçoit le focus (lecteurs d'écran) sans trait noir autour", () => {
@@ -47,13 +48,13 @@ test("le calcul reçoit le focus (lecteurs d'écran) sans trait noir autour", ()
   assert.match(PAGE, /<div id="expression" class="expression" tabindex="-1" role="status"/);
 });
 
-test("le bilan de Mes calculs du jour au téléphone : le nom sur sa ligne, ce qui lui arrive dessous", () => {
-  const bloc = CSS.match(/@media \(max-width: 620px\) \{\n  \.mouv \{ gap: 9px; \}\n  \.mouv > span \{ grid-template-columns: minmax\(0, 1fr\); gap: 1px; \}\n  \.mouv > span > span:last-child \{ text-align: left; font-size: \.88rem; \}\n\}/);
-  assert.ok(bloc, "la règle du téléphone");
-  // À l'ordinateur, rien ne change : deux colonnes.
-  assert.match(CSS, /\n\.mouv > span \{ display: grid; grid-template-columns: minmax\(0, 1fr\) auto; gap: 8px; \}/);
+test("le bilan de Mes calculs du jour au téléphone : parti au lot K1 (« Séance terminée »), ses règles aussi", () => {
+  // (Lot K1b, passe 3 : le ménage de la feuille. L'ancien bilan « .mouv » n'est plus dessiné
+  // depuis le lot K1 ; ses règles, téléphone compris, sont retirées.)
+  assert.ok(!/\.mouv\b/.test(CSS), "plus de règle .mouv");
+  assert.ok(!/class="mouv"|"mouv"/.test(PAGE), "et la page ne l'écrit pas");
 });
 
 test("la feuille a changé : son adresse aussi (cache)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261126-2/);
 });

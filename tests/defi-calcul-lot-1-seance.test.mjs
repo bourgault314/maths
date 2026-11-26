@@ -53,14 +53,19 @@ test("les sortes : un 2e calcul d'une autre sorte (sinon d'une autre écriture) 
   assert.deepEqual(CORE.sortesDe("M2-1").map(s => s.nom), ["× 10", "× 100"]);  // lot 7e : × 1 000 au CM1
 });
 
-test("les réglages dans l'onglet : la durée et le palier, liés au code ; rien de lisible : 10 minutes, tout", () => {
+test("les réglages dans l'onglet : la durée et l'étage, liés au code ; rien de lisible : 10 minutes, tout", () => {
+  // Lot K1b : six étages. Le serveur envoie « etage » (1 à 6) ; ce que le
+  // moteur rend s'appelle toujours `palier` (l'étage jusqu'où va l'appli),
+  // 6 par défaut. L'ancien « palier » (1 à 4) est relu dans SA numérotation :
+  // tests/defi-calcul-lot-K1b-donnees.test.mjs.
   const m = new Map();
   const onglet = {getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: k => m.delete(k)};
-  assert.deepEqual(P.chargerReglagesOnglet(onglet, "7K3M9P"), {minutes: 10, palier: 4});
-  assert.equal(P.sauverReglagesOnglet(onglet, "7K3M9P", {"defi-calcul": {minutes: 15, palier: 2}}), true);
+  assert.deepEqual(P.chargerReglagesOnglet(onglet, "7K3M9P"), {minutes: 10, palier: 6});
+  assert.equal(P.sauverReglagesOnglet(onglet, "7K3M9P", {"defi-calcul": {minutes: 15, etage: 2}}), true);
   assert.deepEqual(P.chargerReglagesOnglet(onglet, "7K3M9P"), {minutes: 15, palier: 2});
-  assert.deepEqual(P.chargerReglagesOnglet(onglet, "2222AA"), {minutes: 10, palier: 4}, "un autre code");
-  assert.deepEqual(P.reglagesDeSeance({"defi-calcul": {minutes: "15", palier: 9, nouveautes: 3}}), {minutes: 10, palier: 4});
+  assert.deepEqual(P.chargerReglagesOnglet(onglet, "2222AA"), {minutes: 10, palier: 6}, "un autre code");
+  assert.deepEqual(P.reglagesDeSeance({"defi-calcul": {minutes: "15", etage: 9, nouveautes: 3}}), {minutes: 10, palier: 6});
+  assert.deepEqual(P.reglagesDeSeance({"defi-calcul": {minutes: 15, palier: 2}}), {minutes: 15, palier: 4}, "l'ancien réglage : 2 voulait dire « jusqu'au CM1 », l'étage 4");
   P.sauverReglagesOnglet(onglet, "7K3M9P", {});
   assert.equal(m.size, 0, "les défauts : rien de rangé");
   assert.equal(P.sauverReglagesOnglet(onglet, "7K3M9P", null), false, "une réponse sans réglages ne touche à rien");

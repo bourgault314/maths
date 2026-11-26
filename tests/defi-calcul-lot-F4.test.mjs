@@ -42,12 +42,14 @@ const apprendre = (p, module, niveau, reponses, jour = J) => P.appliquerSerie(p,
 // ---------------------------------------------------------- les données (v10)
 
 test("lot 6-0 : une ceinture gagnée cette semaine est dans « À féliciter » (le jour le plus récent de la semaine), la page prof l'écrit", async () => {
-  const p = Object.assign(P.creerParcours(), {ceintures: [plus(-10), plus(1), null, null]});
-  assert.deepEqual(P.resumeSuivi(p, {aujourdhui: plus(2)}).feliciter, [{type: "ceinture", ceinture: 2}], "l'orange (cette semaine), pas la jaune (la semaine d'avant)");
+  // (Lot K1b : six ceintures à gagner — la 1re est la blanche-jaune (le CP), la 2e la jaune (le CE1).)
+  const p = Object.assign(P.creerParcours(), {ceintures: [plus(-10), plus(1), null, null, null, null]});
+  assert.deepEqual(P.resumeSuivi(p, {aujourdhui: plus(2)}).feliciter, [{type: "ceinture", ceinture: 2}], "la jaune (cette semaine), pas la blanche-jaune (la semaine d'avant)");
   assert.deepEqual(P.resumeSuivi(p, {aujourdhui: plus(0)}).feliciter, [], "pas avant le jour où elle est gagnée");
   const prof = await lire("../_serveur/public/prof/index.php");
-  assert.match(prof, /const NOMS_CEINTURES = \["ceinture jaune", "ceinture orange", "ceinture verte", "ceinture bleue"\];/);
-  assert.match(prof, /\$\{NOMS_CEINTURES\[x\.ceinture - 1\]\} gagnée/);
+  assert.match(prof, /const NOMS_CEINTURES = \["ceinture blanche-jaune", "ceinture jaune", "ceinture jaune-orange", "ceinture orange", "ceinture verte", "ceinture bleue"\];/);
+  // (Lot K1b, choix de Gwenaël le 26/11 : la classe entre parenthèses, « ceinture blanche-jaune (CP) gagnée ».)
+  assert.match(prof, /\$\{NOMS_CEINTURES\[x\.ceinture - 1\]\} \(\$\{CLASSES_CEINTURES\[x\.ceinture - 1\]\}\) gagnée/);
   // La page prof dit « J'apprends arrêté 3 fois » d'un niveau jamais appris.
   assert.match(prof, /c\.etat === "classe" && c\.pasApprise/);
 });

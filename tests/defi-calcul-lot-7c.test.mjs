@@ -38,7 +38,8 @@ const fractionsDe = texte => [...espaces(texte).matchAll(/(\d+)\/(\d+)/g)].map(m
 const pgcd = (a, b) => (b ? pgcd(b, a % b) : a);
 
 test("lot 7c : 6 compétences construites ; F9-2 au CM1, F4-1, F4-2, F9-3, F11-1 au CM2, « Fraction et quotient » en 6e ; la carte en a 117", () => {
-  const paliers = {"F4-1": 3, "F4-2": 3, "F9-2": 2, "F9-3": 3, "F11-1": 3, "F11-2": 4};
+  // (Lot K1b : six étages — le CM1 est l'étage 4, le CM2 le 5, « vers la 6e » le 6.)
+  const paliers = {"F4-1": 5, "F4-2": 5, "F9-2": 4, "F9-3": 5, "F11-1": 5, "F11-2": 6};
   NIVEAUX.forEach(cle => {
     const t = CORE.niveauDe(cle);
     assert.ok(t && t.module.construit && t.niveau.apprends, cle);
@@ -49,12 +50,12 @@ test("lot 7c : 6 compétences construites ; F9-2 au CM1, F4-1, F4-2, F9-3, F11-1
   assert.deepEqual(CORE.moduleDe("F4").niveaux.map(n => espaces(n.nom)), ["Fraction d’une quantité", "Fraction d’une quantité : résultat décimal"]);
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 132); // (lot 7d : tout est construit ; lot 6 « programmes 2 » : F9-1, F6-2)
+  assert.equal(construits.length, 141); // (lot K1b : neuf de plus, 132 avant) // (lot 7d : tout est construit ; lot 6 « programmes 2 » : F9-1, F6-2)
   // Construit par palier : 40, 31 (tout le CM1), 37 sur 42, 9 sur 12 ; lot 7d : tout, 40, 33, 40, 12.
-  assert.deepEqual([1, 2, 3, 4].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [44, 33, 43, 12]); // (lot 6 « programmes 2 »)
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]); // (lot K1b ; [44, 33, 43, 12] en quatre étages avant)
   // F4-2 ferme le palier 3, après F4-1 (une échelle).
   const ordre = [...CORE.ORDRE];
-  assert.equal(ordre.filter(cle => CORE.niveauDe(cle).niveau.palier === 3).pop(), "F4-2");
+  assert.equal(ordre.filter(cle => CORE.niveauDe(cle).niveau.palier === 5).pop(), "F4-2");
   assert.ok(ordre.indexOf("F4-1") < ordre.indexOf("F4-2") && ordre.indexOf("F9-2") < ordre.indexOf("F9-3") && ordre.indexOf("F11-1") < ordre.indexOf("F11-2"));
 });
 
@@ -114,8 +115,13 @@ test("lot 7c : les règles communes avec les voisins, sur tous les calculs", () 
   [...NIVEAUX, ...voisins].forEach(cle => tous(cle).forEach(c => {
     const t = espaces(c.texte).replace(/ /g, "");
     const deja = textes.get(t);
-    assert.ok(!deja || deja === cle, `${espaces(c.texte)} : dans ${deja} et ${cle}`);
-    textes.set(t, cle);
+    // (Lot K1b : au CE1, « Additions et soustractions de fractions » a les dénominateurs 2, 3,
+    // 4, 5, 6, 8 et 10 — ses demis et ses quarts se retrouvent au CM1 dans « Demis et quarts »,
+    // F2 : le même calcul à deux étages, deux ans plus tard. Rien d'autre n'est commun.)
+    const ce1PuisCm1 = deja && [deja, cle].some(x => x.startsWith("F2-")) && [deja, cle].some(x => x === "F8-1" || x === "F8-2")
+      && fractionsDe(c.texte).every(([, d]) => d === 2 || d === 4);
+    assert.ok(!deja || deja === cle || ce1PuisCm1, `${espaces(c.texte)} : dans ${deja} et ${cle}`);
+    if (!deja) textes.set(t, cle);
   }));
   // Ni les calculs des leçons dans un autre niveau.
   NIVEAUX.forEach(cle => {
@@ -362,7 +368,7 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
@@ -375,5 +381,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(aides, /if \(bas\) trace\.style\.minHeight = `\$\{Math\.max\(bas, trace\.offsetHeight\)\}px`;/);
   // (Lot K1 : la liste de Mon parcours, qui se calait sur une ligne entière, est partie avec lui.)
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

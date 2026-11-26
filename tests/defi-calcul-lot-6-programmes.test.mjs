@@ -37,8 +37,9 @@ const paliers = cle => CORE.niveauDe(cle).niveau.palier;
 test("lot 6 « programmes » : les × 9 et les 19 × un chiffre sont dans les bases", () => {
   const bases = textes("M8-1", "M8-2");
   ["13 × 9 = □", "9 × 13 = □", "46 × 9 = □", "9 × 46 = □", "19 × 3 = □", "7 × 19 = □", "9 × 19 = □"].forEach(t => assert.ok(bases.has(t), t));
-  assert.equal(paliers("M8-1"), 1);
-  assert.equal(paliers("M8-2"), 1);
+  // (Lot K1b : les bases en trois étages — M8-1 au CE1, M8-2 au CE2.)
+  assert.equal(paliers("M8-1"), 2);
+  assert.equal(paliers("M8-2"), 3);
   // Les quatre chiffres : 3, 6, 7, 9 (× 2, × 4, × 8, × 5 : leurs modules).
   ["M8-1", "M8-2"].forEach(cle => assert.deepEqual([...new Set(tous(cle).map(c => c.donnees.a))].sort((x, y) => x - y), [3, 6, 7, 9], cle));
   // « Retrancher » niveau 1 : × 9 d'un nombre à trois chiffres, × 19 d'un nombre à deux chiffres.
@@ -91,10 +92,10 @@ test("lot 6 « programmes » : « ÷ 4, ÷ 8 » prend aussi les nombres qui ne f
 
 test("lot 6 « programmes » : la page — adresse de cache du moteur, copie pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 6 « fraction à deux cases » et « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 6 « fraction à deux cases » et « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

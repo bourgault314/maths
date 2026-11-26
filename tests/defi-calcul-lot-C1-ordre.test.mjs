@@ -55,7 +55,11 @@ test("soustraire des décimaux : « 5 − 4,7 » (d'un entier) n'est plus parmi 
 });
 
 test("« ajouter 9 », « retirer 9 » : les sortes dans l'ordre de leur difficulté, chaque calcul dans la même sorte qu'avant", () => {
-  [["A5-1", (n, a) => n + a], ["A6-1", (n, a) => n - a]].forEach(([cle, op]) => {
+  // Lot K1b : « Ajouter 9 » est en deux — A5-1 au CP (à 2 chiffres, sans passer 100), A5-5 au
+  // CE1 (à 3 chiffres). Dans les deux, un nombre qui finit par 0 ou par 1 a sa sorte, la plus
+  // simple (le tableau : 60 + 9, 61 + 9), sauf pile sur une centaine (191 + 9 : + 10 puis − 1).
+  // « Retirer 9 » (A6-1) n'a pas changé.
+  [["A6-1", (n, a) => n - a]].forEach(([cle, op]) => {
     assert.deepEqual(CORE.sortesDe(cle).map(s => s.nom), ["à 2 chiffres", "à 3 chiffres", "en passant la centaine"]);
     vivier(cle).forEach(c => {
       const {n, a} = c.donnees;
@@ -64,6 +68,21 @@ test("« ajouter 9 », « retirer 9 » : les sortes dans l'ordre de leur difficu
       assert.equal(CORE.sortesDe(cle)[CORE.sorteDe(c)].nom, attendue, espaces(c.texte));
     });
   });
+  const simple = (n, a) => a === 9 && n % 10 <= 1 && !(n % 10 === 1 && Math.floor(n / 10) % 10 === 9);
+  assert.deepEqual(CORE.sortesDe("A5-1").map(s => s.nom), ["finit par 0 ou 1", "+ 10 puis − 1"]);
+  assert.deepEqual(CORE.sortesDe("A5-5").map(s => s.nom), ["finit par 0 ou 1", "à 3 chiffres", "en passant la centaine"]);
+  vivier("A5-1").forEach(c => {
+    const {n, a} = c.donnees;
+    assert.ok(n >= 11 && n + a < 100, `${espaces(c.texte)} : à 2 chiffres, sans passer 100`);
+    assert.equal(CORE.sortesDe("A5-1")[CORE.sorteDe(c)].nom, simple(n, a) ? "finit par 0 ou 1" : "+ 10 puis − 1", espaces(c.texte));
+  });
+  vivier("A5-5").forEach(c => {
+    const {n, a} = c.donnees;
+    assert.ok(n >= 100 && n <= 999, `${espaces(c.texte)} : à 3 chiffres`);
+    const passe = Math.floor(n / 100) !== Math.floor((n + a) / 100);
+    assert.equal(CORE.sortesDe("A5-5")[CORE.sorteDe(c)].nom, simple(n, a) ? "finit par 0 ou 1" : passe ? "en passant la centaine" : "à 3 chiffres", espaces(c.texte));
+  });
+  ["A5-1", "A5-5"].forEach(cle => assert.deepEqual([...new Set(vivier(cle).map(c => CORE.sorteDe(c)))].sort(), CORE.sortesDe(cle).map((_, i) => i), `${cle} : toutes ses sortes sortent`));
 });
 
 test("le test « Tu connais déjà ? » va du plus simple au plus dur (« ajouter 9 » ne commence plus par 199 + 9)", () => {
@@ -76,10 +95,13 @@ test("le test « Tu connais déjà ? » va du plus simple au plus dur (« ajoute
     });
   });
   for (let g = 1; g <= 20; g += 1) {
-    const marche = CORE.genererTest("A5", {graine: g}).find(m => m.niveau === 1);
+    // (Lot K1b : le passage de la centaine est dans la moitié du CE1, A5-5.)
+    const marche = CORE.genererTest("A5", {graine: g}).find(m => m.niveau === 5);
     const ds = marche.calculs.map(CORE.difficulte);
     assert.deepEqual(ds, [...ds].sort((a, b) => a - b), marche.calculs.map(c => espaces(c.texte)).join(" → "));
-    assert.equal(CORE.sortesDe("A5-1")[marche.calculs[marche.calculs.length - 1].sorte].nom, "en passant la centaine");
+    assert.equal(CORE.sortesDe("A5-5")[marche.calculs[marche.calculs.length - 1].sorte].nom, "en passant la centaine");
+    const cp = CORE.genererTest("A5", {graine: g}).find(m => m.niveau === 1);
+    assert.ok(cp.calculs.every(c => c.donnees.n + c.donnees.a < 100), cp.calculs.map(c => espaces(c.texte)).join(" → "));
   }
 });
 
@@ -165,14 +187,14 @@ test("la page : la réserve suit la série, un cran plus facile après une erreu
   assert.match(amener, /serie\.questions\.splice\(suivant, 0, choisi\.question\)/);
   const allonger = page.slice(page.indexOf("function allongerSerie("), page.indexOf("function placerUnCranPlusFacile("));
   assert.match(allonger, /encore\.slice\(encore\.fenetre \|\| 0\)/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
 });
 
-test("les données ne changent pas : progression en version 10 (11 au lot C2, 12 au lot K1), mêmes compétences, mêmes sortes (en nombre)", () => {
+test("les données ne changent pas : progression en version 10 (11 au lot C2, 12 au lot K1, 13 au lot K1b), mêmes compétences, mêmes sortes (en nombre)", () => {
   const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.equal(P.VERSION, 12);
-  assert.equal(CORE.ORDRE.length, 132);
+  assert.equal(P.VERSION, 13);
+  assert.equal(CORE.ORDRE.length, 141); // (lot K1b : neuf étoiles de plus, 132 avant)
   assert.ok(CORE.ORDRE.every(cle => CORE.sortesDe(cle).length >= 2 && CORE.sortesDe(cle).length <= 4));
 });

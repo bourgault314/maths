@@ -171,7 +171,9 @@ test("lib/applis.php déclare pour « defi-calcul » les clés du moteur, les 74
   assert.match(bloc, /'compteur' => 'seances',/);
   // Lot F1 (07/11/2026) : un seul réglage de classe, le nombre de
   // nouveautés par séance (1 à 3, 1 par défaut).
-  assert.match(bloc, /'reglages' => \['minutes' => \['choix' => \[10, 15\]\], 'palier' => \['choix' => \[4, 1, 2, 3\]\]\],/, "lot 1 : la durée et le palier");
+  // (Lot K1b : six étages — le réglage s'appelle « etage », 6 par défaut ; l'ancien « palier » se relit encore.)
+  assert.match(bloc, /'reglages' => \['minutes' => \['choix' => \[10, 15\]\], 'etage' => \['choix' => \[6, 1, 2, 3, 4, 5\]\]\],/, "lot 1 : la durée ; lot K1b : l'étage");
+  assert.match(bloc, /'reglages_anciens' => \['palier' => \['vers' => 'etage', 'valeurs' => \[1 => 3, 2 => 4, 3 => 5, 4 => 6\]\]\],/);
   assert.match(await lire("../_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
   assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours'\];/);
   // La référence écrite pour le serveur est bien celle du générateur.
@@ -238,5 +240,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(page, /defi_calcul\.css\?v=20261126-2/);
 });

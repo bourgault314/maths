@@ -98,7 +98,12 @@ test("le dessin à étapes : chaque droite à plusieurs sauts, sur des milliers 
   // (30 depuis le lot 6 « programmes 2 » : A3-4, les milliers avec une retenue).
   // (Lot C4a : 26 — A3-2, A3-3, A3-4 comptent dans le tableau des rangs,
   // A2-2 n'a plus de nombres en 5.)
-  assert.equal(niveaux.size, 26, [...niveaux].join(" "));
+  // (Lot K1b : 28 — la liste d'avant, plus A10-5, A11-4 et A5-5 (les moitiés du CE1, qui
+  // passent la dizaine comme avant), moins A11-2 : au CP, « Retrancher un chiffre d'une
+  // dizaine » se fait sur le tableau.)
+  assert.equal(niveaux.size, 28, [...niveaux].join(" "));
+  assert.deepEqual(["A10-5", "A11-4", "A5-5"].filter(cle => !niveaux.has(cle)), []);
+  assert.ok(!niveaux.has("A11-2") && !niveaux.has("A10-1") && !niveaux.has("A10-4"));
 });
 
 test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipuler) : à étapes, comme les doubles", () => {
@@ -108,7 +113,10 @@ test("« On te montre » sur la droite à plusieurs sauts (sans outil à manipul
   });
   // (Lot C2 : « un chiffre en passant la centaine » avant « Dizaines entières en passant la centaine ».)
   // (Lot C4a : A3-2 et A3-3 comptent dans le tableau, à étapes aussi.)
-  assert.deepEqual(avec, ["A10-3", "A11-3", "A4-3", "A2-4", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
+  // (Lot K1b : A10-5 et A5-5, les moitiés du CE1 d'« Ajouter un chiffre en passant la dizaine »
+  // et d'« Ajouter 9 » : au-delà de 100, pas de perles, la leçon commence sur la droite ; A4-3
+  // est au CE1, avant les étoiles du CE2.)
+  assert.deepEqual(avec, ["A10-5", "A5-5", "A4-3", "A10-3", "A11-3", "A2-4", "A7-3", "A2-5", "A4-4", "A8-2", "A5-4", "A6-4"]);
   avec.forEach(cle => {
     const r = CORE.niveauDe(cle).niveau.apprends.represente;
     assert.equal(r.etapes.length, 2, cle);

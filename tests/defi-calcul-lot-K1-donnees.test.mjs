@@ -61,14 +61,17 @@ function seance(p, jour, {alea = .5, secondes = 120, juste = () => true, etoile 
 
 // ------------------------------------------------------------ le format
 
-test("le format : version 12, rien d'autre que ce que le moteur décrit", () => {
+test("le format : version 13 (lot K1b ; 12 au lot K1), rien d'autre que ce que le moteur décrit", () => {
+  // Lot K1b : le format est celui du lot K1, avec six étages (`ceintures`, `paliers`, `quarts` à
+  // six places) et les listes par étoile de six modules allongées. La reprise d'une progression
+  // de version 12 : tests/defi-calcul-lot-K1b-donnees.test.mjs.
   assert.deepEqual(P.creerParcours(), {
-    version: 12, epoque: 0, prenom: "", modules: {},
+    version: 13, epoque: 0, prenom: "", modules: {},
     // (Correctif K1 : `parts`, ce que chaque onglet a fait dans la séance ouverte ; `j` en est la somme.)
     seance: {jour: null, etape: 0, n: 0, i: 0, g: 0, p: [0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], parts: []},
     seances: [],
     journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: [], seuls: [], seulsJustes: [], tests: [], testsRates: []},
-    jours: [], ceintures: [null, null, null, null], paliers: [null, null, null, null], quarts: [0, 0, 0, 0]
+    jours: [], ceintures: [null, null, null, null, null, null], paliers: [null, null, null, null, null, null], quarts: [0, 0, 0, 0, 0, 0]
   });
   assert.deepEqual(P.PLAN, {ouverte: 0, minutes: 1, obligatoire: 2, paquet: 3, commences: 4});
   assert.deepEqual(P.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero", "seuls", "seulsJustes", "tests", "testsRates"]);
@@ -86,7 +89,7 @@ test("le format : version 12, rien d'autre que ce que le moteur décrit", () => 
 
 test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas", () => {
   const complet = parcoursComplet();
-  assert.equal(complet.version, 12);
+  assert.equal(complet.version, 13);
   assert.deepEqual(P.normaliserParcours(complet, {aujourdhui: "2026-11-25"}), complet);
   const bruit = JSON.parse(JSON.stringify(complet));
   Object.assign(bruit, {inconnu: 1, texte: "trop dur", reponses: [73]});
@@ -95,7 +98,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   bruit.seance.commentaire = "x";
   assert.deepEqual(P.normaliserParcours(bruit, {aujourdhui: "2026-11-25"}), complet, "les champs d'avant (`ok`, `f`, `t`, `l`) et tout le reste sont ignorés");
   // Une étoile tenue n'a ni arrêt ni « Je tente » raté ; une étoile pas tenue n'a pas de retour en cours.
-  const brut = {version: 12, modules: {A1: {b: [3, 0, 0], e: ["2026-11-20", "2026-11-21", null], ar: [5, 4, 9], r: [2, 1, 0], q: ["2026-11-01", "2026-11-02", "2026-11-03"], x: [2, 3, 1], s: [null, "2026-11-01", null]}}};
+  const brut = {version: 13, modules: {A1: {b: [3, 0, 0], e: ["2026-11-20", "2026-11-21", null], ar: [5, 4, 9], r: [2, 1, 0], q: ["2026-11-01", "2026-11-02", "2026-11-03"], x: [2, 3, 1], s: [null, "2026-11-01", null]}}};
   const lu = P.normaliserParcours(brut, {aujourdhui: "2026-11-25"}).modules.A1;
   // (Correctif K1 : une étoile tenue dont le 2e calcul attend garde `q`, le jour de son premier calcul faux.)
   assert.deepEqual([lu.ar, lu.r, lu.q, lu.x], [[0, 4, 9], [0, 1, 0], ["2026-11-01", "2026-11-02", null], [2, 0, 0]]);
@@ -105,7 +108,7 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   assert.deepEqual(lu.e, ["2026-11-20", null, null], "pas tenue : une échéance seulement au 3e arrêt (« à voir en classe »)");
   assert.deepEqual(lu.s, [null, null, null], "solide un jour : seulement une étoile gagnée un jour");
   // Le jour de retour d'une étoile « à voir en classe » : au plus dans 7 jours.
-  const loin = {version: 12, modules: {A1: {b: [0, 0, 0], ar: [9, 0, 0], e: ["2027-06-01", null, null]}}};
+  const loin = {version: 13, modules: {A1: {b: [0, 0, 0], ar: [9, 0, 0], e: ["2027-06-01", null, null]}}};
   assert.equal(P.normaliserParcours(loin, {aujourdhui: "2026-11-25"}).modules.A1.e[0], "2026-12-02");
 });
 
@@ -130,18 +133,20 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // clé et à l'octet près : si le format grossit, ce test le dit.
   const mesure = options => P.mesurer(Object.assign({}, parcoursComplet(options), {prenom: ""}));
   // (Correctif K1 : une clé de plus, `parts`, et ses 88 nombres au pire — il reste 46 clés et 4 698 octets de marge.)
-  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1954, octets: 33033});
-  assert.deepEqual(mesure({pire: true, causes: 12}), {cles: 1954, octets: 35302});
+  // (Lot K1b : neuf étoiles de plus et deux étages de plus — aucune clé de plus (les listes ne comptent
+  // pas), 566 octets de plus dans la référence, 670 au pire : il reste 46 clés et 4 028 octets de marge.)
+  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1954, octets: 33599});
+  assert.deepEqual(mesure({pire: true, causes: 12}), {cles: 1954, octets: 35972});
   // Les listes ne comptent pas comme des clés : une case par étoile ne coûte rien.
   assert.equal(P.mesurer({b: [1, 2, 3, 4, 5], e: [null, null]}).cles, 2);
 });
 
-test("le serveur : les clés du moteur, version_min 12, la lecture protégée, toutes les listes où la place compte déclarées", async () => {
+test("le serveur : les clés du moteur, version_min 13 (lot K1b ; 12 au lot K1), la lecture protégée, toutes les listes où la place compte déclarées", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
   const declarees = [...bloc.match(/'cles' => \[([^\]]+)\]/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
   assert.deepEqual([...declarees].sort(), [...CLES_DECLAREES].sort(), "lib/applis.php et le moteur déclarent les mêmes clés");
-  assert.match(bloc, /'version_min' => 12,/);
+  assert.match(bloc, /'version_min' => 13,/);
   assert.match(bloc, /'version_max' => 999,/);
   assert.match(bloc, /'version_sans_declaration' => 11,/, "une page qui ne dit pas sa version en lisant vaut au plus la version 11 (B1)");
   const listes = bloc.slice(bloc.indexOf("'listes' => ["));
@@ -170,7 +175,7 @@ test("le rangement par code : une case par code, sous une empreinte, sans préno
   assert.equal(P.clesRevelentUnCode(stockage), false, "aucune clé ne laisse lire un code");
   assert.ok(stockage.cles().every(k => k.startsWith("mathsgo-defi-calcul-")), "rien n'est écrit dans les cases de Défi tables");
   assert.equal(JSON.parse(stockage.brut(cle)).prenom, "", "sous un code, jamais de prénom dans la case");
-  assert.equal(JSON.parse(stockage.brut(cle)).version, 12);
+  assert.equal(JSON.parse(stockage.brut(cle)).version, 13);
   assert.equal(P.charger(stockage, "").prenom, "Léa");
   assert.deepEqual(P.charger(stockage, "7K3M9P").modules.A1.b, [2, 0, 0]);
   assert.deepEqual(P.charger(stockage, "ABCDEF"), P.creerParcours(), "un autre code a sa propre case, vide");

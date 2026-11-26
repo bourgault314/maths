@@ -33,9 +33,11 @@ const tester = (p, module, marche) => P.appliquerTest(p, {module, marche,
 // dizaine » deviennent des procédures, puis « Compléments à 100 : dizaines » — 12 cartes.)
 // (Lot 7b : « Moitié des impairs jusqu'à 15 » — 13 cartes.)
 // (Lot C2 : 15 — les moitiés jusqu'à 40 et des nombres usuels ont leur carte.)
-test("les cartes « par cœur » : les 13 niveaux « par cœur » construits, et eux seuls", () => {
+test("les cartes « par cœur » : les niveaux « par cœur » construits (17 depuis le lot K1b), et eux seuls", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
-  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M1-2", "M4-1", "M4-2", "M1-5", "M1-6", "M5-1", "F2-1", "F1-1", "F2-2", "D8-1", "F1-2", "F1-3"]);
+  // (Lot K1b : « Doubles de 11 à 20 » et « Moitiés de 22 à 40 », M1-7 et M1-8, au CE2 — les moitiés
+  // du haut de M1-1 et M1-2 gardent leur carte ; M5-1 avant M1-6 : l'ordre du CE2 de LA-COUPE.)
+  assert.deepEqual(parCoeur, ["A1-1", "A1-2", "M1-1", "M1-2", "M4-1", "M4-2", "M1-7", "M1-8", "M1-5", "M5-1", "M1-6", "F2-1", "F1-1", "F2-2", "D8-1", "F1-2", "F1-3"]);
   parCoeur.forEach(cle => assert.ok(CORE.carteParCoeur(cle), cle));
   CORE.ORDRE.filter(cle => !parCoeur.includes(cle)).forEach(cle => assert.equal(CORE.carteParCoeur(cle), null, cle));
   assert.ok(Object.isFrozen(CORE.carteParCoeur("M4-1").blocs[0].table[1]));

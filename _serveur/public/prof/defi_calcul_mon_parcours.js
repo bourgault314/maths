@@ -1,5 +1,6 @@
-// Défi calcul — la progression de l'élève (version 12, lot K1 « la carte chez
-// l'élève », 25/11/2026 ; le format d'avant datait du lot 2a, 05/10/2026).
+// Défi calcul — la progression de l'élève (version 13, lot K1b « les bases en
+// trois classes », 26/11/2026 : six étages ; version 12 au lot K1 « la carte
+// chez l'élève », 25/11/2026 ; le format d'avant datait du lot 2a, 05/10/2026).
 //
 // Ce fichier ne connaît AUCUN texte ni aucun générateur : seulement les
 // codes des modules et leur nombre de niveaux ; la carte (les étages, les
@@ -184,7 +185,43 @@
   //    est écarté ;
   //  - le prénom (un visiteur sans code) ne part plus du tout au serveur, qui
   //    ne connaît plus cette clé.
-  const VERSION = 12;
+  // Version 13 (lot K1b « les bases en trois classes », 26/11/2026, choix de
+  // Gwenaël des 22 et 26/11) : SIX étages au lieu de quatre — les bases
+  // (44 étoiles) sont coupées en CP (14), CE1 (20) et CE2 (19) ; les étages
+  // 2, 3, 4 (CM1, CM2, vers la 6e) deviennent les étages 4, 5, 6. Neuf
+  // niveaux sont coupés par classe : la moitié du bas garde son identifiant,
+  // la moitié du haut prend un numéro neuf À LA FIN de son module (A10-4,
+  // A10-5, A11-4, A2-6, A3-5, A5-5, M1-7, M1-8, M1-9) — aucun rang ne bouge
+  // dans les listes enregistrées, elles s'allongent seulement. `ceintures`,
+  // `paliers` et `quarts` ont six places.
+  // C'est la première version qui REPREND de vraies données : une
+  // progression de version 12 se relit SANS RIEN PERDRE (reprendreVersion12) :
+  //  - chaque étoile reste à sa place, telle quelle ;
+  //  - une étoile d'un niveau coupé GAGNÉE UN JOUR (tenue, ou perdue depuis)
+  //    vaut pour ses deux moitiés : la moitié du haut reçoit sa boîte, ses
+  //    dates, ses compteurs (un 2e calcul qui attendait reste sur la moitié
+  //    du bas : celle du haut revient avec un premier calcul) ;
+  //  - ce qui n'a jamais été gagné — un « Je tente » raté, un J'apprends en
+  //    cours, « à voir en classe » — reste sur la moitié du bas ;
+  //  - la ceinture jaune d'avant donne les ceintures blanche-jaune, jaune et
+  //    jaune-orange, le même jour ; sans elle, celles des trois étages dont
+  //    toutes les étoiles sont tenues, dans l'ordre, datées du jour où leur
+  //    dernière étoile a été gagnée (la table des trois étages au moment de
+  //    la coupe est gardée ici : COUPE_K1B) ;
+  //  - un test de ceinture joué sur les bases vaut pour les trois étages ;
+  //  - la ceinture qui se remplit ne recule pas (G9) : celle que l'élève
+  //    remplit maintenant (le premier des trois étages pas encore gagné)
+  //    garde, dans `quarts`, le remplissage qu'il voyait sur la ceinture des
+  //    bases ;
+  //  - la séance, le journal, les jours ne changent pas.
+  // Les versions 2 à 11 repartent toujours de zéro (aucun élève n'avait
+  // joué). Le serveur refuse l'écriture d'une page de version 12
+  // (« version_min » 13). Le réglage du professeur « jusqu'où va l'appli »
+  // change de nom avec la numérotation : `etage` (1 à 6) ; l'ancien, `palier`
+  // (1 à 4), se relit toujours dans SA numérotation (voir etageRegle).
+  const VERSION = 13;
+  // La seule version d'avant qui se relit (les autres repartent de zéro).
+  const VERSION_REPRISE = 12;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -197,10 +234,11 @@
   // 45 modules construits ou à construire, puis les 29 réservés). Un test
   // compare cette table aux fiches de defi_calcul_core.js. Carte v3 (lot
   // « couverture ») : A2 5, A8 2, A9 2, M9 2, F5 2. Lot 6 « programmes 2 »
-  // (version 9) : F6 4, F9 3. Lot C2 (version 11) : M1 6, D8 5.
+  // (version 9) : F6 4, F9 3. Lot C2 (version 11) : M1 6, D8 5. Lot K1b
+  // (version 13) : A10 5, A11 4, A2 6, A3 5, A5 5, M1 9.
   const NIVEAUX = Object.freeze({
-    A1: 3, A10: 3, A11: 3, A2: 5, A3: 4, A4: 4, A5: 4, A6: 4, A7: 3, A8: 2, A9: 2,
-    M4: 2, M1: 6, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
+    A1: 3, A10: 5, A11: 4, A2: 6, A3: 5, A4: 4, A5: 5, A6: 4, A7: 3, A8: 2, A9: 2,
+    M4: 2, M1: 9, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
     C1: 3, C3: 3, C4: 2,
     D1: 3, D2: 4, D3: 3, D4: 3, D5: 2, D6: 3, D7: 3, D8: 5, D9: 2,
     F2: 2, F1: 3, F3: 3, F4: 2, F5: 2, F6: 4, F8: 3, F9: 3, F11: 2,
@@ -210,8 +248,30 @@
   });
   const CODES = Object.freeze(Object.keys(NIVEAUX));
 
+  // Lot K1b : la coupe des bases, telle qu'elle était le jour où la version
+  // 12 est devenue la version 13 (elle ne sert qu'à relire une version 12 :
+  // elle ne suit PAS la carte si celle-ci change plus tard).
+  //  - `niveaux` : combien de niveaux avaient, en version 12, les six
+  //    modules qui en ont gagné ;
+  //  - `moities` : pour chacun, [le rang de la moitié du bas, le rang de la
+  //    moitié du haut] (de 0) de chaque niveau coupé ;
+  //  - `etages` : les étoiles du CP, du CE1 et du CE2 (les 44 étoiles de
+  //    l'étage du bas d'avant, et les 9 moitiés du haut).
+  const gelerListes = objet => Object.freeze(Object.fromEntries(Object.entries(objet).map(([cle, liste]) => [cle, Object.freeze(liste.map(x => (Array.isArray(x) ? Object.freeze(x) : x)))])));
+  const COUPE_K1B = Object.freeze({
+    niveaux: Object.freeze({A10: 3, A11: 3, A2: 5, A3: 4, A5: 4, M1: 6}),
+    moities: gelerListes({A10: [[0, 3], [1, 4]], A11: [[1, 3]], A2: [[0, 5]], A3: [[0, 4]], A5: [[0, 4]], M1: [[0, 6], [1, 7], [3, 8]]}),
+    etages: Object.freeze([
+      Object.freeze(["A1-1", "A1-2", "A1-3", "A10-1", "A10-2", "A4-1", "A4-2", "A5-1", "A2-1", "A11-2", "A3-1", "M1-1", "M1-2", "M1-4"]),
+      Object.freeze(["A10-4", "A10-5", "A4-3", "A11-1", "A11-4", "A7-1", "A2-6", "A3-5", "A2-2", "A2-3", "A3-2", "A5-5", "A6-1", "M1-3", "M1-9",
+        "M4-1", "M4-2", "M8-1", "F8-1", "F8-2"]),
+      Object.freeze(["A10-3", "A11-3", "A7-2", "A8-1", "A5-2", "A6-2", "A5-3", "M1-7", "M1-8", "M1-5", "M1-6", "M2-1", "M3-1", "M5-1", "M6-1", "M6-2",
+        "M8-2", "F6-1", "F9-1"])
+    ])
+  });
+
   // Le rang d'une compétence : sa place dans la liste de toutes les
-  // compétences (218 depuis la version 11), module après module. Plus rien
+  // compétences (227 depuis la version 13), module après module. Plus rien
   // d'enregistré ne s'en sert depuis la version 12 (le plan de la séance ne
   // désigne plus aucune compétence) ; il reste un nom court et stable.
   const RANGS = (() => {
@@ -294,10 +354,11 @@
     // habituelle tient dans les minutes prévues, plus une minute ; la
     // première est toujours permise. Durées (en secondes) : « Je tente » 1
     // minute, J'apprends 4 (simulateur du lot K0).
-    // `paliers` : jusqu'où va l'appli (1 les bases, 2 CM1, 3 CM2, 4 vers la
-    // 6e : tout), réglé par le professeur ; au-delà, rien ne se montre.
+    // `paliers` : jusqu'où va l'appli (lot K1b : 1 le CP, 2 le CE1, 3 le CE2,
+    // 4 le CM1, 5 le CM2, 6 vers la 6e : tout), réglé par le professeur ;
+    // au-delà, rien ne se montre.
     seance: Object.freeze({garder: 60, etapes: 99, minutes: Object.freeze([10, 15]), defaut: 10, tolerance: 60,
-      durees: Object.freeze({tente: 60, apprends: 240, encore: 150, ceinture: 150}), paliers: 4}),
+      durees: Object.freeze({tente: 60, apprends: 240, encore: 150, ceinture: 150}), paliers: 6}),
     // Les étoiles gagnées dans une séance, au journal : un compte.
     nouveautes: Object.freeze({maximum: 99}),
     // Le journal d'une séance (lot G1) : des comptes bornés, la durée en
@@ -313,7 +374,8 @@
     // Les ceintures : une par étage, dans l'ordre. Celle de l'étage en cours
     // se remplit de sa couleur quart par quart (choix de Gwenaël du 22/11) ;
     // `barrettes` : ce que lit encore la page du professeur (3 au plus).
-    ceintures: Object.freeze({nombre: 4, quarts: 4, barrettes: 3})
+    // (Lot K1b : six étages, six ceintures à gagner.)
+    ceintures: Object.freeze({nombre: 6, quarts: 4, barrettes: 3})
   });
 
   // Le plan de la séance en cours, `seance.p` : cinq nombres. Plus aucun
@@ -436,9 +498,24 @@
     return Number.isInteger(valeur) && SEUILS.seance.minutes.includes(valeur) ? valeur : SEUILS.seance.defaut;
   }
 
-  // Jusqu'à quel palier va l'appli : 1 à 4 ; tout le reste vaut 4 (tout).
+  // Jusqu'à quel étage va l'appli : 1 à 6 ; tout le reste vaut 6 (tout).
   function palierDeSeance(valeur) {
     return Number.isInteger(valeur) && valeur >= 1 && valeur <= SEUILS.seance.paliers ? valeur : SEUILS.seance.paliers;
+  }
+
+  // Lot K1b : ce que règle le professeur, « jusqu'où va l'appli ». Le réglage
+  // s'appelle `etage` (1 le CP … 6 vers la 6e : tout). L'ancien, `palier` (1
+  // les bases, 2 CM1, 3 CM2, 4 tout — lot 1 « la séance »), arrive encore
+  // d'un serveur ou d'un onglet d'avant le lot : il est TOUJOURS lu dans
+  // l'ancienne numérotation — un 2 d'avant veut dire CM1 (l'étage 4), jamais
+  // CE1. Rien d'un ancien numéro ne peut donc ouvrir moins, ni plus, que ce
+  // qu'il ouvrait.
+  const ETAGES_DES_PALIERS_12 = Object.freeze({1: 3, 2: 4, 3: 5, 4: 6});
+  function etageRegle(lu) {
+    const r = lu && typeof lu === "object" && !Array.isArray(lu) ? lu : {};
+    if (Object.prototype.hasOwnProperty.call(r, "etage")) return palierDeSeance(r.etage);
+    if (Number.isInteger(r.palier) && Object.prototype.hasOwnProperty.call(ETAGES_DES_PALIERS_12, r.palier)) return ETAGES_DES_PALIERS_12[r.palier];
+    return SEUILS.seance.paliers;
   }
 
   // Les minutes prévues d'un plan (0 : un plan de version 6).
@@ -757,8 +834,8 @@
   // cause `c`. Une date absente vaut null, et surtout pas "" — le serveur
   // remplace à sa place toute valeur qu'il refuse (lib/applis.php,
   // « listes ») : une liste ne glisse jamais d'une case.
-  function moduleVide(id) {
-    const k = NIVEAUX[id];
+  function moduleVide(id, niveaux = NIVEAUX[id]) {
+    const k = niveaux;
     return {vu: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), x: listeDe(k), r: listeDe(k), q: listeDe(k, null),
       pe: listeDe(k), d: listeDe(k, null), s: listeDe(k, null), ar: listeDe(k), g: listeDe(k), c: {}};
   }
@@ -844,9 +921,11 @@
   // l'horloge du poste relue ici (relecture de Codex du 22/11 : deux
   // appareils qui réparaient la même copie à des dates différentes
   // fabriquaient deux échéances).
-  function normaliserModule(id, brut, aujourdhui = jourLocal()) {
-    const k = NIVEAUX[id];
-    const ligne = moduleVide(id);
+  // `niveaux` : combien de niveaux a la ligne lue (le format d'aujourd'hui ;
+  // moins pour une ligne de version 12 d'un module coupé au lot K1b).
+  function normaliserModule(id, brut, aujourdhui = jourLocal(), niveaux = NIVEAUX[id]) {
+    const k = niveaux;
+    const ligne = moduleVide(id, k);
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return ligne;
     const jour = dateOuNull(aujourdhui) || jourLocal();
     ligne.vu = dateOuNull(brut.vu);
@@ -935,12 +1014,102 @@
     return typeof version === "number" && Number.isInteger(version) && version > VERSION;
   }
 
+  // Lot K1b : une progression de VERSION 12, reprise en version 13 (les
+  // règles sont en haut du fichier). Rend un objet brut au format de la
+  // version 13, que normaliserParcours relit ensuite comme n'importe quel
+  // autre ; `brut` n'est pas modifié. Elle ne dépend que de la copie lue et
+  // du jour de la relecture : deux appareils qui reprennent la même copie
+  // obtiennent la même chose, et reprendre puis fusionner donne ce que donne
+  // fusionner puis reprendre — sauf pour `quarts`, le remplissage gardé de
+  // la ceinture en cours (G9), qui n'est qu'un souvenir de l'écran : la
+  // fusion en garde le plus haut.
+  const PAR_ETOILE_12 = Object.freeze(["b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g"]);
+  function reprendreVersion12(brut, aujourdhui) {
+    const modules = {};
+    const source = brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules) ? brut.modules : {};
+    CODES.forEach(id => {
+      if (!Object.prototype.hasOwnProperty.call(source, id)) return;
+      const avant = COUPE_K1B.niveaux[id];
+      if (!avant) { modules[id] = source[id]; return; }
+      // La ligne relue AVEC SES NIVEAUX D'AVANT : une liste plus longue (une
+      // copie trafiquée) ne devient pas les étoiles neuves.
+      const ligne = normaliserModule(id, source[id], aujourdhui, avant);
+      const neuve = moduleVide(id);
+      neuve.vu = ligne.vu;
+      neuve.c = ligne.c;
+      PAR_ETOILE_12.forEach(cle => { for (let i = 0; i < avant; i += 1) neuve[cle][i] = ligne[cle][i]; });
+      COUPE_K1B.moities[id].forEach(([bas, haut]) => {
+        // Le compteur suit toujours (c'est lui qui départage deux appareils :
+        // les deux moitiés doivent départager pareil). Jamais gagnée : rien
+        // d'autre ne passe à la moitié du haut.
+        neuve.g[haut] = ligne.g[bas];
+        if (!ligne.b[bas] && !ligne.d[bas]) return;
+        PAR_ETOILE_12.forEach(cle => { neuve[cle][haut] = ligne[cle][bas]; });
+        // Un J'apprends ne se partage pas ; le 2e calcul qui attend reste à
+        // la moitié du bas (celle du haut revient avec un premier calcul).
+        neuve.ar[haut] = 0;
+        neuve.x[haut] &= X_RATE;
+        if (ligne.b[bas]) neuve.q[haut] = null;
+      });
+      modules[id] = neuve;
+    });
+    const quatre = SEUILS.ceintures.nombre - 2;
+    const ceintures = normaliserDates(brut.ceintures, quatre);
+    const tests = normaliserDates(brut.paliers, quatre);
+    const quarts = normaliserListe(brut.quarts, quatre, SEUILS.ceintures.quarts - 1);
+    // Les ceintures des trois étages nés des bases.
+    let trois = [ceintures[0], ceintures[0], ceintures[0]];
+    if (!ceintures[0]) {
+      trois = [null, null, null];
+      for (let etage = 0; etage < COUPE_K1B.etages.length; etage += 1) {
+        const jours = COUPE_K1B.etages[etage].map(cle => {
+          const [id, numero] = cle.split("-");
+          const ligne = Object.prototype.hasOwnProperty.call(modules, id) ? normaliserModule(id, modules[id], aujourdhui) : null;
+          return ligne && ligne.b[numero - 1] > 0 ? ligne.d[numero - 1] : null;
+        });
+        // (Dans l'ordre : une ceinture ne se donne pas au-dessus d'un étage
+        // pas fini. Une étoile tenue sans jour d'entrée connu : pas de jour
+        // pour la ceinture, la prochaine étape jouée la donnera.)
+        if (jours.some(jour => !jour)) break;
+        trois[etage] = jours.slice().sort().pop();
+      }
+    }
+    // G9 — la ceinture qui se remplit ne recule pas. Ce que l'élève voyait
+    // sur la ceinture des bases (ses étoiles tenues sur les 44 d'avant, ou
+    // le remplissage déjà gardé s'il était plus haut) est gardé pour la
+    // ceinture qu'il remplit maintenant : le premier des trois étages pas
+    // encore gagné. Les deux autres partent de leur compte. (Sans cela, un
+    // élève qui a gagné d'abord les tables et les fractions verrait un quart
+    // devenir zéro : 12 étoiles sur 44, puis 2 sur 14.) Le compte, lui, dit
+    // toujours vrai ; une ceinture ne se gagne que par ses étoiles.
+    const nes = [0, 0, 0];
+    const enCours = trois.findIndex(jour => !jour);
+    if (enCours >= 0) {
+      const hautes = new Set(Object.keys(COUPE_K1B.moities).flatMap(id => COUPE_K1B.moities[id].map(([, haut]) => `${id}-${haut + 1}`)));
+      const avant = COUPE_K1B.etages.flat().filter(cle => !hautes.has(cle));
+      const tenues = avant.filter(cle => {
+        const [id, numero] = cle.split("-");
+        const ligne = Object.prototype.hasOwnProperty.call(modules, id) ? normaliserModule(id, modules[id], aujourdhui) : null;
+        return Boolean(ligne && ligne.b[numero - 1] > 0);
+      }).length;
+      const vu = tenues === avant.length ? 0 : Math.floor(SEUILS.ceintures.quarts * tenues / avant.length);
+      nes[enCours] = Math.min(SEUILS.ceintures.quarts - 1, Math.max(quarts[0], vu));
+    }
+    return Object.assign({}, brut, {
+      version: VERSION, modules,
+      ceintures: [...trois, ...ceintures.slice(1)],
+      paliers: [tests[0], tests[0], tests[0], ...tests.slice(1)],
+      quarts: [...nes, ...quarts.slice(1)]
+    });
+  }
+
   // `aujourdhui` : le jour de la relecture (les dates de repli et les bornes
   // se calculent sur lui).
-  // Une progression d'une AUTRE version que la nôtre n'est pas interprétée :
+  // Une progression d'une AUTRE version que la nôtre :
+  //  - de version 12 : REPRISE en version 13, sans rien perdre (lot K1b,
+  //    reprendreVersion12) ;
   //  - plus ancienne (2 à 11) ou de version illisible : elle repart de zéro
-  //    (aucun élève n'avait joué avant la version 12 ; la première version
-  //    qui devra reprendre de vraies données sera la suivante). Son époque
+  //    (aucun élève n'avait joué avant la version 12). Son époque
   //    est gardée : une version restaurée par le professeur, ou une remise à
   //    zéro, gagne toujours en bloc ; le prénom (un visiteur sans code) aussi ;
   //  - plus récente : rendue vide, elle aussi — l'appelant (charger,
@@ -956,8 +1125,9 @@
     // plus haute effaçait en bloc le travail valide de l'autre appareil.
     if (!versionDe(brut)) return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
-    if (versionDe(brut) !== VERSION) return parcours;
     const jour = dateOuNull(aujourdhui) || jourLocal();
+    if (versionDe(brut) === VERSION_REPRISE) brut = reprendreVersion12(brut, jour);
+    else if (versionDe(brut) !== VERSION) return parcours;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
@@ -2963,12 +3133,16 @@
   }
 
   // Les réglages de la séance (lot 1 « la séance », 12/11/2026 ; lot F1 avant
-  // pour les nouveautés) : les minutes (10 ou 15) et jusqu'à quel palier va
-  // l'appli (1 à 4), que le serveur rend avec l'identité (api/eleve.php,
-  // « reglages » : {"defi-calcul": {"minutes": 15, "palier": 2}}, ceux de
+  // pour les nouveautés) : les minutes (10 ou 15) et jusqu'à quel étage va
+  // l'appli (1 à 6), que le serveur rend avec l'identité (api/eleve.php,
+  // « reglages » : {"defi-calcul": {"minutes": 15, "etage": 2}}, ceux de
   // la classe et ceux de l'élève déjà réunis — l'élève l'emporte ; rien =
   // 10 minutes, tout). Rangés dans l'ONGLET, liés au code, comme
   // l'identité ; sans code, ou illisibles : les défauts.
+  // Lot K1b : le réglage rendu aux écrans garde son nom, `palier` (c'est le
+  // numéro de l'étage, 1 à 6) ; ce qui est ENREGISTRÉ — au serveur et dans
+  // l'onglet — s'appelle `etage`, et l'ancien `palier` se relit dans sa
+  // numérotation d'avant (etageRegle).
   const CLE_REGLAGES = "mathsgo-defi-calcul-reglages";
 
   function reglagesParDefaut() {
@@ -2978,7 +3152,7 @@
   function reglagesDeSeance(reglages) {
     const r = reglages && typeof reglages === "object" && !Array.isArray(reglages) ? reglages["defi-calcul"] : null;
     const lu = r && typeof r === "object" && !Array.isArray(r) ? r : {};
-    return {minutes: minutesDeSeance(lu.minutes), palier: palierDeSeance(lu.palier)};
+    return {minutes: minutesDeSeance(lu.minutes), palier: etageRegle(lu)};
   }
 
   function chargerReglagesOnglet(stockage, code) {
@@ -2988,7 +3162,7 @@
       if (!brut) return reglagesParDefaut();
       const lu = JSON.parse(brut);
       if (!lu || typeof lu !== "object" || lu.code !== propre) return reglagesParDefaut();
-      return {minutes: minutesDeSeance(lu.minutes), palier: palierDeSeance(lu.palier)};
+      return {minutes: minutesDeSeance(lu.minutes), palier: etageRegle(lu)};
     } catch (_) {
       return reglagesParDefaut();
     }
@@ -3003,7 +3177,7 @@
       const lus = reglagesDeSeance(reglages);
       const defaut = reglagesParDefaut();
       if (lus.minutes === defaut.minutes && lus.palier === defaut.palier) stockage.removeItem(CLE_REGLAGES);
-      else stockage.setItem(CLE_REGLAGES, JSON.stringify({code: propre, minutes: lus.minutes, palier: lus.palier}));
+      else stockage.setItem(CLE_REGLAGES, JSON.stringify({code: propre, minutes: lus.minutes, etage: lus.palier}));
       return true;
     } catch (_) {
       return false;
@@ -3469,6 +3643,8 @@
 
   return Object.freeze({
     VERSION,
+    VERSION_REPRISE,
+    COUPE_K1B,
     CLE_STOCKAGE,
     NIVEAUX,
     CODES,

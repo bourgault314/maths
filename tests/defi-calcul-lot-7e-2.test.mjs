@@ -88,13 +88,15 @@ test("1. F3 : en mots, sans signe =, l'unité après la case ; J'écris « Je pa
 const INVENTAIRE = Object.freeze({
   // (Lot C2 : les doubles et les moitiés ont chacun leur carte — M1-1 et
   // M1-2 jusqu'à 40, M1-5 et M1-6 les nombres usuels.)
-  "A1-1": "un", "A1-2": "un", "M1-1": "un", "M1-2": "un", "M4-1": "un", "M4-2": "un",
+  // (Lot K1b : M1-1 et M1-2, au CP, jusqu'à 10 et jusqu'à 20 ; leurs moitiés du CE2, M1-7
+  // et M1-8 — les doubles de 11 à 20, les moitiés de 22 à 40 —, ont chacune leur carte.)
+  "A1-1": "un", "A1-2": "un", "M1-1": "un", "M1-2": "un", "M1-7": "un", "M1-8": "un", "M4-1": "un", "M4-2": "un",
   "M1-5": "deux", "M1-6": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux",
   // Lot 7b : la moitié des impairs jusqu'à 15 — tout est socle (calcul mental CM2, p. 16).
   "D8-1": "un"
 });
 
-test("2. les cartes « par cœur » : 13 niveaux (lot 7b : D8-1) ; deux parties là où l'appli demande plus que les textes", () => {
+test("2. les cartes « par cœur » : 17 niveaux (lot 7b : D8-1 ; lot K1b : M1-7 et M1-8) ; deux parties là où l'appli demande plus que les textes", () => {
   const parCoeur = CORE.ORDRE.filter(cle => { const t = CORE.niveauDe(cle); return t && t.module.construit && t.niveau.type === "F"; });
   assert.deepEqual(parCoeur.sort(), Object.keys(INVENTAIRE).sort());
   // « Différences et trous jusqu'à 20 », « Compléments à la dizaine » : des procédures, sans carte.
@@ -156,7 +158,18 @@ test("2. la page : deux titres de partie, le petit calcul au-dessus de son bloc,
 // et sa leçon ; plus d'annonce « la moitié, je coupe en morceaux ». C'est
 // l'écriture « ÷ 2 » qui arrive nouvelle, avec le même dessin d'annonce.)
 test("3. « Doubles et moitiés en découpant » : la moitié annoncée, son dessin (chaque morceau déjà coupé), À retenir", () => {
-  const moities = tirages("M1-4");
+  // Lot K1b : « Moitiés en découpant » est en deux — M1-4 au CP (les deux chiffres pairs, de
+  // 42 à 88, en mots), M1-9 au CE1 (une dizaine impaire, 50, 70, 90, et l'écriture « ÷ 2 »).
+  // Le dessin de l'annonce de « ÷ 2 » et la leçon d'avant (moitié de 76) sont au CE1.
+  const cp = tirages("M1-4");
+  assert.ok(cp.length > 10);
+  cp.forEach(c => {
+    assert.equal(CORE.nouveauteDe(c), null, c.texte);
+    assert.notEqual(c.forme, "division", `${c.texte} : pas de « ÷ 2 » au CP`);
+    const n = c.forme === "moitie" ? c.donnees.n : c.donnees.r; // (« moitié de □ = 34 » : le nombre coupé est la réponse, 68)
+    assert.ok(n >= 42 && n <= 88 && Math.floor(n / 10) % 2 === 0 && (n % 10) % 2 === 0 && n % 10 !== 0, `${c.texte} : deux chiffres pairs`);
+  });
+  const moities = tirages("M1-9");
   assert.ok(moities.length > 10);
   moities.forEach(c => assert.equal(CORE.nouveauteDe(c), null, c.texte));
   tirages("M1-3").forEach(c => assert.equal(CORE.nouveauteDe(c), null, c.texte));
@@ -174,8 +187,12 @@ test("3. « Doubles et moitiés en découpant » : la moitié annoncée, son des
   const double = tirages("M1-3").find(c => c.forme === "double");
   assert.deepEqual(CORE.aideDe(double, {nouveau: true}), CORE.aideDe(double));
   // La leçon des moitiés : un calcul moyen du niveau, chaque morceau coupé en deux.
-  const a = CORE.niveauDe("M1-4").niveau.apprends;
+  const a = CORE.niveauDe("M1-9").niveau.apprends;
   assert.equal(a.autre, undefined);
+  // Au CP, la même leçon en mots, sur deux chiffres pairs.
+  const b = CORE.niveauDe("M1-4").niveau.apprends;
+  assert.deepEqual(b.represente.etapes.map(e => [espaces(e.texte), e.reponse]), [["moitié de 40 = □", 20], ["moitié de 6 = □", 3], ["moitié de 46 = □", 23]]);
+  assert.equal(espaces(b.bilan), "Pour la moitié, je coupe chaque morceau en deux : moitié de 46 = 20 + 3 = 23.");
   assert.deepEqual(a.represente.etapes.map(e => [espaces(e.texte), e.reponse]), [["70 ÷ 2 = □", 35], ["6 ÷ 2 = □", 3], ["moitié de 76 = □", 38]]);
   assert.equal(espaces(a.bilan), "Pour la moitié, je coupe chaque morceau en deux : moitié de 76 = 70 ÷ 2 + 6 ÷ 2 = 35 + 3 = 38.");
 });
@@ -227,7 +244,7 @@ test("4. × 4, × 8 : chaque double sur le résultat d'avant ; × 5, × 50 : la 
 
 test("5. « Fractions au-delà de 1 » au CM1 : sommes et différences au-delà de 1, sur la barre ; les bases, pile sur 1", () => {
   const f83 = CORE.niveauDe("F8-3").niveau;
-  assert.equal(f83.palier, 2);
+  assert.equal(f83.palier, 4); // (lot K1b : le CM1 est l'étage 4)
   assert.equal(espaces(f83.nom), "Fractions au-delà de 1");
   assert.ok(CORE.ORDRE.indexOf("F8-3") > CORE.ORDRE.indexOf("F5-2") && CORE.ORDRE.indexOf("F8-3") < CORE.ORDRE.indexOf("A5-4"), "dans le palier 2 de l'ordre");
   assert.deepEqual(CORE.sortesDe("F8-3").map(s => s.nom), ["a/b + c/b", "a/b − c/b", "entier − a/b", "a/b − entier"]);
@@ -262,7 +279,7 @@ test("5. « Fractions au-delà de 1 » au CM1 : sommes et différences au-delà 
   assert.equal(espaces(CORE.nouveauteDe(pile.find(c => c.lu.cotes[0][0].d === 5)).texte), "Nouveau : j’arrive pile sur 1 : 5 cinquièmes font une unité.");
   // Les comptes : palier 2 a une compétence de plus, palier 3 une de moins.
   const compte = P.compter(sansTestDePalier(P.creerParcours()), CARTE);
-  assert.deepEqual(compte.paliers.map(p => p.total), [44, 33, 43, 12]); // (lot 7c : F4-2 au CM2 ; lot 6 « programmes 2 » : F9-1, F6-2)
+  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 12]); // (lot K1b : six étages ; [44, 33, 43, 12] avant) // (lot 7c : F4-2 au CM2 ; lot 6 « programmes 2 » : F9-1, F6-2)
 });
 
 // ----------------------------------------------------- 6. retester au lieu d'imposer J'apprends
@@ -300,9 +317,9 @@ function avantM12() {
 
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261125-7/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261126-2/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est

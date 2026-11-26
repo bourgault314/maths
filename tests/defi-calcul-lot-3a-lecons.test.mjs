@@ -31,8 +31,8 @@ const tirages = (cle, n = 40) => {
   return [...vus.values()];
 };
 
-test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 132, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+test("les leçons (141 depuis le lot K1b) : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
+  assert.equal(NIVEAUX.length, 141, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;
@@ -49,8 +49,11 @@ test("les 95 leçons : À retenir reprend le calcul de « On te montre », et sa
 //  - « 3b » : à reprendre au lot 3b (chaque sorte annoncée, fractions).
 const AUTRE_SORTE = Object.freeze({
   "A1-1": "taille : 10 = 8 + ?, la même paire écrite à l'envers",
-  "A10-1": "taille", "A11-1": "taille", "A10-2": "taille", "A11-2": "taille", "A11-3": "taille",
-  "A2-1": "taille", "A6-1": "taille", "M6-1": "taille", "M6-2": "taille", "M7-1": "taille", "M7-3": "taille",
+  "A11-1": "taille", "A10-5": "taille : le saut grandit (+ 5, puis + 7)", "A11-4": "taille", "A11-3": "taille",
+  // (Lot K1b : A2-6, la moitié CE1 d'A2-1 — la leçon complète de peu, J'écris de plus ;
+  // A10-1, A10-2 et A11-2 sont au CP, leur J'écris est de la sorte de la leçon ;
+  // A10-4, A10-5 et A11-4, leurs moitiés du CE1, gardent l'écart d'avant.)
+  "A2-1": "taille", "A2-6": "taille", "A6-1": "taille", "M6-1": "taille", "M6-2": "taille", "M7-1": "taille", "M7-3": "taille",
   "D2-1": "taille", "M12-2": "taille", "C1-3": "taille", "F3-1": "taille : un partage", "F3-2": "taille : un partage",
   // (Lot 7c : On te montre sur des œufs, J'écris sur des grammes — la même méthode, une part puis les parts prises.)
   "F4-1": "taille : un partage, des objets puis une mesure",
@@ -93,11 +96,26 @@ test("les leçons du cahier 3a : la sorte du calcul montré et de J'écris", () 
     assert.equal(montre.forme, forme, cle);
     assert.equal(ecris.forme, forme, cle);
     // (Lot C4a : M1-5, le double d'un nombre rond.)
-    if (cle !== "M1-5") assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : plus de deuxième façon`);
+    // (Lot K1b : M1-1 et M1-2, au CP, montrent en plus la dizaine entière —
+    // double de 40, moitié de 80 —, la même opération.)
+    if (!["M1-5", "M1-1", "M1-2"].includes(cle)) assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : plus de deuxième façon`);
   });
-  // La leçon des moitiés jusqu'à 40 : moitié de 34, on coupe 30 et 4.
+  // Lot K1b : les trois moitiés du haut, la même règle (le double : M1-7 ; la moitié : M1-8, M1-9).
+  ["M1-7", "M1-8", "M1-9"].forEach((cle, i) => {
+    const {montre, ecris} = CORE.niveauDe(cle).niveau.apprends.calculs;
+    assert.equal(montre.forme, i < 1 ? "double" : "moitie", cle);
+    assert.equal(ecris.forme, montre.forme, cle);
+    assert.equal(CORE.sorteDansNiveau(cle, ecris), CORE.sorteDansNiveau(cle, montre), cle);
+    assert.equal(CORE.niveauDe(cle).niveau.apprends.autre, undefined, `${cle} : pas de deuxième façon`);
+  });
+  ["M1-1", "M1-2"].forEach(cle => assert.match(espaces(CORE.niveauDe(cle).niveau.apprends.autre.phrase), /^Pour une dizaine entière, je (double|coupe) les dizaines( en deux)? :$/, cle));
+  // La leçon des moitiés : on coupe chaque morceau en deux — moitié de 12 au CP
+  // (lot K1b : jusqu'à 20), moitié de 26 au CE2 (de 22 à 40 ; moitié de 34
+  // avant le lot : J'écris tiré n'avait plus que « moitié de 36 »).
   assert.deepEqual(CORE.niveauDe("M1-2").niveau.apprends.represente.etapes.map(e => [espaces(e.texte), e.reponse]),
-    [["moitié de 30 = □", 15], ["moitié de 4 = □", 2], ["moitié de 34 = □", 17]]);
+    [["moitié de 10 = □", 5], ["moitié de 2 = □", 1], ["moitié de 12 = □", 6]]);
+  assert.deepEqual(CORE.niveauDe("M1-8").niveau.apprends.represente.etapes.map(e => [espaces(e.texte), e.reponse]),
+    [["moitié de 20 = □", 10], ["moitié de 6 = □", 3], ["moitié de 26 = □", 13]]);
   // × 10 et ÷ 10 (décision 6).
   assert.equal(espaces(CORE.niveauDe("M2-1").niveau.apprends.exemple.texte), "45 × 10");
   // (Lot C4c : la leçon du niveau 2 multiplie, × 1 000 — le nom du niveau.)
@@ -118,13 +136,24 @@ test("les égalités en maths : « 100 = 4 × 25 », puis « 3 × 25 = 75 », un
   assert.match(page, /\$\(id\)\.querySelectorAll\("\.dc-retenir-calcul"\)/, "chaque ligne de calcul rapetisse si elle ne tient pas");
 });
 
-test("le double sur le rekenrek (M1-1) : les deux nombres déjà poussés, rien à pousser", () => {
-  const m = CORE.niveauDe("M1-1").niveau.apprends.manipule;
+test("le double sur le rekenrek (M1-1, et M1-7 depuis le lot K1b) : les deux nombres déjà poussés, rien à pousser", () => {
+  // Lot K1b : « Doubles de 11 à 20 » (M1-7, CE2) garde la leçon d'avant ;
+  // « Doubles jusqu'à 10 et des dizaines » (M1-1, CP) montre 7 et encore 7.
+  const m = CORE.niveauDe("M1-7").niveau.apprends.manipule;
   // (Lot C3 : la leçon passe de 17, un des plus durs du niveau, à 12.)
   assert.deepEqual([...m.rangees], [10, 2, 10, 2]);
   assert.deepEqual([...m.gestes], []);
   assert.deepEqual(m.traces.map(t => [t.apres, espaces(t.texte)]), [[0, "10 + 10 = 20"], [0, "2 + 2 = 4"], [0, "double de 12 = 20 + 4 = 24"]]);
-  // À l'entraînement : les doubles jusqu'à 50 au niveau 1 ; ni la moitié, ni les autres niveaux.
+  const cp = CORE.niveauDe("M1-1").niveau.apprends.manipule;
+  assert.deepEqual([[...cp.rangees], [...cp.gestes], cp.traces.map(t => [t.apres, espaces(t.texte)])], [[7, 7], [], [[0, "double de 7 = 7 + 7 = 14"]]]);
+  // À l'entraînement : les doubles jusqu'à 50 aux niveaux 1 et 7 ; ni la moitié, ni les autres niveaux.
+  ["M1-1", "M1-7"].forEach(cle => assert.ok(tirages(cle).some(c => c.forme === "double" && CORE.manipulationDe(c)), cle));
+  tirages("M1-7").forEach(c => {
+    const outil = CORE.manipulationDe(c);
+    if (c.forme === "double") assert.equal(outil.rangees.reduce((a, b) => a + b, 0), c.reponse, c.texte);
+    else assert.equal(outil, null, c.texte);
+  });
+  ["M1-8", "M1-3", "M1-9"].forEach(cle => tirages(cle).forEach(c => assert.equal(CORE.manipulationDe(c), null, c.texte)));
   tirages("M1-1").forEach(c => {
     const outil = CORE.manipulationDe(c);
     if (c.forme === "double" && c.donnees.n <= 50) {
@@ -170,7 +199,9 @@ test("les générateurs du cahier 3a", () => {
   tirages("M5-1").forEach(c => assert.doesNotMatch(espaces(c.texte), /(^|[^\d])1 ×|= 1 ×/, c.texte));
   // Les sortes d'A3 lisent le saut sans son signe (− centaines existe).
   // (Lot 6 « programmes 2 » : A3-3 n'a plus de sorte « − centaines ».)
-  ["A3-1"].forEach(cle => assert.ok(tirages(cle).some(c => c.donnees.d <= -100 && CORE.sortesDe(cle)[CORE.sorteDe(c)].nom === "− centaines"), cle));
+  // (Lot K1b : les centaines sont dans sa moitié du CE1, A3-5 ; au CP, A3-1 n'a que des dizaines.)
+  tirages("A3-1").forEach(c => assert.ok(Math.abs(c.donnees.d) < 100 && c.donnees.n < 100 && c.donnees.m <= 100, c.texte));
+  ["A3-5"].forEach(cle => assert.ok(tirages(cle).some(c => c.donnees.d <= -100 && CORE.sortesDe(cle)[CORE.sorteDe(c)].nom === "− centaines"), cle));
   assert.ok(tirages("A3-3").some(c => c.donnees.d <= -100 && CORE.sortesDe("A3-3")[CORE.sorteDe(c)].nom === "− en passant le millier"), "A3-3");
 });
 
