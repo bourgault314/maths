@@ -9,6 +9,8 @@
 // Associer, émojis, rappels, ponts, actions, énoncés), la série complétée par les autres cases ou annoncée plus courte, la saisie « 00810 ».
 // Lot 5 (25/11/2026) : trois vrais niveaux pour les conversions (1 « Les bases », 2 « Tout le tableau », 3 « Les pièges », sans les monstres),
 // leur nom dans le menu ; au téléphone, la case de réponse ne bouge plus et les unités des aires et des volumes coiffent leurs cases.
+// Lot 5b (26/11/2026) : la dernière étiquette (« mm³ ») centrée comme les autres, une marge égale des deux côtés au téléphone,
+// et la même étiquette sur tablette (jusqu'à 1 121 px de large) ; au-dessus, le tableau de l'ordinateur, inchangé.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -908,25 +910,148 @@ test("lot 5, téléphone : la case de réponse a une largeur fixe, les chiffres 
   assert.match(css5, /\.nb \{ white-space: nowrap; \}/);
 });
 
-test("lot 5, téléphone : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus de la colonne de ses unités", () => {
-  const tel = [...css5.matchAll(/@media screen and \(max-width: 700px\) \{((?:[^{}]*\{[^}]*\})*)\s*\}/g)].map((m) => m[1]).join("\n");
+// ---- lot 5b (26/11/2026) : « mm³ » centré au téléphone, et l'étiquette sur tablette ----
+// Deux blocs de mise en page du tableau : l'étiquette (jusqu'à 1 121 px de large) et le téléphone (jusqu'à 700 px, le premier
+// bloc « max-width: 700px » de la page). La case de réponse fixe a son propre bloc, limité à 700 px.
+const blocs5b = (largeur) => [...css5.matchAll(new RegExp(`@media screen and \\(max-width: ${largeur}px\\) \\{((?:[^{}]*\\{[^}]*\\})*)\\s*\\}`, "g"))].map((m) => m[1]);
+const etiquette5b = () => { const b = blocs5b(1121); assert.equal(b.length, 1, "un seul bloc pour l'étiquette"); return b[0]; };
+const telephone5b = () => blocs5b(700).join("\n");
+const regles5b = (bloc) => [...bloc.matchAll(/([^{}]+)\{([^}]*)\}/g)].map((m) => [m[1].replace(/\/\*[\s\S]*?\*\//g, "").trim(), m[2].trim()]);
+
+test("lot 5 et 5b : dans le tableau des aires et des volumes, le nom de l'unité est une étiquette au-dessus de la colonne de ses unités", () => {
+  const eti = etiquette5b();
   // les colonnes gardent leur largeur (un nom trop large ne les pousse plus) …
-  assert.match(tel, /\.board-columns \{ grid-template-columns: repeat\(var\(--cols, 7\), minmax\(0, 1fr\)\); \}/);
-  assert.match(tel, /\.head-group, \.subhead-group, \.slots \{ grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax\(0, 1fr\); \}/);
+  assert.match(eti, /\.board\.multi \.board-columns \{ grid-template-columns: repeat\(var\(--cols, 7\), minmax\(0, 1fr\)\); \}/);
+  assert.match(eti, /\.board\.multi \.head-group, \.board\.multi \.subhead-group, \.board\.multi \.slots \{ grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax\(0, 1fr\); \}/);
   // … le nom est une étiquette centrée sur SA colonne (celle des unités), qui peut la dépasser ; les cases vides ne sont plus dessinées
-  assert.match(tel, /\.head-group\.multi > \.unitBtn\.empty-unit \{ visibility: hidden; \}/);
-  assert.match(tel, /\.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ justify-self: center; width: max-content; min-width: 100%;/);
-  assert.match(tel, /\.family-col:last-child \.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ justify-self: end; \}/);
-  assert.match(tel, /\.head-group\.multi > \.unitBtn span \{ font-size: inherit !important;/);
+  assert.match(eti, /\.head-group\.multi > \.unitBtn\.empty-unit \{ visibility: hidden; \}/);
+  assert.match(eti, /\.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; \}/);
+  assert.match(eti, /\.head-group\.multi > \.unitBtn span \{ font-size: inherit !important; letter-spacing: normal !important; \}/);
   // jamais une unité étalée sur ses 2 ou 3 colonnes (« dm³ » n'est pas le nom des trois colonnes), et aucune case retirée de la grille
   assert.doesNotMatch(css5, /head-group\.multi[^{]*\{[^}]*(grid-column|display: none)/);
-  // ordinateur et tablette : rien de tout cela, et les grilles d'avant le lot 5 (1fr)
-  const hors = css5.replace(/@media screen and \(max-width: 700px\) \{(?:[^{}]*\{[^}]*\})*\s*\}/g, "");
-  assert.doesNotMatch(hors, /head-group\.multi|minmax\(0, 1fr\)|grid-auto-columns/);
-  assert.match(hors, /\.board-columns \{ display: grid; grid-template-columns: repeat\(var\(--cols, 7\), 1fr\);/);
-  assert.equal((script.match(/grid-template-columns: repeat\(\$\{schema\.slots\}, 1fr\)/g) || []).length, 3);
-  assert.doesNotMatch(script, /minmax\(0, 1fr\)/);
+  assert.doesNotMatch(css5, /\.multi[^{]*\{[^}]*grid-column/);
+  // au téléphone, tous les tableaux gardent des colonnes égales (lot 5)
+  const tel = telephone5b();
+  assert.match(tel, /\n      \.board-columns \{ grid-template-columns: repeat\(var\(--cols, 7\), minmax\(0, 1fr\)\); \}/);
+  assert.match(tel, /\n      \.head-group, \.subhead-group, \.slots \{ grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax\(0, 1fr\); \}/);
   // la classe « multi » : seulement pour les tableaux à 2 ou 3 cases par unité ; une case sans nom porte « empty-unit »
   assert.match(script, /<div class="head-group\$\{schema\.slots > 1 \? ' multi' : ''\}" style="grid-template-columns: repeat\(\$\{schema\.slots\}, 1fr\)">/);
   assert.match(script, /let classes = `unitBtn \$\{!isLast \|\| !u \? 'empty-unit' : ''\}`;/);
+  // … et le tableau lui-même la porte (lot 5b), posée avant que les colonnes soient écrites
+  assert.match(corps("buildDiapoTableDOM"), /document\.getElementById\('mainBoard'\)\.classList\.toggle\('multi', schema\.slots > 1\);\n\s*columnsContainer\.innerHTML = buildHTMLColumns\(schema, false, null, 'diapo'\);/);
+  assert.match(html, /<div class="board" id="mainBoard">/);
+  for (const [id, sc] of Object.entries(P.SCHEMAS)) assert.equal(sc.slots > 1, ["area", "volM3", "cross"].includes(id), id);
+});
+
+test("lot 5b : la dernière étiquette (« mm³ », « dam³ »…) est centrée comme les autres", () => {
+  // plus aucune étiquette calée au bord du tableau : la règle du lot 5 pour la dernière colonne est retirée
+  assert.doesNotMatch(css5, /justify-self: (?!center)/);
+  assert.equal((css5.match(/justify-self:/g) || []).length, 1, "une seule règle place l'étiquette : au milieu de sa colonne");
+  assert.doesNotMatch(css5, /(last-child|last-of-type|nth-last)[^{]*(head-group|unitBtn)/);
+  assert.doesNotMatch(css5, /(head-group|unitBtn)[^{]*(last-child|last-of-type|nth-last)/);
+  // l'étiquette n'est jamais décalée à la main
+  for (const [sel, decl] of [...regles5b(etiquette5b()), ...regles5b(telephone5b())]) {
+    if (/unitBtn/.test(sel)) assert.doesNotMatch(decl, /margin|transform|translate|left:|right:|text-align/, sel);
+  }
+});
+
+test("lot 5b, téléphone : le tableau des aires et des volumes laisse la même marge à gauche et à droite, assez pour l'étiquette", () => {
+  const tel = telephone5b();
+  // 12 px de chaque côté : le tableau est plus étroit de 24 px, et il reste au milieu (margin: 0 auto dans un cadre à marges égales)
+  assert.match(tel, /\n      \.board\.multi \{ width: calc\(100% - 24px\); \}/);
+  assert.match(css5, /\n    \.board \{ background: transparent; border: none; padding: 0; width: 100%; max-width: 1000px; margin: 0 auto; container-type: inline-size;\}/);
+  assert.match(tel, /\n      \.table-box \{ padding: 10px 6px; \}/);
+  assert.match(css5, /\n    \.table-box \{ padding: 10px 40px; display: none; justify-content: center;/);
+  // rien d'autre ne déplace ce tableau, ni d'un côté ni de l'autre
+  for (const [sel, decl] of regles5b(css5.replace(/\/\*[\s\S]*?\*\//g, ""))) {
+    if (/\.board\.multi\s*$|\.board\.multi\s*,/.test(sel)) assert.equal(decl, "width: calc(100% - 24px);", sel);
+    if (/(^|[\s,>])\.board(\.multi)?\s*(,|$)/.test(sel)) assert.doesNotMatch(decl, /margin-(left|right)|padding-(left|right)|transform|translate|justify-self|align-self/, sel);
+  }
+  // la marge est HORS du tableau : la taille des chiffres (95cqw du tableau) rétrécit avec lui, ils restent entiers dans leurs cases
+  assert.match(css5, /@supports \(width: 1cqw\) \{ \.digit \{ font-size: min\(2\.8rem, calc\(95cqw \/ var\(--n, 7\)\)\); \} \}/);
+  // la place qu'il faut : l'étiquette la plus large (« dam³ », 50,3 px mesurés à 16,8 px de police) au-dessus de la dernière de 12 cases,
+  // sur un téléphone de 360 px : cadre blanc 342 px (page 8 + 8, bordure 1 + 1), cases espacées de 4 px
+  const marge = Number(tel.match(/\.board\.multi \{ width: calc\(100% - (\d+)px\); \}/)[1]) / 2, bord = 6;
+  const cas = (360 - 16 - 2 - 2 * bord - 2 * marge - 11 * 4) / 12;
+  const depasse = (50.3 - cas) / 2;
+  assert.ok(depasse <= bord + marge - 3, `l'étiquette reste à 3 px au moins du bord du cadre (${(bord + marge - depasse).toFixed(1)} px)`);
+  assert.ok(23.83 - cas <= 2.05, "les cases de chiffres perdent 2 px au plus");
+  // les cases plus étroites de 2 px : les petits noms de la 2e ligne (kL hL daL L dL cL mL, ha, a) rapetissent d'autant.
+  // « hL » et « daL », voisins, font 47,5 px à eux deux à 16 px de police : leur écart (4,1 px sur le site à 360 px) est gardé
+  assert.match(tel, /\n      \.board\.multi \.sub-lab \{ font-size: min\(0\.9rem, 4vw\); \}/);
+  assert.equal((css5.match(/\.sub-lab \{/g) || []).length, 2, "la taille des petits noms n'est changée qu'au téléphone, dans ces tableaux");
+  assert.match(css5, /\n    \.sub-lab \{ white-space: nowrap; font-weight: 900; color: color-mix\(in srgb, var\(--accent-dark\) 90%, black\); line-height: 1; \}/);
+  const ecart = (largeur, police) => (largeur - 16 - 2 - 2 * bord - 2 * marge - 11 * 4) / 12 + 4 - (47.5 * police) / 16 / 2;
+  assert.ok(ecart(360, 14.4) >= 4.1 && ecart(390, 14.4) >= 4.1, `« hL » et « daL » à ${ecart(360, 14.4).toFixed(1)} px l'un de l'autre à 360 px`);
+  assert.ok(ecart(320, 0.04 * 320) >= 3, "et à 3 px au moins sur un téléphone de 320 px");
+});
+
+test("lot 5b, téléphone : les noms des aires et des volumes ont la même taille dans « Je projette » et dans « Je m'entraîne »", () => {
+  const tel = telephone5b();
+  // « Je m'entraîne » : 1,05rem (lot 3) ; « Je projette » : 1,25rem pour les autres tableaux, mais 1,05rem ici (à 20 px, deux noms voisins se touchaient)
+  assert.match(tel, /\n      \.entr \.unitBtn \{ min-height: 34px; font-size: 1\.05rem; \}/);
+  assert.match(tel, /\n      \.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ font-size: min\(1\.05rem, 4\.7vw\); \}/);
+  // 4,7vw ne joue que sous 358 px de large (petits téléphones de 320 px) : à 360 px et plus, c'est 1,05rem = 16,8 px
+  assert.ok(4.7 * 3.6 >= 16.8 && 4.7 * 3.2 < 16.8);
+  // la taille n'est fixée que là : sur tablette, les noms gardent les 1,25rem de la page
+  assert.doesNotMatch(etiquette5b(), /font-size: (?!inherit)/);
+  assert.match(css5, /\n    \.unitBtn \{ background: color-mix\(in srgb, var\(--accent\) 12%, #fff\); border: 2px solid var\(--accent\); border-radius: 8px; font-size: 1\.25rem;/);
+});
+
+test("lot 5b : l'étiquette aussi sur tablette, tant que le tableau est plus étroit que celui de l'ordinateur (jusqu'à 1 121 px de large)", () => {
+  etiquette5b();
+  // d'où vient 1 121 : le tableau fait 1 000 px au plus ; il les atteint quand le cadre blanc (page moins 20 + 20, bordure 1 + 1)
+  // moins les marges du tableau (40 + 40) fait 1 000 px, donc à 1 122 px de large. En dessous, il est plus étroit.
+  const px = (re) => Number(css5.match(re)[1]);
+  const maxi = px(/\n    \.board \{[^}]*max-width: (\d+)px;/), page = px(/\n    body \{[^}]*padding: (\d+)px; \}/);
+  const cadre = px(/\n    \.diapo-container \{[^}]*max-width: (\d+)px;/), bordure = px(/\n    \.diapo-container \{[^}]*border: (\d+)px solid/);
+  const cote = px(/\n    \.table-box \{ padding: 10px (\d+)px;/);
+  const tableau = (w) => Math.min(maxi, Math.min(cadre, w - 2 * page) - 2 * bordure - 2 * cote);
+  assert.equal(tableau(1122), 1000);
+  assert.equal(tableau(1121), 999);
+  assert.equal(tableau(1920), 1000);
+  const limite = Number(css5.match(/@media screen and \(max-width: (\d+)px\) \{\s*\.board\.multi \.board-columns/)[1]);
+  assert.equal(limite, 1121);
+  assert.equal(tableau(limite) < maxi && tableau(limite + 1) === maxi, true);
+  // aucune taille d'ordinateur vérifiée n'est touchée : 1180, 1366, 1440 et 1920 de large
+  for (const w of [1180, 1366, 1440, 1920]) assert.ok(w > limite, String(w));
+  // les marges du tableau qui servent à ce calcul ne changent avec la hauteur de la fenêtre que de haut en bas
+  assert.match(css5, /@media screen and \(min-width: 701px\) and \(max-height: 800px\) \{[\s\S]*?\n      \.table-box \{ padding: 4px 40px; \}/);
+});
+
+test("lot 5b : rien au-dessus de 1 121 px, et de 701 à 1 121 px seuls les tableaux à 2 ou 3 cases par unité changent", () => {
+  // dans le bloc de l'étiquette, chaque règle ne vise que le tableau « multi »
+  for (const [sel] of regles5b(etiquette5b())) for (const un of sel.split(",")) assert.match(un, /\.multi\b/, `« ${un.trim()} » toucherait tous les tableaux sur tablette`);
+  // hors de ces deux blocs : rien de l'étiquette, et les grilles d'avant le lot 5 (1fr)
+  const hors = css5.replace(/@media screen and \(max-width: (?:700|1121)px\) \{(?:[^{}]*\{[^}]*\})*\s*\}/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+  assert.doesNotMatch(hors, /\.multi\b|minmax\(0, 1fr\)|grid-auto-columns|empty-unit \{ visibility/);
+  assert.match(hors, /\.board-columns \{ display: grid; grid-template-columns: repeat\(var\(--cols, 7\), 1fr\);/);
+  assert.match(hors, /\n    \.head-group \{ display: grid; gap: 4px; \}/);
+  assert.match(hors, /\n    \.unitBtn\.empty-unit \{ background: transparent; border-color: color-mix\(in srgb, var\(--accent\) 30%, transparent\); \}/);
+  assert.equal((script.match(/grid-template-columns: repeat\(\$\{schema\.slots\}, 1fr\)/g) || []).length, 3);
+  assert.doesNotMatch(script, /minmax\(0, 1fr\)/);
+  // « dam³ » un peu plus petit sur ordinateur : la page le fait toujours (l'étiquette, elle, met tous les noms à la même taille)
+  assert.match(script, /if \(isLast && u\.length >= 4 && schema\.slots === 3\) styleText = 'font-size: 0\.82em; letter-spacing: -0\.5px;';/);
+  // aucune autre requête d'écran ne parle de 1 121 px, et l'étiquette n'a pas de plancher (elle vaut aussi au téléphone)
+  assert.equal((css5.match(/1121px/g) || []).length, 1);
+  assert.doesNotMatch(css5, /@media[^{]*min-width[^{]*\{\s*[^{}]*multi/);
+  // la fiche imprimée : les deux blocs sont réservés à l'écran
+  assert.equal((css5.match(/@media (?!screen|print|\(prefers-reduced-motion)[^{]*\{/g) || []).length, 0);
+});
+
+test("lot 5b : la case de réponse fixe, les colonnes utiles et le pavé restent au téléphone (700 px), pas sur tablette", () => {
+  // le bloc de la case de réponse est à part, et toujours limité à 700 px
+  const blocs = blocs5b(700);
+  const laCase = blocs.filter((b) => /\.entr \.champ \{ width: 7\.2em;/.test(b));
+  assert.equal(laCase.length, 1);
+  assert.doesNotMatch(laCase[0], /board|head-group|unitBtn|multi/, "le bloc de la case de réponse ne contient rien du tableau");
+  assert.match(laCase[0], /\.entr \.question-text \.conv-consigne \{ display: block;/);
+  assert.equal((css5.match(/width: 7\.2em/g) || []).length, 1);
+  // le bloc de l'étiquette ne contient rien d'autre que le tableau
+  assert.doesNotMatch(etiquette5b(), /champ|\.entr|conv-consigne|question|pave|diapo-container|table-box|\.inner|handle|digit/);
+  // les colonnes utiles : toujours à 700 px (au-dessus, le tableau entier)
+  assert.match(script, /function petitEcran\(\) \{ return typeof window !== 'undefined' && window\.matchMedia && window\.matchMedia\('\(max-width: 700px\)'\)\.matches; \}/);
+  assert.equal((script.match(/max-width: \d+px/g) || []).length, 1);
+  // la marge et la taille des noms du lot 5b : dans le bloc du téléphone, pas dans celui de l'étiquette
+  assert.doesNotMatch(etiquette5b(), /calc\(100% - |vw\)/);
 });

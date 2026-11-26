@@ -165,19 +165,31 @@
     .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
     .sub-lab { white-space: nowrap; font-weight: 900; color: color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1; }
 
-    /* lot 5, au téléphone seulement : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus d'UNE seule
+    /* lot 5, étendu au lot 5b : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus d'UNE seule
        colonne, celle de ses unités (« dm³ » n'est pas le nom des trois colonnes : la 2e compte les dizaines de dm³).
        « mm³ » est plus large que sa case : avant, la case grossissait et toute la ligne des unités se décalait (16 px).
        Maintenant les colonnes gardent leur largeur, et le nom est une étiquette centrée sur sa colonne, qui peut la dépasser
-       des deux côtés ; les cases vides de la ligne des unités ne sont plus dessinées. Toutes les unités ont la même taille. */
+       des deux côtés ; les cases vides de la ligne des unités ne sont plus dessinées. Toutes les unités ont la même taille.
+       Lot 5b : l'étiquette vaut tant que le tableau est plus étroit que celui de l'ordinateur (1 000 px), donc jusqu'à
+       1 121 px de large, tablette comprise ; à partir de 1 122 px, c'est le tableau de l'ordinateur, inchangé. */
+    @media screen and (max-width: 1121px) {
+      .board.multi .board-columns { grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr)); }
+      .board.multi .head-group, .board.multi .subhead-group, .board.multi .slots { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+      .head-group.multi > .unitBtn.empty-unit { visibility: hidden; }
+      .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; }
+      .head-group.multi > .unitBtn span { font-size: inherit !important; letter-spacing: normal !important; }
+    }
+    /* au téléphone : tous les tableaux gardent des colonnes égales (lot 5). Lot 5b : la dernière étiquette (« mm³ », « dam³ »…)
+       est centrée comme les autres. Pour qu'elle reste dans le cadre blanc, le tableau des aires et des volumes laisse la même
+       marge à gauche et à droite (12 px de chaque côté, le tableau reste au milieu), et ses noms ont la même taille dans les
+       deux modes : à 20 px, deux noms voisins se touchaient dans « Je projette ». Les cases perdent 2 px : les petits noms
+       de la 2e ligne (kL, hL, daL…) rapetissent d'autant, pour que « hL » et « daL » gardent leur écart. */
     @media screen and (max-width: 700px) {
       .board-columns { grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr)); }
       .head-group, .subhead-group, .slots { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-      .head-group.multi > .unitBtn.empty-unit { visibility: hidden; }
-      .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; }
-      /* la dernière colonne : l'étiquette s'arrête au bord du tableau au lieu d'en sortir */
-      .family-col:last-child .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: end; }
-      .head-group.multi > .unitBtn span { font-size: inherit !important; letter-spacing: normal !important; }
+      .board.multi { width: calc(100% - 24px); }
+      .head-group.multi > .unitBtn:not(.empty-unit) { font-size: min(1.05rem, 4.7vw); }
+      .board.multi .sub-lab { font-size: min(0.9rem, 4vw); }
     }
     /* lot 5, au téléphone, « Je m'entraîne » : « Convertis : » sur sa ligne, et une case de largeur fixe (environ 10 chiffres),
        qui ne grandit plus pendant la frappe : au-delà, ce sont les chiffres qui rapetissent (majChamp) */
@@ -1915,6 +1927,8 @@
       const columnsContainer = document.getElementById('diapoBoardColumns');
       columnsContainer.style.setProperty('--cols', schema.units.length);
       columnsContainer.style.setProperty('--n', schema.units.length * schema.slots);
+      // lot 5b : le tableau à 2 ou 3 cases par unité (aires, volumes, « L ↔ m³ ») porte « multi » : la mise en page de l'étiquette s'y accroche
+      document.getElementById('mainBoard').classList.toggle('multi', schema.slots > 1);
       columnsContainer.innerHTML = buildHTMLColumns(schema, false, null, 'diapo');
     }
 
