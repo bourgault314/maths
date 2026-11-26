@@ -7,6 +7,8 @@
 // la carte du catalogue annonce les deux modes.
 // Lot 4 (25/11/2026) : la relecture de toutes les questions — ce qui était faux corrigé d'un coup (zéro inutile, « Quelle grandeur ? »,
 // Associer, émojis, rappels, ponts, actions, énoncés), la série complétée par les autres cases ou annoncée plus courte, la saisie « 00810 ».
+// Lot 5 (25/11/2026) : trois vrais niveaux pour les conversions (1 « Les bases », 2 « Tout le tableau », 3 « Les pièges », sans les monstres),
+// leur nom dans le menu ; au téléphone, la case de réponse ne bouge plus et les unités des aires et des volumes coiffent leurs cases.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -19,7 +21,7 @@ const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
   const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, convertTricky, seriePlusCourte };`, ctx);
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, convertTricky, seriePlusCourte, BASES, USUELLES, pairesDuTableau, posUnite };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -78,7 +80,6 @@ test("« L ↔ m³ » pose toujours un litre d'un côté et un m³, dm³ ou cm³
     const q = P.buildQuestionLogic("cross", lvl);
     const u = [q.sourceUnit, q.targetUnit];
     assert.ok(u.some((x) => /L$/.test(x)) && u.some((x) => /³$/.test(x)), u.join(" → "));
-    if (lvl === 1) assert.ok(q.targetPos >= q.sourcePos, "niveau 1 : jamais vers une unité plus grande");
   }
 });
 
@@ -453,14 +454,14 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
 });
 
-test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 4)", () => {
-  // Empreintes recalculées au lot 4 (25/11/2026) : le contenu des banques a changé, donc 11 séries sur 12 aussi.
-  // Sur les 400 séries de series-lot4.mjs : 66 identiques, 276 aux mêmes questions dont seuls des mots changent
-  // (zéro inutile retiré, « Quelle grandeur ? », énoncés, émojis, rappels, niveau 3 resté en m ou en L),
-  // 58 dont le tirage change (additions de capacités du niveau 3 en mL, Associer à 3 fois au moins). Avant (main ea9ab92) :
-  // b0ad135bb7640065 a7cd2420dc6c6b18 5d30e0fb3f3d7322 fef22afcb9963a65 01bab2849c192393 1d2ad40738bfceb6
-  // ea15edd9c37ad63a 4f6ef7b3e5f0c640 b8b7436d69be3224 90304fe7170a6dc0 bf8489d85a652448 dc7754fa20c3eee8
-  const MAIN = ["7ea23a256e4ce84a", "3ff1044104a1459c", "3dba203c922ab7d9", "396ca0475cb90a45", "1882a290f925b597", "1093cdf615757fb3", "aebbf08878649521", "edf17416f518c1e2", "9f8433c35ad69b43", "561637ada18f0264", "bf8489d85a652448", "ded48cda8fe4b5a3"];
+test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 5)", () => {
+  // Empreintes recalculées au lot 5 (25/11/2026) : les niveaux 1 et 2 des conversions tirent autrement (c'est voulu), et les 12 séries
+  // en contiennent : les 12 changent. Sur les 400 séries de series-lot5.mjs (toutes ont une case de conversion) : 90 identiques ;
+  // 257 changent par les niveaux 1 ou 2 ; 53 séries du niveau 3 seul changent parce qu'un monstre en est retiré (les 80 autres
+  // sont identiques). 3 218 questions sur 5 000 gardent leur énoncé. Avant (main ea60818, lot 4) :
+  // 7ea23a256e4ce84a 3ff1044104a1459c 3dba203c922ab7d9 396ca0475cb90a45 1882a290f925b597 1093cdf615757fb3
+  // aebbf08878649521 edf17416f518c1e2 9f8433c35ad69b43 561637ada18f0264 bf8489d85a652448 ded48cda8fe4b5a3
+  const MAIN = ["b1bf5c6cea92df25", "abfd8cc5cf7adc44", "8ce458a12d6b1106", "b1d19b6f4ff14216", "041ef6dfb61a4dff", "73e4d6de2a9c3668", "9eb3c6b3676e7bcf", "2221fcf22fbf455f", "fb41aa61468a7ad2", "65070687aa4fbda6", "51979d9c08eda848", "5d9c80bfd2fbb109"];
   const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
   const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
   const lot = [];
@@ -494,7 +495,10 @@ test("je m'entraîne : le lien porte le mode et l'aide (listes fermées) ; « Co
 
 test("et un pirate ? la saisie et le mot gardé sur l'appareil n'entrent jamais en HTML", () => {
   // la saisie : écrite en texte dans la case, bornée, jamais dans innerHTML
-  assert.match(corps("majChamp"), /champ\.textContent = st\.saisie \? ecrire\(st\.saisie\) : ''/);
+  // (lot 5 : le texte est dans un span « champ-t », fabriqué par creer(), qui écrit en textContent)
+  assert.match(corps("majChamp"), /champ\.appendChild\(creer\('span', 'champ-t', st\.saisie \? ecrire\(st\.saisie\) : ''\)\)/);
+  assert.match(corps("creer"), /if \(texte !== undefined\) el\.textContent = texte;/);
+  assert.doesNotMatch(corps("majChamp"), /innerHTML/);
   for (const ligne of script.split("\n")) if (/innerHTML|insertAdjacentHTML|outerHTML/.test(ligne)) assert.doesNotMatch(ligne, /saisie|\.liens|\.rangs|location|localStorage|getItem/, ligne.trim());
   assert.match(corps("taper"), /nb < MAX_SAISIE/);
   assert.equal(P.MAX_SAISIE, 14);
@@ -603,7 +607,7 @@ test("lot 3b : les messages de « Je m'entraîne » ne passent jamais dans le di
   assert.match(q, /getElementById\('entrMsgBas'\)\.hidden = true;/);
 });
 
-test("lot 3b : « Convertis : » sur sa ligne et la conversion en grand (diaporama et « Je m'entraîne »), le téléphone ne change pas", () => {
+test("lot 3b : « Convertis : » sur sa ligne et la conversion en grand (diaporama et « Je m'entraîne ») ; au téléphone, seulement dans « Je m'entraîne » (lot 5)", () => {
   assert.match(script, /const CONSIGNE_CONV = `<span class="conv-consigne">Convertis\$\{NBSP\}:<\/span> `;/);
   const u = corps("updateUI");
   assert.match(u, /qText\.classList\.remove\('conv'\);/);
@@ -614,12 +618,18 @@ test("lot 3b : « Convertis : » sur sa ligne et la conversion en grand (diapora
   assert.match(a, /qText\.classList\.remove\('pb', 'conv'\);/);
   assert.match(a, /qText\.innerHTML = `\$\{CONSIGNE_CONV\}<span class="nb">/);
   assert.match(a, /qText\.classList\.add\('conv'\);/);
-  // la mise en page : seulement à partir de 701 px de large (ordinateur, tablette)
+  // la mise en page : à partir de 701 px de large (ordinateur, tablette) ; au téléphone, une seule règle, et seulement dans « Je m'entraîne » (lot 5)
   const css = html.match(/<style>([\s\S]*?)<\/style>/)[1];
   const blocs = [...css.matchAll(/@media([^{]*)\{((?:[^{}]*\{[^}]*\})*)\s*\}/g)];
-  const avecConv = blocs.filter((m) => /conv/.test(m[2])).map((m) => m[1].trim());
-  assert.ok(avecConv.length >= 3, "trois tailles d'écran");
-  for (const m of avecConv) assert.match(m, /min-width: 701px/, `« ${m} » touche le téléphone`);
+  const avecConv = blocs.filter((m) => /conv/.test(m[2]));
+  assert.ok(avecConv.filter((m) => /min-width: 701px/.test(m[1])).length >= 3, "trois tailles d'écran");
+  for (const m of avecConv) {
+    if (/min-width: 701px/.test(m[1])) continue;
+    assert.equal(m[1].trim(), "screen and (max-width: 700px)", `« ${m[1].trim()} »`);
+    const regles = m[2].split("\n").filter((l) => /conv/.test(l));
+    assert.equal(regles.length, 1, "une seule règle au téléphone");
+    assert.match(regles[0], /^\s*\.entr \.question-text \.conv-consigne \{ display: block;/, "le diaporama du téléphone ne change pas");
+  }
   assert.doesNotMatch(css.replace(/@media[^{]*\{(?:[^{}]*\{[^}]*\})*\s*\}/g, ""), /conv-consigne|\.conv\b/, "aucune règle hors des tailles d'ordinateur");
   assert.match(css, /\.diapo-container \.question-text\.conv \{ font-size: 3rem; line-height: 1\.2; \}/);
   // diaporama : la question (problèmes compris) garde sa taille du 7 avril au 21 novembre, 2,2 rem, dans les fenêtres basses aussi
@@ -746,4 +756,177 @@ test("lot 4 : une case épuisée laisse sa place aux autres ; sinon la série es
 
 test("lot 4 : la case de réponse fait comme une calculatrice (« 00810 » ne s'écrit plus)", () => {
   assert.match(corps("taper"), /else if \(\/\^\[0-9\]\$\/\.test\(c\) && st\.saisie === '0'\) st\.saisie = c;/);
+});
+
+// ---- lot 5 : trois vrais niveaux, leur nom au menu, la case et le tableau du téléphone ----
+const css5 = html.match(/<style>([\s\S]*?)<\/style>/)[1];
+const decimales = (s) => (s.split(",")[1] || "").length;
+const ecrits = (s) => s.replace(",", "").length;
+const part = (n, total) => Math.round((1000 * n) / total) / 10;
+// le nombre écrit avec la plus grande des deux unités
+const grand = (q) => (q.targetPos >= q.sourcePos ? q.valStr : q.calcValStr);
+const paire = (q) => (q.targetPos >= q.sourcePos ? `${q.sourceUnit}–${q.targetUnit}` : `${q.targetUnit}–${q.sourceUnit}`);
+
+test("lot 5, niveau 1 « Les bases » : seulement les relations connues par cœur, dans les deux sens, des entiers de 1 à 99, résultat entier", () => {
+  const attendues = {
+    length: ["km–m", "m–cm", "cm–mm", "m–mm", "m–dm", "dm–cm"], mass: ["kg–g", "g–mg"], massT: ["t–kg", "kg–g", "g–mg"],
+    volL: ["L–cL", "L–mL", "cL–mL"], area: ["m²–dm²", "dm²–cm²"], volM3: ["m³–dm³", "dm³–cm³"], cross: ["L–dm³", "mL–cm³", "L–cm³", "m³–L"],
+  };
+  for (const t of TYPES) {
+    assert.deepEqual([...new Set(P.BASES[t].map((p) => p.join("–")))].sort(), [...attendues[t]].sort(), `les paires de « ${t} »`);
+    P.setSeed(`B${t}`);
+    const N = 4000, vues = new Set(); let haut = 0, petits = 0, dm = 0, meme = 0;
+    for (let i = 0; i < N; i++) {
+      const q = P.buildQuestionLogic(t, 1), g = grand(q);
+      // « L = dm³ » et « mL = cm³ » : les deux unités sont dans la même case, la paire se lit dans l'ordre de la liste
+      const p = q.sourcePos === q.targetPos ? (/L$/.test(q.sourceUnit) ? `${q.sourceUnit}–${q.targetUnit}` : `${q.targetUnit}–${q.sourceUnit}`) : paire(q);
+      assert.ok(attendues[t].includes(p), `${q.valStr} ${q.sourceUnit} → ${q.targetUnit} n'est pas une base`);
+      assert.match(q.valStr + " " + q.calcValStr, /^\d+ \d+$/, "des entiers au départ comme à l'arrivée");
+      assert.ok(Number(g) >= 1 && Number(g) <= 99, `${g} : de 1 à 99 avec la plus grande unité`);
+      assert.ok(Math.abs(q.targetPos - q.sourcePos) <= 3, "× 1 000 au plus");
+      vues.add(p);
+      if (q.targetPos < q.sourcePos) haut++;
+      if (Number(g) <= 9) petits++;
+      if (/\bdm\b/.test(`${q.sourceUnit} ${q.targetUnit}`)) dm++;
+      if (q.targetPos === q.sourcePos) meme++;
+    }
+    assert.equal(vues.size, attendues[t].length, "chaque relation sort");
+    // « même nombre » (L = dm³) : le sens ne compte pas
+    const sens = part(haut, N - meme);
+    assert.ok(sens > 44 && sens < 56, `${t} : ${sens} % vers la plus grande unité (la moitié)`);
+    assert.ok(part(petits, N) > 44 && part(petits, N) < 56, "de 1 à 9 une fois sur deux");
+    if (t === "length") assert.ok(part(dm, N) > 17 && part(dm, N) < 27, `m ↔ dm et dm ↔ cm : ${part(dm, N)} % (2 sur 9)`);
+    // « L ↔ m³ » : un tiers L ↔ cm³, un tiers m³ ↔ L, un tiers « même nombre »
+    if (t === "cross") assert.ok(part(meme, N) > 28 && part(meme, N) < 39, `même nombre des deux côtés : ${part(meme, N)} % (un tiers)`);
+  }
+});
+
+test("lot 5, niveau 2 « Tout le tableau » : jusqu'à × 1 000, un nombre simple avec la plus grande unité, jamais de zéro juste après la virgule", () => {
+  const SIMPLE = /^(\d{1,3}|\d{1,2},\d|\d,\d{2,3}|0,\d{1,3})$/;
+  for (const t of TYPES) {
+    P.setSeed(`T2${t}`);
+    const N = 6000, schema = P.SCHEMAS[t], colonne = schema.slots, vues = new Set();
+    let haut = 0, usuelles2 = 0, rare = 0, petit1 = 0, virgule = 0, milliemes = 0, meme = 0;
+    for (let i = 0; i < N; i++) {
+      const q = P.buildQuestionLogic(t, 2), g = grand(q), ecart = Math.abs(q.targetPos - q.sourcePos);
+      // l'écart : 1 à 3 colonnes (longueurs, masses, capacités), une seule pour les aires et les volumes, 3 cases au plus pour « L ↔ m³ »
+      assert.ok(ecart <= 3, `${q.sourceUnit} → ${q.targetUnit} : plus de × 1 000`);
+      if (t !== "cross") assert.ok(ecart >= colonne && ecart <= (colonne === 1 ? 3 : colonne), `${q.sourceUnit} → ${q.targetUnit}`);
+      assert.match(g, SIMPLE, `${g} ${q.sourceUnit}/${q.targetUnit} n'est pas un nombre simple`);
+      for (const s of [q.valStr, q.calcValStr]) {
+        assert.doesNotMatch(s, /,0/, `${s} : un zéro juste après la virgule, c'est le niveau 3`);
+        assert.ok(decimales(s) <= 3 && ecrits(s) <= 7, `${s} : 3 décimales et 7 chiffres au plus`);
+        assert.doesNotMatch(s, /,\d*0$/, `${s} : pas de zéro inutile`);
+      }
+      if (decimales(g) === 3) { assert.equal(ecart, 3, `${g} : des millièmes seulement à × 1 000`); milliemes++; }
+      const u = [q.sourceUnit, q.targetUnit].filter((x) => P.USUELLES.has(x)).length;
+      if (u === 2) usuelles2++; else rare++;
+      if (q.targetPos < q.sourcePos) haut++;
+      if (q.targetPos === q.sourcePos) meme++;
+      if (/^0,/.test(g)) petit1++;
+      if (/,/.test(q.valStr + q.calcValStr)) virgule++;
+      vues.add(paire(q));
+    }
+    const p = P.pairesDuTableau(t);
+    assert.ok(vues.size >= p.toutes.length - (t === "cross" ? 2 : 0), `${t} : tout le tableau sort (${vues.size} paires sur ${p.toutes.length})`);
+    assert.ok(p.deux.length >= 2 && p.une.length >= 2, "des paires de chaque sorte");
+    const sens = part(haut, N - meme);
+    assert.ok(sens > 45 && sens < 55, `${t} : ${sens} % vers la plus grande unité`);
+    // 1 question sur 2 entre deux unités usuelles (plus celles du quart « tout le tableau »)
+    assert.ok(part(usuelles2, N) > 50 && part(usuelles2, N) < 70, `${t} : ${part(usuelles2, N)} % entre deux unités usuelles`);
+    assert.ok(part(rare, N) > 30, `${t} : ${part(rare, N)} % avec une autre unité du tableau`);
+    // les nombres plus petits que 1 (0,5 L = 50 cL ; 750 g = 0,75 kg), qu'aucun niveau ne posait avant le lot 5
+    assert.ok(part(petit1, N) > 10 && part(petit1, N) < 20, `${t} : ${part(petit1, N)} % de nombres plus petits que 1 (3 sur 20)`);
+    assert.ok(part(virgule, N) > 40 && part(virgule, N) < 62, `${t} : ${part(virgule, N)} % de questions avec une virgule`);
+    if (colonne !== 2) assert.ok(milliemes > 0, "des millièmes à × 1 000 (2,375 kg = 2 375 g)");
+  }
+  // les unités usuelles : celles du niveau 1 (sans dm), la tonne, et km²
+  assert.deepEqual([...P.USUELLES].sort(), ["L", "cL", "cm", "cm²", "cm³", "dm²", "dm³", "g", "kg", "km", "km²", "m", "mL", "mg", "mm", "m²", "m³", "t"].sort());
+});
+
+test("lot 5, niveau 3 « Les pièges » : le tirage d'avant le lot 5, sans les monstres (4 décimales et 8 chiffres au plus)", () => {
+  // Empreintes des 300 premières questions par case : calculées avec la page du main ea60818 (lot 4), en sautant les monstres
+  // (n3-identique.mjs : sur 2 000 questions par case, la suite du lot est exactement celle du main, monstres en moins).
+  const AVANT = { length: "bca852335407129f", mass: "77f1d83a86f6e15f", massT: "bba83573d5c2621f", volL: "269df653f757bd43", area: "051d128368dc7719", volM3: "fefc43b452e888e3", cross: "268f3ab63aa9f367" };
+  for (const t of TYPES) {
+    P.setSeed(`N3${t}`);
+    const N = 3000, suite = []; let zero = 0, grandEcart = 0;
+    for (let i = 0; i < N; i++) {
+      const q = P.buildQuestionLogic(t, 3);
+      if (i < 300) suite.push(`${q.valStr} ${q.sourceUnit} = ${q.calcValStr} ${q.targetUnit}`);
+      for (const s of [q.valStr, q.calcValStr]) assert.ok(decimales(s) <= 4 && ecrits(s) <= 8, `${q.valStr} ${q.sourceUnit} = ${q.calcValStr} ${q.targetUnit}`);
+      if (/^0,0|,0\d/.test(q.valStr) || /^0,0/.test(q.calcValStr)) zero++;
+      if (Math.abs(q.targetPos - q.sourcePos) > 3) grandEcart++;
+    }
+    assert.equal(createHash("sha256").update(JSON.stringify(suite)).digest("hex").slice(0, 16), AVANT[t], `${t} : le tirage du niveau 3 a changé`);
+    assert.ok(part(zero, N) > 30, `${t} : ${part(zero, N)} % de zéros à placer (0,05 ; 3,05 ; 0,045)`);
+    // les grands écarts des aires et des volumes (1 m² = 10 000 cm², 1 m³ = 1 000 000 cm³) restent au niveau 3
+    if (t === "area" || t === "volM3") assert.ok(part(grandEcart, N) > 15, `${t} : ${part(grandEcart, N)} % de grands écarts`);
+  }
+});
+
+test("lot 5 : chaque niveau a assez de questions différentes pour une série de 20", () => {
+  for (const t of TYPES) for (const lvl of [1, 2, 3]) for (let k = 0; k < 10; k++) {
+    const s = P.tirerSerie([t], [lvl], 20, `Q${k}`);
+    assert.equal(s.length, 20, `${t} niveau ${lvl}`);
+    assert.equal(new Set(s.map((q) => q.textId)).size, 20);
+  }
+});
+
+test("lot 5 : le nom de chaque niveau à côté de sa case ; sur ordinateur, la liste est rangée à droite et le bandeau garde sa hauteur", () => {
+  const menu = html.slice(html.indexOf('<div class="config-block bloc-niveaux">'), html.indexOf('<label>Questions :</label>'));
+  const noms = [...menu.matchAll(/<label><input type="checkbox" name="cbLevel" value="(\d)"( checked)?> ([^<]+)<\/label>/g)].map((m) => `${m[1]}${m[2] ? "*" : ""} ${m[3].replace(/&nbsp;/g, " ")}`);
+  assert.deepEqual(noms, ["1* 1 · Les bases", "2 2 · Tout le tableau", "3 3 · Les pièges"]);
+  // un nom ne se coupe jamais : espaces insécables et white-space: nowrap
+  assert.doesNotMatch(menu.replace(/<[^>]+>/g, "").replace(/\s*\n\s*/g, "").trim().replace(/^Niveaux :/, ""), / /);
+  assert.match(css5, /\.niveaux \{ display: flex; flex-direction: column;/);
+  assert.match(css5, /\.niveaux label \{ cursor: pointer; white-space: nowrap; \}/);
+  // ordinateur (900 px et plus) : la liste sort de la ligne des options, qui garde sa hauteur ; la place lui est réservée à droite
+  const ordi = css5.split("@media screen and (min-width: 900px) {")[1].split("\n    }\n")[0];
+  const reserve = Number(ordi.match(/\.bottom-config \{ position: relative; padding-right: (\d+)px; \}/)[1]);
+  const m = ordi.match(/\.bloc-niveaux \{ position: absolute; top: 12px; right: (\d+)px; width: (\d+)px;/);
+  assert.ok(Number(m[1]) + Number(m[2]) + 12 <= reserve, "la liste tient dans la place réservée");
+  // le lien et les réglages ne changent pas : toujours niveaux=1,2,3
+  assert.equal(P.ecrireLien({ cases: ["length"], niveaux: [1, 3], questions: 10, serie: "AB12", mode: "diapo", aide: "demande" }).includes("niveaux=1,3"), true);
+  // les textes d'explication du haut de fichier et des tests disent les trois noms
+  assert.match(script, /1 « Les bases »[\s\S]{0,400}2 « Tout le tableau »[\s\S]{0,400}3 « Les pièges »/);
+});
+
+test("lot 5, téléphone : la case de réponse a une largeur fixe, les chiffres rapetissent, « = » ne se sépare pas de la mesure", () => {
+  const tel = [...css5.matchAll(/@media screen and \(max-width: 700px\) \{((?:[^{}]*\{[^}]*\})*)\s*\}/g)].map((m) => m[1]).join("\n");
+  assert.match(tel, /\.entr \.champ \{ width: 7\.2em; min-width: 0; box-sizing: border-box; overflow: hidden; white-space: nowrap; \}/);
+  assert.match(tel, /\.entr \.question-text \.conv-consigne \{ display: block;/);
+  // hors du téléphone, la case garde sa règle d'avant (elle grandit avec la réponse)
+  assert.match(css5, /\n    \.champ \{ display: inline-block; min-width: 3\.2em;/);
+  assert.equal((css5.match(/\.champ \{[^}]*width: 7\.2em/g) || []).length, 1);
+  const m = corps("majChamp");
+  assert.match(m, /for \(let k = 1; k <= 8 && champ\.scrollWidth > champ\.clientWidth; k\+\+\) t\.style\.fontSize = \(100 - 8 \* k\) \+ '%';/);
+  // 14 caractères (MAX_SAISIE) à 36 % au pire : la boucle s'arrête dès que le texte tient
+  assert.equal(100 - 8 * 8, 36);
+  // la mesure, une espace insécable et « = » dans le même bloc insécable ; la case et son unité dans un autre
+  assert.match(corps("afficherQuestion"), /<span class="nb">\$\{mesure\(q\.valStr, q\.sourceUnit\)\}\$\{NBSP\}=<\/span> <span class="nb">\$\{champHTML\(\)\}\$\{NBSP\}<span id="uniteRep"><\/span><\/span>/);
+  assert.match(css5, /\.nb \{ white-space: nowrap; \}/);
+});
+
+test("lot 5, téléphone : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus de la colonne de ses unités", () => {
+  const tel = [...css5.matchAll(/@media screen and \(max-width: 700px\) \{((?:[^{}]*\{[^}]*\})*)\s*\}/g)].map((m) => m[1]).join("\n");
+  // les colonnes gardent leur largeur (un nom trop large ne les pousse plus) …
+  assert.match(tel, /\.board-columns \{ grid-template-columns: repeat\(var\(--cols, 7\), minmax\(0, 1fr\)\); \}/);
+  assert.match(tel, /\.head-group, \.subhead-group, \.slots \{ grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax\(0, 1fr\); \}/);
+  // … le nom est une étiquette centrée sur SA colonne (celle des unités), qui peut la dépasser ; les cases vides ne sont plus dessinées
+  assert.match(tel, /\.head-group\.multi > \.unitBtn\.empty-unit \{ visibility: hidden; \}/);
+  assert.match(tel, /\.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ justify-self: center; width: max-content; min-width: 100%;/);
+  assert.match(tel, /\.family-col:last-child \.head-group\.multi > \.unitBtn:not\(\.empty-unit\) \{ justify-self: end; \}/);
+  assert.match(tel, /\.head-group\.multi > \.unitBtn span \{ font-size: inherit !important;/);
+  // jamais une unité étalée sur ses 2 ou 3 colonnes (« dm³ » n'est pas le nom des trois colonnes), et aucune case retirée de la grille
+  assert.doesNotMatch(css5, /head-group\.multi[^{]*\{[^}]*(grid-column|display: none)/);
+  // ordinateur et tablette : rien de tout cela, et les grilles d'avant le lot 5 (1fr)
+  const hors = css5.replace(/@media screen and \(max-width: 700px\) \{(?:[^{}]*\{[^}]*\})*\s*\}/g, "");
+  assert.doesNotMatch(hors, /head-group\.multi|minmax\(0, 1fr\)|grid-auto-columns/);
+  assert.match(hors, /\.board-columns \{ display: grid; grid-template-columns: repeat\(var\(--cols, 7\), 1fr\);/);
+  assert.equal((script.match(/grid-template-columns: repeat\(\$\{schema\.slots\}, 1fr\)/g) || []).length, 3);
+  assert.doesNotMatch(script, /minmax\(0, 1fr\)/);
+  // la classe « multi » : seulement pour les tableaux à 2 ou 3 cases par unité ; une case sans nom porte « empty-unit »
+  assert.match(script, /<div class="head-group\$\{schema\.slots > 1 \? ' multi' : ''\}" style="grid-template-columns: repeat\(\$\{schema\.slots\}, 1fr\)">/);
+  assert.match(script, /let classes = `unitBtn \$\{!isLast \|\| !u \? 'empty-unit' : ''\}`;/);
 });

@@ -165,6 +165,26 @@
     .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
     .sub-lab { white-space: nowrap; font-weight: 900; color: color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1; }
 
+    /* lot 5, au téléphone seulement : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus d'UNE seule
+       colonne, celle de ses unités (« dm³ » n'est pas le nom des trois colonnes : la 2e compte les dizaines de dm³).
+       « mm³ » est plus large que sa case : avant, la case grossissait et toute la ligne des unités se décalait (16 px).
+       Maintenant les colonnes gardent leur largeur, et le nom est une étiquette centrée sur sa colonne, qui peut la dépasser
+       des deux côtés ; les cases vides de la ligne des unités ne sont plus dessinées. Toutes les unités ont la même taille. */
+    @media screen and (max-width: 700px) {
+      .board-columns { grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr)); }
+      .head-group, .subhead-group, .slots { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+      .head-group.multi > .unitBtn.empty-unit { visibility: hidden; }
+      .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; }
+      /* la dernière colonne : l'étiquette s'arrête au bord du tableau au lieu d'en sortir */
+      .family-col:last-child .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: end; }
+      .head-group.multi > .unitBtn span { font-size: inherit !important; letter-spacing: normal !important; }
+    }
+    /* lot 5, au téléphone, « Je m'entraîne » : « Convertis : » sur sa ligne, et une case de largeur fixe (environ 10 chiffres),
+       qui ne grandit plus pendant la frappe : au-delà, ce sont les chiffres qui rapetissent (majChamp) */
+    @media screen and (max-width: 700px) {
+      .entr .question-text .conv-consigne { display: block; font-size: 1rem; font-weight: 800; color: var(--muted); margin-bottom: 2px; }
+      .entr .champ { width: 7.2em; min-width: 0; box-sizing: border-box; overflow: hidden; white-space: nowrap; }
+    }
     /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 950px; background: white; }
     @media screen and (max-width: 700px) {
@@ -177,6 +197,7 @@
       .theme-col .checkbox-list[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
       .bottom-config, .config-options, .btn-wrap, .print-group { width: 100%; }
       .bottom-config { align-items: stretch; padding: 10px; }
+      .bloc-niveaux .niveaux { flex: 1; }
       .config-options { gap: 10px; }
       .btn-wrap { align-items: stretch; }
       .print-group { flex-wrap: wrap; }
@@ -267,6 +288,22 @@
     .seg-mode .seg { border: 0; background: white; color: var(--text); font: bold 0.9rem 'Nunito', sans-serif; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
     .seg-mode .seg[aria-pressed="true"] { background: #1283ff; color: white; }
     .config-block[hidden] { display: none; }
+    /* lot 5 : le nom de chaque niveau à côté de sa case, en liste (comme les trois cases de l'impression).
+       Sur ordinateur, la liste est rangée en haut à droite du bandeau : le bandeau garde sa hauteur. */
+    .niveaux { display: flex; flex-direction: column; gap: 3px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cfd8ea; }
+    .niveaux label { cursor: pointer; white-space: nowrap; }
+    .niveaux input { accent-color: var(--accent); }
+    .bloc-niveaux { align-items: flex-start; }
+    .bloc-niveaux > label { white-space: nowrap; padding-top: 7px; }
+    @media screen and (min-width: 701px) and (max-width: 899px) {
+      .niveaux { flex-direction: row; gap: 14px; }
+    }
+    @media screen and (min-width: 900px) {
+      .bottom-config { position: relative; padding-right: 226px; }
+      .bloc-niveaux { position: absolute; top: 12px; right: 16px; width: 190px; flex-direction: column; gap: 4px; }
+      .bloc-niveaux > label { padding-top: 0; }
+      .bloc-niveaux .niveaux { align-self: stretch; }
+    }
     .cb-row.hors-mode { opacity: .45; cursor: not-allowed; }
     .cb-row.hors-mode input { cursor: not-allowed; }
 
@@ -590,12 +627,12 @@
             <button type="button" class="seg" data-mode="entrainement" aria-pressed="true" onclick="choisirMode('entrainement', true)">✍️ Je m'entraîne</button>
           </div>
         </div>
-        <div class="config-block">
+        <div class="config-block bloc-niveaux">
           <label>Niveaux :</label>
-          <div style="display: flex; gap: 12px; background: white; padding: 6px 12px; border-radius: 6px; border: 1px solid #cfd8ea;">
-            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="1" checked style="accent-color: var(--accent);"> 1</label>
-            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="2" style="accent-color: var(--accent);"> 2</label>
-            <label style="cursor: pointer;"><input type="checkbox" name="cbLevel" value="3" style="accent-color: var(--accent);"> 3</label>
+          <div class="niveaux">
+            <label><input type="checkbox" name="cbLevel" value="1" checked> 1&nbsp;·&nbsp;Les&nbsp;bases</label>
+            <label><input type="checkbox" name="cbLevel" value="2"> 2&nbsp;·&nbsp;Tout&nbsp;le&nbsp;tableau</label>
+            <label><input type="checkbox" name="cbLevel" value="3"> 3&nbsp;·&nbsp;Les&nbsp;pièges</label>
           </div>
         </div>
         <div class="config-block">
@@ -1072,20 +1109,15 @@
     /* =========================================
        GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES)
        ========================================= */
-    function valeurDuNiveau(level) {
-      if (level === 1) {
-        let size = rand(1, 3);
-        if (size === 1) return rand(1, 9).toString();
-        if (size === 2) return rand(10, 99).toString();
-        return rand(100, 999).toString();
-      }
-      if (level === 2) {
-        let type = rand(1, 4);
-        if (type === 1) return rand(1, 99).toString();
-        if (type === 2) return rand(100, 9999).toString();
-        if (type === 3) return depuisEntier(rand(11, 999), 1);
-        return depuisEntier(rand(101, 9999), 2);
-      }
+    /* lot 5 (25/11/2026) : trois vrais niveaux pour les conversions
+       1 « Les bases »       : les relations qu'on connaît par cœur, dans les deux sens, des entiers de 1 à 99, résultat entier
+       2 « Tout le tableau » : toutes les unités, dans les deux sens, jusqu'à × 1 000 et ÷ 1 000 ; le nombre écrit avec la plus
+                               grande des deux unités est simple (un entier jusqu'à 999 ; 3,5 ; 2,75 ; 0,5 ; 0,25), et il n'y a
+                               jamais de zéro juste après la virgule
+       3 « Les pièges »      : les nombres et les unités d'avant le lot 5 (0,05 ; 3,05 ; 45 000 ; les grands écarts des aires et
+                               des volumes), sans ce qui a plus de 4 chiffres après la virgule ou plus de 8 chiffres */
+    // niveau 3 : les nombres pièges (le tirage d'avant le lot 5, inchangé)
+    function nombrePiege() {
       let type = rand(1, 4);
       if (type === 1) { let zeros = rand(1, 2) === 1 ? "0,0" : "0,00"; return zeros + rand(1, 9); }
       if (type === 2) { if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9); return rand(1, 9) + "0," + rand(1, 9); }
@@ -1102,25 +1134,97 @@
     // « L ↔ m³ » : toujours une unité de capacité d'un côté, une unité de volume de l'autre
     const LITRES = ['hL', 'L', 'dL', 'cL', 'mL'];
     const CUBES = ['m³', 'dm³', 'cm³'];
-    function buildCrossLogic(level) {
-      const base = SCHEMAS.cross;
-      const paires = [];
-      for (const l of LITRES) for (const c of CUBES) {
-        const pl = posUnite(base, l), pc = posUnite(base, c);
-        paires.push([l, c, pl, pc], [c, l, pc, pl]);
-      }
-      // niveau 1 : jamais vers une unité plus grande
-      const possibles = paires.filter(([, , a, b]) => level === 1 ? b >= a : true);
-      const [src, tgt, a, b] = pick(possibles);
-      return questionDeConversion(base, valeurDuNiveau(level), src, tgt, a, b);
+
+    // ---- niveau 1 : les relations qu'on connaît par cœur (une paire écrite deux fois sort deux fois plus souvent)
+    const BASES = {
+      length: [['km', 'm'], ['km', 'm'], ['m', 'cm'], ['m', 'cm'], ['cm', 'mm'], ['cm', 'mm'], ['m', 'mm'], ['m', 'dm'], ['dm', 'cm']],
+      mass:   [['kg', 'g'], ['kg', 'g'], ['g', 'mg']],
+      massT:  [['t', 'kg'], ['kg', 'g'], ['g', 'mg']],
+      volL:   [['L', 'cL'], ['L', 'mL'], ['cL', 'mL']],
+      area:   [['m²', 'dm²'], ['dm²', 'cm²']],
+      volM3:  [['m³', 'dm³'], ['dm³', 'cm³']],
+      cross:  [['L', 'dm³'], ['mL', 'cm³'], ['L', 'cm³'], ['L', 'cm³'], ['m³', 'L'], ['m³', 'L']]
+    };
+    function questionDesBases(type) {
+      const base = SCHEMAS[type];
+      const [grande, petite] = pick(BASES[type]);
+      const pg = posUnite(base, grande), pp = posUnite(base, petite);
+      // des nombres simples : de 1 à 9 une fois sur deux, de 10 à 99 sinon
+      const k = String(rand(1, 2) === 1 ? rand(1, 9) : rand(10, 99));
+      // vers la petite unité : 3 km = 3 000 m ; vers la grande : 400 cm = 4 m (le résultat est l'entier tiré)
+      if (rand(1, 2) === 1) return questionDeConversion(base, k, grande, petite, pg, pp);
+      return questionDeConversion(base, decaler(k, pp - pg), petite, grande, pp, pg);
     }
 
-    function buildQuestionLogic(type, level) {
-      if (type === 'cross') return buildCrossLogic(level);
+    // ---- niveau 2 : tout le tableau, jusqu'à × 1 000
+    const USUELLES = new Set(['km', 'm', 'cm', 'mm', 't', 'kg', 'g', 'mg', 'L', 'cL', 'mL', 'km²', 'm²', 'dm²', 'cm²', 'm³', 'dm³', 'cm³']);
+    // toutes les paires [grande unité, petite unité, leurs cases] d'une case du menu : 1 à 3 colonnes d'écart
+    // (une seule pour les aires et les volumes : × 100 et × 1 000)
+    const PAIRES_DU_TABLEAU = {};
+    function pairesDuTableau(type) {
+      if (PAIRES_DU_TABLEAU[type]) return PAIRES_DU_TABLEAU[type];
+      const base = SCHEMAS[type], toutes = [];
+      if (type === 'cross') {
+        for (const l of LITRES) for (const c of CUBES) {
+          const pl = posUnite(base, l), pc = posUnite(base, c);
+          if (Math.abs(pl - pc) <= 3) toutes.push(pl <= pc ? [l, c, pl, pc] : [c, l, pc, pl]);
+        }
+      } else {
+        const u = base.units, s = base.slots, max = s === 1 ? 3 : 1;
+        for (let i = 0; i < u.length; i++) for (let j = i + 1; j <= i + max && j < u.length; j++) {
+          if (u[i] !== '-' && u[j] !== '-') toutes.push([u[i], u[j], i * s + s - 1, j * s + s - 1]);
+        }
+      }
+      const usuelles = n => toutes.filter(([a, b]) => USUELLES.has(a) + USUELLES.has(b) === n);
+      return PAIRES_DU_TABLEAU[type] = { toutes, deux: usuelles(2), une: usuelles(1) };
+    }
+    // le nombre écrit avec la plus grande des deux unités (« ecart » : le nombre de cases entre les deux unités)
+    function nombreSimple(ecart) {
+      const r = rand(1, 20);
+      if (r <= 6) return String(rand(1, 99));                    // 6 sur 20 : un entier jusqu'à 99
+      if (r <= 9) return String(rand(100, 999));                 // 3 sur 20 : un entier jusqu'à 999
+      if (r <= 14) return depuisEntier(rand(11, 999), 1);        // 5 sur 20 : un chiffre après la virgule (3,5 ; 12,5)
+      if (r <= 16) return depuisEntier(rand(101, 999), 2);       // 2 sur 20 : deux chiffres après la virgule (2,75)
+      if (r <= 19) {                                             // 3 sur 20 : plus petit que 1 (0,5 ; 0,25 ; 0,75 ; 0,45)
+        const sorte = rand(1, 4);
+        if (sorte <= 2) return '0,' + rand(1, 9);
+        return sorte === 3 ? pick(['0,25', '0,75']) : depuisEntier(rand(11, 99), 2);
+      }
+      // 1 sur 20 : des millièmes, seulement à × 1 000 (2,375 kg = 2 375 g)
+      return ecart === 3 ? depuisEntier(rand(101, 9999), 3) : depuisEntier(rand(11, 999), 1);
+    }
+    const nbChiffres = s => s.replace(',', '').length;
+    // pas de piège au niveau 2 : jamais de zéro juste après la virgule (0,05 ; 3,05), 3 décimales et 7 chiffres au plus
+    function sansPiege(q) { return [q.valStr, q.calcValStr].every(s => !/,0/.test(s) && nbDecimales(s) <= 3 && nbChiffres(s) <= 7); }
+    function questionDuTableau(type) {
+      const base = SCHEMAS[type], p = pairesDuTableau(type);
+      for (let i = 0; i < 200; i++) {
+        // 1 fois sur 2, deux unités usuelles (3,5 m = 350 cm) ; 1 sur 4, une usuelle et une autre (41 dg = 4,1 g) ; 1 sur 4, tout le tableau
+        const r = rand(1, 4), liste = r <= 2 ? p.deux : (r === 3 ? p.une : p.toutes);
+        const [grande, petite, pg, pp] = pick(liste.length ? liste : p.toutes);
+        const n = nombreSimple(pp - pg);
+        const q = rand(1, 2) === 1 ? questionDeConversion(base, n, grande, petite, pg, pp)
+                                   : questionDeConversion(base, decaler(n, pp - pg), petite, grande, pp, pg);
+        if (sansPiege(q)) return q;
+      }
+      return questionDesBases(type);
+    }
+
+    // ---- niveau 3 : n'importe quelles unités du tableau et les nombres pièges, comme avant le lot 5
+    function conversionPiege(type) {
+      if (type === 'cross') {
+        const base = SCHEMAS.cross, paires = [];
+        for (const l of LITRES) for (const c of CUBES) {
+          const pl = posUnite(base, l), pc = posUnite(base, c);
+          paires.push([l, c, pl, pc], [c, l, pc, pl]);
+        }
+        const [src, tgt, a, b] = pick(paires);
+        return questionDeConversion(base, nombrePiege(), src, tgt, a, b);
+      }
       const schema = SCHEMAS[type];
       let maxGap = 3; if (schema.slots === 2 || schema.slots === 3) maxGap = 2;
       let gap = rand(1, maxGap);
-      let direction = (level === 1) ? 1 : (rand(1, 2) === 1 ? 1 : -1);
+      let direction = rand(1, 2) === 1 ? 1 : -1;
 
       let validStarts = [];
       for (let i = 0; i < schema.units.length; i++) {
@@ -1128,9 +1232,18 @@
           if (targetIdx >= 0 && targetIdx < schema.units.length && schema.units[i] !== '-' && schema.units[targetIdx] !== '-') validStarts.push(i);
       }
       let uIndex1 = pick(validStarts); let uIndex2 = uIndex1 + (gap * direction);
-      const valStr = valeurDuNiveau(level);
+      const valStr = nombrePiege();
       const s = schema.slots;
       return questionDeConversion(schema, valStr, schema.units[uIndex1], schema.units[uIndex2], uIndex1 * s + s - 1, uIndex2 * s + s - 1);
+    }
+    // … sans les monstres : « 0,009 dm³ = 0,000 000 009 dam³ », « 64 000 hm³ = 64 000 000 000 m³ » sont retirés
+    function sansMonstre(q) { return [q.valStr, q.calcValStr].every(s => nbDecimales(s) <= 4 && nbChiffres(s) <= 8); }
+
+    function buildQuestionLogic(type, level) {
+      if (level === 1) return questionDesBases(type);
+      if (level === 2) return questionDuTableau(type);
+      for (let i = 0; i < 200; i++) { const q = conversionPiege(type); if (sansMonstre(q)) return q; }
+      return conversionPiege(type);
     }
 
     // une question de problème : la conversion montrée dans le tableau, plus l'énoncé et la correction ;
@@ -1731,7 +1844,7 @@
       let slotIndex = 0;
       schema.units.forEach((u, ci) => {
         html += `<div class="family-col">`;
-        html += `<div class="head-group" style="grid-template-columns: repeat(${schema.slots}, 1fr)">`;
+        html += `<div class="head-group${schema.slots > 1 ? ' multi' : ''}" style="grid-template-columns: repeat(${schema.slots}, 1fr)">`;
         for(let si=0; si<schema.slots; si++){
           let isLast = (si === schema.slots - 1);
           let classes = `unitBtn ${!isLast || !u ? 'empty-unit' : ''}`;
@@ -2235,10 +2348,13 @@
     function majChamp() {
       const st = E.st[E.i], champ = document.getElementById('champ');
       if (!champ) return;
-      champ.textContent = st.saisie ? ecrire(st.saisie) : '';
+      champ.textContent = '';
+      const t = champ.appendChild(creer('span', 'champ-t', st.saisie ? ecrire(st.saisie) : ''));
+      // au téléphone, la case a une largeur fixe : un nombre trop long rapetisse (jusqu'à 36 %) au lieu de pousser la case
+      for (let k = 1; k <= 8 && champ.scrollWidth > champ.clientWidth; k++) t.style.fontSize = (100 - 8 * k) + '%';
       champ.classList.toggle('faux', st.faux || st.etat === 'revoir');
       champ.classList.toggle('juste', st.fini && st.etat !== 'revoir');
-      if (!st.fini && !st.faux) champ.appendChild(creer('span', 'car'));
+      if (!st.fini && !st.faux) t.appendChild(creer('span', 'car'));
     }
     function message(texteOuHtml, oui, enHtml = false) {
       const q = E.serie[E.i];
@@ -2314,7 +2430,7 @@
       if (genre === 'nombre') {
         const unite = bonneReponse(q).unite;
         if (!q.isEstimation && !q.isProblem) {
-          qText.innerHTML = `${CONSIGNE_CONV}<span class="nb">${mesure(q.valStr, q.sourceUnit)}</span> = <span class="nb">${champHTML()}${NBSP}<span id="uniteRep"></span></span>`;
+          qText.innerHTML = `${CONSIGNE_CONV}<span class="nb">${mesure(q.valStr, q.sourceUnit)}${NBSP}=</span> <span class="nb">${champHTML()}${NBSP}<span id="uniteRep"></span></span>`;
           qText.classList.add('conv');
         } else {
           qText.innerHTML = q.isProblem ? typo(q.problemText) : `<strong>${typo(q.phrase)}</strong>`;
