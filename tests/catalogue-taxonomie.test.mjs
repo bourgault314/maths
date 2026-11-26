@@ -34,7 +34,7 @@ const allowedGroups = new Set([
 ]);
 
 const expectedGroupCounts = {
-  manipuler: 43,
+  manipuler: 44, // + Le volume du pavé droit et du cube (26/11/2026)
   entrainer: 31, // + Flash Anzan (22/10/2026)
   generer: 34,
   imprimer: 30,
@@ -45,7 +45,7 @@ const expectedGroupCounts = {
 };
 
 const expectedVisibleCardCounts = {
-  manipuler: 39,
+  manipuler: 40, // + Le volume du pavé droit et du cube (26/11/2026)
   entrainer: 29,
   generer: 34,
   imprimer: 27,
@@ -67,10 +67,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 191 entrées dont 181 publiées", () => {
+test("le catalogue conserve 192 entrées dont 182 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 191); // + la page Papiers à imprimer (12/11/2026)
-  assert.equal(published.length, 181);
+  assert.equal(resources.length, 192); // + la page Papiers à imprimer (12/11/2026), + Le volume du pavé droit et du cube (26/11/2026)
+  assert.equal(published.length, 182);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -146,7 +146,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 181 ressources reste stable", () => {
+test("la répartition arbitrée des 182 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -430,6 +430,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 163, "Les 181 ressources doivent être représentées par 163 cartes après regroupement.");
+  assert.equal(visibleCardCount, 164, "Les 182 ressources doivent être représentées par 164 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

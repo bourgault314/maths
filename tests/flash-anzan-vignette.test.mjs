@@ -101,5 +101,5 @@ test("Anzan : le catalogue tire le nombre UNE fois par page et l'utilise dans th
   assert.match(corps, /anzanThumbnail\.isAnzanThumbnail\(thumbnail\)/);
   assert.match(corps, /anzanThumbnail\.dataUrl\(anzanThumbnailNumber\)/);
   assert.match(lire("assets/js/catalogue-refonte-data.js"), /"thumbnail": "assets\/img\/thumbnails\/calcul-mental\/flash-anzan\.svg\?v=1"/);
-  assert.match(lire("outils/index.html"), /catalogue-refonte\.js\?v=anzan-vignette-20261022-1/);
+  assert.match(lire("outils/index.html"), /catalogue-refonte\.js\?v=volumes-20261126-1/);
 });

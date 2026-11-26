@@ -57,9 +57,9 @@ test("le boulier commun à Rekenrek et Montessori ne gonfle pas le total du pare
 test("chaque domaine annonce seulement ses ressources atteignables", () => {
   const expected = {
     "nombres-calculs": 96,
-    "proportionnalite-mesures": 18,
+    "proportionnalite-mesures": 19, // + Le volume du pavé droit et du cube (26/11/2026)
     algebre: 28, // − les livrets bleu/jaune et Mathigon (06/11/2026) ; + « Comment on joue ? » de la page Splat : le film, la vidéo, le diaporama (11/10/2026), puis le diaporama en ligne
-    geometrie: 21,
+    geometrie: 22, // + Le volume du pavé droit et du cube, aussi dans Espace, solides et patrons (26/11/2026)
     donnees: 2,
     informatique: 0,
     "jeux-recherches": 12,
@@ -69,7 +69,7 @@ test("chaque domaine annonce seulement ses ressources atteignables", () => {
     assert.equal(context.domainResourceCount(domain), count, domain);
   }
   assert.equal(context.notionResourceCount("calcul-mental", "nombres-calculs"), 8);
-  assert.equal(context.resourceCount(published), 181, "Automatismes reste compté une fois dans le total du catalogue.");
+  assert.equal(context.resourceCount(published), 182, "Automatismes reste compté une fois dans le total du catalogue.");
 });
 
 test("Triangles compte ses descendants et les rubriques vides restent à zéro", () => {

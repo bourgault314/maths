@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Le volume du pavé droit et du cube | maths&amp;go</title>
+<meta name="description" content="Remplir un pavé droit ou un cube avec des cubes unités : une rangée, une couche, puis toutes les couches, pour comprendre la formule V = L × ℓ × h et faire tourner le solide.">
+<link rel="canonical" href="https://mathsgo.re/outils/volumes/volume_pave.html">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<style>
+  :root{
+    --ink:#17324D; --muted:#5b6b78; --ligne:#dfe6ec; --fond:#f5f7f9;
+    --vert:#08A6A6; --vert-fonce:#067f7f; --vert-clair:#EAF8F7;
+    --orange:#F28C28; --orange-clair:#FDF0E2; --orange-fonce:#c76a10;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--fond);color:var(--ink);
+       font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+       display:flex;flex-direction:column;-webkit-user-select:none;user-select:none;
+       -webkit-tap-highlight-color:transparent}
+  .bandeau{background:#fff;border-bottom:2.5px solid var(--vert);padding:6px 10px;
+           display:grid;grid-template-columns:48px 1fr 48px;align-items:center;flex:0 0 auto}
+  .bandeau h1{font-size:18px;margin:0;font-weight:700;text-align:center;grid-column:2}
+  #retour{grid-column:1;text-decoration:none}
+  .rond{width:44px;height:44px;border-radius:12px;border:1px solid #cfd8e0;background:#fff;
+        display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);padding:0}
+  .rond:hover{background:#f2f6f8}
+  .rond svg{width:22px;height:22px}
+  #btnEcran{grid-column:3;justify-self:end}
+
+  .corps{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+  .scene{position:relative;min-height:0;background:#fff;touch-action:none;cursor:grab;overflow:hidden}
+  .scene.attrape{cursor:grabbing}
+  .scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .vues{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;gap:6px;z-index:2}
+  .vues button{min-width:44px;white-space:nowrap}
+  .panneau{background:var(--fond);border-left:1px solid var(--ligne);overflow:auto;padding:10px;
+           display:flex;flex-direction:column;gap:10px}
+  .carte{background:#fff;border:1px solid var(--ligne);border-radius:14px;padding:10px 12px}
+  .carte h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+            margin:0 0 10px;font-weight:700}
+
+  button{font:inherit;font-size:15px;min-height:44px;padding:0 12px;border-radius:10px;
+         border:1px solid #cfd8e0;background:#fff;color:var(--ink);cursor:pointer}
+  button:hover{background:#f2f6f8}
+  button.on{background:var(--vert);border-color:var(--vert);color:#fff;font-weight:600}
+  button.on:hover{background:var(--vert-fonce)}
+  button[disabled]{opacity:.38;cursor:default}
+  button[disabled]:hover{background:#fff}
+
+  .bascule{display:grid;grid-template-columns:1fr 1fr 74px;gap:6px;margin-bottom:8px}
+  .bascule select{font:inherit;font-size:16px;min-height:44px;border:1px solid #cfd8e0;border-radius:10px;
+                  background:#fff;color:var(--ink);padding:0 6px;text-align:center}
+  .dims{display:grid;gap:6px}
+  .dim{display:grid;grid-template-columns:1fr 44px 54px 44px;align-items:center;gap:6px}
+  .dim .nom{font-size:15px}
+  .dim .nom b{display:inline-block;min-width:18px;font-family:Georgia,"Times New Roman",serif;
+              font-style:italic;font-size:18px}
+  .dim .valeur{text-align:center;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+  .dim button{padding:0;font-size:22px;font-weight:600}
+
+  .etapes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .etapes button{padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;
+                 font-size:12.5px;line-height:1.1;min-height:66px}
+  .etapes button svg{width:34px;height:30px}
+  .etapes button.on svg .f1{fill:#fff}
+  .etapes button.on svg .f2{fill:rgba(255,255,255,.72)}
+  .etapes button.on svg .f3{fill:rgba(255,255,255,.5)}
+  .etapes button.on svg path{stroke:var(--vert-fonce)}
+  .ligne2{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}
+  .ligne2 > button{white-space:nowrap;padding:0 8px}
+  .ligne2 button svg{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+
+  .calcul{display:flex;flex-direction:column;position:relative}
+  .tete{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 4px}
+  .tete h2{margin:0}
+  .rond .ferme{display:none}
+  .rond[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .rond[aria-pressed="true"] .ouvert{display:none}
+  .rond[aria-pressed="true"] .ferme{display:block}
+  .contenu{display:flex;flex-direction:column;flex:1 1 auto}
+  .calcul.cache .contenu{visibility:hidden}
+  .voile{display:none;position:absolute;left:0;right:0;top:52px;bottom:0;align-items:center;justify-content:center;color:#c9d2d9}
+  .voile svg{width:64px;height:64px}
+  .calcul.cache .voile{display:flex}
+  .phrase{font-size:19px;line-height:1.4;min-height:80px}
+  .phrase .gros{font-size:24px;font-weight:700}
+  .phrase .c{color:var(--orange-fonce);font-weight:700}
+  .phrase .discret{color:var(--muted);font-size:15px}
+  .couches{display:flex;align-items:center;gap:4px}
+  .couches button{width:44px;padding:0;font-size:22px;font-weight:600}
+  .couches .n{min-width:62px;text-align:center;font-size:18px;line-height:1;font-variant-numeric:tabular-nums;color:var(--muted)}
+  .couches .n b{color:var(--ink);font-size:20px}
+  .couches .n small{display:block;font-size:11px;margin-top:3px}
+  .couches.eteint .n{opacity:.45}
+
+  .formule{margin-top:auto;border-top:1px solid var(--ligne);padding-top:10px;
+           font-size:22px;font-variant-numeric:tabular-nums}
+  .formule .l{display:grid;grid-template-columns:auto auto 1fr;column-gap:8px;align-items:baseline;
+              min-height:32px}
+  .formule .l > span:first-child{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+  .formule .t{display:inline-block;text-align:center;transition:color .25s}
+  .formule .t i{font-family:Georgia,"Times New Roman",serif}
+  .formule .t small{display:block;font-size:11px;color:var(--muted);font-style:normal;
+                    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;margin-top:-2px}
+  .formule .eteint{color:#b9c4cd}
+  .formule .eteint small{color:#c9d2d9}
+  .formule .allume{color:var(--orange-fonce)}
+  .formule .res{font-weight:700}
+  .formule .op{color:var(--muted)}
+
+  @media (max-width:860px){
+    body{height:auto;min-height:100%}
+    .corps{grid-template-columns:minmax(0,1fr);flex:0 0 auto}
+    .scene{height:56vh;min-height:300px}
+    .panneau{border-left:none;border-top:1px solid var(--ligne);overflow:visible}
+    .calcul{min-height:0}
+    .carte.solide{order:3} .carte.remplir{order:1} .carte.calcul{order:2}
+  }
+  @media (max-width:420px){
+    .long{display:none}
+    .vues button{font-size:14px;padding:0 10px}
+    .bandeau h1{font-size:15.5px}
+    .etapes button{font-size:11px;min-height:66px}
+    .etapes button svg{width:28px;height:26px}
+    .phrase{font-size:17px}
+    .formule{font-size:19px}
+  }
+  :fullscreen .bandeau h1{font-size:20px}
+  /* écran bas (portable, projecteur 1280 × 720) : on gagne la hauteur des titres de cartes */
+  @media (min-width:861px) and (max-height:800px){
+    .carte.solide h2,.carte.remplir h2{display:none}
+    .etapes button{min-height:60px}
+    .phrase{min-height:72px}
+  }
+</style>
+<script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
+</head>
+<body data-mathsgo-parent-href="/outils/index.html?domain=proportionnalite-mesures&amp;notion=volumes"
+      data-mathsgo-parent-label="Volumes" data-mathsgo-parent-link="#retour">
+
+<header class="bandeau">
+  <a class="rond" id="retour" href="../index.html?domain=proportionnalite-mesures&amp;notion=volumes" aria-label="Retour à Volumes" title="Retour à Volumes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </a>
+  <h1 id="titre">Le volume du pavé droit</h1>
+  <button type="button" class="rond" id="btnEcran" aria-label="Plein écran" title="Plein écran">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+  </button>
+</header>
+
+<main class="corps">
+  <div class="scene" id="scene">
+    <canvas id="toile"></canvas>
+    <div class="vues">
+      <button type="button" id="v3d" class="on">3D</button>
+      <button type="button" id="vFace">De face</button>
+      <button type="button" id="vDessus">De dessus</button>
+      <button type="button" id="vTourne" class="rond" aria-label="Faire tourner" title="Faire tourner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.35-5.65"/><path d="M20 4v5h-5"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <aside class="panneau">
+    <section class="carte solide">
+      <h2>Le solide</h2>
+      <div class="bascule">
+        <button type="button" id="mPave" class="on">Pavé droit</button>
+        <button type="button" id="mCube">Cube</button>
+        <select id="unite" aria-label="Unité de longueur">
+          <option value="mm">mm</option>
+          <option value="cm" selected>cm</option>
+          <option value="dm">dm</option>
+          <option value="m">m</option>
+        </select>
+      </div>
+      <div class="dims" id="dims"></div>
+    </section>
+
+    <section class="carte remplir">
+      <h2>Remplir avec des cubes</h2>
+      <div class="etapes" id="etapes">
+        <button type="button" data-e="0">
+          <svg viewBox="0 0 34 30"><path d="M5 11 L17 5 L29 11 L29 23 L17 29 L5 23 Z M5 11 L17 17 L29 11 M17 17 L17 29" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          La boîte
+        </button>
+        <button type="button" data-e="1">
+          <svg viewBox="0 0 34 30"><path class="f1" d="M11 12 L17 9 L23 12 L17 15 Z" fill="#F9C38C" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/><path class="f2" d="M11 12 L17 15 L17 22 L11 19 Z" fill="#F28C28" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/><path class="f3" d="M17 15 L23 12 L23 19 L17 22 Z" fill="#d97516" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          1 cube
+        </button>
+        <button type="button" data-e="2">
+          <svg viewBox="0 0 34 30"><path class="f1" d="M3 16 L9 13 L31 13 L25 16 Z" fill="#F9C38C" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/><path class="f2" d="M3 16 L25 16 L25 22 L3 22 Z" fill="#F28C28" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/><path class="f3" d="M25 16 L31 13 L31 19 L25 22 Z" fill="#d97516" stroke="#c76a10" stroke-width="1.2" stroke-linejoin="round"/><path d="M8.5 16 V22 M14 16 V22 M19.5 16 V22" stroke="#c76a10" stroke-width="1.1"/></svg>
+          1 rangée
+        </button>
+        <button type="button" data-e="3">
+          <svg viewBox="0 0 34 30"><path class="f1" d="M3 18 L13 10 L31 10 L21 18 Z" fill="#9BDDDA" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path class="f2" d="M3 18 L21 18 L21 23 L3 23 Z" fill="#08A6A6" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path class="f3" d="M21 18 L31 10 L31 15 L21 23 Z" fill="#078d8d" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.3 15.3 L24.3 15.3 M9.7 12.7 L27.7 12.7" stroke="#067f7f" stroke-width="1.1"/></svg>
+          1 couche
+        </button>
+        <button type="button" data-e="4">
+          <svg viewBox="0 0 34 30"><path class="f1" d="M3 11 L12 5 L31 5 L22 11 Z" fill="#9BDDDA" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path class="f2" d="M3 11 L22 11 L22 27 L3 27 Z" fill="#08A6A6" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path class="f3" d="M22 11 L31 5 L31 21 L22 27 Z" fill="#078d8d" stroke="#067f7f" stroke-width="1.2" stroke-linejoin="round"/><path d="M3 16.3 H22 L31 10.3 M3 21.6 H22 L31 15.6" fill="none" stroke="#067f7f" stroke-width="1.1"/></svg>
+          Le pavé
+        </button>
+      </div>
+      <div class="ligne2">
+        <button type="button" id="btnEcarter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="txtEcarter">Écarter</span>
+        </button>
+        <div class="couches" id="couches">
+          <button type="button" id="cMoins" aria-label="Une couche de moins">−</button>
+          <span class="n"><b id="cN">0</b>&#8239;/&#8239;<span id="cH">5</span><small>couches</small></span>
+          <button type="button" id="cPlus" aria-label="Une couche de plus">+</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="carte calcul">
+      <div class="tete">
+        <h2>Le calcul</h2>
+        <button type="button" class="rond" id="btnOeil" aria-pressed="false" aria-label="Cacher le calcul" title="Cacher le calcul">
+          <svg class="ouvert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="ferme" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.9 3.8M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7c1.8 0 3.4-.5 4.7-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+        </button>
+      </div>
+      <div class="contenu" id="contenuCalcul">
+        <div class="phrase" id="phrase"></div>
+        <div class="formule" id="formule"></div>
+      </div>
+      <div class="voile" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-2.9 3.8M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7c1.8 0 3.4-.5 4.7-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<script defer src="../../assets/js/tool-parent-navigation.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ---------- état ---------- */
+const MAX = 10;
+const etat = {
+  cube:false,
+  L:4, l:3, h:5,          // longueur (x), largeur (z, profondeur), hauteur (y)
+  unite:'cm',
+  etape:0,                // 0 boîte, 1 cube, 2 rangée, 3 couche, 4 pavé
+  couches:0,              // couches posées à l'étape 4
+  ecart:0, ecartCible:0,  // écart entre les couches (en arêtes de cube)
+  yaw:0.62, pitch:0.47,   // vue
+  cible:null,             // vue visée (animation)
+  tourne:false,
+  cache:false             // calcul caché (l'œil)
+};
+const COUL = {
+  ink:'#17324D', muted:'#5b6b78',
+  vert:[8,166,166], vertClair:[120,206,202],
+  orange:[242,140,40], orangeClair:[249,195,140]
+};
+/* cubes : un tableau indexé par le rang de remplissage */
+let cubes = [];   // {t0, dur, sort:false|t, vivant}
+const DUREE_CHUTE = 420;
+
+function N(){ return etat.L*etat.l*etat.h; }
+function couche(k){ return Math.floor(k/(etat.L*etat.l)); }
+function rangee(k){ return Math.floor(k/etat.L)%etat.l; }
+function colonne(k){ return k%etat.L; }
+
+function cibleCompte(){
+  switch(etat.etape){
+    case 0: return 0;
+    case 1: return 1;
+    case 2: return etat.L;
+    case 3: return etat.L*etat.l;
+    default: return etat.couches*etat.L*etat.l;
+  }
+}
+
+/* Faire apparaître ou disparaître des cubes. Le rythme dit ce qu'on compte :
+   cube par cube pour la rangée, rangée par rangée pour la couche,
+   couche par couche pour le pavé. */
+function allerA(b, anime){
+  const now = performance.now();
+  const a = cubes.filter(c=>c && c.vivant).length;
+  if(b > a){
+    let groupe;
+    if(b <= etat.L) groupe = k=>k;                         // par cube
+    else if(b <= etat.L*etat.l) groupe = k=>Math.floor(k/etat.L); // par rangée
+    else groupe = k=>couche(k);                             // par couche
+    const pas = b <= etat.L ? 230 : (b <= etat.L*etat.l ? 330 : 430);
+    const g0 = groupe(a);
+    for(let k=a;k<b;k++){
+      const d = anime ? (groupe(k)-g0)*pas : 0;
+      cubes[k] = {t0: now + d, dur: anime ? DUREE_CHUTE : 0, vivant:true, sort:0};
+    }
+  } else if(b < a){
+    for(let k=b;k<a;k++){
+      if(cubes[k]){ cubes[k].vivant=false; cubes[k].sort = anime ? now : now-1000; }
+    }
+  }
+  demander();
+}
+
+/* ---------- interface : dimensions ---------- */
+const dimsEl = document.getElementById('dims');
+function construireDims(){
+  const lignes = etat.cube
+    ? [['c','côté','L']]
+    : [['L','longueur','L'],['ℓ','largeur','l'],['h','hauteur','h']];
+  dimsEl.innerHTML = lignes.map(([lettre,mot,cle])=>`
+    <div class="dim" data-cle="${cle}">
+      <span class="nom"><b>${lettre}</b> ${mot}</span>
+      <button type="button" data-d="-1" aria-label="${mot} moins 1">−</button>
+      <span class="valeur" id="val-${cle}">${etat[cle]}</span>
+      <button type="button" data-d="1" aria-label="${mot} plus 1">+</button>
+    </div>`).join('');
+  majBoutonsDims();
+}
+function majBoutonsDims(){
+  dimsEl.querySelectorAll('.dim').forEach(div=>{
+    const cle = div.dataset.cle, v = etat[cle];
+    div.querySelector('[data-d="-1"]').disabled = v<=1;
+    div.querySelector('[data-d="1"]').disabled = v>=MAX;
+    div.querySelector('.valeur').textContent = v;
+  });
+}
+dimsEl.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-d]'); if(!b) return;
+  const cle = b.closest('.dim').dataset.cle;
+  const v = Math.max(1, Math.min(MAX, etat[cle] + (+b.dataset.d)));
+  if(etat.cube){ etat.L=etat.l=etat.h=v; } else etat[cle]=v;
+  changerDimensions();
+});
+function changerDimensions(){
+  etat.couches = Math.min(etat.couches, etat.h);
+  if(etat.etape===4 && etat.couches===0) etat.couches = etat.h;
+  cubes = [];
+  allerA(cibleCompte(), false);
+  majBoutonsDims(); majTextes(); demander();
+}
+function choisirMode(cube){
+  etat.cube = cube;
+  document.getElementById('mPave').classList.toggle('on', !cube);
+  document.getElementById('mCube').classList.toggle('on', cube);
+  document.getElementById('titre').textContent = cube ? 'Le volume du cube' : 'Le volume du pavé droit';
+  document.querySelector('[data-e="4"]').lastChild.textContent = cube ? ' Le cube' : ' Le pavé';
+  if(cube){ const c = Math.min(etat.L, MAX); etat.L=etat.l=etat.h=Math.max(2,Math.min(c,6)); }
+  construireDims(); changerDimensions();
+}
+document.getElementById('mPave').onclick = ()=>{ if(etat.cube) choisirMode(false); };
+document.getElementById('mCube').onclick = ()=>{ if(!etat.cube) choisirMode(true); };
+document.getElementById('unite').onchange = e=>{ etat.unite = e.target.value; majTextes(); demander(); };
+
+/* ---------- interface : étapes ---------- */
+const etapesEl = document.getElementById('etapes');
+etapesEl.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-e]'); if(!b) return;
+  choisirEtape(+b.dataset.e);
+});
+function choisirEtape(n, couches){
+  etat.etape = n;
+  if(n===4) etat.couches = couches || etat.h;
+  etapesEl.querySelectorAll('button').forEach(b=>b.classList.toggle('on', +b.dataset.e===n));
+  allerA(cibleCompte(), true);
+  if(n<3 && etat.ecartCible>0) basculerEcart(false);
+  btnEcarter.disabled = n<3;
+  majTextes();
+}
+/* Les couches posées, à la main : actif dès qu'une couche est là. */
+function couchesAffichees(){ return etat.etape<3 ? 0 : (etat.etape===3 ? 1 : etat.couches); }
+document.getElementById('cMoins').onclick = ()=>{
+  if(etat.etape===4 && etat.couches>1){ etat.couches--; allerA(cibleCompte(),true); majTextes(); } };
+document.getElementById('cPlus').onclick  = ()=>{
+  if(etat.etape===3 && etat.h>1) choisirEtape(4, 2);
+  else if(etat.etape===4 && etat.couches<etat.h){ etat.couches++; allerA(cibleCompte(),true); majTextes(); } };
+
+/* L'œil : cacher le calcul pour faire chercher, puis le dévoiler. */
+const btnOeil = document.getElementById('btnOeil'), carteCalcul = document.querySelector('.calcul');
+btnOeil.onclick = ()=>{
+  etat.cache = !etat.cache;
+  carteCalcul.classList.toggle('cache', etat.cache);
+  btnOeil.setAttribute('aria-pressed', String(etat.cache));
+  const t = etat.cache ? 'Montrer le calcul' : 'Cacher le calcul';
+  btnOeil.setAttribute('aria-label', t); btnOeil.title = t;
+  demander();
+};
+
+const btnEcarter = document.getElementById('btnEcarter');
+function basculerEcart(force){
+  const on = force===undefined ? etat.ecartCible===0 : force;
+  etat.ecartCible = on ? 0.55 : 0;
+  btnEcarter.classList.toggle('on', on);
+  document.getElementById('txtEcarter').textContent = on ? 'Resserrer' : 'Écarter';
+  demander();
+}
+btnEcarter.onclick = ()=>basculerEcart();
+
+/* ---------- textes ---------- */
+const phraseEl = document.getElementById('phrase'), formuleEl = document.getElementById('formule');
+const couchesEl = document.getElementById('couches');
+function nb(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+function u3(){ return etat.unite+'³'; }
+function pl(n, mot){ return n>1 ? mot+'s' : mot; }
+
+function couchesPosees(){
+  // couches dont tous les cubes sont arrivés (le texte compte avec l'animation)
+  const now = performance.now(), parC = etat.L*etat.l;
+  let n=0;
+  for(let c=0;c<etat.h;c++){
+    let ok=true;
+    for(let k=c*parC;k<(c+1)*parC;k++){
+      const q=cubes[k]; if(!q||!q.vivant||now<q.t0+q.dur){ ok=false; break; }
+    }
+    if(ok) n++; else break;
+  }
+  return Math.min(n, etat.couches);
+}
+let dernierTexte='';
+function majTextes(){
+  const {L,l,h} = etat, cube = etat.cube, base = L*l;
+  const e = etat.etape;
+  let p='';
+  if(e===0){
+    p = `<span class="gros">Combien de cubes de 1&nbsp;${u3()}&nbsp;?</span>`;
+  } else if(e===1){
+    p = `<span class="gros">1 cube unité</span><br>arête 1&nbsp;${etat.unite} · volume <span class="c">1&nbsp;${u3()}</span>`;
+  } else if(e===2){
+    p = `<span class="gros">1 rangée = <span class="c">${L}</span> ${pl(L,'cube')}</span>`;
+  } else if(e===3){
+    p = `<span class="gros">1 couche = <span class="c">${l}</span> ${pl(l,'rangée')} de ${L}</span><br>${L} × <span class="c">${l}</span> = ${nb(base)} ${pl(base,'cube')}`;
+  } else {
+    const n = couchesPosees();
+    if(n===0) p = `<span class="gros">On empile les couches…</span>`;
+    else p = `<span class="gros"><span class="c">${n}</span> ${pl(n,'couche')} de ${nb(base)} ${pl(base,'cube')}</span><br>${nb(base)} × <span class="c">${n}</span> = ${nb(base*n)} ${pl(base*n,'cube')}`
+             + (n===h ? ` <span class="discret">: le ${cube?'cube':'pavé'} est plein</span>` : '');
+  }
+  const nc = couchesAffichees();
+  couchesEl.classList.toggle('eteint', e<3);
+  document.getElementById('cN').textContent = nc;
+  document.getElementById('cH').textContent = h;
+  document.getElementById('cMoins').disabled = !(e===4 && etat.couches>1);
+  document.getElementById('cPlus').disabled = e<3 || nc>=h;
+
+  // la formule s'allume au fil des étapes
+  const plein = e===4 && couchesPosees()===h;
+  const sL = e>=2 ? 'allume' : 'eteint', sl = e>=3 ? 'allume' : 'eteint', sh = plein ? 'allume' : 'eteint';
+  const fin = plein ? '' : 'eteint';
+  let f;
+  if(cube){
+    const sc = e>=2 ? 'allume':'eteint';
+    f = `<div class="l"><span>V</span><span class="op">=</span><span>`
+      + `<span class="t ${sc}"><i>c</i><small>côté</small></span> <span class="op">×</span> `
+      + `<span class="t ${sl}"><i>c</i><small>côté</small></span> <span class="op">×</span> `
+      + `<span class="t ${sh}"><i>c</i><small>côté</small></span> <span class="op">=</span> <span class="t ${fin}"><i>c</i>³</span></span></div>`
+      + `<div class="l"><span>V</span><span class="op">=</span><span class="${fin}">${L} × ${L} × ${L}</span></div>`
+      + `<div class="l"><span>V</span><span class="op">=</span><span class="res ${fin}">${nb(N())}&nbsp;${u3()}</span></div>`;
+  } else {
+    f = `<div class="l"><span>V</span><span class="op">=</span><span>`
+      + `<span class="t ${sL}"><i>L</i><small>longueur</small></span> <span class="op">×</span> `
+      + `<span class="t ${sl}"><i>ℓ</i><small>largeur</small></span> <span class="op">×</span> `
+      + `<span class="t ${sh}"><i>h</i><small>hauteur</small></span></span></div>`
+      + `<div class="l"><span>V</span><span class="op">=</span><span class="${fin}">${L} × ${l} × ${h}</span></div>`
+      + `<div class="l"><span>V</span><span class="op">=</span><span class="res ${fin}">${nb(N())}&nbsp;${u3()}</span></div>`;
+  }
+  const html = p + '|' + f;
+  if(html!==dernierTexte){ phraseEl.innerHTML = p; formuleEl.innerHTML = f; dernierTexte = html; }
+}
+
+/* ---------- vues ---------- */
+const VUES = { v3d:[0.62,0.47], vFace:[0,0], vDessus:[0,Math.PI/2] };
+Object.keys(VUES).forEach(id=>{
+  document.getElementById(id).onclick = ()=>{ etat.cible = VUES[id].slice(); arreterTourne(); marquerVue(id); demander(); };
+});
+function marquerVue(id){ Object.keys(VUES).forEach(k=>document.getElementById(k).classList.toggle('on', k===id)); }
+const btnTourne = document.getElementById('vTourne');
+btnTourne.onclick = ()=>{ etat.tourne = !etat.tourne; btnTourne.classList.toggle('on', etat.tourne);
+  if(etat.tourne){ marquerVue(null); if(etat.pitch<0.25) etat.cible=[etat.yaw,0.47]; } demander(); };
+function arreterTourne(){ etat.tourne=false; btnTourne.classList.remove('on'); }
+
+document.getElementById('btnEcran').onclick = ()=>{
+  if(document.fullscreenElement) document.exitFullscreen();
+  else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+};
+
+/* ---------- tourner à la main ---------- */
+const scene = document.getElementById('scene');
+let glisse = null;
+scene.addEventListener('pointerdown', e=>{
+  if(e.target.closest('button')) return;
+  glisse = {x:e.clientX, y:e.clientY, yaw:etat.yaw, pitch:etat.pitch, id:e.pointerId};
+  scene.setPointerCapture(e.pointerId); scene.classList.add('attrape');
+  etat.cible = null; arreterTourne(); marquerVue(null);
+});
+scene.addEventListener('pointermove', e=>{
+  if(!glisse || e.pointerId!==glisse.id) return;
+  etat.yaw = glisse.yaw + (e.clientX-glisse.x)*0.009;
+  etat.pitch = Math.max(0, Math.min(Math.PI/2, glisse.pitch + (e.clientY-glisse.y)*0.009));
+  demander();
+});
+function lacher(){ glisse=null; scene.classList.remove('attrape'); }
+scene.addEventListener('pointerup', lacher); scene.addEventListener('pointercancel', lacher);
+
+/* ---------- dessin ---------- */
+const toile = document.getElementById('toile'), ctx = toile.getContext('2d');
+let W=0,H=0,DPR=1, echelle=0, echelleCible=0;
+function taille(){
+  const r = scene.getBoundingClientRect();
+  DPR = Math.min(window.devicePixelRatio||1, 2.5);
+  W = r.width; H = r.height;
+  toile.width = Math.round(W*DPR); toile.height = Math.round(H*DPR);
+  demander();
+}
+new ResizeObserver(taille).observe(scene);
+
+function mix(c, k){ // assombrit (k<1) ou éclaircit (k>1) une couleur rgb
+  if(k<=1){ // on assombrit vers une encre bleutée plutôt que vers le gris
+    const t=1-k, D=[10,40,64];
+    return `rgb(${c[0]+(D[0]-c[0])*t|0},${c[1]+(D[1]-c[1])*t|0},${c[2]+(D[2]-c[2])*t|0})`;
+  }
+  const t=k-1; return `rgb(${c[0]+(255-c[0])*t|0},${c[1]+(255-c[1])*t|0},${c[2]+(255-c[2])*t|0})`;
+}
+function ease(t){ t=Math.max(0,Math.min(1,t)); return 1-Math.pow(1-t,3); }
+
+function couleurCube(k){
+  const e = etat.etape;
+  if(e<=2) return COUL.orange;
+  if(e===3) return rangee(k)%2===0 ? COUL.orange : COUL.orangeClair;
+  return couche(k)%2===0 ? COUL.vert : COUL.vertClair;
+}
+
+let enCours=false;
+function demander(){ if(!enCours){ enCours=true; requestAnimationFrame(image); } }
+
+function image(now){
+  enCours=false;
+  let encore=false;
+  // vue
+  if(etat.tourne){ etat.yaw += 0.006; encore=true; }
+  if(etat.cible){
+    let dy = etat.cible[0]-etat.yaw; dy = Math.atan2(Math.sin(dy),Math.cos(dy));
+    const dp = etat.cible[1]-etat.pitch;
+    if(Math.abs(dy)<0.002 && Math.abs(dp)<0.002){ etat.yaw=etat.cible[0]; etat.pitch=etat.cible[1]; etat.cible=null; }
+    else { etat.yaw += dy*0.16; etat.pitch += dp*0.16; encore=true; }
+  }
+  // écart
+  if(Math.abs(etat.ecart-etat.ecartCible)>0.003){ etat.ecart += (etat.ecartCible-etat.ecart)*0.16; encore=true; }
+  else etat.ecart = etat.ecartCible;
+  // cubes en mouvement ?
+  for(const c of cubes){ if(!c) continue;
+    if(c.vivant && now < c.t0+c.dur+30) encore=true;
+    if(!c.vivant && now < c.sort+200) encore=true; }
+
+  dessiner(now);
+  majTextes();
+  if(encore) demander();
+}
+
+function dessiner(now){
+  const {L,l,h} = etat;
+  const g = etat.ecart;
+  const Htot = h + (h-1)*g;
+  const cy0 = Htot/2; // centre vertical
+  const ca=Math.cos(etat.yaw), sa=Math.sin(etat.yaw), cb=Math.cos(etat.pitch), sb=Math.sin(etat.pitch);
+  // marges pour les cotes et la place des boutons de vue
+  const R = 0.5*Math.sqrt(L*L+l*l+Htot*Htot);
+  const marge = Math.max(34, Math.min(70, W*0.09));
+  echelleCible = Math.max(8, Math.min((W-2*marge)/(2*R), (H-2*marge-40)/(2*R)));
+  if(!echelle || Math.abs(echelle-echelleCible)<0.05) echelle=echelleCible;
+  else { echelle += (echelleCible-echelle)*0.2; demander(); }
+  const s = echelle, cx = W/2, cyE = H/2 - 14;
+
+  function P(x,y,z){ // monde → écran (x de -L/2 à L/2, y de 0 à Htot, z de -l/2 à l/2)
+    const yy = y - cy0;
+    const x1 = x*ca - z*sa, z1 = x*sa + z*ca;
+    const y2 = yy*cb - z1*sb, z2 = yy*sb + z1*cb;
+    return [cx + s*x1, cyE - s*y2, z2];
+  }
+  function profondeur(x,y,z){ const yy=y-cy0; const z1=x*sa+z*ca; return yy*sb + z1*cb; }
+  // normales dans l'espace de vue : composante vers l'observateur
+  const vers = { px: sa*cb, nx: -sa*cb, py: sb, ny: -sb, pz: ca*cb, nz: -ca*cb };
+  // lumière (fixée à l'observateur, en haut à gauche)
+  function lum(nx,ny,nz){ // normale monde → éclairement
+    const x1 = nx*ca - nz*sa, z1 = nx*sa + nz*ca;
+    const y2 = ny*cb - z1*sb, z2 = ny*sb + z1*cb;
+    const d = (-0.45*x1 + 0.75*y2 + 0.5*z2)/1.0124;
+    return d>0 ? 1 + 0.22*d : 1 + 0.30*d;
+  }
+  const LUM = { px:lum(1,0,0), nx:lum(-1,0,0), py:lum(0,1,0), ny:lum(0,-1,0), pz:lum(0,0,1), nz:lum(0,0,-1) };
+
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.lineJoin='round'; ctx.lineCap='round';
+
+  const x0=-L/2, x1=L/2, z0=-l/2, z1=l/2;
+  const boite = Math.max(0, 1 - g/0.18); // la boîte s'efface quand on écarte
+
+  // sol quadrillé (la base)
+  if(boite>0 && etat.pitch>0.02){
+    ctx.globalAlpha = boite;
+    poly([P(x0,0,z0),P(x1,0,z0),P(x1,0,z1),P(x0,0,z1)], '#eef5f7', null);
+    ctx.strokeStyle='#d3dee5'; ctx.lineWidth=1;
+    ctx.beginPath();
+    for(let i=1;i<L;i++){ ligne(P(x0+i,0,z0),P(x0+i,0,z1)); }
+    for(let j=1;j<l;j++){ ligne(P(x0,0,z0+j),P(x1,0,z0+j)); }
+    ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  // parois du fond de la boîte (légèrement teintées)
+  const facesBoite = [
+    {n:'px', p:[[x1,0,z0],[x1,Htot,z0],[x1,Htot,z1],[x1,0,z1]]},
+    {n:'nx', p:[[x0,0,z0],[x0,0,z1],[x0,Htot,z1],[x0,Htot,z0]]},
+    {n:'pz', p:[[x0,0,z1],[x1,0,z1],[x1,Htot,z1],[x0,Htot,z1]]},
+    {n:'nz', p:[[x0,0,z0],[x0,Htot,z0],[x1,Htot,z0],[x1,0,z0]]},
+  ];
+  if(boite>0){
+    ctx.globalAlpha = boite*0.55;
+    for(const f of facesBoite){ if(vers[f.n] < -0.01) poly(f.p.map(q=>P(...q)), '#f1f6f8', null); }
+    ctx.globalAlpha=1;
+  }
+  // arêtes de la boîte : 12, chacune bordée de deux faces
+  const A = [
+    // x
+    [[x0,0,z0],[x1,0,z0],'ny','nz','x'],[[x0,0,z1],[x1,0,z1],'ny','pz','x'],
+    [[x0,Htot,z0],[x1,Htot,z0],'py','nz','x'],[[x0,Htot,z1],[x1,Htot,z1],'py','pz','x'],
+    // z
+    [[x0,0,z0],[x0,0,z1],'ny','nx','z'],[[x1,0,z0],[x1,0,z1],'ny','px','z'],
+    [[x0,Htot,z0],[x0,Htot,z1],'py','nx','z'],[[x1,Htot,z0],[x1,Htot,z1],'py','px','z'],
+    // y
+    [[x0,0,z0],[x0,Htot,z0],'nx','nz','y'],[[x1,0,z0],[x1,Htot,z0],'px','nz','y'],
+    [[x0,0,z1],[x0,Htot,z1],'nx','pz','y'],[[x1,0,z1],[x1,Htot,z1],'px','pz','y'],
+  ];
+  const visibleA = a => vers[a[2]]>0.001 || vers[a[3]]>0.001;
+  // arêtes cachées : en pointillés, sous les cubes
+  if(boite>0){
+    ctx.globalAlpha = boite;
+    ctx.setLineDash([5,5]); ctx.strokeStyle='#8fa3b3'; ctx.lineWidth=1.4;
+    ctx.beginPath(); for(const a of A){ if(!visibleA(a)) ligne(P(...a[0]),P(...a[1])); } ctx.stroke();
+    ctx.setLineDash([]); ctx.globalAlpha=1;
+  }
+
+  // cubes, du plus loin au plus proche
+  const liste=[];
+  for(let k=0;k<cubes.length;k++){
+    const c=cubes[k]; if(!c) continue;
+    let alpha=1, chute=0;
+    if(c.vivant){
+      if(now < c.t0) continue;
+      const t = c.dur ? (now-c.t0)/c.dur : 1;
+      chute = (1-ease(t))*2.2; alpha = Math.min(1, 0.25 + t*1.6);
+    } else {
+      const t = (now-c.sort)/180; if(t>=1) continue; alpha = 1-t;
+    }
+    const i=colonne(k), j=rangee(k), m=couche(k);
+    const bx = x0+i, bz = z1-1-j, by = m*(1+g) + chute;
+    liste.push({k, bx, by, bz, alpha, d: profondeur(bx+0.5, by+0.5, bz+0.5)});
+  }
+  liste.sort((u,v)=>u.d-v.d);
+  const ep = Math.max(0.8, Math.min(1.6, s*0.03));
+  for(const q of liste){
+    const {bx,by,bz} = q, col = couleurCube(q.k);
+    ctx.globalAlpha = q.alpha;
+    const X0=bx,X1=bx+1,Y0=by,Y1=by+1,Z0=bz,Z1=bz+1;
+    const trait = mix(col, 0.62);
+    if(vers.py>0) poly([P(X0,Y1,Z0),P(X1,Y1,Z0),P(X1,Y1,Z1),P(X0,Y1,Z1)], mix(col, LUM.py), trait, ep);
+    if(vers.ny>0) poly([P(X0,Y0,Z0),P(X0,Y0,Z1),P(X1,Y0,Z1),P(X1,Y0,Z0)], mix(col, LUM.ny), trait, ep);
+    if(vers.pz>0) poly([P(X0,Y0,Z1),P(X1,Y0,Z1),P(X1,Y1,Z1),P(X0,Y1,Z1)], mix(col, LUM.pz), trait, ep);
+    if(vers.nz>0) poly([P(X0,Y0,Z0),P(X0,Y1,Z0),P(X1,Y1,Z0),P(X1,Y0,Z0)], mix(col, LUM.nz), trait, ep);
+    if(vers.px>0) poly([P(X1,Y0,Z0),P(X1,Y1,Z0),P(X1,Y1,Z1),P(X1,Y0,Z1)], mix(col, LUM.px), trait, ep);
+    if(vers.nx>0) poly([P(X0,Y0,Z0),P(X0,Y0,Z1),P(X0,Y1,Z1),P(X0,Y1,Z0)], mix(col, LUM.nx), trait, ep);
+  }
+  ctx.globalAlpha=1;
+
+  // arêtes visibles de la boîte
+  if(boite>0){
+    ctx.globalAlpha = boite;
+    ctx.strokeStyle=COUL.ink; ctx.lineWidth=2;
+    ctx.beginPath(); for(const a of A){ if(visibleA(a)) ligne(P(...a[0]),P(...a[1])); } ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  // cotes : une arête par direction, choisie visible et au bord de la figure
+  const centre = P(0,Htot/2,0);
+  const e = etat.etape;
+  const cotes = etat.cube
+    ? [['x', L, 'c', e===2], ['z', l, 'c', e===3], ['y', h, 'c', e===4]]
+    : [['x', L, 'L', e===2], ['z', l, 'ℓ', e===3], ['y', h, 'h', e===4]];
+  if(boite>0.05){
+    ctx.globalAlpha = boite;
+    for(const [axe, val, lettre, vedette] of cotes){
+      const cand = A.filter(a=>a[4]===axe && visibleA(a));
+      if(!cand.length) continue;
+      let best=null, bestScore=-1e9;
+      for(const a of cand){
+        const p=P(...a[0]), q=P(...a[1]);
+        const len = Math.hypot(q[0]-p[0], q[1]-p[1]);
+        if(len < 14) continue;
+        const mx=(p[0]+q[0])/2, my=(p[1]+q[1])/2;
+        // bas de la figure pour les arêtes horizontales, gauche pour la hauteur
+        const score = axe==='y' ? -mx + (p[2]+q[2])*0.01 : my + (p[2]+q[2])*0.01;
+        if(score>bestScore){ bestScore=score; best={p,q,mx,my,len}; }
+      }
+      if(!best) continue;
+      const couleur = vedette ? mix(COUL.orange,0.82) : COUL.ink;
+      if(vedette){
+        ctx.strokeStyle = mix(COUL.orange,0.82); ctx.lineWidth = 4.5;
+        ctx.beginPath(); ligne(best.p,best.q); ctx.stroke();
+      }
+      let dx = best.mx-centre[0], dy = best.my-centre[1];
+      // décalage perpendiculaire à l'arête, du côté opposé au centre
+      let nx = -(best.q[1]-best.p[1]), ny = best.q[0]-best.p[0];
+      const nl = Math.hypot(nx,ny)||1; nx/=nl; ny/=nl;
+      if(nx*dx+ny*dy<0){ nx=-nx; ny=-ny; }
+      etiquette(best.mx+nx*30, best.my+ny*30, val+' '+etat.unite, couleur, vedette);
+    }
+    ctx.globalAlpha=1;
+  }
+
+  // étiquette « 1 cm³ » sur le cube unité
+  if(e===1 && cubes[0] && cubes[0].vivant && now>cubes[0].t0+cubes[0].dur*0.6){
+    const p = P(x0+0.5, 1.0, z1-0.5);
+    etiquette(p[0], p[1]-26, '1 '+u3(), mix(COUL.orange,0.82), true);
+  }
+
+  // couches écartées : chaque couche porte son nombre de cubes
+  if(g>0.12 && e>=3 && !etat.cache){
+    const parC = L*l, nC = e===3 ? 1 : etat.couches;
+    ctx.globalAlpha = Math.min(1,(g-0.12)/0.25);
+    for(let m=0;m<nC;m++){
+      const k=(m+1)*parC-1; const c=cubes[k];
+      if(!c||!c.vivant||now<c.t0+c.dur) continue;
+      const y = m*(1+g)+0.5;
+      let maxX=-1e9, yy=0;
+      for(const [xx,zz] of [[x0,z0],[x1,z0],[x0,z1],[x1,z1]]){
+        const p=P(xx,y,zz); if(p[0]>maxX){ maxX=p[0]; yy=p[1]; }
+      }
+      etiquette(Math.min(W-40, maxX+34), yy, nb(parC), mix(couleurCube(k),0.7), false);
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function ligne(p,q){ ctx.moveTo(p[0],p[1]); ctx.lineTo(q[0],q[1]); }
+  function poly(pts, fond, trait, w){
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.closePath();
+    if(fond){ ctx.fillStyle=fond; ctx.fill(); }
+    if(trait){ ctx.strokeStyle=trait; ctx.lineWidth=w||1; ctx.stroke(); }
+  }
+}
+
+function etiquette(x,y,texte,couleur,vedette){
+  const taillePolice = Math.max(14, Math.min(22, W/38));
+  ctx.font = `700 ${taillePolice}px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif`;
+  const w = ctx.measureText(texte).width + 16, hh = taillePolice + 12;
+  x = Math.max(w/2+4, Math.min(W-w/2-4, x));
+  y = Math.max(hh/2+4, Math.min(H-hh/2-4, y));
+  ctx.beginPath();
+  const r=hh/2, l0=x-w/2, t0=y-hh/2;
+  ctx.moveTo(l0+r,t0); ctx.arcTo(l0+w,t0,l0+w,t0+hh,r); ctx.arcTo(l0+w,t0+hh,l0,t0+hh,r);
+  ctx.arcTo(l0,t0+hh,l0,t0,r); ctx.arcTo(l0,t0,l0+w,t0,r); ctx.closePath();
+  ctx.fillStyle = vedette ? couleur : '#fff'; ctx.fill();
+  ctx.strokeStyle = couleur; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.fillStyle = vedette ? '#fff' : couleur;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(texte, x, y+1);
+}
+
+/* ---------- départ ---------- */
+construireDims();
+choisirEtape(0);
+taille();
+})();
+</script>
+</body>
+</html>
