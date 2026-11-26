@@ -317,6 +317,11 @@ ${beads(number)}
       keywords: "aire périmètre surface rectangle triangle",
       icon: "area"
     },
+    volumes: {
+      description: "Remplir, compter les couches et comprendre les formules.",
+      keywords: "volume pavé cube cubes unités couches cm3 dm3 litre",
+      icon: "volume"
+    },
     "temps-durees": {
       description: "Lire l’heure et comprendre les durées.",
       keywords: "horloge heure minute durée temps",
@@ -874,9 +879,13 @@ ${beads(number)}
     return resourceClassifications[resource.path] || {};
   }
 
+  // Une ressource peut aussi s'afficher dans une seconde notion (« alsoInNotions ») sans
+  // quitter la sienne : Unités de volume en 3D dans Volumes, le volume du pavé dans
+  // Espace, solides et patrons (26/11/2026). Même principe que alsoInCollections.
   function resourceBelongsToNotion(resource, notionId) {
     const classification = resourceClassification(resource);
     if ((classification.hiddenFromNotions || []).includes(notionId)) return false;
+    if ((classification.alsoInNotions || []).includes(notionId)) return true;
     const primaryNotion = classification.primaryNotion;
     return primaryNotion ? primaryNotion === notionId : resource.notions.includes(notionId);
   }

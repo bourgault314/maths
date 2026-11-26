@@ -18,6 +18,8 @@ const publishedGeometry = catalogue.resources.filter((resource) => (
 ));
 
 function belongsTo(resource, notionId) {
+  // alsoInNotions : une ressource rangée ailleurs s'affiche aussi ici (même règle que catalogue-refonte.js)
+  if ((classifications[resource.path]?.alsoInNotions || []).includes(notionId)) return true;
   const primary = classifications[resource.path]?.primaryNotion;
   return primary ? primary === notionId : resource.notions.includes(notionId);
 }
@@ -53,14 +55,14 @@ test("la géométrie présente six rubriques remplies sans Pythagore ni Thalès 
   assert.equal(notions.get("thales").parent, "triangles");
 });
 
-test("les vingt et une ressources géométriques ont exactement une place dans les six rubriques", () => {
+test("les vingt-deux ressources géométriques ont exactement une place dans les six rubriques", () => {
   const expectedCounts = new Map([
     ["construction-geometrique", 2],
     ["angles", 3],
     ["triangles", 11],
     ["reperage", 2],
     ["mesures-geometriques", 1],
-    ["espace-constructions", 2]
+    ["espace-constructions", 3] // + Le volume du pavé droit et du cube (26/11/2026), rangé dans Volumes
   ]);
   const placements = new Map(publishedGeometry.map((resource) => [resource.path, []]));
 
@@ -70,7 +72,7 @@ test("les vingt et une ressources géométriques ont exactement une place dans l
     resources.forEach((resource) => placements.get(resource.path).push(rootId));
   }
 
-  assert.equal(publishedGeometry.length, 21);
+  assert.equal(publishedGeometry.length, 22);
   for (const [path, roots] of placements) {
     assert.equal(roots.length, 1, `${path} doit avoir une seule rubrique géométrique, reçu : ${roots.join(", ")}`);
   }

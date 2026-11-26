@@ -593,7 +593,7 @@ test("lot 3b : la carte du catalogue annonce les deux modes, et le cache du cata
   const bloc = cat.split('"outils/conversions/conversions_exerciseur.html": {')[1].split("}")[0];
   assert.match(bloc, /"cardDescription": "Projeter des questions de conversion et d’ordre de grandeur, ou laisser l’élève s’entraîner en autonomie, avec un score\."/);
   assert.doesNotMatch(bloc, /\b(seul|seule)\b/);
-  assert.match(readFileSync(new URL("../outils/index.html", import.meta.url), "utf8"), /catalogue-refonte-data\.js\?v=exerciseur-conversions-20261125-1/);
+  assert.match(readFileSync(new URL("../outils/index.html", import.meta.url), "utf8"), /catalogue-refonte-data\.js\?v=volumes-20261126-1/);
 });
 
 test("lot 3b : les messages de « Je m'entraîne » ne passent jamais dans le diaporama", () => {

@@ -1114,6 +1114,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/conversions/conversions_unites_volumes.html": {
       "primaryNotion": "conversions",
+      "alsoInNotions": ["volumes"],
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["conversions", "volumes", "unites-cubes", "3d", "visualisation"],
@@ -1189,6 +1190,15 @@ window.MATHSGO_CATALOGUE = {
       ],
       "thumbnail": "assets/img/thumbnails/espace/pave-droit-espace.svg?v=2",
       "cardDescription": "Faire tourner le pav\u00e9, sortir le triangle rectangle cach\u00e9 dans le solide, et r\u00e9cup\u00e9rer la figure pour une fiche."
+    },
+    "outils/volumes/volume_pave.html": {
+      "primaryNotion": "volumes",
+      "alsoInNotions": ["espace-constructions"],
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["volume", "pave-droit", "cube", "cubes-unites", "couches", "formule"],
+      "thumbnail": "assets/img/thumbnails/volumes/volume-pave.png?v=1",
+      "cardDescription": "Remplir un pavé ou un cube de cubes unités, rangée par rangée puis couche par couche, pour comprendre V = L × ℓ × h."
     },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
@@ -1926,6 +1936,11 @@ window.MATHSGO_CATALOGUE = {
       "domain": "proportionnalite-mesures"
     },
     {
+      "id": "volumes",
+      "title": "Volumes",
+      "domain": "proportionnalite-mesures"
+    },
+    {
       "id": "temps-durees",
       "title": "Temps et durées",
       "domain": "proportionnalite-mesures"
@@ -2484,7 +2499,8 @@ window.MATHSGO_CATALOGUE = {
         "proportionnalite-mesures"
       ],
       "notions": [
-        "conversions"
+        "conversions",
+        "volumes"
       ],
       "uses": [
         "manipuler",
@@ -4963,6 +4979,42 @@ window.MATHSGO_CATALOGUE = {
         "rabattement",
         "sch\u00e9ma de pav\u00e9 droit pour une fiche",
         "export SVG"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-volumes-volume-pave-html",
+      "title": "Le volume du pavé droit et du cube",
+      "description": "Remplir un pavé droit ou un cube avec des cubes unités : une rangée, une couche, puis toutes les couches, pour comprendre la formule V = L × ℓ × h et faire tourner le solide.",
+      "path": "outils/volumes/volume_pave.html",
+      "domains": [
+        "proportionnalite-mesures",
+        "geometrie"
+      ],
+      "notions": [
+        "volumes",
+        "espace-constructions"
+      ],
+      "uses": [
+        "projeter",
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "volume du pavé droit",
+        "volume du cube",
+        "cube unité",
+        "centimètre cube",
+        "couches",
+        "longueur × largeur × hauteur",
+        "côté au cube",
+        "aire de la base × hauteur"
       ],
       "kind": "tool",
       "status": "published",
