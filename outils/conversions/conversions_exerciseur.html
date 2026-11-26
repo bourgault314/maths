@@ -147,6 +147,17 @@
     .family-col { display: flex; flex-direction: column; gap: 6px; }
     .cursor { position: absolute; left: 0; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 15%, transparent); border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent); border-radius: 8px; pointer-events: none; transition: transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out; z-index: 3; }
     .cursor::after { content: ","; position: absolute; bottom: 32px; right: -11px; font-family: 'Nunito', Arial, sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--accent-dark); line-height: 0; text-shadow: 2px 2px 0 var(--panel), -2px -2px 0 var(--panel), 2px -2px 0 var(--panel), -2px 2px 0 var(--panel); z-index: 10; }
+    /* lot 5b : quand le nom de l'unité est une étiquette (plus large que sa colonne), la fenêtre fait le tour du nom en entier, puis
+       descend sur la colonne : elle ne coupe plus « cm³ » en deux. Son trait passe exactement sur le contour du nom et sur celui de
+       la case du chiffre des unités (leur propre contour s'efface dessous : un seul trait). Le cadre du nom est ouvert en bas, sur la colonne. */
+    .cursor.nom { border-color: var(--accent-dark); border-top: 0; border-radius: 0 0 8px 8px; }
+    .cursor.nom::before { content: ""; position: absolute; box-sizing: border-box; left: 50%; bottom: calc(100% - 3px); width: var(--nom-l); height: var(--nom-h); transform: translateX(-50%); pointer-events: none; transition: inherit;
+      background: inherit; border: 3px solid var(--accent-dark); --epaule: calc((var(--nom-l) - var(--col-l)) / 2); border-radius: 8px 8px min(8px, var(--epaule)) min(8px, var(--epaule));
+      -webkit-mask: linear-gradient(#000, #000) top / 100% calc(100% - 3px) no-repeat, linear-gradient(#000, #000) left bottom / var(--epaule) 3px no-repeat, linear-gradient(#000, #000) right bottom / var(--epaule) 3px no-repeat;
+      mask: linear-gradient(#000, #000) top / 100% calc(100% - 3px) no-repeat, linear-gradient(#000, #000) left bottom / var(--epaule) 3px no-repeat, linear-gradient(#000, #000) right bottom / var(--epaule) 3px no-repeat; }
+    /* la virgule reste à sa place (la fenêtre est plus étroite de 2 px de chaque côté et en bas) */
+    .cursor.nom::after { right: -13px; bottom: 30px; }
+    .cursor.nom ~ .board-columns .unitBtn.nom-choisi, .cursor.nom ~ .board-columns .digit.unit-highlight { border-color: transparent; }
     .handle { position: absolute; left: 0; width: 140px; height: 75px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: 2px solid #fff; border-radius: 12px; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; user-select: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2); padding: 6px; transition: transform 1s ease-in-out, top 1s ease-in-out; }
     .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
     .handle-top::after { content: ""; position: absolute; bottom: -14px; left: calc(50% + var(--decal, 0px)); transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark); }
@@ -2002,13 +2013,28 @@
       let w = cellRect.width;
       let cx = x + w / 2;
       let gap = 4;
-      cursor.style.width = `${w + gap}px`;
-      cursor.style.transform = `translateX(${x - gap/2}px)`;
+      // lot 5b : le nom est une étiquette (tableau à 2 ou 3 cases par unité, jusqu'à 1 121 px de large) : la fenêtre fait le tour
+      // du nom, puis descend sur la colonne, et son trait passe exactement sur leur contour (plus de marge autour).
+      // Ailleurs (ordinateur, autres tableaux, petit nom « hL »), le rectangle d'avant, 2 px autour du nom et de la case.
+      const etiquette = !headBtn.classList.contains('empty-unit') && getComputedStyle(headBtn).justifySelf === 'center';
+      const autour = etiquette ? 0 : gap/2;
+      cursor.classList.toggle('nom', etiquette);
+      cursor.style.width = `${w + 2 * autour}px`;
+      cursor.style.transform = `translateX(${x - autour}px)`;
 
       let topPx = headRect.top - innerRect.top;
       let bottomPx = cellRect.bottom - innerRect.top;
-      cursor.style.top = `${topPx - gap/2}px`;
-      cursor.style.height = `${(bottomPx - topPx) + gap}px`;
+      if (etiquette) {
+        const basNom = headRect.bottom - innerRect.top;
+        cursor.style.setProperty('--nom-l', `${Math.max(headRect.width, w)}px`);
+        cursor.style.setProperty('--nom-h', `${headRect.height}px`);
+        cursor.style.setProperty('--col-l', `${w}px`);
+        cursor.style.top = `${basNom - 3}px`;
+        cursor.style.height = `${bottomPx - (basNom - 3)}px`;
+      } else {
+        cursor.style.top = `${topPx - gap/2}px`;
+        cursor.style.height = `${(bottomPx - topPx) + gap}px`;
+      }
 
       handles[0].style.top = `${topPx - (handles[0].offsetHeight || 75) - 14}px`;
       handles[1].style.top = `${bottomPx + 14}px`;
@@ -2021,8 +2047,9 @@
 
       document.querySelectorAll('#diapoBoardColumns .digit').forEach(inp => inp.classList.remove('unit-highlight'));
       cellTarget.classList.add('unit-highlight');
-      document.querySelectorAll('#diapoBoardColumns .unitBtn, #diapoBoardColumns .sub-lab').forEach(b => b.classList.remove('unit-highlight-text'));
+      document.querySelectorAll('#diapoBoardColumns .unitBtn, #diapoBoardColumns .sub-lab').forEach(b => b.classList.remove('unit-highlight-text', 'nom-choisi'));
       texteUnite.classList.add('unit-highlight-text');
+      if (etiquette) headBtn.classList.add('nom-choisi');
 
       let currentStr = isFinal ? q.calcValStr : q.valStr;
       if(!document.getElementById('hideCommaStyle')) {

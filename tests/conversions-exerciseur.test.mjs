@@ -1055,3 +1055,45 @@ test("lot 5b : la case de réponse fixe, les colonnes utiles et le pavé restent
   // la marge et la taille des noms du lot 5b : dans le bloc du téléphone, pas dans celui de l'étiquette
   assert.doesNotMatch(etiquette5b(), /calc\(100% - |vw\)/);
 });
+
+test("lot 5b : la fenêtre de l'unité fait le tour du nom (étiquette), puis descend sur la colonne, son trait sur leur contour ; ailleurs, le rectangle d'avant", () => {
+  const p = corps("positionDiapoCursor");
+  // l'étiquette se reconnaît à sa mise en page (centrée sur sa colonne), pas à une largeur d'écran recopiée dans le script
+  assert.match(p, /const etiquette = !headBtn\.classList\.contains\('empty-unit'\) && getComputedStyle\(headBtn\)\.justifySelf === 'center';/);
+  assert.match(p, /cursor\.classList\.toggle\('nom', etiquette\);/);
+  // avec l'étiquette, le trait passe exactement sur le contour (0 px autour) ; sans elle, 2 px autour comme avant (w + gap, x - gap/2)
+  assert.match(p, /let gap = 4;/);
+  assert.match(p, /const autour = etiquette \? 0 : gap\/2;/);
+  assert.match(p, /cursor\.style\.width = `\$\{w \+ 2 \* autour\}px`;\n\s*cursor\.style\.transform = `translateX\(\$\{x - autour\}px\)`;/);
+  // le cadre du nom : exactement le nom (jamais plus étroit que la colonne) ; la colonne part du bas du nom et s'arrête au bas de la case
+  assert.match(p, /const basNom = headRect\.bottom - innerRect\.top;/);
+  assert.match(p, /cursor\.style\.setProperty\('--nom-l', `\$\{Math\.max\(headRect\.width, w\)\}px`\);/);
+  assert.match(p, /cursor\.style\.setProperty\('--nom-h', `\$\{headRect\.height\}px`\);/);
+  assert.match(p, /cursor\.style\.setProperty\('--col-l', `\$\{w\}px`\);/);
+  assert.match(p, /cursor\.style\.top = `\$\{basNom - 3\}px`;\n\s*cursor\.style\.height = `\$\{bottomPx - \(basNom - 3\)\}px`;/);
+  // sans étiquette (ordinateur, autres tableaux, petit nom « hL ») : exactement le rectangle d'avant, du haut du nom au bas de la case
+  assert.match(p, /\} else \{\n\s*cursor\.style\.top = `\$\{topPx - gap\/2\}px`;\n\s*cursor\.style\.height = `\$\{\(bottomPx - topPx\) \+ gap\}px`;\n\s*\}/);
+  // un seul trait : le contour du nom choisi et celui de la case s'effacent sous la fenêtre, et seulement sous elle
+  assert.match(p, /forEach\(b => b\.classList\.remove\('unit-highlight-text', 'nom-choisi'\)\);\n\s*texteUnite\.classList\.add\('unit-highlight-text'\);\n\s*if \(etiquette\) headBtn\.classList\.add\('nom-choisi'\);/);
+  assert.match(css5, /\n    \.cursor\.nom ~ \.board-columns \.unitBtn\.nom-choisi, \.cursor\.nom ~ \.board-columns \.digit\.unit-highlight \{ border-color: transparent; \}/);
+  assert.equal((css5.match(/nom-choisi/g) || []).length, 1);
+  assert.match(html, /<div class="cursor" id="diapoCursor"><\/div>\s*<div class="handle handle-top"[\s\S]*?<div class="board-columns" id="diapoBoardColumns"><\/div>/);
+  // la mise en page : la colonne perd son bord du haut, le cadre du nom est posé dessus, centré, ouvert en bas sur la largeur de la colonne
+  assert.match(css5, /\n    \.cursor\.nom \{ border-color: var\(--accent-dark\); border-top: 0; border-radius: 0 0 8px 8px; \}/);
+  const avant = css5.match(/\n    \.cursor\.nom::before \{([^}]*)\}/)[1];
+  assert.match(avant, /left: 50%; bottom: calc\(100% - 3px\); width: var\(--nom-l\); height: var\(--nom-h\); transform: translateX\(-50%\);/);
+  assert.match(avant, /background: inherit; border: 3px solid var\(--accent-dark\);/);
+  assert.match(avant, /--epaule: calc\(\(var\(--nom-l\) - var\(--col-l\)\) \/ 2\); border-radius: 8px 8px min\(8px, var\(--epaule\)\) min\(8px, var\(--epaule\)\);/);
+  assert.equal((avant.match(/mask: linear-gradient\(#000, #000\) top \/ 100% calc\(100% - 3px\) no-repeat, linear-gradient\(#000, #000\) left bottom \/ var\(--epaule\) 3px no-repeat, linear-gradient\(#000, #000\) right bottom \/ var\(--epaule\) 3px no-repeat;/g) || []).length, 2, "avec et sans préfixe -webkit-");
+  // mêmes arrondis que le nom et que la case (8 px), pour que le trait suive leur contour
+  assert.match(css5, /\n    \.unitBtn \{[^}]*border: 2px solid var\(--accent\); border-radius: 8px;/);
+  assert.match(css5, /\n    \.digit \{[^}]*border: 2px solid var\(--accent\); border-radius: 8px;/);
+  // il suit la fenêtre quand elle glisse d'une unité à l'autre, et ne reçoit pas les touchers
+  assert.match(avant, /pointer-events: none; transition: inherit;/);
+  // la virgule reste à sa place : la fenêtre est plus étroite de 2 px à droite et en bas (11 + 2, 32 - 2)
+  assert.match(css5, /\n    \.cursor::after \{ content: ","; position: absolute; bottom: 32px; right: -11px;/);
+  assert.match(css5, /\n    \.cursor\.nom::after \{ right: -13px; bottom: 30px; \}/);
+  // la fenêtre d'avant n'est pas touchée
+  assert.match(css5, /\n    \.cursor \{ position: absolute; left: 0; box-sizing: border-box; background: color-mix\(in srgb, var\(--accent\) 15%, transparent\); border: 3px solid color-mix\(in srgb, var\(--accent-dark\) 60%, transparent\); border-radius: 8px;/);
+  assert.equal((css5.match(/\.cursor\.nom/g) || []).length, 5);
+});
