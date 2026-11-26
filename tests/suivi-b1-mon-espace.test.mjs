@@ -207,10 +207,12 @@ test("l'insigne : seulement ce qui est gagné, jamais « débutant »", () => {
   assert.equal(laPorte("defi-tables", {compte: "x", rang: {niveau: 2, cle: "<img>", nom: "x"}}).insigne, null, "une clé de rang inconnue : rien");
   const CORE = {CEINTURES: [{nom: "Ceinture blanche", court: "blanche"}, {nom: "Ceinture jaune", court: "jaune"}, {nom: "Ceinture orange", court: "orange"}],
     elementCeinture: () => new Noeud("svg")};
-  assert.equal(laPorte("defi-calcul", {fait: 3, total: 129, ceinture: {n: 0, barrettes: 0}}, {MATHSGO_DEFI_CALCUL_CORE: CORE}).insigne, null,
-    "la ceinture blanche sans barrette n'est pas encore un gain");
-  const calcul = laPorte("defi-calcul", {fait: 64, total: 129, ceinture: {n: 2, barrettes: 1}}, {MATHSGO_DEFI_CALCUL_CORE: CORE});
-  assert.deepEqual([calcul.texteInsigne, calcul.texteLigne], ["orange", "64 compétences sues sur 129"]);
+  // (Lot K1 : le lecteur ne rend rien sans étoile gagnée ; avec une étoile,
+  // la ceinture de l'étage en cours, remplie quart par quart, et ses étoiles.)
+  assert.equal(laPorte("defi-calcul", null, {MATHSGO_DEFI_CALCUL_CORE: CORE}).insigne, null, "aucune étoile : pas d'insigne");
+  const calcul = laPorte("defi-calcul", {fait: 17, total: 44, ceinture: {n: 1, rempli: .25}}, {MATHSGO_DEFI_CALCUL_CORE: CORE});
+  assert.deepEqual([calcul.texteInsigne, calcul.texteLigne], ["jaune", "17\u00a0étoiles sur 44"]);
+  assert.equal(laPorte("defi-calcul", {fait: 1, total: 44, ceinture: {n: 1, rempli: 0}}, {MATHSGO_DEFI_CALCUL_CORE: CORE}).texteLigne, "1\u00a0étoile sur 44");
   const anzan = laPorte("flash-anzan", {texte: "162 calculs · 11 jours d’entraînement", grade: "10e kyu", colonne: "8e kyu"});
   assert.deepEqual([anzan.texteInsigne, anzan.texteLigne], ["10e kyu", "Colonne : 8e kyu"], "choix 1 : Flash dans l'insigne, Colonne dessous");
   const anzanSansGrade = laPorte("flash-anzan", {texte: "12 calculs · 2 jours d’entraînement", grade: "", colonne: ""});

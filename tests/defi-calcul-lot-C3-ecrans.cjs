@@ -296,7 +296,8 @@ const visibilite = (page, sel) => page.evaluate(q => getComputedStyle(document.q
       await taper(s.page, 100);
       // « À toi » est le retour du jour : il compte (la compétence monte).
       const p = await appel(s.page, "parcours");
-      assert.equal(p.modules.C3.b[0], 4, "le retour est noté");
+      // (Lot K1 : « Je tente » met l'étoile en boîte 2 ; le retour juste la monte en 3.)
+      assert.equal(p.modules.C3.b[0], 3, "le retour est noté");
       await tient(s.page, largeur, hauteur);
       const apprends = await appel(s.page, "jour", "C3", 1, "4 469 − □ = 4 369", "apprends");
       assert.deepEqual(apprends, {exemple: false, sansLecon: false});

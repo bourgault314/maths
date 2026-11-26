@@ -378,7 +378,7 @@ async function verifierFlecheEnHaut(page, ou, filSel, telephone) {
   if (telephone) assert.equal(m.label, "none", `${ou} : au téléphone, la flèche est ronde, sans mot`);
 }
 
-test("le titre de l'écran d'abord, la ligne dessous : Défi tables (Mon parcours, Ma séance) et Défi calcul (Ma séance, Comment ça marche ?)", {skip: ignorer, timeout: PLAFOND}, async () => {
+test("le titre de l'écran d'abord, la ligne dessous : Défi tables (Mon parcours, Ma séance) et Défi calcul (La carte, Ma séance, Comment ça marche ?)", {skip: ignorer, timeout: PLAFOND}, async () => {
   await demarrerServeur();
   const nav = await navigateur.launch();
   try {
@@ -408,9 +408,15 @@ test("le titre de l'écran d'abord, la ligne dessous : Défi tables (Mon parcour
       assert.ok(centre < 4, `Défi tables, Ma séance (${taille}) : les étapes et le nom sont centrés (écart ${centre.toFixed(1)} px)`);
       assert.deepEqual(o.erreurs, [], `Défi tables (${taille}) : aucune erreur`);
       await o.ctx.close();
-      // Défi calcul : la séance, puis « Comment ça marche ? ».
+      // Défi calcul : la carte, la séance, puis « Comment ça marche ? ».
+      // (Lot K1 : « Commencer » lance la séance ; « La carte » remplace Mon parcours.)
       o = await ouvrir(nav, "Défi calcul", {largeur, hauteur, telephone});
-      await o.page.locator("#acc-seance button:visible").first().click();
+      await o.page.click("#acc-porte");
+      await o.page.waitForTimeout(600);
+      await verifierSousTitre(o.page, `Défi calcul, La carte (${taille})`, "#ecran-carte > .settings-toolbar", "#carte-etages");
+      await o.page.click("#carte-back");
+      await o.page.waitForTimeout(400);
+      await o.page.click("#acc-commencer");
       await o.page.waitForTimeout(1200);
       await verifierSousTitre(o.page, `Défi calcul, Ma séance (${taille})`, "#fil-seance", "#play .status");
       await verifierFlecheEnHaut(o.page, `Défi calcul, Ma séance (${taille})`, "#fil-seance", telephone);

@@ -262,13 +262,14 @@ test("le dessin à étapes : le résultat tapé à la première case est juste (
 
 test("les données ne changent pas : progression, compétences, clés des calculs", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.match(parcours, /VERSION\s*=\s*11\b/, "la progression reste en version 11");
+  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12.)
+  assert.match(parcours, /VERSION\s*=\s*12\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1)");
   // Les clés des calculs (les boîtes de Mes calculs du jour) : inchangées.
   assert.equal(CORE.niveauDe("A3-2").niveau.imposes[1].cle, "A3-2-534-70-x");
   assert.equal(CORE.genererSerie("A2-2", {graine: 1, genre: "valide"}).find(c => c.forme === "difference").cle.split("-").slice(0, 3).join("-"), "A2-2-100");
   // La copie du moteur pour la page prof, octet pour octet.
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-7/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
 });

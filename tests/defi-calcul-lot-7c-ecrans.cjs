@@ -36,6 +36,28 @@ const FORMATS = process.env.FORMATS ? process.env.FORMATS.split(",").map(x => x.
 const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon", ".webp": "image/webp"};
 
+
+// Lot K1 « la carte » (25/11/2026) : Mon parcours et le test de module sont
+// partis. Leurs cas deviennent : la carte d'un élève arrivé à l'étage, où
+// les étoiles du lot sont là (leur nom, lu par le lecteur d'écran), et le
+// cadre tient. La progression est jouée par le vrai moteur (version 12).
+const P12K1 = require(path.join(RACINE, "outils/calcul_mental/defi_calcul_mon_parcours.js"));
+const CARTE_K1 = require(path.join(RACINE, "outils/calcul_mental/defi_calcul_core.js")).carte();
+function parcoursJusqua(etage, jour = "2026-11-25") {
+  const six = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  let p = P12K1.creerParcours();
+  for (let e = 1; e < etage; e += 1) {
+    const dedans = P12K1.carteEleve(p, CARTE_K1, {aujourdhui: jour}).etages.find(x => x.etage === e).lignes.flatMap(l => l.etoiles.map(x => x.cle));
+    for (const k of CARTE_K1.ordre.filter(c => dedans.includes(c))) {
+      const [m, n] = k.split("-");
+      const r = P12K1.appliquerTentative(p, {module: m, niveau: Number(n), reponses: six}, {aujourdhui: P12K1.ajouterJours(jour, -40), carte: CARTE_K1});
+      if (!r.refuse) p = r.parcours;
+    }
+  }
+  return p;
+}
+const etoilesSurLaCarte = page => page.evaluate(() => [...document.querySelectorAll("#carte-lignes .ck-case")].map(b => (b.getAttribute("aria-label") || "").replace(/[\u00a0\u202f]/g, " ")));
+
 function servir() {
   const serveur = http.createServer((requete, reponse) => {
     const fichier = path.join(RACINE, decodeURIComponent(new URL(requete.url, "http://x").pathname));
@@ -277,16 +299,17 @@ async function jouerBandes(s, m, cle) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : Mon parcours d'un élève au CM1 (F9-2) et au CM2 (F4, F9-3, F11-1)`, async () => {
-      for (const [arret, ceintures, nom] of [[c => c.module === "F9" && c.niveau === 2, ["2026-11-01", null, null, null], "cm1"], [c => c.module === "F4" && c.niveau === 1, ["2026-11-01", "2026-11-05", null, null], "cm2"]]) {
-        const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(arret, ceintures)});
+    await cas(`${f} : la carte (lot K1) — au CM1 et au CM2 : les fractions du lot 7c`, async () => {
+      for (const [nom, etage, motifs] of [
+        ["cm1", 2, [/Dénominateurs multiples/]],
+        ["cm2", 3, [/Fraction d’une quantité/]]]) {
+        const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursJusqua(etage)});
         await s.page.click("#acc-porte");
         await pause(s.page, 800);
-        assert.match(await texte(s.page, "#acc-parcours"), nom === "cm1" ? /Palier 2/ : /Palier 3/);
-        assert.match(await texte(s.page, "#acc-parcours"), nom === "cm1" ? /Dénominateurs multiples/ : /Fraction d’une quantité/);
-        const ecart = await ecartListe(s.page);
-        assert.ok(ecart !== null && Math.abs(ecart) <= 1, `${nom} : la liste commence sur une ligne entière (${ecart} px)`);
-        await photo(s.page, `${f}-mon-parcours-${nom}`);
+        assert.equal(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.carte().courant), etage, `${nom} : l'étage ${etage}`);
+        const vues = await etoilesSurLaCarte(s.page);
+        motifs.forEach(m => assert.ok(vues.some(v => m.test(v)), `${nom} : ${m} sur la carte (${vues.length} étoiles)`));
+        await photo(s.page, `${f}-carte-${nom}`);
         await tient(s.page, largeur, hauteur);
         assert.deepEqual(s.erreurs, []);
         await s.ctx.close();

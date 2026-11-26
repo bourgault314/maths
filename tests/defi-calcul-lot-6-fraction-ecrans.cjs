@@ -264,9 +264,10 @@ async function poser(page, texteCalcul, outil = "aucun", niveau = 2) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : « Tu connais déjà ? » (mode prof) — la fraction cherchée`, async () => {
+    await cas(`${f} : « Je tente » (mode prof) — la fraction cherchée`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, adresse: `${PAGE}&prof=1&module=F11&niveau=2`, eleve: false});
-      await s.page.getByRole("button", {name: /Tu connais déjà/}).first().click();
+      // (Lot K1 : « Je tente » remplace « Tu connais déjà ? » ; le panneau de l'étoile est ouvert par l'adresse.)
+      await s.page.locator("#panneau-corps button", {hasText: "Je tente"}).first().click();
       await pause(s.page, 500);
       let vu = false;
       for (let i = 0; i < 8 && !vu; i += 1) {

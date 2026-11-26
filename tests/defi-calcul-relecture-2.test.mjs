@@ -184,10 +184,8 @@ test("les titres des niveaux se lisent : chacun a au moins un mot", () => {
   NIVEAUX.forEach(({niveau, cle}) => assert.doesNotMatch(niveau.titre, /\btrous?\b/, cle));
 });
 
-test("« 2 jours cette semaine » sur l'accueil et à la fin de la séance ; « Je recopie cela »", () => {
-  assert.match(PAGE, /return soirs \? `\$\{soirs\}\\u00a0jour\$\{soirs > 1 \? "s" : ""\} cette semaine` : "";/);
-  assert.match(PAGE, /function texteSemaine\(\) \{\s*return texteSoirs\(semaine\(\)\.soirs\);\s*\}/);
-  assert.doesNotMatch(PAGE, /fois cette semaine` : ""/);
+test("« Je recopie cela » ; plus de « soirs » (lot K1 : la ligne des jours n'est plus que sur Mon espace)", () => {
+  assert.doesNotMatch(PAGE, /cette semaine` : ""/);
   assert.doesNotMatch(PAGE, /soir\$\{/);
   // Lot 2 : la ligne a un nom (un niveau « par cœur » dit autre chose).
   assert.match(PAGE, /<p id="retenir-cahier" class="cahier">Je recopie cela dans mon cahier\.<\/p>/);
@@ -231,9 +229,9 @@ test("la bande « Mode professeur » : au téléphone, « Mode professeur · Qui
 });
 
 test("les adresses des fichiers changés (cache) ; la copie du moteur pour la page prof", async () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
   // (Lot 3c « J'écris sur des calculs qui changent » : le cœur et les aides, 20261113-5.)
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-7/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261125-2/);
   const copie = await lire("../_serveur/public/prof/defi_calcul_core.js");
   assert.equal(copie, await lire("../outils/calcul_mental/defi_calcul_core.js"), "copie octet pour octet");

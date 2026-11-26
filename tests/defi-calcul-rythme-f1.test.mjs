@@ -19,17 +19,23 @@ const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
 
 test("page élève : chaque lecture de la séance passe les réglages au moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  const appels = [...page.matchAll(/PARCOURS\.(fileSeance|ouvrirSeance|fermerSeance)\(([^)]*\))?/g)].map(m => m[0]);
-  assert.ok(appels.length >= 8, `${appels.length} appels`);
+  // (Lot K1 : `etatSeance` remplace `fileSeance` ; la carte et une étoile
+  // lisent le palier par optionsCarte.)
+  const appels = [...page.matchAll(/PARCOURS\.(etatSeance|ouvrirSeance|fermerSeance)\(([^)]*\))?/g)].map(m => m[0]);
+  assert.ok(appels.length >= 4, `${appels.length} appels`);
   appels.forEach(appel => assert.match(appel, /optionsSeance\(/, `sans les réglages : ${appel}`));
+  [...page.matchAll(/PARCOURS\.(carteEleve|etatEtoile)\(([^)]*\))?/g)].map(m => m[0])
+    .forEach(appel => assert.match(appel, /optionsCarte\(\)/, `sans le palier : ${appel}`));
+  assert.match(page, /const optionsCarte = \(\) => \(\{aujourdhui: jourCourant\(\), palier: palierRegle\(\), prof: MODE_PROF\}\);/);
+  [...page.matchAll(/PARCOURS\.(commencerPaquet|tirerCalculsDuJour|terminerCalculsDuJour)\(parcours, [^\n]*/g)].map(m => m[0])
+    .forEach(appel => assert.match(appel, /palier: palierRegle\(\)|\(parcours, options\)/, `sans le palier : ${appel}`)); // (`options` : celles de finish, palier compris)
   assert.match(page, /function reglagesSeance\(\) \{\s*return MODE_PROF \|\| !codeSuivi \? PARCOURS\.reglagesParDefaut\(\) : reglagesDeLEleve;/,
     "10 minutes et tout, en mode professeur et sans code");
   assert.match(page, /function optionsSeance\(aujourdhui = jourCourant\(\)\) \{\s*return Object\.assign\(\{aujourdhui\}, reglagesSeance\(\)\);/);
-  // Le palier aussi là où la séance avance (les étapes jouées) et où l'on
-  // cherche « Mon module ».
-  assert.match(page, /const options = \{aujourdhui: jourCourant\(\), carte: CARTE, seance: enSeance\(\), palier: palierRegle\(\)\};/);
-  assert.match(page, /const competenceCourante = \(\) => PARCOURS\.competenceCourante\(parcours, CARTE, palierRegle\(\)\);/);
-  assert.doesNotMatch(page, /PARCOURS\.moduleCourant\(parcours, CARTE\)\)/, "jamais sans le palier");
+  // Le palier aussi là où la séance avance (les étapes jouées). (Lot K1 :
+  // « Mon module » et `competenceCourante` sont partis.)
+  assert.match(page, /const options = \{aujourdhui: jourCourant\(\), carte: CARTE, seance: enSeance\(\) && !MODE_PROF, palier: palierRegle\(\)\};/);
+  assert.doesNotMatch(page, /PARCOURS\.(moduleCourant|competenceCourante|fileSeance)\(/, "plus d'ancien moteur");
   // Les deux réponses du serveur qui portent les réglages.
   assert.equal((page.match(/noterReglages\(code, (?:reponse\.donnees|donnees)\.reglages\)/g) || []).length, 2, "identité et billet");
   assert.match(page, /codeSuivi = code;[\s\S]{0,200}reglagesDeLEleve = PARCOURS\.chargerReglagesOnglet\(stockageSession\(\), code\);/, "un autre code : ses réglages");
@@ -37,7 +43,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   // peut pas le ranger ; une séance NEUVE relit le réglage (2 s au plus).
   assert.match(page, /reglagesDeLEleve = PARCOURS\.reglagesDeSeance\(reglages\);\s*PARCOURS\.sauverReglagesOnglet\(stockageSession\(\), code, reglages\);/,
     "en mémoire d'abord, rangé ensuite");
-  assert.match(page, /async function lancerSeance\(\) \{\s*if \(ouvertureEnCours\) return;\s*\/\/[^\n]*\n\s*if \(!PARCOURS\.fileSeance\(parcours, CARTE, optionsSeance\(\)\)\.ouverte && suiviActif\(\) && !suiviHorsLigne\) \{/);
+  assert.match(page, /async function lancerSeance\(\) \{\s*if \(ouvertureEnCours\) return;\s*if \(!PARCOURS\.seanceOuverte\(parcours, jourCourant\(\)\) && suiviActif\(\) && !suiviHorsLigne\) \{/);
   assert.match(page, /await Promise\.race\(\[rafraichirReglages\(\), new Promise\(fini => window\.setTimeout\(fini, 2000\)\)\]\);/);
   assert.match(page, /if \(sync\.detache\) \{ finAttente\(\); return; \}(?:\s*\/\/[^\n]*)*\s*if \(envoisRetenus\(\)\) \{ demarrageEnAttente = true; finAttente\(\); return; \}\s*demarrageEnAttente = false;\s*rafraichirReglages\(\);/, "la lecture du démarrage est celle qu'on attend");
   // « Comment ça marche ? » : la durée réglée.
@@ -45,21 +51,17 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261122-1/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261125-7/, "le moteur change d'adresse");
 });
 
-test("page élève : Mon parcours n'a d'onglet que pour les paliers ouverts, et dit le réglage s'il n'est pas « tout »", async () => {
+test("page élève : la carte n'a d'étage ouvert que jusqu'au réglage du professeur (lot K1)", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /compte\.paliers\.filter\(palier => palier\.palier <= palierRegle\(\)\)\.map\(/);
-  assert.match(page, /if \(state\.palier > palierRegle\(\)\) state\.palier = palierRegle\(\);/);
-  assert.match(page, /return soude\(`Jusqu’au palier \$\{n\} \(\$\{palier\.n === 1 \? "les bases" : palier\.classes\}\)`\);/);
-  assert.match(page, /if \(n >= PARCOURS\.SEUILS\.seance\.paliers\) return "";/, "« tout » : rien d'écrit");
-  // Le test ne prend que les niveaux des paliers ouverts (le mode professeur : tous).
-  // Lot 7-0 : et pas au-delà du palier en cours (PARCOURS.marchesDuTest).
-  assert.match(page, /const bornes = MODE_PROF \? \{de: 1, jusqua: Infinity\} : PARCOURS\.marchesDuTest\(parcours, CARTE, id, palierRegle\(\)\);/);
-  assert.match(page, /\.filter\(marche => marche\.niveau >= bornes\.de && marche\.niveau <= bornes\.jusqua\);/);
+  // Le moteur ferme les étages au-delà du palier réglé (carteEleve, palier) ;
+  // le mode professeur les ouvre tous (prof: MODE_PROF).
+  assert.match(page, /const carteDuJour = \(\) => PARCOURS\.carteEleve\(parcours, CARTE, optionsCarte\(\)\);/);
+  // Plus de test de module ni d'escalier borné par palier.
+  ["marchesDuTest", "renderParcoursPaliers", "Jusqu’au palier"].forEach(mot => assert.ok(!page.includes(mot), mot));
 });
-
 test("page prof : « Régler Défi calcul » — la durée et le palier pour la classe, autrement pour quelques élèves", async () => {
   const page = await lire("../_serveur/public/prof/index.php");
   assert.match(page, /if \(cle === "defi-calcul"\) corps\.append\(\.\.\.choixCalcul\(\)\);/);
@@ -106,9 +108,11 @@ test("serveur : une page d'avant le lot 1 (version 6) ne réécrit pas la progre
   // Lot 6 « programmes 2 » : 9 (F6 et F9 ont un niveau de plus).
   // Lot F4 « personne ne reste bloqué » : 10 (`ar` et `paliers`).
   // Lot C2 : 11 (M1 et D8 en deux niveaux, doubles puis moitiés).
-  assert.match(moteur, /const VERSION = 11;/);
+  // Lot K1 « la carte chez l'élève » : 12 (des étoiles, leur compteur ; plus
+  // de `ok`, `f`, `t`, `l`).
+  assert.match(moteur, /const VERSION = 12;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 11,/);
+  assert.match(bloc, /'version_min' => 12,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   assert.ok(api.indexOf("$versionMin") > api.indexOf("if (!empty($corps['lire']))"));

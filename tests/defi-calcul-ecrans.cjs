@@ -6,10 +6,16 @@
 //   node tests/defi-calcul-ecrans.cjs
 //   DEFI_CALCUL_CAPTURES=/chemin/du/dossier node tests/defi-calcul-ecrans.cjs   (dépose les captures)
 //   CHROMIUM_EXECUTABLE_PATH=/chemin/chrome node tests/defi-calcul-ecrans.cjs   (un Chromium précis)
-//   DEFI_CALCUL_SEULEMENT=premier-jour node tests/defi-calcul-ecrans.cjs   (premier-jour | rouges | de-cote)
+//   DEFI_CALCUL_SEULEMENT=premier-jour node tests/defi-calcul-ecrans.cjs
 //   DEFI_CALCUL_TAILLE=1366 …   (une seule taille : 1366, 1440, 390x844 ou 390x664)
 //
-// Ce qui est joué :
+// Lot K1 « la carte » (25/11/2026) : le test en escalier, les compétences
+// rouges et la mise de côté n'existent plus (remplacés par « Je tente » et
+// l'étoile qui part, joués dans defi-calcul-lot-K1-ecrans.cjs) ; les scénarios
+// « rouges » et « de-cote » sont retirés. « premier-jour » devient : « Je
+// tente » raté, puis J'apprends du même calcul, en une étape (inchangé).
+//
+// Ce qui est joué (avant K1) :
 //   premier-jour  l'accueil ; le test en escalier (monter, 3e calcul, ✗ sans
 //                 la bonne réponse, arrêt) ; J'apprends du niveau raté TOUT
 //                 DE SUITE, en une étape (lot 2 : on te montre ; perles 2
@@ -513,152 +519,58 @@ async function cliquerSuite(page) {
 
 // ------------------------------------------------------------------ premier jour
 //
-// Léa arrive : elle sait les niveaux 1 et 2 des compléments, pas le 3.
+// Lot K1 : Léa a gagné les deux premières étoiles ce matin (elles reviennent
+// demain) ; « Commencer » la met sur « Je tente : Différences et trous
+// jusqu'à 20 », qu'elle rate (deux faux) ; elle l'apprend tout de suite.
 async function premierJour(navigateur, base, taille) {
-  // (Lot F4 : son test de palier est déjà joué — raté —, elle avance module
-  // par module ; le test de palier a sa recette, defi-calcul-lot-F4-ecrans.cjs.)
-  const session = await ouvrir(navigateur, base, taille, {jour: "2026-11-02", parcours: P.normaliserParcours({version: P.VERSION, paliers: ["2026-10-30", null, null, null]})});
+  const jour = "2026-11-02";
+  const CARTE = require(path.join(RACINE, "outils/calcul_mental/defi_calcul_core.js")).carte();
+  const six = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  const depart = ["A1-1", "A1-2"].reduce((q, cle) => P.appliquerTentative(q, {module: "A1", niveau: Number(cle.slice(3)), reponses: six}, {aujourdhui: jour, carte: CARTE}).parcours, P.creerParcours());
+  const session = await ouvrir(navigateur, base, taille, {jour, parcours: depart});
   const {page} = session;
   const ecran = (nom, options) => controler(session, taille, `jour1-${nom}`, options);
   await ecran("accueil");
-  const fil = await textes(page, "#acc-seance li, #acc-seance .etape");
-  assert.ok(!fil.some(t => /La suite/.test(t)), "le fil n'annonce plus « La suite »");
-  await page.getByText("Commencer").first().click();
+  assert.match(await texte(page, "#acc-but-texte"), /Différences et trous jusqu’à 20/, "le but du jour");
+  await page.click("#acc-commencer");
   await page.waitForTimeout(600);
-  assert.equal(await genre(page), "test");
-  // Marche 1 : 3 justes (lot 1 « la séance » : 3 calculs par marche).
-  for (let i = 0; i < 3; i += 1) { const c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100); }
-  assert.equal((await escalier(page)).marche, 2, "marche 1 montée");
-  await ecran("test-marche-2", {jeu: true, pave: true});
-  // Marche 2 : un juste, un faux → un calcul de plus (4) ; le faux : ✗, jamais la bonne réponse.
-  let c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100);
-  c = await calcul(page); await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(250);
-  const retour = await texte(page, "#answer-feedback");
-  assert.equal(retour, "✗ Pas juste", "au test, un faux : ✗, sans la bonne réponse");
-  assert.doesNotMatch(await texte(page, "#expression"), new RegExp(`\\b${c.reponse}\\b`), "la bonne réponse n'est pas écrite dans le calcul");
-  await ecran("test-faux", {jeu: true});
+  assert.equal(await genre(page), "tente");
+  // Deux faux : ✗ sans la bonne réponse, puis l'arrêt.
+  let c = await calcul(page);
+  const sansReponse = (await texte(page, "#expression")).replace(/\s/g, "");
+  await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(250);
+  assert.equal(await texte(page, "#answer-feedback"), "✗ Pas juste", "« Je tente » : un faux, ✗, sans la bonne réponse");
+  // La case garde la réponse tapée (fausse) — la bonne n'est écrite nulle part.
+  assert.equal(await texte(page, "#inline-answer"), String(c.reponse + 1), "la case garde la réponse tapée");
+  assert.equal((await texte(page, "#expression")).replace(/\s/g, "").length, sansReponse.length + String(c.reponse + 1).length, "rien d'autre n'est écrit dans le calcul");
+  await ecran("tente-faux", {jeu: true});
   await page.waitForTimeout(1200);
-  assert.equal((await escalier(page)).courante.length, 2, "on passe tout seul au calcul suivant");
-  for (let i = 0; i < 2; i += 1) { c = await calcul(page); await taper(page, c.reponse); await valider(page); await page.waitForTimeout(1100); }
-  assert.equal((await escalier(page)).marche, 3, "marche 2 montée, à 3 sur 4");
-  // Marche 3 : deux faux → arrêt.
-  for (let i = 0; i < 2; i += 1) { c = await calcul(page); await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(1300); }
-  await page.waitForTimeout(800);
-  assert.equal(await texte(page, "#result-title"), "Niveaux 1 et 2 : déjà sus !");
-  assert.match(await texte(page, "#result-score"), /^Le niveau 3, tu vas l’apprendre maintenant/);
-  assert.equal(await boutonSuite(page), "Étape 2 : j’apprends Différences et trous jusqu’à 20 →", "le niveau raté s'apprend TOUT DE SUITE (pas le test d'un autre module)");
-  await ecran("test-bilan");
+  c = await calcul(page); await taper(page, c.reponse + 1); await valider(page); await page.waitForTimeout(1500);
+  assert.match(await texte(page, "#result-suite"), /^Ce calcul, on l’apprend ensemble\. ?Différences et trous jusqu’à 20/);
+  assert.equal(await boutonSuite(page), "J’apprends");
+  await ecran("tente-rate");
   await cliquerSuite(page);
-  // Modules lot 1 (31/10) : le vrai premier module du parcours est A1.
-  // Lot 2 : J'apprends en une étape.
   const ecranApprends = (nom, options) => ecran(nom, options);
   ecranApprends.telephone = taille.telephone;
   await jouerApprendsEnUneEtape(page, "A1-3", ecranApprends);
-  // ⑥ Réussi : « ✓ Réussi ! » et À retenir sur le même écran (planche 3).
+  // ⑥ Réussi : « ✓ Réussi ! » et À retenir sur le même écran (planche 3) ;
+  // l'étoile est gagnée (lot K1).
   assert.equal(await texte(page, "#retenir-reussi"), "✓ Réussi ! Différences et trous jusqu’à 20 revient demain.");
   assert.equal(await page.isVisible("#result-retenir"), true);
   assert.equal(await page.isVisible("#result-verdict"), false, "plus d'écran « Entraînement réussi ! »");
-  // Lot 3b (choix de Gwenaël) : un niveau « par cœur » a deux écrans — À
-  // retenir avec son schéma, puis « Ma carte à apprendre ». Lot 7e-2 (choix
-  // de Gwenaël) : A1-3 est une procédure — un seul écran, sans carte.
   assert.equal(await texte(page, "#retenir-cahier"), "Je recopie cela dans mon cahier.", "À retenir, avec son schéma");
   assert.equal(await page.locator("#retenir-image > svg").count(), 1, "le schéma du calcul montré");
   assert.equal(await page.locator("#retenir-image .dc-coeur").count(), 0, "pas de carte : A1-3 est une procédure");
-  // Lot 1 « la séance » : le temps n'est pas passé (l'horloge de la page est
-  // arrêtée) — la séance continue avec le module suivant, testé.
-  assert.equal(await boutonSuite(page), "Étape 3 : tu connais déjà ? →", "le module suivant (A10) est testé");
+  assert.match(await boutonSuite(page), /^Continuer ?Ensuite : /, "la séance continue (l'horloge de la page est arrêtée)");
   await ecran("apprends-retenir");
-  const p = await parcours(page);
-  assert.deepEqual(p.modules.A1.b, [4, 3, 2]);
-  assert.deepEqual(p.modules.A1.a, [1, 1, 1], "les marches prouvées comptent comme J'apprends fait");
+  const e = await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.carte().etages[0].lignes.flatMap(l => l.etoiles).find(x => x.cle === "A1-3"));
+  assert.equal(e.etat, "gagnee", "J'apprends réussi : l'étoile est gagnée");
   await page.waitForTimeout(800);
   assert.deepEqual(session.erreurs, []);
   await session.contexte.close();
 }
 
-// Une progression : {"A2-1": [boîte, échéance, échecs, appris]}.
-function progression(boites) {
-  const p = P.normaliserParcours({version: 2});
-  Object.entries(boites).forEach(([cle, [b, e, x = 0, a = 1]]) => {
-    const [id, n] = cle.split("-");
-    const l = p.modules[id] || P.normaliserParcours({modules: {[id]: {}}}).modules[id];
-    l.b[n - 1] = b; l.e[n - 1] = e; l.x[n - 1] = x; l.a[n - 1] = a; l.f[n - 1] = 1; l.vu = "2026-10-30";
-    p.modules[id] = l;
-  });
-  return P.normaliserParcours(p);
-}
-
-async function jouerCalculsDuJour(page, faux) {
-  for (let i = 0; i < 30 && await genre(page) === "jour"; i += 1) {
-    const c = await calcul(page);
-    const rater = faux(c);
-    await taper(page, rater ? c.reponse + 1 : c.reponse);
-    await valider(page);
-    await page.waitForTimeout(rater ? 900 : 1100);
-    if (rater && await texte(page, "#validate") === "Suivant") { await valider(page); await page.waitForTimeout(400); }
-  }
-  await page.waitForTimeout(800);
-}
-
-// ------------------------------------------------------------------ deux rouges
-async function deuxRouges(navigateur, base, taille) {
-  const jour = "2026-11-02";
-  const session = await ouvrir(navigateur, base, taille, {jour, parcours: progression({"A2-1": [2, jour], "A2-2": [2, jour], "M2-1": [3, "2026-11-05"]})});
-  const {page} = session;
-  const ecran = (nom, options) => controler(session, taille, `rouges-${nom}`, options);
-  await ecran("accueil");
-  await page.getByText("Commencer").first().click();
-  await page.waitForTimeout(600);
-  assert.equal(await genre(page), "jour");
-  await jouerCalculsDuJour(page, () => true);
-  await ecran("bilan-jour");
-  assert.equal(await boutonSuite(page), "Étape 2 : je m’entraîne encore →");
-  for (const [n, nom] of [[1, "premiere"], [2, "seconde"]]) {
-    await cliquerSuite(page);
-    assert.equal(await genre(page), "rattrape");
-    assert.equal((await entrainement(page)).outil, "image", "« encore » commence à la droite");
-    await ecran(`encore-${nom}`, {jeu: true, pave: true, image: true});
-    const outils = [];
-    for (let i = 0; i < 20 && await genre(page) === "rattrape"; i += 1) outils.push((await repondreEntrainement(page, true)).outil);
-    // (Lot 3b : « un nombre en 5 » annoncé dans Compléments à 100 — son
-    // dessin revient une fois, ce rappel ne compte pas : un calcul de plus.)
-    // (lot C1 : une écriture nouvelle arrive avec son rappel au dessin, qui
-    // ne compte pas — « 100 − 70 = □ » dans « encore » : 7 calculs au plus.)
-    assert.deepEqual(outils.slice(0, 2), ["image", "image"], "deux justes avec la droite");
-    assert.deepEqual(outils.slice(-3), ["aucun", "aucun", "aucun"], "fini à 3 justes de suite sans aide");
-    assert.ok(outils.length <= 7, `au plus deux rappels (${outils})`);
-    await page.waitForTimeout(600);
-    assert.equal(await texte(page, "#result-title"), "Entraînement réussi !");
-    if (n === 1) assert.equal(await boutonSuite(page), "Étape 3 : je m’entraîne encore →", "la seconde rouge, dans la même séance");
-  }
-  assert.match(await boutonSuite(page), /^Étape 4 : tu connais déjà/, "puis la nouveauté vient toujours");
-  await ecran("puis-nouveaute");
-  await page.waitForTimeout(800);
-  assert.deepEqual(session.erreurs, []);
-  await session.contexte.close();
-}
-
-// ------------------------------------------------------------------ mise de côté
-async function deCote(navigateur, base, taille) {
-  const jour = "2026-11-02";
-  const session = await ouvrir(navigateur, base, taille, {jour, parcours: progression({"A5-1": [1, jour, 2, 0], "A2-1": [3, "2026-11-08"], "A2-2": [3, "2026-11-08"], "M2-1": [3, "2026-11-08"]})});
-  const {page} = session;
-  await page.getByText("Commencer").first().click();
-  await page.waitForTimeout(600);
-  await jouerCalculsDuJour(page, c => c.module === "A5");
-  const lignes = await textes(page, "#result-suite .cadre p, #result-suite .mouv > span");
-  assert.ok(lignes.some(t => /mise de côté, revient dans 3 jours/.test(t)), `la ligne « mise de côté » (${lignes.join(" | ")})`);
-  assert.ok(lignes.includes("On la met de côté quelques jours : ton professeur la reverra avec toi.") || lignes.includes("On la met de côté quelques jours\u00a0: ton professeur la reverra avec toi."), "la phrase");
-  // Modules lot 1 : A1, jamais ouvert, passe avant A2-3 dans la carte.
-  assert.match(await boutonSuite(page), /^Étape 2 : tu connais déjà/, "la nouveauté vient quand même");
-  await controler(session, taille, "de-cote-bilan");
-  const p = await parcours(page);
-  assert.equal(p.modules.A5.x[0], 3, "signalée « à voir en classe »");
-  assert.equal(p.modules.A5.e[0], "2026-11-05");
-  await page.waitForTimeout(800);
-  assert.deepEqual(session.erreurs, []);
-  await session.contexte.close();
-}
+// (Lot K1 : « rouges » et « de-cote » retirés — voir l'en-tête.)
 
 // ------------------------------------------------------------------ lancement
 const voulu = nom => !SEULEMENT || SEULEMENT.split(",").includes(nom);
@@ -671,9 +583,7 @@ const voulu = nom => !SEULEMENT || SEULEMENT.split(",").includes(nom);
   let echec = null;
   try {
     for (const taille of TAILLES) {
-      if (voulu("premier-jour")) { await premierJour(navigateur, base, taille); console.log(`ok — premier jour (test, J'apprends en une étape tout de suite) à ${taille.nom}`); }
-      if (voulu("rouges")) { await deuxRouges(navigateur, base, taille); console.log(`ok — deux « encore » puis la nouveauté à ${taille.nom}`); }
-      if (voulu("de-cote")) { await deCote(navigateur, base, taille); console.log(`ok — la mise de côté à ${taille.nom}`); }
+      if (voulu("premier-jour")) { await premierJour(navigateur, base, taille); console.log(`ok — premier jour (« Je tente » raté, J'apprends en une étape tout de suite) à ${taille.nom}`); }
     }
   } catch (erreur) {
     echec = erreur;

@@ -53,10 +53,28 @@ function servir() {
 // Un élève dont les tests de palier sont joués ; `modules` : ses lignes ;
 // `seanceAuTemps` : une séance ouverte aujourd'hui dont le temps est passé
 // (11 min 40 s), encore garantie (J'apprends s'arrête alors dès 4 calculs).
-function eleve(modules, {seanceAuTemps = false} = {}) {
+// (Lot K1 : une séance dont le temps est passé se ferme dès l'accueil ; elle
+// part donc à 9 min 59 s, et la minute qui manque passe pendant J'apprends —
+// voir `jouer(…, {uneMinute: true})`.)
+// (Lot K1 : une étoile fermée ne s'apprend pas — `avant` : les étoiles de
+// la carte d'avant celle-ci sont gagnées, pour qu'elle soit ouverte.)
+function gagnerAvant(p, cle) {
+  const six = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  for (const k of CARTE.ordre) {
+    if (k === cle) break;
+    const [m, n] = k.split("-");
+    if (p.modules[m] && p.modules[m].ar && p.modules[m].ar[Number(n) - 1]) continue;
+    const r = P.appliquerTentative(p, {module: m, niveau: Number(n), reponses: six}, {aujourdhui: "2026-11-20", carte: CARTE});
+    if (!r.refuse) p = r.parcours;
+  }
+  return p;
+}
+function eleve(modules, {seanceAuTemps = false, avant = null} = {}) {
   const brut = {version: P.VERSION, modules, jours: ["2026-11-20"], seances: ["2026-11-20"], paliers: PALIERS_JOUES};
-  if (seanceAuTemps) brut.seance = {jour: JOUR, etape: 1, n: 1, p: [1, 0, 0, 1, 0, 10, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 700, 0]};
-  return P.normaliserParcours(brut, {aujourdhui: JOUR});
+  // (Lot K1 : le plan de la séance en version 12 — [ouverte, minutes, obligatoire, paquet, commencées].)
+  if (seanceAuTemps) brut.seance = {jour: JOUR, etape: 1, n: 1, i: 4321, g: 1, p: [1, 10, 0, 0, 1], j: [0, 0, 0, 0, 599, 0, 0, 0, 0, 0]};
+  const p = P.normaliserParcours(brut, {aujourdhui: JOUR});
+  return avant ? gagnerAvant(p, avant) : p;
 }
 const ligne = (k, plus = {}) => Object.assign({vu: "2026-11-20", b: Array(k).fill(0), e: Array(k).fill(null), a: Array(k).fill(0), f: Array(k).fill(1), ar: Array(k).fill(0)}, plus);
 
@@ -128,7 +146,7 @@ const resultat = page => visible(page, "#result");
 // Joue J'apprends jusqu'au bilan ; `choisir(e, n)` dit juste ou faux (e :
 // l'entraînement à l'écran, n : les calculs déjà joués). Rend le nombre de
 // calculs joués (J'écris à part).
-async function jouer(page, choisir) {
+async function jouer(page, choisir, {uneMinute = false} = {}) {
   let joues = 0;
   for (let tour = 0; tour < 80 && !(await resultat(page)); tour += 1) {
     if (await appel(page, "ecrisEnCours")) { await ecrire(page); continue; }
@@ -139,6 +157,8 @@ async function jouer(page, choisir) {
     if (!e) break;
     await repondre(page, choisir(e, joues));
     joues += 1;
+    // (Lot K1 : une minute de réflexion après le premier calcul — le temps de la séance passe.)
+    if (uneMinute && joues === 1) await pause(page, 59000);
   }
   await pause(page, 800);
   return joues;
@@ -157,10 +177,10 @@ async function jouer(page, choisir) {
     const f = `${largeur}x${hauteur}`;
 
     await cas(`${f} : (3) J'apprends arrêté au temps — le chemin annoncé est la reprise enregistrée`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({M6: ligne(2, {f: [1, 0]})}, {seanceAuTemps: true})});
+      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({M6: ligne(2, {f: [1, 0]})}, {seanceAuTemps: true, avant: "M6-1"})});
       assert.equal(await appel(s.page, "reprendre", "M6", 1, 0), true);
       await pause(s.page, 600);
-      const joues = await jouer(s.page, () => true);
+      const joues = await jouer(s.page, () => true, {uneMinute: true});
       await photo(s.page, `${f}-memes-regles`);
       assert.equal(joues, 4, "arrêté au temps, dès 4 calculs");
       assert.match(await texte(s.page, "#result-title"), /^On continue demain$/);
@@ -172,14 +192,14 @@ async function jouer(page, choisir) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : (10) au 4e arrêt — « ton professeur va le revoir avec toi », il revient demain`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({M6: ligne(2, {ar: [3 * 3 + 2, 0], e: ["2026-11-20", null], f: [1, 0]})}, {seanceAuTemps: true})});
+    await cas(`${f} : (10) au 4e arrêt — « Ce calcul, ton professeur le reverra avec toi. », il revient demain`, async () => {
+      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({M6: ligne(2, {ar: [3 * 3 + 2, 0], e: ["2026-11-20", null], f: [1, 0]})}, {seanceAuTemps: true, avant: "M6-1"})});
       assert.equal(await appel(s.page, "reprendre", "M6", 1, 2), true);
       await pause(s.page, 600);
-      await jouer(s.page, () => true);
+      await jouer(s.page, () => true, {uneMinute: true});
       await photo(s.page, `${f}-4e-arret`);
       const suite = await texte(s.page, "#result-suite");
-      assert.match(suite, /Ce niveau, ton professeur va le revoir avec toi\./);
+      assert.match(suite, /Ce calcul, ton professeur le reverra avec toi\. En attendant, continue sur les autres lignes\./); // (lot K1, planche K1-2)
       assert.doesNotMatch(suite, /tu passes à la suite/, "il revient demain");
       const p = await appel(s.page, "parcours");
       assert.equal(P.arretsDe(p.modules.M6, 0), 4);
@@ -189,13 +209,14 @@ async function jouer(page, choisir) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : (10) le 3e arrêt sur F9-2 — « Demain, tu passes à la suite. »`, async () => {
+    await cas(`${f} : (10) le 3e arrêt sur F9-2 — « Ce calcul, ton professeur le reverra avec toi. » (lot K1)`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: eleve({F9: ligne(3, {b: [4, 0, 0], e: ["2026-12-01", null, null], a: [1, 0, 0], d: ["2026-11-01", null, null], s: ["2026-11-10", null, null], ar: [0, 2 * 3 + 2, 0], f: [1, 1, 0]})}, {seanceAuTemps: true})});
       assert.equal(await appel(s.page, "reprendre", "F9", 2, 2), true);
       await pause(s.page, 600);
-      await jouer(s.page, () => true);
+      await jouer(s.page, () => true, {uneMinute: true});
       await photo(s.page, `${f}-f9-2`);
-      assert.match(await texte(s.page, "#result-suite"), /Ce niveau, ton professeur va le revoir avec toi\. Demain, tu passes à la suite\./);
+      // (Lot K1 : plus de « Demain, tu passes à la suite » — l'élève choisit sur la carte.)
+      assert.match(await texte(s.page, "#result-suite"), /Ce calcul, ton professeur le reverra avec toi\. En attendant, continue sur les autres lignes\./);
       const p = await appel(s.page, "parcours");
       assert.equal(p.modules.F9.e[1], "2026-11-30");
       await tient(s.page, largeur, hauteur);
@@ -253,7 +274,7 @@ async function jouer(page, choisir) {
       await photo(s.page, `${f}-page-ancienne`);
       assert.equal(await visible(s.page, "#suivi-repere"), true, "le message est à l'écran");
       assert.match(await texte(s.page, "#suivi-repere"), /Page ancienne : recharge la page\./);
-      await s.page.click("#acc-seance .carte-seance");
+      await s.page.click("#acc-commencer");
       await pause(s.page, 2500);
       if (await appel(s.page, "calcul")) await repondre(s.page, true);
       assert.equal(await s.page.evaluate(() => localStorage.getItem("mathsgo-defi-calcul-parcours")), v11, "la copie version 11 est intacte");

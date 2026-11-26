@@ -45,59 +45,78 @@
   ]);
 
   // Le dessin d'une ceinture nouée (SVG en texte : la page, la tuile de Mon
-  // espace et la page du professeur le posent tel quel). `barrettes` : 0 à
-  // 3, des bandes blanches bordées d'encre sur le pan droit, comme les
-  // barrettes du judo. `vide` : une ceinture pas encore gagnée, en
-  // pointillés gris. `taille` : la largeur en pixels (hauteur 5/8).
-  function formeCeinture(n, {barrettes = 0, vide = false, taille = 64, titre = ""} = {}) {
+  // espace et la page du professeur le posent tel quel).
+  // Lot K1 (25/11/2026, Gwenaël : « on voyait les montants derrière par
+  // transparence ») : les pans et la bande, puis le nœud posé PAR-DESSUS,
+  // chacun avec son fond. Options :
+  //  - `rempli` (0 à 1, lot K1) : la ceinture de l'étage en cours se remplit
+  //    de sa couleur de gauche à droite, quart par quart ; le reste est blanc ;
+  //  - `vide` : une ceinture pas encore ouverte, blanche au trait gris ;
+  //  - `barrettes` : 0 à 3, des bandes blanches bordées d'encre sur le pan
+  //    droit (la page du professeur d'avant le lot K2) ;
+  //  - `taille` : la largeur en pixels (hauteur 5/8).
+  let numeroCeinture = 0;
+  function formeCeinture(n, {barrettes = 0, vide = false, taille = 64, titre = "", rempli = 1} = {}) {
     const ceinture = CEINTURES[Math.max(0, Math.min(CEINTURES.length - 1, Math.floor(Number(n) || 0)))];
     const largeur = Math.max(8, Math.min(400, Math.round(Number(taille) || 64)));
     const nombre = vide ? 0 : Math.max(0, Math.min(3, Math.floor(Number(barrettes) || 0)));
+    const part = vide ? 0 : Math.max(0, Math.min(1, Number.isFinite(Number(rempli)) ? Number(rempli) : 1));
     const racine = {"class": "ceinture", viewBox: "0 0 64 40", width: String(largeur), height: String(Math.round(largeur * 40 / 64)), focusable: "false"};
     if (titre) { racine.role = "img"; racine["aria-label"] = String(titre); } else racine["aria-hidden"] = "true";
-    const groupe = {fill: vide ? "#ffffff" : ceinture.couleur, stroke: vide ? "#9fb4c4" : "#143451", "stroke-width": "1.7", "stroke-linejoin": "round"};
-    if (vide) groupe["stroke-dasharray"] = "3 2.4";
-    const pans = [
+    const encre = vide ? "#9fb4c4" : "#143451";
+    // (La forme d'avant le lot K1, gardée : Gwenaël l'aime. Ce qui change,
+    // c'est l'ordre : chaque morceau a son fond et son trait avant le
+    // suivant — le trait des pans et de la bande ne se voit plus à travers
+    // le nœud quand la ceinture est blanche ou à moitié remplie.)
+    const dos = [
       ["path", {d: "M27 17L33 18.5L23.5 37.5L16.5 35.5Z"}], ["path", {d: "M31 18.5L37 17L47.5 35.5L40.5 37.5Z"}],
-      ["rect", {x: "2", y: "9", width: "60", height: "9", rx: "2.2"}], ["rect", {x: "24.5", y: "5.5", width: "15", height: "15.5", rx: "3"}]
+      ["rect", {x: "2", y: "9", width: "60", height: "9", rx: "2.2"}]
     ];
-    const bandes = [];
+    const noeud = [["rect", {x: "24.5", y: "5.5", width: "15", height: "15.5", rx: "3"}]];
+    // La couleur, sur toute la ceinture ou sur sa partie remplie seulement.
+    const clip = part > 0 && part < 1 ? `mgc${(numeroCeinture = (numeroCeinture + 1) % 1000000)}` : "";
+    const defs = clip ? [["clipPath", {id: clip}, [["rect", {x: "0", y: "0", width: (64 * part).toFixed(2), height: "40"}]]]] : [];
+    const couleur = formes => (part > 0 ? [["g", Object.assign({fill: ceinture.couleur}, clip ? {"clip-path": `url(#${clip})`} : {}), formes]] : []);
+    const trait = Object.assign({fill: "none", stroke: encre, "stroke-width": "1.7", "stroke-linejoin": "round"}, vide ? {"stroke-dasharray": "3 2.4"} : {});
+    const calques = [
+      ...(defs.length ? [["defs", {}, defs]] : []),
+      ["g", {fill: "#ffffff"}, dos], ...couleur(dos), ["g", trait, dos],
+      ["g", {fill: "#ffffff"}, noeud], ...couleur(noeud), ["g", trait, noeud]
+    ];
     for (let k = 0; k < nombre; k += 1) {
       const t = .44 + k * .16;
       const cx = 34 + 10 * t;
       const cy = 18 + 18.5 * t;
       const [px, py] = [.889 * 4.6, -.457 * 4.6];
-      const trait = (f, epaisseur, couleur) => ["path", {d: `M${(cx - px * f).toFixed(2)} ${(cy - py * f).toFixed(2)}L${(cx + px * f).toFixed(2)} ${(cy + py * f).toFixed(2)}`, stroke: couleur, "stroke-width": epaisseur}];
-      bandes.push(trait(1, "3.6", "#143451"), trait(.82, "1.6", "#ffffff"));
+      const bande = (f, epaisseur, coul) => ["path", {d: `M${(cx - px * f).toFixed(2)} ${(cy - py * f).toFixed(2)}L${(cx + px * f).toFixed(2)} ${(cy + py * f).toFixed(2)}`, stroke: coul, "stroke-width": epaisseur}];
+      calques.push(bande(1, "3.6", "#143451"), bande(.82, "1.6", "#ffffff"));
     }
-    return {racine, groupe, pans, bandes};
+    return {racine, calques};
   }
 
   // Le dessin en texte SVG (la page de l'appli, les planches) : rien que des
   // nombres bornés et les couleurs ci-dessus ; le titre est échappé.
   function dessinCeinture(n, options = {}) {
-    const {racine, groupe, pans, bandes} = formeCeinture(n, options);
+    const {racine, calques} = formeCeinture(n, options);
     const echapper = valeur => String(valeur).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
     const attributs = objet => Object.keys(objet).map(cle => ` ${cle}="${echapper(objet[cle])}"`).join("");
-    const element = ([nom, objet]) => `<${nom}${attributs(objet)}/>`;
-    return `<svg${attributs(racine)}><g${attributs(groupe)}>${pans.map(element).join("")}</g>${bandes.map(element).join("")}</svg>`;
+    const element = ([nom, objet, enfants]) => (enfants ? `<${nom}${attributs(objet)}>${enfants.map(element).join("")}</${nom}>` : `<${nom}${attributs(objet)}/>`);
+    return `<svg${attributs(racine)}>${calques.map(element).join("")}</svg>`;
   }
 
   // Le même dessin en éléments (createElementNS, aucun HTML) : pour la page
   // du professeur et la tuile de Mon espace, où rien ne passe par innerHTML.
   function elementCeinture(doc, n, options = {}) {
-    const {racine, groupe, pans, bandes} = formeCeinture(n, options);
+    const {racine, calques} = formeCeinture(n, options);
     const NS = "http://www.w3.org/2000/svg";
-    const creer = (nom, objet) => {
+    const creer = ([nom, objet, enfants]) => {
       const noeud = doc.createElementNS(NS, nom);
       Object.keys(objet).forEach(cle => noeud.setAttribute(cle, objet[cle]));
+      (enfants || []).forEach(enfant => noeud.appendChild(creer(enfant)));
       return noeud;
     };
-    const svg = creer("svg", racine);
-    const g = creer("g", groupe);
-    pans.forEach(([nom, objet]) => g.appendChild(creer(nom, objet)));
-    svg.appendChild(g);
-    bandes.forEach(([nom, objet]) => svg.appendChild(creer(nom, objet)));
+    const svg = creer(["svg", racine]);
+    calques.forEach(calque => svg.appendChild(creer(calque)));
     return svg;
   }
 
@@ -1846,6 +1865,75 @@
     "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3",
     "M9-2", "D7-3", "F11-2"
   ]);
+
+  // ------------------------------------------------------------ la carte et les étoiles
+  //
+  // Lot K1 « la carte chez l'élève » (25/11/2026, choix de Gwenaël des 21, 22
+  // et 25/11 ; la table vient du lot K0, `table-cles.mjs`). Un ÉTAGE est un
+  // palier (1 les bases, 2 le CM1, 3 le CM2, 4 vers la 6e) ; dans un étage,
+  // des LIGNES (une opération, un nom d'élève), et dans une ligne des
+  // ÉTOILES (une étoile = une compétence, « A2-1 ») rangées dans l'ordre de
+  // `ORDRE`. L'élève choisit sa ligne ; dans une ligne, l'étoile suivante ne
+  // s'ouvre que quand celle d'avant est gagnée.
+  // Les 28 lignes, étage par étage, dans l'ordre où la carte les montre.
+  const LIGNES = Object.freeze({
+    1: Object.freeze([
+      Object.freeze(["Jusqu’à 20", Object.freeze(["A1-1", "A1-2", "A1-3"])]),
+      Object.freeze(["J’additionne", Object.freeze(["A10-1", "A10-2", "A4-1", "A4-2", "A10-3", "A4-3"])]),
+      Object.freeze(["Je soustrais", Object.freeze(["A11-1", "A11-2", "A11-3", "A7-1", "A7-2", "A8-1"])]),
+      Object.freeze(["Dizaines et compléments", Object.freeze(["A2-1", "A3-1", "A2-2", "A2-3", "A3-2"])]),
+      Object.freeze(["J’ajoute 9, je retire 9", Object.freeze(["A5-1", "A6-1", "A5-2", "A6-2", "A5-3"])]),
+      Object.freeze(["Doubles et moitiés", Object.freeze(["M1-1", "M1-2", "M1-3", "M1-4", "M1-5", "M1-6"])]),
+      Object.freeze(["Les tables", Object.freeze(["M4-1", "M2-1", "M4-2", "M3-1", "M5-1"])]),
+      Object.freeze(["Je multiplie", Object.freeze(["M6-1", "M8-1", "M6-2", "M8-2"])]),
+      Object.freeze(["Fractions", Object.freeze(["F8-1", "F8-2", "F6-1", "F9-1"])])
+    ]),
+    2: Object.freeze([
+      Object.freeze(["J’additionne, je soustrais", Object.freeze(["A6-3", "A3-3", "A7-3", "A4-4", "A8-2"])]),
+      Object.freeze(["Je complète", Object.freeze(["A2-4", "A2-5"])]),
+      Object.freeze(["Je multiplie", Object.freeze(["M2-2", "M7-1", "M3-2", "M7-2", "M8-3", "M10-1"])]),
+      Object.freeze(["Je divise", Object.freeze(["M11-1", "M12-1", "M11-2"])]),
+      Object.freeze(["Décimaux", Object.freeze(["D1-1", "D2-1", "D3-1", "F1-1", "D1-2", "D4-1"])]),
+      Object.freeze(["Fractions", Object.freeze(["F2-1", "F5-1", "F6-2", "F5-2"])]),
+      Object.freeze(["Je calcule avec des fractions", Object.freeze(["F3-1", "F3-2", "F8-3", "F9-2"])]),
+      Object.freeze(["Parenthèses et trous", Object.freeze(["C1-1", "C3-1", "C3-2"])])
+    ]),
+    3: Object.freeze([
+      Object.freeze(["J’additionne, je soustrais", Object.freeze(["A5-4", "A6-4", "A3-4", "A9-1"])]),
+      Object.freeze(["Je multiplie", Object.freeze(["M3-3", "M7-3", "M10-2", "D9-1", "D9-2"])]),
+      Object.freeze(["Je divise", Object.freeze(["M13-1", "M13-2", "M12-2", "M13-3"])]),
+      Object.freeze(["Décimaux\u00a0: × 10, ÷ 10", Object.freeze(["D2-2", "D3-2", "D1-3", "D2-3", "D3-3", "F1-2"])]),
+      Object.freeze(["Décimaux\u00a0: + et −", Object.freeze(["D6-1", "D4-2", "D5-1", "D6-2", "D4-3", "D7-1"])]),
+      Object.freeze(["Décimaux\u00a0: doubles et moitiés", Object.freeze(["D8-1", "D8-2", "D8-3", "D8-4", "D8-5"])]),
+      Object.freeze(["Fractions", Object.freeze(["F2-2", "F6-3", "F6-4", "F9-3"])]),
+      Object.freeze(["Fraction d’une quantité", Object.freeze(["F3-3", "F4-1", "F11-1", "F4-2"])]),
+      Object.freeze(["Parenthèses et trous", Object.freeze(["C1-2", "C3-3", "C1-3", "C4-1", "C4-2"])])
+    ]),
+    4: Object.freeze([
+      Object.freeze(["Décimaux\u00a0: + et −", Object.freeze(["D5-2", "D6-3", "A9-2", "D7-2", "D7-3"])]),
+      Object.freeze(["Je multiplie, je divise", Object.freeze(["M9-1", "M10-3", "M12-3", "M9-2"])]),
+      Object.freeze(["Décimaux et fractions", Object.freeze(["D2-4", "F1-3", "F11-2"])])
+    ])
+  });
+  // Les liens « d'abord » entre deux lignes d'un même étage : l'étoile →
+  // l'étoile à gagner avant elle (en plus de celle qui la précède dans sa
+  // ligne). L'étoile fermée le dit : « Fermée. D'abord : Compléments à la
+  // dizaine ». Un lien ne sort jamais de l'étage et ne remonte jamais
+  // l'ordre de la carte (un test le vérifie).
+  const DABORD = Object.freeze({
+    "A10-2": "A2-1", "A11-2": "A2-1", "A5-1": "A3-1", "M6-1": "M1-3", "M8-1": "M4-2",
+    "M12-1": "M3-2", "F8-3": "F5-1", "F9-2": "F6-2",
+    "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3"
+  });
+  // La ligne de chaque étoile : {etage, ligne (son rang dans l'étage, de 0),
+  // nom}.
+  const LIGNE_DE = (() => {
+    const table = {};
+    Object.keys(LIGNES).forEach(etage => LIGNES[etage].forEach(([nom, cles], ligne) => cles.forEach(cle => {
+      table[cle] = Object.freeze({etage: Number(etage), ligne, nom});
+    })));
+    return Object.freeze(table);
+  })();
 
   const A2 = {
     id: "A2", nom: "Compléments à la dizaine, à 100, à 1\u00a0000", exemple: "37 + ? = 100",
@@ -12239,7 +12327,11 @@
     reserveSansPalier("C2", "Priorités", "6 + 4 × 2", 4),
     reserveSansPalier("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 3)
   ].map(fiche => Object.freeze(Object.assign({}, fiche, {
+    // Lot K1 : chaque niveau porte sa ligne sur la carte (son nom d'élève),
+    // lue dans la table `LIGNES` ; "" pour un niveau qui n'est pas dans la
+    // carte (un module réservé).
     niveaux: Object.freeze(fiche.niveaux.map(niveau => Object.freeze(Object.assign({}, niveau,
+      {ligne: LIGNE_DE[`${fiche.id}-${niveau.n}`] ? LIGNE_DE[`${fiche.id}-${niveau.n}`].nom : ""},
       niveau.imposes ? {imposes: Object.freeze(niveau.imposes.slice())} : {},
       niveau.apprends ? {apprends: representeAEtapes(niveau.apprends)} : {}))))
   }))));
@@ -12711,7 +12803,13 @@
         types: fiche.niveaux.map(niveau => niveau.type || "P"),
         construit: Boolean(fiche.construit)
       })),
-      ordre: ORDRE.slice()
+      ordre: ORDRE.slice(),
+      // Lot K1 : les lignes de chaque étage, dans l'ordre de la carte
+      // ([{etage, nom, cles}], les étoiles d'une ligne dans l'ordre de
+      // `ordre`), et les liens « d'abord » (étoile → étoile à gagner avant).
+      lignes: Object.keys(LIGNES).map(Number).sort((a, b) => a - b)
+        .flatMap(etage => LIGNES[etage].map(([nom, cles]) => ({etage, nom, cles: cles.slice()}))),
+      dabord: Object.assign({}, DABORD)
     };
   }
 
@@ -13097,6 +13195,50 @@
     });
   }
   const TEST_MINIMUM = 3;
+
+  // « Je tente » (lot K1, choix de Gwenaël des 21, 22 et 25/11) : pour gagner
+  // une étoile sans la leçon, 6 calculs du niveau, du plus simple au plus
+  // dur, AU MOINS UN DE CHAQUE SORTE ; 5 justes, l'étoile est gagnée ; la
+  // page s'arrête au 2e faux. C'est le test d'un niveau (`genererTest`)
+  // étendu de 3 ou 4 à 6 calculs : le calcul du milieu de chaque sorte
+  // d'abord, puis, à tour de rôle, un autre calcul de chaque sorte (le plus
+  // dur qui reste, puis le plus simple, pour couvrir l'étendue du niveau).
+  // Jamais deux fois le même calcul. La même graine rend la même série.
+  // Rend [calcul…] (chacun porte sa `sorte`), [] si le niveau n'existe pas.
+  const TENTATIVE = Object.freeze({calculs: 6, justes: 5});
+  function genererTentative(cleNiveau, {graine = 1} = {}) {
+    const trouve = niveauDe(cleNiveau);
+    if (!trouve || !trouve.module.construit || typeof trouve.niveau.composer !== "function") return [];
+    const sortes = sortesDe(cleNiveau).map(sorte => sorte.n);
+    const tirer = essai => genererSerie(cleNiveau, {graine: (graine + trouve.niveau.n * 7919 + essai * 104729) >>> 0, genre: "entraine", total: 30, ordonne: false});
+    let brut = tirer(0);
+    const manque = () => sortes.some(n => !brut.some(calcul => sorteDe(calcul) === n)) || new Set(brut.map(calcul => calcul.texte)).size < TENTATIVE.calculs;
+    for (let essai = 1; essai <= 8 && manque(); essai += 1) {
+      const vus = new Set(brut.map(calcul => calcul.texte));
+      brut = brut.concat(tirer(essai).filter(calcul => !vus.has(calcul.texte) && vus.add(calcul.texte)));
+    }
+    const vus = new Set();
+    const serie = brut.filter(calcul => !vus.has(calcul.texte) && vus.add(calcul.texte))
+      .map((calcul, rang) => ({calcul, rang})).sort((a, b) => difficulte(a.calcul) - difficulte(b.calcul) || a.rang - b.rang)
+      .map(({calcul}) => Object.assign({}, calcul, {sorte: sorteDe(calcul)}));
+    const pris = new Set();
+    const calculs = [];
+    sortes.forEach(n => {
+      const deLaSorte = serie.filter(calcul => calcul.sorte === n);
+      const choisi = deLaSorte[Math.floor((deLaSorte.length - 1) / 2)];
+      if (choisi && calculs.length < TENTATIVE.calculs) { calculs.push(choisi); pris.add(choisi); }
+    });
+    for (let tour = 0; calculs.length < TENTATIVE.calculs && tour < sortes.length * 2 * TENTATIVE.calculs; tour += 1) {
+      const n = sortes[tour % sortes.length];
+      const reste = serie.filter(calcul => calcul.sorte === n && !pris.has(calcul));
+      // Un tour sur deux le plus dur qui reste, l'autre le plus simple.
+      const autre = Math.floor(tour / sortes.length) % 2 === 0 ? reste[reste.length - 1] : reste[0];
+      if (autre) { calculs.push(autre); pris.add(autre); }
+    }
+    serie.filter(calcul => !pris.has(calcul)).slice(0, TENTATIVE.calculs - calculs.length).forEach(calcul => { calculs.push(calcul); pris.add(calcul); });
+    calculs.sort((a, b) => difficulte(a) - difficulte(b) || sortes.indexOf(a.sorte) - sortes.indexOf(b.sorte));
+    return calculs;
+  }
 
   // Un seul calcul d'un niveau (Mes calculs du jour en tirent un par
   // compétence), tiré au hasard dans le niveau — pas le plus simple.
@@ -14718,6 +14860,11 @@
     rangDansEcriture,
     unCranPlusFacile,
     genererTest,
+    // Lot K1 : la carte (les lignes, les liens « d'abord ») et « Je tente ».
+    LIGNES,
+    DABORD,
+    TENTATIVE,
+    genererTentative,
     genererUn,
     sortesDe,
     sorteDe,

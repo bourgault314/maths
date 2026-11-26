@@ -191,18 +191,16 @@ const PAR_COEUR = {"M1-1": /Sous chaque nombre, son double/, "M1-2": /Sous chaqu
       await s.ctx.close();
     });
 
-    await cas(`${f} : Mon parcours d'un élève aux bases — « Doubles et moitiés », les bases à 44 compétences`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(c => c.module === "M1" && c.niveau === 2)});
+    // (Lot K1 : Mon parcours remplacé par la carte — la ligne « Doubles et
+    // moitiés » aux bases, la ceinture jaune à 44 étoiles.)
+    await cas(`${f} : la carte d'un élève aux bases — la ligne « Doubles et moitiés », 44 étoiles`, async () => {
+      const s = await ouvrir(nav, base, {largeur, hauteur});
       await s.page.click("#acc-porte");
       await pause(s.page, 800);
-      const lu = await texte(s.page, "#acc-parcours");
-      if (process.env.VOIR) console.log(lu);
-      assert.match(lu, /Palier 1/);
-      // Mon parcours range par module : « Doubles et moitiés », ses six
-      // niveaux tous aux bases ; le palier compte 44 compétences.
-      assert.match(lu, /\/44/, "les bases : 44 compétences");
-      assert.match(lu, /Doubles et moitiés(?!niveaux)/, "le module, ses niveaux tous aux bases");
-      await photo(s.page, `${f}-mon-parcours`);
+      assert.match(await texte(s.page, "#carte-porteur"), /Ceinture jaune.*sur 44/);
+      const lignes = await s.page.evaluate(() => [...document.querySelectorAll("#carte-lignes .ck-ligne h3")].map(h => h.firstChild.textContent.replace(/[\u00a0\u202f]/g, " ").trim()));
+      assert.ok(lignes.includes("Doubles et moitiés"), lignes.join(" | "));
+      await photo(s.page, `${f}-carte`);
       await tient(s.page, largeur, hauteur);
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();

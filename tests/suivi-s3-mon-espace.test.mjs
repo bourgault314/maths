@@ -139,28 +139,24 @@ function coffresTresor(jour) {
 }
 // Défi calcul : une séance jouée jusqu'au bout, tout juste (comme le test S2).
 const CARTE_CALCUL = (() => { const c = DCORE.carte(); return {modules: c.modules.map(f => Object.assign({}, f, {construit: f.paliers.some(Boolean)})), ordre: c.ordre}; })();
+// (Lot K1 « la carte chez l'élève » : une séance de la carte — Mes calculs du
+// jour, tout juste, puis l'étoile que « Continuer » propose, apprise.)
+let tirageD = 0;
 function seanceD(p, jour) {
-  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour});
-  const avant = p.seance.n;
-  for (let tour = 0; tour < 30 && p.seance.n === avant; tour += 1) {
-    const etape = D.fileSeance(p, CARTE_CALCUL, {aujourdhui: jour}).etapes[0];
-    if (!etape || etape.type === "avance") break;
-    // Lot 1 « la séance » : la séance au temps — 2 min 30 par étape.
-    p = D.noterTemps(p, 150);
-    if (etape.type === "jour") {
-      D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour}).forEach(c => {
-        p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: true, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
-      });
-      p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
-    } else if (etape.type === "test") {
-      p = D.appliquerTest(p, {module: etape.module, marche: 2, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 3, total: 3}]}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    } else {
-      // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
-      const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
-      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    }
+  tirageD += 1;
+  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour, alea: (tirageD * 0.0137) % 1});
+  D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour, maximum: 999}).forEach(c => {
+    p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: true, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
+  });
+  p = D.noterTemps(p, 300);
+  p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
+  const suite = D.continuer(p, CARTE_CALCUL, {aujourdhui: jour});
+  if (suite.type === "etoile" && D.seanceOuverte(p, jour)) {
+    const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
+    p = D.noterTemps(p, 300);
+    p = D.appliquerSerie(p, {module: suite.module, niveau: suite.niveau, genre: "apprends", reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
   }
-  return p;
+  return D.seanceOuverte(p, jour) ? D.fermerSeance(p, CARTE_CALCUL, {aujourdhui: jour, force: true}).parcours : p;
 }
 
 // ------------------------------------------------------------ Ma semaine
@@ -233,14 +229,17 @@ test("gains : une table passée, deux tables, un monde fini — les mots de « �
   assert.equal(r.jauges["splat"].gain, undefined, "un monde fini la semaine d'avant n'est plus un gain");
 });
 
-test("gains : Défi calcul dès la PREMIÈRE compétence sue cette semaine (choix de Gwenaël, question 1)", async () => {
-  // (Lot F4 : le test de palier déjà joué — la séance avance module par module.)
-  const p = seanceD(Object.assign(D.creerParcours(), {paliers: ["2026-11-01", "2026-11-01", "2026-11-01", "2026-11-01"]}), "2026-11-10");
-  const sues = D.resumeProf(p, DCORE.carte(), "2026-11-12").modules
-    .reduce((n, m) => n + m.sues.filter(j => j && j >= "2026-11-09" && j <= "2026-11-12").length, 0);
-  assert.ok(sues >= 1 && sues < 5, `la séance jouée fait ${sues} compétence(s) sue(s) : sous le seuil de « À féliciter »`);
-  const {jauges} = await lireLaSemaine({"defi-calcul": p}, JEUDI);
-  assert.equal(jauges["defi-calcul"].gain, `↑ +${sues} cette semaine`);
+test("gains : Défi calcul dès la PREMIÈRE étoile gagnée cette semaine (lot K1 : « ↑ +3 étoiles cette semaine », choix de Gwenaël du 25/11)", async () => {
+  const SIX = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  const gagner = (p, cle, jour) => { const [m, n] = cle.split("-"); return D.appliquerTentative(p, {module: m, niveau: Number(n), reponses: SIX}, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours; };
+  // Une étoile le vendredi d'avant (pas cette semaine), trois cette semaine.
+  let p = gagner(D.creerParcours(), CARTE_CALCUL.ordre[0], "2026-11-06");
+  CARTE_CALCUL.ordre.slice(1, 4).forEach((cle, i) => { p = gagner(p, cle, ["2026-11-09", "2026-11-10", "2026-11-12"][i]); });
+  let r = await lireLaSemaine({"defi-calcul": p}, JEUDI);
+  assert.equal(r.jauges["defi-calcul"].gain, "↑ +3 étoiles cette semaine");
+  const une = gagner(D.creerParcours(), CARTE_CALCUL.ordre[0], "2026-11-10");
+  r = await lireLaSemaine({"defi-calcul": une}, JEUDI);
+  assert.equal(r.jauges["defi-calcul"].gain, "↑ +1 étoile cette semaine");
   const lundi = await lireLaSemaine({"defi-calcul": p}, LUNDI_SUIVANT);
   assert.equal(lundi.jauges["defi-calcul"].gain, undefined);
 });

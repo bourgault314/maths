@@ -81,7 +81,8 @@ async function repondre(page, juste) {
   await cliquerTouches(page, juste ? c.reponse : c.reponse + 1);
   await page.click("#validate");
   await pause(page, 400);
-  if (!juste && !(await appel(page, "escalier")) && (await appel(page, "genre")) !== "palier") {
+  // (Lot K1 : « Je tente » et la ceinture ne corrigent pas ; plus de test en escalier ni de palier.)
+  if (!juste && !(await appel(page, "tentative"))) {
     await pause(page, 4000);
     await page.click("#validate");
   }
@@ -96,10 +97,6 @@ async function ecrire(page) {
     await pause(page, 700);
   }
   for (let i = 0; i < 6 && (await appel(page, "ecrisEnCours")); i += 1) { await page.click("#validate"); await pause(page, 700); }
-}
-async function commencer(page) {
-  await page.click("#acc-seance .carte-seance");
-  await pause(page, 2500);
 }
 async function photo(page, nom) {
   if (!SORTIE) return;

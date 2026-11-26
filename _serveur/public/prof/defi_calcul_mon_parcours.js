@@ -1,27 +1,32 @@
-// Défi calcul — la progression de l'élève (format définitif, lot 2a,
-// 05/10/2026 ; la carte v2 et le scénario du 30/10 au lot 3, version 2).
+// Défi calcul — la progression de l'élève (version 12, lot K1 « la carte chez
+// l'élève », 25/11/2026 ; le format d'avant datait du lot 2a, 05/10/2026).
 //
 // Ce fichier ne connaît AUCUN texte ni aucun générateur : seulement les
-// codes des modules et leur nombre de niveaux. Il tient le format enregistré
-// (version 2), les boîtes (une par COMPÉTENCE : un niveau d'un module), la
-// séance guidée, le test d'entrée en escalier, Mes calculs du jour, la fusion
-// entre deux appareils et le rangement par code sur l'appareil.
+// codes des modules et leur nombre de niveaux ; la carte (les étages, les
+// lignes, les liens « d'abord », l'ordre) lui est donnée par
+// defi_calcul_core.js. Il tient le format enregistré, les ÉTOILES (une par
+// compétence : un niveau d'un module) et leurs boîtes, la carte de l'élève,
+// « Je tente », J'apprends, Mes calculs du jour, les ceintures, la séance,
+// la fusion entre deux appareils et le rangement par code sur l'appareil.
 //
-// Les règles sont celles de « defi-calcul-seance-guidee.md » (étape 5a),
-// corrigées par le scénario d'un module et la carte v2 (30/10/2026) :
-//  - une compétence ENTRE dans les boîtes par un entraînement réussi
-//    (boîte 2) ou par le test d'entrée : la marche la plus haute prouvée en
-//    boîte 3, les marches en dessous en boîte 4 (sues) ;
-//  - elle ne BOUGE que dans Mes calculs du jour : juste et due, elle monte ;
-//    fausse, elle descend. Nulle part ailleurs une erreur ne compte ;
-//  - elle est SUE à la boîte 4 ; un module est su quand toutes ses
-//    compétences le sont ;
-//  - le palier est celui du NIVEAU (la carte), et la séance prend la première
-//    compétence de l'ordre de la carte qui n'est pas dans les boîtes ;
-//  - « le rouge d'abord » : tant qu'une compétence est rouge (ratée dans Mes
-//    calculs du jour), pas de nouveauté — la séance l'entraîne avec l'aide ;
-//    ratée encore, elle refait J'apprends. Une compétence sue ratée descend
-//    d'une boîte et compte comme rouge pour la journée (décision du 30/10).
+// Les règles sont celles de « la carte et les clés » (conception du
+// 21/11/2026, § 11 et § 12) :
+//  - un ÉTAGE par palier, une ceinture par étage ; dans un étage, des
+//    lignes, et dans une ligne des étoiles dans l'ordre. L'élève choisit sa
+//    ligne ; l'étoile suivante d'une ligne s'ouvre quand celle d'avant a été
+//    gagnée ;
+//  - une étoile se GAGNE par « Je tente » (6 calculs, 5 justes) ou par
+//    J'apprends (le finir la donne), au choix de l'élève ; elle entre alors
+//    au début des boîtes et revient le lendemain, puis à 3, 7, 14, 30 et 60
+//    jours ;
+//  - elle ne BOUGE que dans Mes calculs du jour : juste, elle monte d'une
+//    boîte ; les deux calculs faux, elle est PERDUE et se regagne. Nulle
+//    part ailleurs une erreur ne compte ;
+//  - toutes les étoiles d'un étage : la ceinture, et l'étage suivant. Rien
+//    de ce qui est ouvert ne se referme, une ceinture gagnée ne se reprend
+//    jamais ;
+//  - plus rien n'est imposé après Mes calculs du jour : « Continuer »
+//    propose, l'élève choisit.
 //
 // Copié de defi_tables_mon_parcours.js puis adapté, jamais partagé : Défi
 // tables reste intact. Le rangement par code (empreinte SHA-256 salée, purge
@@ -118,7 +123,52 @@
   // rangs du plan de la séance ouverte sont recalculés. Le serveur refuse
   // l'écriture d'une page de version 10 (« version_min » 11) : elle lirait
   // les lignes de M1 et D8 avec les anciens numéros.
-  const VERSION = 11;
+  // Version 12 (lot K1 « la carte chez l'élève », 25/11/2026, choix de
+  // Gwenaël des 21, 22 et 25/11 : « la carte et les étoiles » remplace le
+  // couloir automatique). Le format change en entier, et c'est la dernière
+  // fois avant l'ouverture : AUCUN élève n'a encore joué, une progression
+  // d'avant (versions 2 à 11) REPART DE ZÉRO au lieu d'être reprise (seule
+  // son époque est gardée, pour qu'une restauration du professeur gagne
+  // toujours en bloc) ; tout le code de reprise des anciennes versions a
+  // disparu. Par étoile (un niveau d'un module), la ligne d'un module garde :
+  //   b   sa boîte (0 : l'étoile n'est pas tenue ; 1 à 7 : gagnée) ;
+  //   e   son échéance (gagnée : le jour où elle revient ; pas gagnée et
+  //       « à voir en classe » après 3 J'apprends arrêtés : le jour où elle
+  //       se rejoue ; sinon null) ;
+  //   a   1 quand sa leçon est faite ou qu'elle est déjà revenue une fois
+  //       (0 : gagnée sans leçon et jamais revenue — son premier retour
+  //       montre un exemple résolu, lot C3) ;
+  //   x   au retour : 2, le 2e calcul attend (le premier était faux : il
+  //       sera reposé même si la page a été fermée entre les deux, G2) ;
+  //       1, un retour raté qui n'a pas fait partir l'étoile (ne sert que
+  //       si SEUILS.retour.ratesDeSuite vaut 2) ;
+  //   r   les « Je tente » ratés sur cette étoile (2 : « Je tente » fermé
+  //       pour de bon, jusqu'à ce qu'elle soit gagnée) ;
+  //   q   le jour du dernier « Je tente » raté (fermé jusqu'au lendemain) ;
+  //   pe  combien de fois elle a été perdue (3 : « à voir en classe ») ;
+  //   d   le jour où elle a été gagnée pour la première fois, `s` celui où
+  //       elle est devenue solide (boîte 4), posés une fois ;
+  //   ar  un J'apprends arrêté (3 × les arrêts + la reprise, lot F4) ;
+  //   g   son COMPTEUR : il monte d'un cran à chaque fois que l'étoile
+  //       change. La fusion de deux appareils se décide ÉTOILE PAR ÉTOILE,
+  //       sur ce compteur (le plus avancé des deux côtés), jamais sur la
+  //       somme d'un module ni sur une date (relecture de Codex du 22/11,
+  //       B2).
+  // Ont disparu : `ok` (le module « su »), `f`, `t`, `l` (les séries jouées,
+  // « entraînée avec l'aide », le « lent » : le rouge d'abord et le
+  // réentraînement imposé n'existent plus). La séance : `i`, son identité
+  // (tirée à l'ouverture, elle devient le numéro de sa ligne au journal :
+  // deux séances différentes restent deux, G3) ; `g`, son compteur ; un plan
+  // `p` de 5 nombres (plus aucun rang de compétence dedans : rien ne peut
+  // désigner quelque chose de pas jouable, G6). Le journal gagne quatre
+  // comptes (`seuls`, `seulsJustes`, `tests`, `testsRates`, pour la page du
+  // professeur du lot K2). `paliers` : le jour où « Tente toute la
+  // ceinture » a été joué, par étage. `quarts` : le remplissage de la
+  // ceinture de chaque étage qu'un changement de carte ne doit pas faire
+  // reculer (G9). Le serveur refuse l'écriture d'une page de version 11
+  // (« version_min » 12), et ne sert plus une progression à une page qui ne
+  // saurait pas la lire (B1).
+  const VERSION = 12;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -145,8 +195,9 @@
   const CODES = Object.freeze(Object.keys(NIVEAUX));
 
   // Le rang d'une compétence : sa place dans la liste de toutes les
-  // compétences (213 depuis la version 9, 218 depuis la version 11), module après module. Il sert à ranger une compétence
-  // dans un nombre (le plan de la séance).
+  // compétences (218 depuis la version 11), module après module. Plus rien
+  // d'enregistré ne s'en sert depuis la version 12 (le plan de la séance ne
+  // désigne plus aucune compétence) ; il reste un nom court et stable.
   const RANGS = (() => {
     const debut = {};
     let rang = 0;
@@ -163,109 +214,76 @@
     return id ? {module: id, niveau: rang - RANGS.debut[id] + 1} : null;
   }
 
-  // La version 10 (avant le lot C2) : M1 et D8 avaient 3 niveaux. Chaque
-  // ancien niveau va à sa place `PLACES_V11` (ancien niveau 1, 2, 3 → nouveau
-  // niveau) ; les autres places sont les niveaux neufs (les moitiés).
-  const PLACES_V11 = Object.freeze({M1: Object.freeze([1, 5, 3]), D8: Object.freeze([1, 2, 4])});
-  const NIVEAUX_V10 = Object.freeze(Object.assign({}, NIVEAUX, {M1: 3, D8: 3}));
-  const niveauDepuisV10 = (id, niveau) => (PLACES_V11[id] ? PLACES_V11[id][niveau - 1] : niveau);
-  // La version 8 (avant le lot 6 « programmes 2 ») : F6 et F9 avaient un
-  // niveau de moins. Le niveau neuf de chacun prend la place `INSERES_V9`.
-  const INSERES_V9 = Object.freeze({F6: 2, F9: 1});
-  const NIVEAUX_V8 = Object.freeze(Object.assign({}, NIVEAUX_V10, {F6: 3, F9: 2}));
-  // Un rang d'une ancienne table → le rang de la même compétence aujourd'hui
-  // (-1 : aucun). `niveaux` : la table de cette version ; `deplacer` : le
-  // niveau d'aujourd'hui d'un ancien niveau.
-  function rangDepuis(rang, niveaux, deplacer) {
-    let debut = 0;
-    for (const id of CODES) {
-      const k = niveaux[id];
-      if (rang >= debut && rang < debut + k) return rangDe(id, deplacer(id, rang - debut + 1));
-      debut += k;
-    }
-    return -1;
-  }
-  // Version 8 → 9 (F6 et F9), puis 10 → 11 (M1 et D8).
-  const rangDepuisV8 = rang => rangDepuis(rang, NIVEAUX_V8,
-    (id, niveau) => niveauDepuisV10(id, INSERES_V9[id] && niveau >= INSERES_V9[id] ? niveau + 1 : niveau));
-  const rangDepuisV10 = rang => rangDepuis(rang, NIVEAUX_V10, niveauDepuisV10);
-
   const SEUILS = Object.freeze({
     // Un entraînement à longueur adaptée (scénario du 30/10, couches du
     // 31/10) : l'outil à manipuler d'abord (les perles, le glisse-nombres),
     // 2 justes ; puis l'image (la droite, le tableau), 2 justes ; puis rien.
-    // Réussi à 5 justes de suite sans outil ; une erreur fait revenir
-    // l'image, 2 erreurs de suite l'outil à manipuler ; au bout de 25
-    // calculs sans y arriver, c'est raté.
-    // Lot F4 (18/11/2026, choix de Gwenaël) : « une erreur n'efface pas
-    // tout » — réussi à 5 justes sur les 6 derniers calculs sans aide (et
-    // plus 5 de suite). Une erreur seule, une fois sans aide : le dessin
-    // revient pour UN calcul (juste, on repart sans aide, la fenêtre est
-    // gardée) ; deux erreurs de suite : l'outil, comme avant.
+    // Lot F4 (18/11/2026, choix de Gwenaël) : réussi à 5 justes sur les 6
+    // derniers calculs sans aide. Une erreur seule, une fois sans aide : le
+    // dessin revient pour UN calcul (juste, on repart sans aide, la fenêtre
+    // est gardée) ; deux erreurs de suite : l'outil, comme avant.
     entraine: Object.freeze({avecOutil: 2, sansOutil: 5, fenetre: 6, erreurs: 2, maximum: 25}),
     // Lot F4 : J'apprends ne se rate plus. Il s'arrête sur « On continue
     // demain » dès que la séance a passé son temps (les minutes prévues et la
     // minute de tolérance) s'il a déjà fait 4 calculs, et au plus tard au
     // bout de 25 calculs ; il garde où l'élève en est (au dessin, ou sans
     // aide) et reprend là le lendemain, sans « On te montre ». Au 3e arrêt
-    // sur le même niveau, ce niveau est « à voir en classe » (signalé au
-    // professeur) et attend 7 jours : l'élève passe à la suite (le reste du
-    // module attend avec lui). Simulateur du lot F4 (six profils) : 15
-    // calculs au plus arrêtait trop tôt les élèves fragiles (des séances de
-    // 6 à 7 minutes sans rien valider) ; au temps, la médiane reste à 11
-    // minutes, 3 % des séances au-delà de 13.
+    // sur la même étoile, elle est « à voir en classe » (signalée au
+    // professeur) et attend 7 jours : l'élève passe à la suite.
     apprends: Object.freeze({maximum: 25, avantArret: 4, arrets: 3, joursDeCote: 7}),
-    // Le test d'entrée en escalier (lot 1 « la séance », 12/11/2026, choix
-    // de Gwenaël) : un calcul par sorte, 3 au moins par marche (4 pour un
-    // niveau à 4 sortes) ; dès un faux, un calcul de plus, de la sorte
-    // ratée. La marche est montée avec au plus un faux ; 2 faux, le test
-    // s'arrête. 12 tests au plus dans une séance (garde-fou).
-    test: Object.freeze({parMarche: 3, fauxPermis: 1, parSeance: 12}),
-    // Le test de palier (lot F4, choix de Gwenaël) : au début d'un palier
-    // pas encore commencé, un calcul de chacune des 12 compétences les plus
-    // dures du palier (le dernier niveau de chaque module dans le palier, les
-    // derniers de l'ordre de la carte). Un faux permis : tout le palier passe
-    // d'un coup (les compétences entrent sues, en boîte 4, leurs retours
-    // étalés de 7 à 13 jours). 2 faux, le test s'arrête et rien n'est perdu :
-    // les tests module par module, comme avant.
-    palier: Object.freeze({calculs: 12, fauxPermis: 1, etale: 7}),
-    // Les boîtes : délais de retour 1, 1, 3, 7, 14, 30, 60 jours (lot F1,
-    // 07/11/2026 : les boîtes 6 et 7 ; avant, la boîte 5 revenait tous les
-    // 14 jours sans fin). Une compétence entre en boîte 2 (entraînement), 3
-    // (la marche la plus haute prouvée au test) ou 4 (les marches en
-    // dessous) ; elle est sue en boîte 4, et le reste jusqu'à la 7.
-    revision: Object.freeze({boites: 7, delais: Object.freeze([1, 1, 3, 7, 14, 30, 60]), entraine: 2, test: 3, dessous: 4, su: 4}),
-    // La séance au temps (lot 1, décisions 1 et 2 de « fonctionnement 3 ») :
-    // 10 minutes, ou 15 au choix du professeur (pour la classe ou pour un
-    // élève). Toujours : Mes calculs du jour, les rouges, et l'avancée
-    // jusqu'au premier apprentissage compris (les tests, puis J'apprends et
-    // son entraînement). Ensuite, une étape ne commence que si le temps
-    // actif plus sa durée habituelle tient dans les minutes prévues, plus
-    // une minute. Les durées habituelles sont celles du simulateur
-    // (fonctionnement 3) : test 1,5 min, Je m'entraîne encore 2,5 (en
-    // secondes ici). Lot 2 « J'apprends en une étape » (12/11/2026,
-    // décision 7) : J'apprends et Je m'entraîne ne font plus qu'une étape,
-    // 4 minutes (simulateur du lot 2, la médiane d'une étape : 2,7 min
-    // pour le très bon élève, 4,3 pour l'élève moyen, 9,4 pour l'élève en
-    // difficulté).
+    // « Je m'entraîne encore » (sur une étoile gagnée, sans effet sur les
+    // boîtes) : commence au dessin, fini à 3 justes de suite sans aide, 20
+    // calculs au plus. (Le nom `rattrapage` date du « rouge d'abord ».)
+    rattrapage: Object.freeze({sansOutil: 3, maximum: 20}),
+    // Les boîtes : délais de retour 1, 1, 3, 7, 14, 30, 60 jours. Une étoile
+    // gagnée (par « Je tente » ou par J'apprends) entre AU DÉBUT des boîtes,
+    // en boîte 2, et revient le lendemain (choix de Gwenaël du 21/11,
+    // 20 h 53) ; placée par « Tente toute la ceinture », en boîte 4 ; elle
+    // est solide en boîte 4 (une information pour le professeur seulement).
+    revision: Object.freeze({boites: 7, delais: Object.freeze([1, 1, 3, 7, 14, 30, 60]), entree: 2, ceinture: 4, su: 4}),
+    // « Je tente » (choix de Gwenaël des 21, 22 et 25/11) : 6 calculs, 5
+    // justes, l'étoile est gagnée ; arrêt au 2e faux. Raté : fermé sur cette
+    // étoile jusqu'au lendemain ; raté deux fois sur la même étoile : elle ne
+    // propose plus que « J'apprends », jusqu'à ce qu'elle soit gagnée. Pour
+    // un niveau « par cœur », juste mais lent deux fois de suite compte faux.
+    tente: Object.freeze({calculs: 6, justes: 5, fauxPermis: 1, essais: 2, lentMs: 5000}),
+    // Un retour dans Mes calculs du jour : un calcul ; faux, un 2e ; le 2e
+    // juste, c'était un accident (rien ne bouge, elle revient demain). Les
+    // deux faux : le retour est raté, et L'ÉTOILE PART TOUT DE SUITE (choix
+    // de Gwenaël du 25/11, 17 h 10 : « il ne la connaît pas, il la
+    // retravaille » — sa règle du 21/11, qui remplace son choix de 16 h le
+    // même jour, « elle revient demain, puis elle part »). Elle sort des
+    // boîtes, se regagne par « Je tente » (le jour même s'il veut) ou par
+    // J'apprends, et rentre alors au début des boîtes. `ratesDeSuite` :
+    // combien de retours ratés de suite font partir l'étoile — 1 ; à 2, on
+    // retrouve la règle de 16 h (au premier, elle descend d'une boîte et
+    // revient le lendemain), le moteur sait faire les deux. Perdue 3 fois :
+    // « à voir en classe ».
+    retour: Object.freeze({ratesDeSuite: 1, perdues: 3}),
+    // Mes calculs du jour : ce qui est dû, un calcul par étoile, par PAQUETS
+    // de 10, les plus anciennes d'abord (choix de Gwenaël du 21/11, 21 h 10).
+    // Le premier paquet est le seul passage obligé ; « Continuer » propose
+    // le paquet suivant dès qu'une étoile a 3 jours de retard. Pour un
+    // niveau « par cœur », un calcul juste au-delà de 5 s ne fait pas
+    // monter (et ne fait jamais perdre l'étoile).
+    jour: Object.freeze({paquet: 10, retard: 3, lentMs: 5000}),
+    // « Tente toute la ceinture » : 12 calculs (le dernier niveau de chaque
+    // module dans l'étage, les derniers de l'ordre de la carte). Un faux
+    // permis : tout l'étage est gagné ; sinon les modules dont le calcul est
+    // juste gardent leurs étoiles de l'étage. Ces étoiles reviennent
+    // étalées : 8 par jour au plus, à partir du 7e jour.
+    ceinture: Object.freeze({calculs: 12, fauxPermis: 1, apres: 7, parJour: 8}),
+    // La séance au temps : 10 minutes, ou 15 au choix du professeur. Une
+    // étape de la carte ne commence que si le temps actif plus sa durée
+    // habituelle tient dans les minutes prévues, plus une minute ; la
+    // première est toujours permise. Durées (en secondes) : « Je tente » 1
+    // minute, J'apprends 4 (simulateur du lot K0).
     // `paliers` : jusqu'où va l'appli (1 les bases, 2 CM1, 3 CM2, 4 vers la
-    // 6e : tout), réglé par le professeur ; au-delà, ni test ni leçon.
+    // 6e : tout), réglé par le professeur ; au-delà, rien ne se montre.
     seance: Object.freeze({garder: 60, etapes: 99, minutes: Object.freeze([10, 15]), defaut: 10, tolerance: 60,
-      durees: Object.freeze({test: 90, apprends: 240, rattrape: 150, palier: 150, apresTest: 120}), paliers: 4}),
-    // Les nouveautés réussies d'une séance, au journal (lot G1) : un compte.
+      durees: Object.freeze({tente: 60, apprends: 240, encore: 150, ceinture: 150}), paliers: 4}),
+    // Les étoiles gagnées dans une séance, au journal : un compte.
     nouveautes: Object.freeze({maximum: 99}),
-    // Mes calculs du jour : seulement ce qui est dû (31/10 : plus de calculs
-    // d'entretien), 20 au plus, un par compétence. Pour un niveau de faits,
-    // un calcul juste au-delà de 5 s ne fait pas monter.
-    jour: Object.freeze({maximum: 20, lentMs: 5000}),
-    // Une compétence ratée dans Mes calculs du jour : rouge, entraînée avec
-    // l'aide (« Je m'entraîne encore » : commence à l'image, fini à 3 justes
-    // de suite sans aide, 20 calculs au plus) ; 3 rouges au plus par séance,
-    // puis la nouveauté vient toujours. Ratée une 2e fois de suite : elle
-    // refait J'apprends. Ratée une 3e fois de suite : mise de côté 3 jours
-    // (boîte 1, pas rouge pendant ces jours, signalée au professeur), puis
-    // elle revient par J'apprends et « Je m'entraîne encore ».
-    rattrapage: Object.freeze({echecs: 2, deCote: 3, joursDeCote: 3, parSeance: 3, sansOutil: 3, maximum: 20}),
     // Le journal d'une séance (lot G1) : des comptes bornés, la durée en
     // minutes de temps actif (90 au plus). La séance ouverte compte ses
     // secondes (90 minutes au plus).
@@ -273,83 +291,75 @@
     jours: Object.freeze({garder: 14}),
     compteur: 9999,
     causes: 12,
-    // Les ceintures (lot 4) : une par palier, dans l'ordre ; 3 barrettes au
-    // plus sur la ceinture qu'on porte, une par quart du palier suivant déjà
-    // rendu solide un jour.
-    ceintures: Object.freeze({nombre: 4, barrettes: 3})
+    // Les ceintures : une par étage, dans l'ordre. Celle de l'étage en cours
+    // se remplit de sa couleur quart par quart (choix de Gwenaël du 22/11) ;
+    // `barrettes` : ce que lit encore la page du professeur (3 au plus).
+    ceintures: Object.freeze({nombre: 4, quarts: 4, barrettes: 3})
   });
 
-  // Le plan de la séance en cours, `seance.p` : onze nombres (lot 1 « la
-  // séance », 12/11/2026 ; sept avant).
+  // Le plan de la séance en cours, `seance.p` : cinq nombres. Plus aucun
+  // rang de compétence dedans (relecture de Codex du 22/11, G6) : ce que la
+  // séance propose se recalcule à chaque fois sur l'état des étoiles.
   //   [0] 1 si la séance est ouverte (commencée, pas finie) ;
-  //   [1] 1 si Mes calculs du jour restent à jouer ;
-  //   [2] rang + 1 de la compétence rouge à entraîner (décidé après Mes
-  //       calculs du jour), 0 s'il n'y en a pas (ou plus) ;
-  //   [3] le nombre de tests d'entrée joués ;
-  //   [4] les apprentissages : 0 libres, 3 arrêtés (un entraînement raté :
-  //       rien de nouveau avant demain) ;
-  //   [5] les minutes prévues, 10 ou 15 (le réglage à l'ouverture ; 0, un
-  //       plan de version 6, vaut 10) ;
-  //   [6] les apprentissages commencés dans cette séance (J'apprends joué,
-  //       réussi ou non ; avant le lot 2, aussi Je m'entraîne) : tant qu'il
-  //       vaut 0, l'avancée est garantie ;
-  //   [7] le 2e calcul en attente : rang + 1 de la compétence ratée dans Mes
-  //       calculs du jour (0 : aucun) ;
-  //   [8] sa boîte d'avant le faux, [9] ses échecs `x` d'avant, [10] son
-  //       « J'apprends fait » `a` d'avant — rendus si le 2e calcul est juste.
-  // Un plan de version 6 (sept nombres) se relit : ses nombres 4 à 6 sont
-  // remis à zéro (leur sens a changé), la séance continue avec 10 minutes.
-  const PLAN = Object.freeze({ouverte: 0, jour: 1, rattrapage: 2, tests: 3, nouveaute: 4, minutes: 5, commences: 6,
-    second: 7, secondBoite: 8, secondEchecs: 9, secondAppris: 10});
-  const NOUVEAUTE = Object.freeze({aFaire: 0, arretee: 3});
+  //   [1] les minutes prévues, 10 ou 15 (le réglage à l'ouverture) ;
+  //   [2] 1 si le paquet en cours est le passage OBLIGÉ (le premier paquet
+  //       de Mes calculs du jour, avant la carte) ;
+  //   [3] les étoiles qui restent à demander dans le paquet en cours (10 au
+  //       plus ; 0 : pas de paquet en cours) ;
+  //   [4] les étapes de la carte commencées dans cette séance (« Je
+  //       tente », J'apprends, « Tente toute la ceinture ») : tant qu'il
+  //       vaut 0, la prochaine est toujours permise.
+  const PLAN = Object.freeze({ouverte: 0, minutes: 1, obligatoire: 2, paquet: 3, commences: 4});
   // Lot F4 : où reprend un J'apprends arrêté (`ar`).
   const REPRISE = Object.freeze({montre: 0, dessin: 1, seul: 2});
-  const PLAN_MAX = Object.freeze([1, 1, RANGS.total, SEUILS.test.parSeance, 3, SEUILS.seance.minutes[SEUILS.seance.minutes.length - 1], 99,
-    RANGS.total, SEUILS.revision.boites, SEUILS.rattrapage.deCote, 1]);
+  const PLAN_MAX = Object.freeze([1, SEUILS.seance.minutes[SEUILS.seance.minutes.length - 1], 1, SEUILS.jour.paquet, 99]);
+  // L'identité d'une séance, tirée à son ouverture (1 à 9 999) ; 0 : aucune.
+  const IDENTITE_MAX = 9999;
 
   // Le journal des séances (lot G1 « journal + accueil », 07/11/2026). Pour
   // chaque séance FINIE, rangée comme `seances` (la même place dans chaque
-  // liste) : les calculs du jour faits, combien étaient justes, les
-  // nouveautés réussies, les compétences prouvées au test, les rouges
-  // entraînées (« Je m'entraîne encore »), la durée en minutes de temps
-  // actif. Rien que des entiers : le serveur ne garde ni texte ni liste
-  // d'objets ; ni heure, ni calcul, ni réponse. -1 : pas connu (une séance
-  // finie avant le lot G1, ou une valeur abîmée). Puis le numéro de la
-  // séance (correctif S1, voir NUMERO_RANG).
-  // Le NUMÉRO d'une séance (correctif S1, relecture de Codex du 07/11/2026) :
-  // son rang dans sa journée × 10 000 + une empreinte de ses nombres (0 à
-  // 9 999). Il dit
-  // QUELLE séance c'est, d'un appareil à l'autre : deux copies d'une même
-  // séance ont le même numéro ; deux séances faites chacune sur son appareil
-  // le même jour en ont deux. Le rang range la journée dans l'ordre où
-  // l'élève l'a jouée ; ce n'est ni une heure ni une durée. -1 : une séance
-  // sans numéro, finie avant le journal — son entrée ne dit rien, elle est
-  // « blanche ». Une entrée connue sans numéro (abîmée, écrite avant ce
-  // correctif, ou rendue par un serveur qui ne connaissait pas encore le
-  // numéro) en reçoit un par la même règle — sa place dans la journée, ses
-  // nombres : le même que celui que la page lui avait donné, et le même sur
-  // chaque appareil. Rien de tiré au hasard. Deux séances de la même
-  // journée, au même rang et aux mêmes nombres, jouées chacune sur son
-  // appareil hors ligne, n'en font qu'une (comme avant ce correctif).
+  // liste) : les calculs du jour faits, combien étaient justes, les étoiles
+  // gagnées par J'apprends (`nouveautes`), les étoiles gagnées par « Je
+  // tente » ou « Tente toute la ceinture » (`prouvees`), les étoiles perdues
+  // au retour (`rouges`), la durée en minutes de temps actif, le numéro de
+  // la séance ; et, depuis la version 12 (pour la page du professeur du lot
+  // K2) : les calculs faits SANS AIDE dans J'apprends et combien étaient
+  // justes (`seuls`, `seulsJustes`), les premiers retours d'étoiles placées
+  // par « Tente toute la ceinture » et combien ont été ratés (`tests`,
+  // `testsRates`). Rien que des entiers : ni heure, ni calcul, ni réponse.
+  // -1 : pas connu (une valeur abîmée).
+  // Le NUMÉRO d'une séance : son rang dans sa journée × 10 000 + son
+  // IDENTITÉ (1 à 9 999, tirée à l'ouverture de la séance, version 12 —
+  // relecture de Codex du 22/11, G3 : avant, une empreinte de ses nombres,
+  // et deux séances aux mêmes nombres faites chacune sur son appareil n'en
+  // faisaient qu'une). Deux copies d'une même séance ont la même identité,
+  // d'un appareil à l'autre : elles se dédoublonnent ; deux séances
+  // différentes en ont deux (sauf une fois sur 10 000). Le rang range la
+  // journée dans l'ordre où l'élève l'a jouée ; ce n'est ni une heure ni une
+  // durée. -1 : une séance sans numéro — son entrée ne dit rien, elle est
+  // « blanche ». Une entrée connue sans numéro (abîmée) en reçoit un par sa
+  // place dans la journée et l'empreinte de ses nombres : le même sur
+  // chaque appareil, rien de tiré au hasard.
   const NUMERO_RANG = 10000;
   const NUMERO_RANGS = 99;
   const NUMERO_MAX = NUMERO_RANGS * NUMERO_RANG + NUMERO_RANG - 1;
-  const JOURNAL = Object.freeze(["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero"]);
+  const JOURNAL = Object.freeze(["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero",
+    "seuls", "seulsJustes", "tests", "testsRates"]);
   const JOURNAL_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.nouveautes.maximum,
-    SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.minutes, NUMERO_MAX]);
-  // Ce que la séance OUVERTE a déjà fait, `seance.j` : six nombres, versés
+    SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.minutes, NUMERO_MAX,
+    SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte]);
+  // Ce que la séance OUVERTE a déjà fait, `seance.j` : dix nombres, versés
   // au journal quand elle finit.
-  //   [0] calculs du jour faits, [1] justes, [2] compétences prouvées au
-  //   test, [3] rouges entraînées, [4] secondes de temps actif,
-  //   [5] nouveautés réussies.
-  // Correctif G1 (relecture de Codex) : les nouveautés se comptent ICI, au
-  // moment où elles sont réussies, et plus dans le plan (`p[6]`) — après
-  // minuit, le plan neuf repart de 0 et la nouveauté de la veille était
-  // perdue. Un `j` de cinq nombres (enregistré avant le correctif) se relit
-  // avec 0 nouveauté.
-  const EN_COURS = Object.freeze({calculs: 0, justes: 1, prouvees: 2, rouges: 3, secondes: 4, nouveautes: 5});
+  //   [0] calculs du jour faits, [1] justes, [2] étoiles gagnées par « Je
+  //   tente » ou par un test de ceinture, [3] étoiles perdues, [4] secondes
+  //   de temps actif, [5] étoiles gagnées par J'apprends, [6] calculs sans
+  //   aide dans J'apprends, [7] justes parmi eux, [8] premiers retours
+  //   d'étoiles placées par un test de ceinture, [9] ratés parmi eux.
+  const EN_COURS = Object.freeze({calculs: 0, justes: 1, prouvees: 2, rouges: 3, secondes: 4, nouveautes: 5,
+    seuls: 6, seulsJustes: 7, tests: 8, testsRates: 9});
   const EN_COURS_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte,
-    SEUILS.journal.compte, SEUILS.journal.secondes, SEUILS.nouveautes.maximum]);
+    SEUILS.journal.compte, SEUILS.journal.secondes, SEUILS.nouveautes.maximum,
+    SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte]);
 
   // Les minutes d'une séance : 10 ou 15 (un vrai nombre, pas « 15 » en
   // texte) ; tout le reste vaut 10.
@@ -371,10 +381,14 @@
     return JSON.parse(JSON.stringify(valeur));
   }
 
+  // Un ENTIER borné, sinon `defaut`. Le type est contrôlé AVANT toute
+  // conversion (relecture de Codex du 22/11, G5) : seul un vrai nombre
+  // entier passe — ni un booléen (true valait 1 : une boîte gagnée sans
+  // jouer), ni un texte, ni une liste d'un seul nombre, ni un objet (sa
+  // conversion pouvait lever une exception et vider tout le parcours).
   function entier(valeur, minimum, maximum, defaut = 0) {
-    const nombre = Number(valeur);
-    if (!Number.isInteger(nombre) || nombre < minimum || nombre > maximum) return defaut;
-    return nombre;
+    if (typeof valeur !== "number" || !Number.isInteger(valeur) || valeur < minimum || valeur > maximum) return defaut;
+    return valeur;
   }
 
   // Une date est un VRAI jour, « AAAA-MM-JJ », rien d'autre : la même règle
@@ -463,13 +477,20 @@
     return journal;
   }
 
-  // Une entrée du journal, propre : sept entiers, -1 quand ce n'est pas
-  // connu ; jamais plus de justes que de calculs ; un numéro de rang 0 n'en
-  // est pas un.
+  // Une entrée du journal, propre : onze entiers, -1 quand ce n'est pas
+  // connu ; jamais plus de justes que de calculs (ni de ratés que de
+  // retours) ; un numéro de rang 0 n'en est pas un.
   function entreePropre(brute) {
     const entree = JOURNAL_MAX.map((maximum, index) => entier(brute[index], -1, maximum, -1));
-    if (entree[0] >= 0 && entree[1] > entree[0]) entree[1] = entree[0];
-    if (entree[6] >= 0 && entree[6] < NUMERO_RANG) entree[6] = -1;
+    const borner = (tout, partie) => {
+      const [t, p] = [JOURNAL.indexOf(tout), JOURNAL.indexOf(partie)];
+      if (entree[t] >= 0 && entree[p] > entree[t]) entree[p] = entree[t];
+    };
+    borner("calculs", "justes");
+    borner("seuls", "seulsJustes");
+    borner("tests", "testsRates");
+    const numero = JOURNAL.indexOf("numero");
+    if (entree[numero] >= 0 && entree[numero] < NUMERO_RANG) entree[numero] = -1;
     return entree;
   }
 
@@ -543,11 +564,13 @@
   }
 
   // Le numéro d'une séance qui finit `jour` : le rang qui suit la journée
-  // (ses séances, et les rangs déjà pris), puis l'empreinte de ses nombres.
-  function numeroNeuf(paires, jour, entree) {
+  // (ses séances, et les rangs déjà pris), puis son IDENTITÉ (tirée à son
+  // ouverture, G3) ; sans identité (une donnée abîmée), l'empreinte de ses
+  // nombres.
+  function numeroNeuf(paires, jour, entree, identite = 0) {
     const duJour = paires.filter(paire => paire.jour === jour);
     const rang = Math.min(NUMERO_RANGS, 1 + Math.max(duJour.length, ...duJour.map(paire => rangDuNumero(numeroDe(paire.entree)))));
-    return rang * NUMERO_RANG + empreinteEntree(entree);
+    return rang * NUMERO_RANG + (identite >= 1 && identite <= IDENTITE_MAX ? identite : empreinteEntree(entree));
   }
 
   // Des paires {jour, entree} : une seule par numéro et par jour (la
@@ -618,7 +641,7 @@
   }
 
   function enCoursVide() {
-    return [0, 0, 0, 0, 0, 0];
+    return EN_COURS_MAX.map(() => 0);
   }
 
   function nettoyerPrenom(valeur) {
@@ -632,40 +655,22 @@
     return Array.from({length: nombre}, () => valeur);
   }
 
-  // Un module : pour chaque niveau, sa boîte `b` (0 = pas entrée), son
-  // échéance `e`, « J'apprends » fait `a`, les séries jouées `f`, les échecs
-  // consécutifs dans Mes calculs du jour `x`, « entraînée avec l'aide le
-  // jour `vu` » `t` (le rouge d'abord : une seule fois par jour) ; et les
-  // erreurs par cause `c`.
-  // Une compétence pas entrée n'a pas d'échéance : null, et surtout pas "" —
-  // le serveur retire d'une liste toute chaîne qui n'est pas une date, les
-  // échéances suivantes glisseraient d'un rang.
-  // Lot G1 : deux dates par compétence, comme `e` (null quand il n'y en a
-  // pas) — `d`, le jour où elle est ENTRÉE (apprise à l'entraînement, ou
-  // prouvée au test), et `s`, le jour où elle est devenue SUE (passée de la
-  // boîte 3 à la boîte 4, ou entrée sue par le test). Chacune est posée UNE
-  // fois et ne bouge plus : une compétence redescendue puis remontée ne
-  // compte pas une seconde fois.
-  // Lot 1 « la séance » : `l`, 1 quand le dernier calcul du jour d'un niveau
-  // « par cœur » était juste mais lent (décision 9 de « fonctionnement 3 » :
-  // lent deux fois de suite = rouge) ; 0 sinon.
-  // Lot F4 : une liste de plus, `ar`, qui ne vaut que pour une compétence PAS
-  // ENTRÉE — un J'apprends arrêté : 3 × le nombre d'arrêts sur ce niveau +
-  // la reprise (0 : on te montre, 1 : au dessin, 2 : sans aide). Un seul
-  // nombre pour les deux : le serveur compte les clés (2 000 au plus) et
-  // deux listes de plus dépassaient (2 094 au pire cas). Et l'échéance `e`
-  // d'une compétence pas entrée, null jusque-là, garde le jour où un niveau
-  // « à voir en classe » (3 arrêts) revient dans le parcours.
+  // La ligne d'un module (version 12) : une case par étoile dans chaque
+  // liste (le détail est écrit en tête de fichier, « Version 12 »), le jour
+  // `vu` où le module a été joué pour la dernière fois, et les erreurs par
+  // cause `c`. Une date absente vaut null, et surtout pas "" — le serveur
+  // remplace à sa place toute valeur qu'il refuse (lib/applis.php,
+  // « listes ») : une liste ne glisse jamais d'une case.
   function moduleVide(id) {
     const k = NIVEAUX[id];
-    return {vu: null, ok: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), f: listeDe(k), x: listeDe(k), t: listeDe(k),
-      l: listeDe(k), d: listeDe(k, null), s: listeDe(k, null), ar: listeDe(k), c: {}};
+    return {vu: null, b: listeDe(k), e: listeDe(k, null), a: listeDe(k), x: listeDe(k), r: listeDe(k), q: listeDe(k, null),
+      pe: listeDe(k), d: listeDe(k, null), s: listeDe(k, null), ar: listeDe(k), g: listeDe(k), c: {}};
   }
 
-  // Lot F4 : lire et écrire `ar`. Correctif F4 (point 9) : au-delà du 9e
-  // arrêt, le compte tourne (10 → 7, 11 → 8, 12 → 9) au lieu de rester à 9 :
-  // la semaine d'attente revient tous les 3 arrêts (12e, 15e…), pas à chaque
-  // arrêt. Il ne dépasse donc jamais 9 (`ar` : 29 au plus).
+  // Lot F4 : lire et écrire `ar`. Au-delà du 9e arrêt, le compte tourne
+  // (10 → 7, 11 → 8, 12 → 9) au lieu de rester à 9 : la semaine d'attente
+  // revient tous les 3 arrêts (12e, 15e…), pas à chaque arrêt. Il ne dépasse
+  // donc jamais 9 (`ar` : 29 au plus).
   const ARRETS_MAX = 9;
   function arretSuivant(arrets) {
     const suivant = arrets + 1;
@@ -676,9 +681,16 @@
   function poserArret(ligne, index, arrets, reprise) {
     ligne.ar[index] = Math.min(ARRETS_MAX, Math.max(0, arrets)) * 3 + entier(reprise, 0, REPRISE.seul);
   }
+  // `x` : un retour raté (1), et le 2e calcul qui attend (2).
+  const X_RATE = 1;
+  const X_SECOND = 2;
 
   function planVide() {
     return PLAN_MAX.map(() => 0);
+  }
+
+  function seanceVide() {
+    return {jour: null, etape: 0, n: 0, i: 0, g: 0, p: planVide(), j: enCoursVide()};
   }
 
   function creerParcours() {
@@ -687,31 +699,44 @@
       epoque: 0,
       prenom: "",
       modules: {},
-      seance: {jour: null, etape: 0, n: 0, p: planVide(), j: enCoursVide()},
+      seance: seanceVide(),
       seances: [],
       journal: journalVide(),
       jours: [],
       ceintures: ceinturesVides(),
-      paliers: ceinturesVides()
+      paliers: ceinturesVides(),
+      quarts: quartsVides()
     };
   }
 
-  // Lot 4 : les ceintures gagnées, une date par palier (null : pas gagnée).
+  // Une date par étage (null : pas gagnée, pas joué).
   function ceinturesVides() {
     return Array.from({length: SEUILS.ceintures.nombre}, () => null);
   }
 
+  // Le remplissage de la ceinture de chaque étage à ne pas faire reculer (0
+  // à 3 quarts ; 0 : rien à garder).
+  function quartsVides() {
+    return Array.from({length: SEUILS.ceintures.nombre}, () => 0);
+  }
+
+  // Une liste d'entiers bornés, à la longueur du format : chaque valeur
+  // reste à SA place (une valeur refusée vaut 0), ce qui dépasse est coupé,
+  // ce qui manque vaut 0.
   function normaliserListe(brut, nombre, maximum) {
     const liste = Array.isArray(brut) ? brut : [];
     return Array.from({length: nombre}, (_, index) => entier(liste[index], 0, maximum));
   }
 
-  // Correctif F4 (21/11/2026, relecture de Codex, point 6) : le jour de
-  // retour d'un niveau « à voir en classe » n'est gardé que s'il tombe au
-  // plus tard dans 7 jours (`aujourdhui` : le jour de la relecture) ; plus
-  // loin (une horloge fausse, une progression trafiquée), il est ramené à
-  // aujourd'hui + 7. Un jour passé reste passé : l'attente est finie, elle
-  // n'est jamais repoussée.
+  function normaliserDates(brut, nombre) {
+    const liste = Array.isArray(brut) ? brut : [];
+    return Array.from({length: nombre}, (_, index) => dateOuNull(liste[index]));
+  }
+
+  // Le jour de retour d'une étoile « à voir en classe » n'est gardé que s'il
+  // tombe au plus tard dans 7 jours (`aujourdhui` : le jour de la
+  // relecture) ; plus loin (une horloge fausse, une progression trafiquée),
+  // il est ramené à aujourd'hui + 7. Un jour passé reste passé.
   function retourBorne(jour, aujourdhui) {
     const date = dateOuNull(jour);
     if (!date) return null;
@@ -719,38 +744,44 @@
     return date > plusTard ? plusTard : date;
   }
 
+  // `aujourdhui` : le jour de la relecture, passé par l'appelant — jamais
+  // l'horloge du poste relue ici (relecture de Codex du 22/11 : deux
+  // appareils qui réparaient la même copie à des dates différentes
+  // fabriquaient deux échéances).
   function normaliserModule(id, brut, aujourdhui = jourLocal()) {
     const k = NIVEAUX[id];
     const ligne = moduleVide(id);
-    if (!brut || typeof brut !== "object") return ligne;
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return ligne;
+    const jour = dateOuNull(aujourdhui) || jourLocal();
     ligne.vu = dateOuNull(brut.vu);
-    ligne.ok = dateOuNull(brut.ok);
     ligne.b = normaliserListe(brut.b, k, SEUILS.revision.boites);
     ligne.a = normaliserListe(brut.a, k, 1);
-    ligne.f = normaliserListe(brut.f, k, SEUILS.compteur);
-    ligne.x = normaliserListe(brut.x, k, SEUILS.rattrapage.deCote);
-    ligne.t = normaliserListe(brut.t, k, 1);
-    ligne.l = normaliserListe(brut.l, k, 1);
+    ligne.x = normaliserListe(brut.x, k, X_RATE + X_SECOND);
+    ligne.r = normaliserListe(brut.r, k, SEUILS.tente.essais);
+    ligne.pe = normaliserListe(brut.pe, k, SEUILS.retour.perdues);
     ligne.ar = normaliserListe(brut.ar, k, ARRETS_MAX * 3 + REPRISE.seul);
+    ligne.g = normaliserListe(brut.g, k, SEUILS.compteur);
+    ligne.d = normaliserDates(brut.d, k);
+    ligne.s = normaliserDates(brut.s, k);
     const echeances = Array.isArray(brut.e) ? brut.e : [];
-    const entrees = Array.isArray(brut.d) ? brut.d : [];
-    const sues = Array.isArray(brut.s) ? brut.s : [];
+    const rates = normaliserDates(brut.q, k);
     for (let i = 0; i < k; i += 1) {
-      // L'échéance, les échecs, l'entraînement du jour et les deux dates
-      // n'existent que pour une compétence entrée. Une date absente ou
-      // abîmée vaut null (une compétence entrée avant le lot G1).
       if (ligne.b[i]) {
-        ligne.e[i] = dateOuNull(echeances[i]) || ligne.vu || jourLocal();
-        ligne.d[i] = dateOuNull(entrees[i]);
-        ligne.s[i] = dateOuNull(sues[i]);
-        // Lot F4 : entrée, plus rien d'arrêté.
-        ligne.ar[i] = 0;
+        // Gagnée : une échéance (abîmée ou absente : le jour de la
+        // relecture, elle revient tout de suite) ; plus rien d'arrêté ni de
+        // tenté.
+        ligne.e[i] = dateOuNull(echeances[i]) || jour;
+        ligne.ar[i] = 0; ligne.r[i] = 0;
       } else {
-        ligne.x[i] = 0; ligne.t[i] = 0; ligne.l[i] = 0;
-        // Lot F4 : un niveau « à voir en classe » (3 arrêts) a son jour de
-        // retour ; tous les autres, rien.
-        ligne.e[i] = arretsDe(ligne, i) >= SEUILS.apprends.arrets ? retourBorne(echeances[i], aujourdhui) : null;
+        // Pas tenue : rien du retour ; l'échéance ne vaut que pour une
+        // étoile « à voir en classe » (3 arrêts) ; le jour du dernier « Je
+        // tente » raté ne vaut que s'il y en a eu un.
+        ligne.x[i] = 0;
+        ligne.e[i] = arretsDe(ligne, i) >= SEUILS.apprends.arrets ? retourBorne(echeances[i], jour) : null;
+        ligne.q[i] = ligne.r[i] ? rates[i] : null;
       }
+      // Solide un jour : seulement une étoile déjà gagnée un jour.
+      if (!ligne.d[i] && !ligne.b[i]) ligne.s[i] = null;
     }
     if (brut.c && typeof brut.c === "object" && !Array.isArray(brut.c)) {
       Object.keys(brut.c).filter(cause => /^\d{1,2}$/.test(cause)).sort((x, y) => Number(x) - Number(y))
@@ -762,181 +793,86 @@
     return ligne;
   }
 
-  // Le plan d'une séance de version 8 (lot 6 « programmes 2 ») ou 10 (lot
-  // C2) : ses deux rangs (la rouge à entraîner, le 2e calcul en attente)
-  // sont ceux de l'ancienne table ; on les recalcule. Le reste ne bouge pas.
-  function planDepuis(brut, depuis) {
-    if (!Array.isArray(brut)) return brut;
-    const plan = brut.slice();
-    [PLAN.rattrapage, PLAN.second].forEach(i => {
-      const v = entier(plan[i], 0, 9999);
-      if (!v) return;
-      const rang = depuis(v - 1);
-      plan[i] = rang >= 0 ? rang + 1 : 0;
-    });
-    return plan;
-  }
-
-  // `version` : celle de la progression relue. Un plan de version 6 (sept
-  // nombres) garde ses quatre premiers ; les suivants avaient un autre sens.
-  function normaliserPlan(brut, version = VERSION) {
+  function normaliserPlan(brut) {
     const liste = Array.isArray(brut) ? brut : [];
     const plan = PLAN_MAX.map((maximum, index) => entier(liste[index], 0, maximum));
-    // (L'arrêt après un entraînement raté, 3, garde son sens.)
-    if (version < 7) for (let i = PLAN.nouveaute; i < plan.length; i += 1) if (i !== PLAN.nouveaute || plan[i] !== NOUVEAUTE.arretee) plan[i] = 0;
     // Les minutes : 10 ou 15, sinon 0 (lu 10).
     if (!SEUILS.seance.minutes.includes(plan[PLAN.minutes])) plan[PLAN.minutes] = 0;
-    // Un 2e calcul en attente vient avec ce qu'il faut rendre ; sinon rien.
-    if (plan[PLAN.second] && !competenceDeRang(plan[PLAN.second] - 1)) plan[PLAN.second] = 0;
-    if (!plan[PLAN.second]) [PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
-    if (plan[PLAN.second] && !plan[PLAN.secondBoite]) plan[PLAN.second] = 0;
+    // Une séance fermée n'a ni paquet ni étape.
+    if (plan[PLAN.ouverte] !== 1) return planVide();
+    if (!plan[PLAN.paquet]) plan[PLAN.obligatoire] = 0;
     return plan;
   }
 
-  // La reprise des boîtes de la version 2 (lot « couverture », 06/11/2026) :
-  // A8-3 est réuni à A8-2, F5-3 à F5-2. Avant de couper la liste à 2
-  // niveaux, la compétence réunie prend, des deux anciennes, la plus
-  // prudente : celle qui est entrée ; entrées toutes les deux, celle qui a la
-  // boîte la plus basse (son échéance, ses échecs, son « entraînée avec
-  // l'aide »). « J'apprends fait » vaut si les deux l'étaient ; les séries
-  // jouées s'ajoutent. Une compétence réunie ratée revient donc tout de
-  // suite par Mes calculs du jour, jamais une boîte gagnée sans avoir été
-  // jouée. Les compétences des autres modules ne bougent pas : leurs rangs,
-  // si, et le plan d'une séance de la version 2 est refermé (plus bas).
-  const REUNIS_V3 = Object.freeze({A8: Object.freeze([2, 3]), F5: Object.freeze([2, 3])});
-  function reprendreV2(id, brut) {
-    if (!brut || typeof brut !== "object") return brut;
-    // A2 a un niveau de plus (A2-5) : le module n'est plus su tant que ce
-    // niveau n'est pas appris (il n'est plus coché).
-    if (id === "A2") return Object.assign({}, brut, {ok: null});
-    if (!REUNIS_V3[id]) return brut;
-    const [garde, parti] = REUNIS_V3[id].map(n => n - 1);
-    const liste = cle => (Array.isArray(brut[cle]) ? brut[cle].slice() : []);
-    const b = liste("b");
-    const nombre = (x, max) => entier(x, 0, max);
-    const boiteG = nombre(b[garde], SEUILS.revision.boites);
-    const boiteP = nombre(b[parti], SEUILS.revision.boites);
-    const source = !boiteP ? garde : !boiteG ? parti : boiteP < boiteG ? parti : garde;
-    const copie = Object.assign({}, brut);
-    ["b", "e", "x", "t"].forEach(cle => {
-      const l = liste(cle);
-      if (source === parti) l[garde] = l[parti];
-      l.splice(parti, 1);
-      copie[cle] = l;
-    });
-    const a = liste("a");
-    a[garde] = boiteG && boiteP ? Math.min(nombre(a[garde], 1), nombre(a[parti], 1)) : nombre(a[source], 1);
-    a.splice(parti, 1);
-    copie.a = a;
-    const f = liste("f");
-    f[garde] = Math.min(SEUILS.compteur, nombre(f[garde], SEUILS.compteur) + nombre(f[parti], SEUILS.compteur));
-    f.splice(parti, 1);
-    copie.f = f;
-    return copie;
+  // La version d'une progression brute (relecture de Codex du 22/11, B1 et
+  // G5) : un ENTIER de 1 à 999, un vrai nombre — sinon 0, « illisible ».
+  // Une version absente, en texte ou fractionnaire (10,5) n'est JAMAIS prise
+  // pour une version ancienne à reprendre.
+  function versionDe(brut) {
+    const version = brut && typeof brut === "object" && !Array.isArray(brut) ? brut.version : null;
+    return typeof version === "number" && Number.isInteger(version) && version >= 1 && version <= 999 ? version : 0;
   }
 
-  // La reprise des lignes de la version 8 (lot 6 « programmes 2 ») : dans
-  // F6 et F9, chaque liste reçoit, à la place du niveau neuf, la valeur
-  // d'une compétence pas entrée (0, ou null pour une date) ; le module n'est
-  // plus coché « su ». Une liste plus courte que l'ancien nombre de niveaux
-  // est d'abord complétée, pour que la case aille au bon endroit.
-  const LISTES_V9 = Object.freeze({b: 0, e: null, a: 0, f: 0, x: 0, t: 0, l: 0, d: null, s: null});
-  function reprendreV8(id, brut) {
-    if (!brut || typeof brut !== "object" || !INSERES_V9[id]) return brut;
-    const place = INSERES_V9[id] - 1;
-    const copie = Object.assign({}, brut, {ok: null});
-    Object.keys(LISTES_V9).forEach(cle => {
-      if (!Array.isArray(brut[cle])) return;
-      const vide = LISTES_V9[cle];
-      const liste = Array.from({length: Math.max(NIVEAUX_V8[id], brut[cle].length)}, (_, i) => (i < brut[cle].length ? brut[cle][i] : vide));
-      liste.splice(place, 0, vide);
-      copie[cle] = liste.slice(0, NIVEAUX_V10[id]);
-    });
-    return copie;
+  // Écrite par une page PLUS RÉCENTE que ce moteur : rien n'en est lu, rien
+  // n'en est fusionné ni enregistré par-dessus (B1). Une version au-delà de
+  // 999 (le serveur la refuse) compte comme plus récente, elle aussi.
+  function tropRecente(brut) {
+    const version = brut && typeof brut === "object" && !Array.isArray(brut) ? brut.version : null;
+    return typeof version === "number" && Number.isInteger(version) && version > VERSION;
   }
 
-  // La reprise des lignes de la version 10 (lot C2) : dans M1 et D8, chaque
-  // liste est refaite à la longueur d'aujourd'hui — chaque ancienne case à
-  // sa place (`PLACES_V11`), la valeur d'une compétence pas entrée aux
-  // places neuves ; le module n'est plus coché « su ». Une liste plus longue
-  // que l'ancien nombre de niveaux est coupée : ce qui dépasse n'avait pas
-  // de niveau.
-  const LISTES_V11 = Object.freeze(Object.assign({}, LISTES_V9, {ar: 0}));
-  function reprendreV10(id, brut) {
-    if (!brut || typeof brut !== "object" || !PLACES_V11[id]) return brut;
-    const copie = Object.assign({}, brut, {ok: null});
-    Object.keys(LISTES_V11).forEach(cle => {
-      if (!Array.isArray(brut[cle])) return;
-      const liste = listeDe(NIVEAUX[id], LISTES_V11[cle]);
-      PLACES_V11[id].forEach((place, i) => { if (i < brut[cle].length) liste[place - 1] = brut[cle][i]; });
-      copie[cle] = liste;
-    });
-    return copie;
-  }
-
-  // Correctif F4 (point 7) : la version relue. Le serveur n'accepte que 1 à
-  // 999 ; une version PLUS RÉCENTE que celle de ce moteur (une page plus
-  // neuve, ou une donnée trafiquée : 1500) n'est jamais relue comme une
-  // version ancienne — ni reprise de F6 et F9, ni plan refermé : elle se
-  // relit comme la nôtre (et l'appareil reste en lecture seule, voir
-  // versionEnAvance).
-  function versionLue(brut) {
-    const version = Number(brut && brut.version);
-    if (Number.isInteger(version) && version > VERSION) return VERSION;
-    return entier(version, 0, 999);
-  }
-
-  // `aujourdhui` : le jour de la relecture (le jour de retour d'un niveau « à
-  // voir en classe » est borné à 7 jours après lui).
+  // `aujourdhui` : le jour de la relecture (les dates de repli et les bornes
+  // se calculent sur lui).
+  // Une progression d'une AUTRE version que la nôtre n'est pas interprétée :
+  //  - plus ancienne (2 à 11) ou de version illisible : elle repart de zéro
+  //    (aucun élève n'avait joué avant la version 12 ; la première version
+  //    qui devra reprendre de vraies données sera la suivante). Son époque
+  //    est gardée : une version restaurée par le professeur, ou une remise à
+  //    zéro, gagne toujours en bloc ; le prénom (un visiteur sans code) aussi ;
+  //  - plus récente : rendue vide, elle aussi — l'appelant (charger,
+  //    recevoir, sauver) ne l'utilise pas et passe en lecture seule.
   function normaliserParcours(brut, {aujourdhui = jourLocal()} = {}) {
     const parcours = creerParcours();
-    if (!brut || typeof brut !== "object") return parcours;
+    if (!brut || typeof brut !== "object" || Array.isArray(brut)) return parcours;
+    if (tropRecente(brut)) return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
-    const lue = versionLue(brut);
-    const avantV3 = lue < 3;
-    const avantV9 = lue < 9;
-    const avantV11 = lue < 11;
+    if (versionDe(brut) !== VERSION) return parcours;
+    const jour = dateOuNull(aujourdhui) || jourLocal();
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
-        const ligne = avantV3 ? reprendreV2(id, brut.modules[id]) : brut.modules[id];
-        const ligneV10 = avantV9 ? reprendreV8(id, ligne) : ligne;
-        parcours.modules[id] = normaliserModule(id, avantV11 ? reprendreV10(id, ligneV10) : ligneV10, aujourdhui);
+        parcours.modules[id] = normaliserModule(id, brut.modules[id], jour);
       });
     }
-    const seance = brut.seance && typeof brut.seance === "object" ? brut.seance : {};
-    // Le plan d'une séance ne vaut que dans sa version : en version 1, les
-    // rangs des compétences et le sens de p[4] étaient autres ; en version 2,
-    // les rangs (A2 a un niveau de plus, A8, A9, M9, F5 en ont moins). Une
-    // progression plus ancienne garde ses boîtes et son nombre de séances,
-    // mais sa séance en cours est refermée (elle se rouvre sur un plan neuf).
-    // Une séance de version 3 continue en version 4 (lot F1) : son plan à 5
-    // nombres se relit 0, 0 (une nouveauté, comme avant).
-    const ancienne = lue < 3;
+    const seance = brut.seance && typeof brut.seance === "object" && !Array.isArray(brut.seance) ? brut.seance : {};
     parcours.seance = {
-      jour: ancienne ? null : dateOuNull(seance.jour),
-      etape: ancienne ? 0 : entier(seance.etape, 0, SEUILS.seance.etapes),
+      jour: dateOuNull(seance.jour),
+      etape: entier(seance.etape, 0, SEUILS.seance.etapes),
       n: entier(seance.n, 0, SEUILS.compteur),
-      p: ancienne ? planVide() : normaliserPlan(avantV9 ? planDepuis(seance.p, rangDepuisV8) : avantV11 ? planDepuis(seance.p, rangDepuisV10) : seance.p, lue),
+      i: entier(seance.i, 0, IDENTITE_MAX),
+      g: entier(seance.g, 0, SEUILS.compteur),
+      p: normaliserPlan(seance.p),
       j: enCoursVide()
     };
-    // Ce que la séance ouverte a fait (lot G1) : rien quand elle n'est pas
-    // ouverte. Une séance de version 4 ouverte repart de zéro.
+    // Une séance ouverte a un jour et une identité ; sinon elle est fermée.
+    if (parcours.seance.p[PLAN.ouverte] === 1 && (!parcours.seance.jour || !parcours.seance.i)) parcours.seance.p = planVide();
+    if (parcours.seance.p[PLAN.ouverte] !== 1) { parcours.seance.etape = 0; parcours.seance.i = 0; }
+    // Ce que la séance ouverte a fait : rien quand elle n'est pas ouverte.
     if (parcours.seance.p[PLAN.ouverte] === 1 && Array.isArray(seance.j)) {
       parcours.seance.j = EN_COURS_MAX.map((maximum, index) => entier(seance.j[index], 0, maximum));
-      if (parcours.seance.j[EN_COURS.justes] > parcours.seance.j[EN_COURS.calculs]) parcours.seance.j[EN_COURS.justes] = parcours.seance.j[EN_COURS.calculs];
+      const j = parcours.seance.j;
+      if (j[EN_COURS.justes] > j[EN_COURS.calculs]) j[EN_COURS.justes] = j[EN_COURS.calculs];
+      if (j[EN_COURS.seulsJustes] > j[EN_COURS.seuls]) j[EN_COURS.seulsJustes] = j[EN_COURS.seuls];
+      if (j[EN_COURS.testsRates] > j[EN_COURS.tests]) j[EN_COURS.testsRates] = j[EN_COURS.tests];
     }
     const rangees = normaliserSeancesEtJournal(brut.seances, brut.journal);
     parcours.seances = rangees.seances;
     parcours.journal = rangees.journal;
     parcours.jours = normaliserJours(brut.jours);
-    // Lot 4 : une date par palier ; tout le reste vaut null.
-    const ceintures = Array.isArray(brut.ceintures) ? brut.ceintures : [];
-    parcours.ceintures = ceinturesVides().map((_, index) => dateOuNull(ceintures[index]));
-    // Lot F4 : le jour où chaque test de palier a été joué ; null sinon.
-    const paliers = Array.isArray(brut.paliers) ? brut.paliers : [];
-    parcours.paliers = ceinturesVides().map((_, index) => dateOuNull(paliers[index]));
+    parcours.ceintures = normaliserDates(brut.ceintures, SEUILS.ceintures.nombre);
+    parcours.paliers = normaliserDates(brut.paliers, SEUILS.ceintures.nombre);
+    parcours.quarts = normaliserListe(brut.quarts, SEUILS.ceintures.nombre, SEUILS.ceintures.quarts - 1);
     return parcours;
   }
 
@@ -958,8 +894,22 @@
     return !parcours.prenom && !Object.keys(parcours.modules).length && !parcours.seances.length && !parcours.jours.length;
   }
 
+  // La ligne d'un module, pour la LIRE (ligneAChanger pour l'écrire). Un
+  // module jamais touché rend toujours la même ligne vide, gelée : la carte
+  // la demande des centaines de fois par écran.
+  const LIGNES_VIDES = new Map();
+  function ligneVide(id) {
+    let ligne = LIGNES_VIDES.get(id);
+    if (!ligne) {
+      ligne = moduleVide(id);
+      Object.keys(ligne).forEach(cle => { if (ligne[cle] && typeof ligne[cle] === "object") Object.freeze(ligne[cle]); });
+      Object.freeze(ligne);
+      LIGNES_VIDES.set(id, ligne);
+    }
+    return ligne;
+  }
   function ligneDe(parcours, id) {
-    return parcours.modules[id] || moduleVide(id);
+    return parcours.modules[id] || ligneVide(id);
   }
 
   function noterJour(parcours, date) {
@@ -967,16 +917,43 @@
     if (jour && !parcours.jours.includes(jour)) parcours.jours = normaliserJours([...parcours.jours, jour]);
   }
 
-  // ------------------------------------------------- les modules et leurs couleurs
+  // Une ligne de module posée dans la copie. Un module qui entre pour la
+  // première fois prend sa place dans l'ordre des codes, comme à la
+  // relecture (normaliserParcours, fusionner) : le même parcours s'écrit
+  // toujours avec le même JSON (sinon la page croit avoir à renvoyer).
+  function poserLigne(copie, id, ligne) {
+    const nouveau = !Object.prototype.hasOwnProperty.call(copie.modules, id);
+    copie.modules[id] = ligne;
+    if (!nouveau) return;
+    const ranges = {};
+    CODES.forEach(code => { if (Object.prototype.hasOwnProperty.call(copie.modules, code)) ranges[code] = copie.modules[code]; });
+    copie.modules = ranges;
+  }
 
+  // La ligne d'un module, prête à être changée dans la copie : posée, et son
+  // jour `vu` mis à aujourd'hui.
+  function ligneAChanger(copie, id, aujourdhui) {
+    const ligne = copie.modules[id] || moduleVide(id);
+    poserLigne(copie, id, ligne);
+    ligne.vu = aujourdhui;
+    return ligne;
+  }
+
+  // ------------------------------------------------------ la carte et les étoiles
+  //
   // `carte` : ce que rend CORE.carte() — les modules (ce qui est construit,
-  // le palier et le type de chaque niveau) et l'ordre du parcours, une
-  // compétence après l'autre (« A1-1 », « A1-2 », …). La séance ne parcourt
-  // que les compétences des modules construits.
+  // le palier et le type de chaque niveau), l'ordre du parcours, une étoile
+  // après l'autre (« A1-1 », « A1-2 », …), les LIGNES de chaque étage
+  // ([{etage, nom, cles}]) et les liens « d'abord » ({étoile: étoile à gagner
+  // avant}). L'ÉTAGE d'une étoile est le palier de son niveau. Seules les
+  // étoiles des modules construits sont sur la carte.
   function normaliserCarte(carte) {
-    if (Array.isArray(carte)) return {modules: carte, ordre: carte.flatMap(f => Array.from({length: f.niveaux || 0}, (_, i) => `${f.id}-${i + 1}`))};
-    if (carte && typeof carte === "object") return {modules: Array.isArray(carte.modules) ? carte.modules : [], ordre: Array.isArray(carte.ordre) ? carte.ordre : []};
-    return {modules: [], ordre: []};
+    if (Array.isArray(carte)) return {modules: carte, ordre: carte.flatMap(f => Array.from({length: f.niveaux || 0}, (_, i) => `${f.id}-${i + 1}`)), lignes: [], dabord: {}};
+    if (carte && typeof carte === "object") {
+      return {modules: Array.isArray(carte.modules) ? carte.modules : [], ordre: Array.isArray(carte.ordre) ? carte.ordre : [],
+        lignes: Array.isArray(carte.lignes) ? carte.lignes : [], dabord: carte.dabord && typeof carte.dabord === "object" ? carte.dabord : {}};
+    }
+    return {modules: [], ordre: [], lignes: [], dabord: {}};
   }
 
   function ficheCarte(carte, id) {
@@ -991,37 +968,6 @@
   function palierDe(carte, id, niveau) {
     const fiche = ficheCarte(carte, id);
     return fiche && Array.isArray(fiche.paliers) ? entier(fiche.paliers[niveau - 1], 0, 9) : fiche ? entier(fiche.palier, 0, 9) : 0;
-  }
-
-  // Lot C3 « les exemples résolus » (22/11/2026) : une compétence entrée par
-  // un test (« Tu connais déjà ? » ou le test de palier), donc sans
-  // J'apprends, et qui n'est pas encore revenue depuis — son premier retour
-  // dans Mes calculs du jour montre un exemple résolu avant une écriture que
-  // la leçon montre (la page sait laquelle). Aucune donnée nouvelle : tant
-  // qu'elle n'est pas revenue, sa boîte et son échéance sont celles de son
-  // entrée. La marche la plus haute d'un test entre en boîte 3, sans date
-  // « sue », et revient 3 jours après son entrée ; les marches en dessous
-  // et le test de palier, en boîte 4, sues le jour de leur entrée, reviennent
-  // 7 à 13 jours après. Une compétence entrée par J'apprends entre en boîte
-  // 2 ; un retour (juste ou faux) change sa boîte ou son échéance : rien de
-  // tout cela ne ressemble plus à une entrée.
-  function premierRetourSansLecon(parcours, id, niveau) {
-    if (!parcours || !parcours.modules || !Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return false;
-    const ligne = parcours.modules[id];
-    const index = Number(niveau) - 1;
-    if (!ligne || !Array.isArray(ligne.b) || !(index >= 0 && index < NIVEAUX[id])) return false;
-    const boite = ligne.b[index];
-    const entree = dateOuNull(ligne.d && ligne.d[index]);
-    const echeance = dateOuNull(ligne.e && ligne.e[index]);
-    const sue = dateOuNull(ligne.s && ligne.s[index]);
-    if (!entree || !echeance) return false;
-    const ecart = ecartJours(entree, echeance);
-    if (boite === SEUILS.revision.test) return !sue && ecart === delaiDeBoite(SEUILS.revision.test);
-    if (boite === SEUILS.revision.dessous) {
-      const delai = delaiDeBoite(SEUILS.revision.dessous);
-      return sue === entree && ecart >= delai && ecart < delai + SEUILS.palier.etale;
-    }
-    return false;
   }
 
   function typeDe(carte, id, niveau) {
@@ -1042,180 +988,204 @@
     return liste;
   }
 
-  // Lot 7e-2 : une ligne de module posée dans la copie. Un module qui entre
-  // pour la première fois prend sa place dans l'ordre des codes, comme à la
-  // relecture (normaliserParcours, fusionner) : le même parcours s'écrit
-  // toujours avec le même JSON (sinon la page croit avoir à renvoyer).
-  function poserLigne(copie, id, ligne) {
-    const nouveau = !Object.prototype.hasOwnProperty.call(copie.modules, id);
-    copie.modules[id] = ligne;
-    if (!nouveau) return;
-    const ranges = {};
-    CODES.forEach(code => { if (Object.prototype.hasOwnProperty.call(copie.modules, code)) ranges[code] = copie.modules[code]; });
-    copie.modules = ranges;
+  // Le PLAN de la carte, calculé une fois par carte : pour chaque étoile,
+  // son étage, sa ligne, l'étoile d'avant dans sa ligne, ses liens
+  // « d'abord » ; les lignes de chaque étage ; les étoiles de chaque étage,
+  // dans l'ordre. Une étoile que la table des lignes oublie (une carte de
+  // test, un niveau ajouté sans sa ligne) reçoit une ligne à elle, au nom de
+  // son module : elle reste jouable. Un lien « d'abord » qui sort de l'étage
+  // ou qui remonte l'ordre de la carte est ignoré.
+  const PLANS = new WeakMap();
+  function planDeCarte(carte) {
+    const cleCache = carte && typeof carte === "object" ? carte : null;
+    if (cleCache && PLANS.has(cleCache)) return PLANS.get(cleCache);
+    const c = normaliserCarte(carte);
+    const etoiles = new Map();
+    const ordre = [];
+    parcoursConstruit(carte).forEach(({module: id, niveau}) => {
+      const etage = palierDe(carte, id, niveau);
+      const cle = `${id}-${niveau}`;
+      if (!etage || etage > SEUILS.ceintures.nombre || etoiles.has(cle)) return;
+      const etoile = {cle, module: id, niveau, index: niveau - 1, etage, rang: ordre.length, type: typeDe(carte, id, niveau),
+        ligne: -1, nomLigne: "", place: 0, avant: null, dabord: []};
+      etoiles.set(cle, etoile);
+      ordre.push(etoile);
+    });
+    const lignes = [];
+    const poser = (etage, nom, cles) => {
+      const liste = cles.map(cle => etoiles.get(cle)).filter(e => e && e.etage === etage && e.ligne < 0).sort((x, y) => x.rang - y.rang);
+      if (!liste.length) return;
+      const ligne = {etage, nom: String(nom || ""), etoiles: liste};
+      liste.forEach((etoile, place) => {
+        etoile.ligne = lignes.length; etoile.nomLigne = ligne.nom; etoile.place = place; etoile.avant = place ? liste[place - 1].cle : null;
+      });
+      lignes.push(ligne);
+    };
+    c.lignes.forEach(l => { if (l && Array.isArray(l.cles)) poser(entier(l.etage, 0, 9), l.nom, l.cles.map(String)); });
+    // Les étoiles sans ligne : une ligne par module et par étage.
+    const sans = new Map();
+    ordre.filter(e => e.ligne < 0).forEach(e => {
+      const cle = `${e.etage} ${e.module}`;
+      if (!sans.has(cle)) sans.set(cle, {etage: e.etage, nom: e.module, cles: []});
+      sans.get(cle).cles.push(e.cle);
+    });
+    sans.forEach(l => poser(l.etage, l.nom, l.cles));
+    Object.keys(c.dabord).forEach(cle => {
+      const etoile = etoiles.get(cle);
+      const liens = Array.isArray(c.dabord[cle]) ? c.dabord[cle] : [c.dabord[cle]];
+      if (!etoile) return;
+      liens.forEach(lien => {
+        const avant = etoiles.get(String(lien));
+        if (avant && avant.etage === etoile.etage && avant.rang < etoile.rang && avant.cle !== etoile.avant && !etoile.dabord.includes(avant.cle)) etoile.dabord.push(avant.cle);
+      });
+    });
+    const etages = [];
+    for (let n = 1; n <= SEUILS.ceintures.nombre; n += 1) {
+      const liste = ordre.filter(e => e.etage === n);
+      etages.push({etage: n, etoiles: liste, lignes: lignes.filter(l => l.etage === n)});
+    }
+    const plan = {etoiles, ordre, lignes, etages};
+    if (cleCache) PLANS.set(cleCache, plan);
+    return plan;
   }
 
-  // Le module est su quand toutes ses compétences sont en boîte 4 ou plus.
-  function toutSu(ligne) {
-    return ligne.b.every(boite => boite >= SEUILS.revision.su);
-  }
+  const etoilesDeLEtage = (plan, etage) => (plan.etages[etage - 1] ? plan.etages[etage - 1].etoiles : []);
 
-  // Un module intact : rien n'y est entré, rien n'y a été joué ni appris.
-  // C'est à l'entrée d'un module intact que le test en escalier se joue.
-  function estIntact(ligne) {
-    return !ligne.b.some(Boolean) && !ligne.f.some(Boolean) && !ligne.a.some(Boolean);
-  }
+  // ------------------------------------------------- l'état d'une étoile
 
-  // Le module a été su un jour : il reste coché.
-  function estSu(parcours, id) {
-    return Boolean(parcours.modules[id] && parcours.modules[id].ok);
-  }
+  // Tenue : l'étoile est gagnée, elle est dans les boîtes.
+  const tenue = (ligne, index) => ligne.b[index] > 0;
+  // Gagnée un jour : sa date `d` ne s'efface jamais.
+  const dejaGagnee = (ligne, index) => Boolean(ligne.d[index]);
+  // Quelque chose a été fait sur cette étoile : elle ne se referme plus.
+  const touchee = (ligne, index) => Boolean(ligne.b[index] || ligne.d[index] || ligne.ar[index] || ligne.r[index]);
 
-  // « Mon niveau » (et son module, « Mon module ») : une compétence grise
-  // déjà COMMENCÉE d'abord (jouée au test sans être prouvée, J'apprends fait
-  // ou entraînement raté) — on finit ce qu'on a commencé : après « Le niveau
-  // 3, tu vas l'apprendre maintenant », c'est lui qui vient (31/10) ; sinon
-  // la première compétence grise de l'ordre de la carte. null quand tout est
-  // entré.
-  // `palier` (lot 1 « la séance ») : jusqu'où va l'appli — au-delà, aucune
-  // compétence n'est « la courante » (ni test ni leçon). 4 : tout.
-  // Lot F4 « personne ne reste bloqué » : un niveau « à voir en classe »
-  // (3 J'apprends arrêtés) attend son jour de retour (`m`) ; le reste de son
-  // module attend avec lui (on n'apprend pas le niveau 2 sans le 1). Le
-  // parcours passe à la suite. `aujourdhui` : le jour de la séance.
+  // Une étoile « à voir en classe » (3 J'apprends arrêtés) attend son jour
+  // de retour : elle ne se joue pas d'ici là. `aujourdhui` : le jour de la
+  // séance.
   function enAttente(ligne, index, aujourdhui) {
-    return !ligne.b[index] && Boolean(ligne.e[index]) && ligne.e[index] > aujourdhui;
+    return !ligne.b[index] && arretsDe(ligne, index) >= SEUILS.apprends.arrets && Boolean(ligne.e[index]) && ligne.e[index] > aujourdhui;
   }
 
-  function competenceCourante(parcours, carte, palier = SEUILS.seance.paliers, aujourdhui = jourLocal()) {
-    let premiere = null;
-    const jusqua = palierDeSeance(palier);
-    const bloques = new Set();
-    for (const {module: id, niveau} of parcoursConstruit(carte)) {
-      if (jusqua < SEUILS.seance.paliers && palierDe(carte, id, niveau) > jusqua) continue;
-      const ligne = ligneDe(parcours, id);
-      if (ligne.b[niveau - 1]) continue;
-      if (bloques.has(id)) continue;
-      if (ligne.e.some((_, index) => index < niveau && enAttente(ligne, index, aujourdhui))) { bloques.add(id); continue; }
-      if (ligne.f[niveau - 1] || ligne.a[niveau - 1]) return {module: id, niveau};
-      if (!premiere) premiere = {module: id, niveau};
-    }
-    return premiere;
-  }
-
-  // Lot 7-0 (14/11/2026, choix de Gwenaël : « le test s'arrête au palier en
-  // cours ») : le test « Tu connais déjà ? » ne monte que jusqu'au palier
-  // où l'élève travaille — celui de sa compétence courante, jamais au-delà
-  // du réglage du professeur. On finit les bases avant le CM1 : une marche
-  // de CM1 ratée au test ne passe plus devant les bases.
-  // Rend les marches à jouer, {de, jusqua} (des numéros de niveau), ou null
-  // s'il n'y a rien à tester : `de`, le premier niveau pas encore entré
-  // (1 pour un module intact) ; `jusqua`, le dernier niveau du palier en
-  // cours.
-  function marchesDuTest(parcours, carte, id, palier = SEUILS.seance.paliers, aujourdhui = jourLocal()) {
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return null;
-    const ligne = ligneDe(parcours, id);
-    const courante = competenceCourante(parcours, carte, palier, aujourdhui);
-    const plafond = Math.min(palierDeSeance(palier), courante ? palierDe(carte, courante.module, courante.niveau) || SEUILS.seance.paliers : SEUILS.seance.paliers);
-    const de = ligne.b.findIndex(boite => !boite) + 1;
-    if (!de) return null;
-    let jusqua = 0;
-    for (let n = de; n <= NIVEAUX[id]; n += 1) {
-      const p = palierDe(carte, id, n);
-      if (!p || p > plafond) break;
-      jusqua = n;
-    }
-    return jusqua ? {de, jusqua} : null;
-  }
-
-  // Lot 7-0 : les marches d'un palier plus haut d'un module déjà commencé
-  // ont leur test, elles aussi (de la marche suivante jusqu'au palier en
-  // cours). Lot 7e-2 (choix de Gwenaël du 15/11, « retester au lieu
-  // d'imposer J'apprends ») : de même pour toute marche pas encore entrée
-  // d'un module commencé, même au palier en cours — après une marche ratée,
-  // le niveau suivant a son « Tu connais déjà ? » quand le parcours y arrive
-  // (avant : il s'apprenait sans test). Rater le niveau 1 ne dit rien du
-  // niveau 2, le raté date souvent de plusieurs semaines, un test coûte une
-  // minute et J'apprends dix. La compétence courante : rien n'y a été joué
-  // ni appris, et le niveau d'avant est entré.
-  function testDeReprise(parcours, carte, courante) {
-    if (!courante || courante.niveau < 2) return false;
-    const ligne = ligneDe(parcours, courante.module);
-    const i = courante.niveau - 1;
-    return !estIntact(ligne) && !ligne.b[i] && !ligne.f[i] && !ligne.a[i] && Boolean(ligne.b[i - 1]);
-  }
-
-  function moduleCourant(parcours, carte, palier = SEUILS.seance.paliers, aujourdhui = jourLocal()) {
-    const courante = competenceCourante(parcours, carte, palier, aujourdhui);
-    return courante ? courante.module : null;
-  }
-
-  // Une compétence est ROUGE pour la séance (« le rouge d'abord ») quand elle
-  // est en boîte 1, ou quand elle a été ratée aujourd'hui dans Mes calculs du
-  // jour (elle revient demain avec au moins un échec) : une compétence sue
-  // ratée descend en boîte 3 et compte comme rouge pour la journée seulement.
-  // Une compétence mise de côté (3 échecs de suite) n'est pas rouge pendant
-  // ses jours de côté ; le jour où elle revient, elle l'est (boîte 1).
-  function estRouge(ligne, index, aujourdhui) {
-    if (!ligne.b[index]) return false;
-    if (estDeCote(ligne, index, aujourdhui)) return false;
-    return ligne.b[index] === 1 || (ligne.x[index] >= 1 && ligne.e[index] > aujourdhui);
-  }
-
-  // Mise de côté : 3 échecs de suite dans Mes calculs du jour, et ses jours
-  // de côté ne sont pas finis.
-  function estDeCote(ligne, index, aujourdhui) {
-    return Boolean(ligne.b[index]) && ligne.x[index] >= SEUILS.rattrapage.deCote && ligne.e[index] > aujourdhui;
-  }
-
-  // « À voir en classe » (pour la page prof, lot 2b) : 3 échecs de suite,
-  // tant qu'un calcul du jour juste ne l'a pas remise à zéro.
-  // Lot F4 : aussi un niveau PAS ENTRÉE dont J'apprends s'est arrêté 3 fois
-  // (« personne ne reste bloqué ») — tant qu'il n'est pas appris.
+  // « À voir en classe » (pour l'élève et pour la page du professeur) :
+  //  - une étoile pas tenue dont J'apprends s'est arrêté 3 fois (lot F4), ou
+  //    qui a été perdue 3 fois (l'élève qui gagne, perd et regagne en
+  //    boucle) ;
+  //  - une étoile tenue, perdue 3 fois, tant qu'elle n'est pas solide.
   function aVoirEnClasse(ligne, index) {
-    if (!ligne.b[index]) return arretsDe(ligne, index) >= SEUILS.apprends.arrets;
-    return ligne.x[index] >= SEUILS.rattrapage.deCote;
+    const perdues = ligne.pe[index] >= SEUILS.retour.perdues;
+    if (!ligne.b[index]) return perdues || arretsDe(ligne, index) >= SEUILS.apprends.arrets;
+    return perdues && ligne.b[index] < SEUILS.revision.su;
   }
 
-  // « Entraînée avec l'aide aujourd'hui » : `t` ne vaut que pour le jour `vu`.
-  function entraineeAujourdhui(ligne, index, aujourdhui) {
-    return ligne.vu === aujourdhui && ligne.t[index] === 1;
+  // Une étoile est PASSÉE quand celle d'après peut s'ouvrir : elle a été
+  // gagnée un jour (perdue depuis, elle ne referme rien) ; ou elle est « à
+  // voir en classe » après 3 arrêts et sa première semaine d'attente est
+  // finie (un 4e arrêt n'a pu arriver qu'après) — la ligne ne reste jamais
+  // bloquée.
+  function passee(ligne, index, aujourdhui) {
+    if (dejaGagnee(ligne, index) || tenue(ligne, index)) return true;
+    const arrets = arretsDe(ligne, index);
+    if (arrets < SEUILS.apprends.arrets) return false;
+    return arrets > SEUILS.apprends.arrets || !ligne.e[index] || ligne.e[index] <= aujourdhui;
   }
 
-  // Les compétences rouges des modules construits, dans l'ordre de la
-  // carte ; `nonEntrainees` : seulement celles qui n'ont pas encore été
-  // entraînées aujourd'hui.
-  function rouges(parcours, carte, aujourdhui, {nonEntrainees = false} = {}) {
-    return parcoursConstruit(carte).filter(({module: id, niveau}) => {
-      const ligne = parcours.modules[id];
-      return ligne && estRouge(ligne, niveau - 1, aujourdhui) && !(nonEntrainees && entraineeAujourdhui(ligne, niveau - 1, aujourdhui));
+  // La PORTE d'un étage : ouverte quand toutes les étoiles de l'étage d'en
+  // dessous ont été gagnées un jour — une étoile « à voir en classe » ne la
+  // bloque pas (elle retient seulement la ceinture). Rien de ce qui est
+  // ouvert ne se referme : une ceinture déjà gagnée, un test de ceinture déjà
+  // joué ou une étoile déjà touchée dans l'étage le gardent ouvert, même si
+  // une étoile d'en dessous se perd ou si une copie plus ancienne revient.
+  function porteOuverte(parcours, plan, etage) {
+    if (etage <= 1) return true;
+    if (etage > SEUILS.ceintures.nombre || !etoilesDeLEtage(plan, etage).length) return false;
+    if (parcours.ceintures[etage - 2] || parcours.paliers[etage - 1]) return true;
+    if (etoilesDeLEtage(plan, etage).some(e => touchee(ligneDe(parcours, e.module), e.index))) return true;
+    const dessous = etoilesDeLEtage(plan, etage - 1);
+    if (!dessous.length) return porteOuverte(parcours, plan, etage - 1);
+    return porteOuverte(parcours, plan, etage - 1) && dessous.every(e => {
+      const ligne = ligneDe(parcours, e.module);
+      return dejaGagnee(ligne, e.index) || tenue(ligne, e.index) || aVoirEnClasse(ligne, e.index);
     });
   }
 
-  // L'état d'un module dans le parcours, et la couleur de chaque compétence :
-  //   bientot  pas encore construit ;
-  //   su       il a été su (il reste coché) ;
-  //   revoir   su, mais une de ses compétences est rouge ;
-  //   encours  commencé ;
-  //   libre    pas commencé.
-  function etatModule(parcours, id, carte, palier = SEUILS.seance.paliers, aujourdhui = jourLocal()) {
-    const fiche = ficheCarte(carte, id);
-    const ligne = ligneDe(parcours, id);
-    const courante = competenceCourante(parcours, carte, palier, aujourdhui);
-    const base = {
-      id,
-      niveaux: NIVEAUX[id],
-      couleurs: ligne.b.map(couleurDeBoite),
-      paliers: ligne.b.map((_, index) => palierDe(carte, id, index + 1)),
-      ici: courante && courante.module === id ? courante.niveau : 0
+  // L'étoile qui tient celle-ci fermée (sa clé), ou null : celle d'avant
+  // dans sa ligne d'abord, puis ses liens « d'abord ».
+  function fermeePar(parcours, plan, etoile, aujourdhui) {
+    const pasPassee = cle => {
+      const autre = plan.etoiles.get(cle);
+      return Boolean(autre) && !passee(ligneDe(parcours, autre.module), autre.index, aujourdhui);
     };
-    if (!fiche || !fiche.construit) return Object.assign(base, {etat: "bientot"});
-    if (ligne.ok) return Object.assign(base, {etat: ligne.b.includes(1) ? "revoir" : "su"});
-    return Object.assign(base, {etat: estIntact(ligne) ? "libre" : "encours"});
+    if (etoile.avant && pasPassee(etoile.avant)) return etoile.avant;
+    return etoile.dabord.find(pasPassee) || null;
   }
 
-  // Les compétences par palier (sues, entrées, total) et par couleur, et
-  // les modules sus. Le palier est celui du niveau (carte v2).
+  // L'état d'une étoile, pour l'élève — TROIS dessins (choix de Gwenaël du
+  // 22/11) : `fermee` (un cadenas), `aGagner` (une étoile vide), `gagnee`
+  // (une étoile pleine). Le reste se dit dans le panneau de l'étoile et sert
+  // à « Continuer » :
+  //   visible       son étage est dans le réglage du professeur ;
+  //   dabord        fermée : l'étoile à gagner d'abord (« Fermée. D'abord :
+  //                 … ») ; null quand c'est la porte de l'étage qui est fermée ;
+  //   aRegagner     pas tenue, mais déjà gagnée un jour (« Tu l'avais gagnée.
+  //                 Regagne ton étoile. ») ;
+  //   enCours       un J'apprends commencé (« On reprend là où tu en
+  //                 étais. »), `reprise` : 1 au dessin, 2 sans aide ;
+  //   aVoir         « à voir en classe » ; `attend` : le jour où elle se
+  //                 rejoue (null : elle se joue) ;
+  //   tente         "" « Je tente » permis ; "aujourdhui" : déjà tenté et
+  //                 raté aujourd'hui ; "ferme" : raté deux fois, fermé pour
+  //                 de bon (« Ce calcul, on l'apprend ensemble. ») ;
+  //   actions       ce que le panneau propose : {tente, apprends, entraine} ;
+  //   boite, solide, due (elle revient aujourd'hui), second (son 2e calcul
+  //   attend), premierRetour (gagnée sans leçon, jamais revenue : son
+  //   retour montre un exemple résolu) — pour une étoile gagnée.
+  // `prof` (le mode professeur) : toutes les étoiles sont ouvertes.
+  function etatDe(parcours, plan, etoile, aujourdhui, reglage, prof = false) {
+    const ligne = ligneDe(parcours, etoile.module);
+    const i = etoile.index;
+    const visible = etoile.etage <= reglage;
+    const base = {cle: etoile.cle, module: etoile.module, niveau: etoile.niveau, etage: etoile.etage, ligne: etoile.nomLigne, place: etoile.place,
+      type: etoile.type, visible, boite: ligne.b[i], solide: ligne.b[i] >= SEUILS.revision.su, dejaGagnee: dejaGagnee(ligne, i) || tenue(ligne, i),
+      aVoir: aVoirEnClasse(ligne, i), dabord: null, aRegagner: false, enCours: false, reprise: 0, attend: null, tente: "",
+      due: false, second: false, premierRetour: false, actions: {tente: false, apprends: false, entraine: false}};
+    if (tenue(ligne, i)) {
+      return Object.assign(base, {etat: "gagnee", due: ligne.e[i] <= aujourdhui, second: Boolean(ligne.x[i] & X_SECOND),
+        premierRetour: !ligne.a[i], actions: {tente: false, apprends: false, entraine: visible || prof}});
+    }
+    const porte = prof || (visible && porteOuverte(parcours, plan, etoile.etage));
+    const bloque = prof || !porte || touchee(ligne, i) ? null : fermeePar(parcours, plan, etoile, aujourdhui);
+    if (!porte || bloque) return Object.assign(base, {etat: "fermee", dabord: bloque});
+    const attend = enAttente(ligne, i, aujourdhui) ? ligne.e[i] : null;
+    // (Fermé « aujourd'hui » : raté CE jour-là, à l'égalité — une date d'un
+    // autre jour, même à venir sur une horloge fausse, ne ferme rien.)
+    const tente = ligne.r[i] >= SEUILS.tente.essais ? "ferme" : ligne.r[i] && ligne.q[i] === aujourdhui ? "aujourdhui" : "";
+    return Object.assign(base, {etat: "aGagner", aRegagner: dejaGagnee(ligne, i), enCours: ligne.ar[i] > 0 && !attend, reprise: repriseDe(ligne, i),
+      attend, tente, actions: {tente: !attend && !tente, apprends: !attend, entraine: false}});
+  }
+
+  function etatEtoile(parcours, carte, id, niveau, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, prof = false} = {}) {
+    const plan = planDeCarte(carte);
+    const etoile = plan.etoiles.get(`${id}-${niveau}`);
+    if (!etoile) return null;
+    return etatDe(normaliserParcours(parcours, {aujourdhui}), plan, etoile, aujourdhui, palierDeSeance(palier), prof);
+  }
+
+  // Une étoile gagnée sans leçon (par « Je tente » ou par un test de
+  // ceinture) et jamais revenue depuis : son premier retour dans Mes calculs
+  // du jour montre un exemple résolu avant une écriture que la leçon montre
+  // (lot C3 ; la page sait laquelle). `a` passe à 1 quand la leçon est faite
+  // ou quand ce premier retour est passé.
+  function premierRetourSansLecon(parcours, id, niveau) {
+    if (!parcours || !parcours.modules || !Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return false;
+    const ligne = parcours.modules[id];
+    const index = Number(niveau) - 1;
+    if (!ligne || !Array.isArray(ligne.b) || !Array.isArray(ligne.a) || !(index >= 0 && index < NIVEAUX[id])) return false;
+    return ligne.b[index] > 0 && !ligne.a[index];
+  }
+
+  // Les étoiles par étage (tenues, solides, total) et par couleur. (La page
+  // du professeur lit `sues` : les solides, et `entrees` : les tenues.)
   function compter(parcours, carte) {
     const paliers = new Map();
     const competences = {gris: 0, rouge: 0, bleu: 0, vert: 0};
@@ -1224,6 +1194,7 @@
     normaliserCarte(carte).modules.filter(fiche => Object.prototype.hasOwnProperty.call(NIVEAUX, fiche.id)).forEach(fiche => {
       const ligne = ligneDe(parcours, fiche.id);
       let dansLaCarte = false;
+      let tousSolides = true;
       ligne.b.forEach((boite, index) => {
         const palier = palierDe(carte, fiche.id, index + 1);
         if (!palier) return;
@@ -1232,12 +1203,13 @@
         compte.total += 1;
         if (boite) compte.entrees += 1;
         if (boite >= SEUILS.revision.su) compte.sues += 1;
+        else tousSolides = false;
         paliers.set(palier, compte);
         competences[couleurDeBoite(boite)] += 1;
       });
       if (dansLaCarte) {
         modules += 1;
-        if (estSu(parcours, fiche.id)) modulesSus += 1;
+        if (tousSolides) modulesSus += 1;
       }
     });
     const liste = [...paliers.values()].sort((x, y) => x.palier - y.palier);
@@ -1254,72 +1226,226 @@
 
   // ------------------------------------------------------------ les ceintures
   //
-  // Lot 4 « les ceintures » (14/11/2026, choix de Gwenaël) : une ceinture
-  // par palier — jaune (les bases), orange (CM1), verte (CM2), bleue (vers
-  // la 6e) ; tout le monde part en ceinture blanche. Un palier est FINI
-  // quand toutes ses compétences CONSTRUITES sont solides (boîte 4 ou plus)
-  // en même temps : le même « fini » que l'onglet du palier dans Mon
-  // parcours. Les ceintures se gagnent dans l'ordre : l'orange attend la
-  // jaune (un élève fort peut finir le CM1 avant les bases : les deux
-  // viennent ensemble). Une ceinture gagnée ne se reprend JAMAIS — ni quand
-  // un niveau redevient « à revoir », ni quand de nouveaux modules
-  // arrivent dans son palier.
-  // Les barrettes (choix de Gwenaël) : sur la ceinture qu'on porte, une par
-  // quart du palier suivant rendu solide UN JOUR (la date `s`, qui ne bouge
-  // plus) — 3 au plus ; elles ne se perdent donc pas. Rien n'est rangé pour
-  // elles : elles se recomptent.
+  // Une ceinture par étage — jaune (les bases), orange (CM1), verte (CM2),
+  // bleue (vers la 6e) ; tout le monde part en ceinture blanche. Lot K1
+  // (choix de Gwenaël du 21/11, 20 h 53) : la ceinture d'un étage est gagnée
+  // quand TOUTES ses étoiles sont tenues en même temps (plus « toutes
+  // solides ») ; une étoile « à voir en classe » ne bloque pas la porte de
+  // l'étage suivant, mais elle retient la ceinture. Les ceintures se gagnent
+  // dans l'ordre, jamais au-delà du réglage du professeur, et une ceinture
+  // gagnée ne se reprend JAMAIS.
+  // La ceinture de l'étage en cours se remplit de sa couleur QUART PAR QUART
+  // (choix de Gwenaël du 22/11), « 17 étoiles sur 44 » à côté. Une étoile
+  // perdue fait reculer le compte, donc parfois un quart ; un CHANGEMENT DE
+  // CARTE (des étoiles ajoutées à un étage), jamais (relecture de Codex du
+  // 22/11, G9) : `quarts` garde, par étage, le remplissage que l'élève avait
+  // avant le changement (voir garderRemplissage), et l'écran ne montre
+  // jamais moins.
 
-  // Les compétences construites d'un palier : [{module, niveau, ligne}].
+  // Les étoiles d'un étage : [{module, niveau, ligne}].
   function competencesDuPalier(parcours, carte, palier) {
-    return parcoursConstruit(carte).filter(({module: id, niveau}) => palierDe(carte, id, niveau) === palier)
-      .map(({module: id, niveau}) => ({module: id, niveau, ligne: ligneDe(parcours, id)}));
+    return etoilesDeLEtage(planDeCarte(carte), palier).map(e => ({module: e.module, niveau: e.niveau, ligne: ligneDe(parcours, e.module)}));
   }
 
-  // Donne les ceintures que les boîtes méritent (dans l'ordre, à la suite
-  // de celles déjà gagnées). Modifie `copie` ; rend les paliers gagnés.
-  // Correctif Codex (14/11/2026) : jamais au-delà du palier réglé par le
-  // professeur (`palierMax`) — une classe ramenée aux bases ne reçoit pas
-  // l'orange, même si le CM1 était déjà solide ; elle viendra à la première
-  // étape finie après que le palier aura été relevé.
+  // Donne les ceintures que les étoiles méritent (dans l'ordre, à la suite
+  // de celles déjà gagnées). Modifie `copie` ; rend les étages gagnés.
   function gagnerCeintures(copie, carte, aujourdhui, palierMax = SEUILS.seance.paliers) {
     const gagnees = [];
     if (!carte) return gagnees;
-    if (!Array.isArray(copie.ceintures)) copie.ceintures = ceinturesVides();
+    const plan = planDeCarte(carte);
     const jusqua = Math.min(SEUILS.ceintures.nombre, palierDeSeance(palierMax));
-    for (let palier = 1; palier <= jusqua; palier += 1) {
-      if (copie.ceintures[palier - 1]) continue;
-      const liste = competencesDuPalier(copie, carte, palier);
-      if (!liste.length || !liste.every(c => c.ligne.b[c.niveau - 1] >= SEUILS.revision.su)) break;
-      copie.ceintures[palier - 1] = aujourdhui;
-      gagnees.push(palier);
+    for (let etage = 1; etage <= jusqua; etage += 1) {
+      if (copie.ceintures[etage - 1]) continue;
+      const liste = etoilesDeLEtage(plan, etage);
+      if (!liste.length || !liste.every(e => tenue(ligneDe(copie, e.module), e.index))) break;
+      copie.ceintures[etage - 1] = aujourdhui;
+      gagnees.push(etage);
     }
     return gagnees;
   }
 
+  // Les quarts remplis de la ceinture d'un étage (0 à 4) : ce que les
+  // étoiles tenues donnent, jamais moins que ce qu'un changement de carte a
+  // demandé de garder ; 4 seulement quand tout est tenu.
+  function quartsDe(parcours, plan, etage) {
+    const liste = etoilesDeLEtage(plan, etage);
+    if (!liste.length) return {etoiles: 0, total: 0, quarts: 0};
+    const etoiles = liste.filter(e => tenue(ligneDe(parcours, e.module), e.index)).length;
+    const calcule = Math.floor(SEUILS.ceintures.quarts * etoiles / liste.length);
+    const garde = etoiles === liste.length ? calcule : Math.min(SEUILS.ceintures.quarts - 1, entier(parcours.quarts[etage - 1], 0, SEUILS.ceintures.quarts - 1));
+    return {etoiles, total: liste.length, quarts: Math.max(calcule, garde)};
+  }
+
+  // Un changement de carte (G9) : à appeler par la reprise d'une version
+  // quand des étoiles ont été ajoutées à un étage, ou retirées. Pour chaque
+  // étage, le remplissage que l'élève voyait avec `carteAvant` est gardé
+  // dans `quarts` (jamais moins que ce qui y était déjà) : l'écran ne
+  // recule pas. Rend une copie.
+  function garderRemplissage(parcours, carteAvant, {aujourdhui = jourLocal()} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carteAvant);
+    for (let etage = 1; etage <= SEUILS.ceintures.nombre; etage += 1) {
+      const avant = Math.min(SEUILS.ceintures.quarts - 1, quartsDe(copie, plan, etage).quarts);
+      copie.quarts[etage - 1] = Math.max(copie.quarts[etage - 1], avant);
+    }
+    return copie;
+  }
+
   // Où en est l'élève : la ceinture qu'il porte (0 blanche, 1 jaune…, 4
-  // bleue), la prochaine (null : plus rien à gagner jusqu'au palier réglé
-  // par le professeur), ses barrettes, et pour la prochaine : combien de
-  // compétences sont solides maintenant sur combien, et combien l'ont été
-  // un jour.
+  // bleue), la prochaine (null : plus rien à gagner jusqu'au réglage du
+  // professeur), et pour la prochaine : ses étoiles tenues sur combien
+  // (« 17 étoiles sur 44 »), ses quarts remplis (0 à 3). `barrettes`,
+  // `solides` et `unJour` : ce que lisent encore la page du professeur et
+  // la tuile de Mon espace (les quarts, les étoiles tenues, les étoiles
+  // gagnées un jour).
   function etatCeintures(parcours, carte, palierMax = SEUILS.seance.paliers) {
     const p = normaliserParcours(parcours);
+    const plan = planDeCarte(carte);
     const dates = p.ceintures.slice();
     let porte = 0;
     while (porte < SEUILS.ceintures.nombre && dates[porte]) porte += 1;
     const jusqua = palierDeSeance(palierMax);
     const suivante = porte + 1;
-    const liste = suivante <= jusqua ? competencesDuPalier(p, carte, suivante) : [];
+    const liste = suivante <= jusqua ? etoilesDeLEtage(plan, suivante) : [];
     if (!liste.length) {
-      return {porte, dates, prochaine: null, barrettes: 0, solides: 0, unJour: 0, total: 0,
+      return {porte, dates, prochaine: null, etoiles: 0, quarts: 0, barrettes: 0, solides: 0, unJour: 0, total: 0,
         fini: porte >= jusqua || !construits(carte).length};
     }
-    const solides = liste.filter(c => c.ligne.b[c.niveau - 1] >= SEUILS.revision.su).length;
-    const unJour = liste.filter(c => c.ligne.b[c.niveau - 1] && c.ligne.s[c.niveau - 1]).length;
-    const barrettes = Math.min(SEUILS.ceintures.barrettes, Math.floor(SEUILS.ceintures.nombre * unJour / liste.length));
-    return {porte, dates, prochaine: suivante, barrettes, solides, unJour, total: liste.length, fini: false};
+    const q = quartsDe(p, plan, suivante);
+    const quarts = Math.min(SEUILS.ceintures.quarts - 1, q.quarts);
+    const unJour = liste.filter(e => dejaGagnee(ligneDe(p, e.module), e.index)).length;
+    return {porte, dates, prochaine: suivante, etoiles: q.etoiles, quarts, barrettes: Math.min(SEUILS.ceintures.barrettes, quarts),
+      solides: q.etoiles, unJour, total: q.total, fini: false};
   }
 
-  // ------------------------------------------------------------ la séance guidée
+  // ------------------------------------------- « Tente toute la ceinture »
+  //
+  // Le test de palier du lot F4, devenu un CHOIX (lot K1) : en haut de la
+  // carte d'un étage où rien n'est gagné ni joué, l'élève peut tenter tout
+  // l'étage d'un coup, 12 calculs, une fois par étage. Il peut l'ignorer.
+
+  // Les étoiles du test d'un étage : le dernier niveau de chaque module dans
+  // l'étage, les 12 derniers dans l'ordre de la carte ; s'il y en a moins de
+  // 12, complété par les étoiles d'en dessous (les dernières de l'étage).
+  // Rendues dans l'ordre de la carte, du plus simple au plus dur.
+  // [{module, niveau}].
+  function calculsDuTestDeCeinture(carte, etage) {
+    const liste = etoilesDeLEtage(planDeCarte(carte), etage);
+    const derniers = new Map();
+    liste.forEach(e => derniers.set(e.module, e));
+    let choisies = [...derniers.values()].sort((x, y) => x.rang - y.rang).slice(-SEUILS.ceinture.calculs);
+    if (choisies.length < SEUILS.ceinture.calculs) {
+      const autres = liste.filter(e => !choisies.includes(e)).slice(-(SEUILS.ceinture.calculs - choisies.length));
+      choisies = choisies.concat(autres).sort((x, y) => x.rang - y.rang);
+    }
+    return choisies.map(e => ({module: e.module, niveau: e.niveau}));
+  }
+
+  // Un étage est COMMENCÉ dès qu'une de ses étoiles est gagnée, a été
+  // gagnée, a un J'apprends arrêté ou un « Je tente » raté.
+  function etageCommence(parcours, plan, etage) {
+    return etoilesDeLEtage(plan, etage).some(e => touchee(ligneDe(parcours, e.module), e.index));
+  }
+
+  // « Tente toute la ceinture » est-il proposé pour cet étage ? L'étage est
+  // dans le réglage du professeur, sa porte est ouverte, son test n'a jamais
+  // été joué, rien n'y est commencé, et il a assez d'étoiles pour 12 calculs.
+  function testDeCeinturePropose(parcours, plan, etage, reglage) {
+    if (etage < 1 || etage > reglage || parcours.paliers[etage - 1]) return false;
+    if (etoilesDeLEtage(plan, etage).length < SEUILS.ceinture.calculs) return false;
+    // (La porte se lit avant « commencé » : un étage commencé a sa porte
+    // ouverte pour toujours.)
+    return !etageCommence(parcours, plan, etage) && porteOuverte(parcours, plan, etage);
+  }
+
+  // Le jour où revient une étoile placée par un test de ceinture : le
+  // premier jour, à partir du 7e, où moins de 8 étoiles sont déjà attendues
+  // (décision du lot K0 : « toutes entre 7 et 13 jours » faisait jusqu'à 19
+  // retours le même jour).
+  function jourDeRetourEtale(charge, aujourdhui) {
+    for (let n = SEUILS.ceinture.apres; n < SEUILS.ceinture.apres + 400; n += 1) {
+      const jour = ajouterJours(aujourdhui, n);
+      if ((charge.get(jour) || 0) < SEUILS.ceinture.parJour) {
+        charge.set(jour, (charge.get(jour) || 0) + 1);
+        return jour;
+      }
+    }
+    return ajouterJours(aujourdhui, SEUILS.ceinture.apres);
+  }
+
+  // ------------------------------------------------------- la carte de l'élève
+
+  // Tout ce que la carte montre, étage par étage : la porte, la ceinture
+  // (gagnée ou en train de se remplir), « Tente toute la ceinture », les
+  // lignes et l'état de chaque étoile. Les étages au-delà du réglage du
+  // professeur ne sont pas rendus (`prof` : le mode professeur, tout est
+  // ouvert et tout est rendu).
+  function carteEleve(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, prof = false} = {}) {
+    const p = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = prof ? SEUILS.ceintures.nombre : palierDeSeance(palier);
+    const etages = plan.etages.filter(e => e.etoiles.length && e.etage <= reglage).map(({etage, lignes}) => {
+      const q = quartsDe(p, plan, etage);
+      return {
+        etage,
+        ouvert: prof || porteOuverte(p, plan, etage),
+        ceinture: p.ceintures[etage - 1],
+        etoiles: q.etoiles, total: q.total, quarts: p.ceintures[etage - 1] ? SEUILS.ceintures.quarts : Math.min(SEUILS.ceintures.quarts - 1, q.quarts),
+        test: {propose: !prof && testDeCeinturePropose(p, plan, etage, reglage), joue: p.paliers[etage - 1]},
+        lignes: lignes.map(l => ({nom: l.nom, etoiles: l.etoiles.map(e => etatDe(p, plan, e, aujourdhui, reglage, prof))}))
+      };
+    });
+    // L'étage où l'élève travaille : le premier étage ouvert qui a encore
+    // une étoile à gagner (le dernier ouvert quand tout est gagné).
+    const ouverts = etages.filter(e => e.ouvert);
+    const courant = ouverts.find(e => e.etoiles < e.total) || ouverts[ouverts.length - 1] || null;
+    return {etages, courant: courant ? courant.etage : 0, etoiles: etages.reduce((s, e) => s + e.etoiles, 0), total: etages.reduce((s, e) => s + e.total, 0)};
+  }
+
+  // -------------------------------------------------------- Mes calculs du jour
+  //
+  // Ce qui est DÛ : les étoiles tenues dont l'échéance est arrivée, dans le
+  // réglage du professeur — une étoile gagnée dans un étage que le réglage
+  // ne montre plus garde son étoile, mais ne revient pas tant que le réglage
+  // ne remonte pas (relecture de Codex du 22/11, G8). L'ordre : l'étoile
+  // dont le 2e calcul attend d'abord (G2 : il est reposé, même si la page a
+  // été fermée entre les deux, même sur un autre appareil) ; puis les plus
+  // anciennes (l'échéance, puis la boîte la plus basse, puis l'ordre de la
+  // carte).
+  function etoilesDues(parcours, plan, aujourdhui, reglage) {
+    const dues = [];
+    plan.ordre.forEach(etoile => {
+      if (etoile.etage > reglage) return;
+      const ligne = parcours.modules[etoile.module];
+      if (!ligne || !tenue(ligne, etoile.index) || ligne.e[etoile.index] > aujourdhui) return;
+      dues.push({etoile, echeance: ligne.e[etoile.index], boite: ligne.b[etoile.index], second: Boolean(ligne.x[etoile.index] & X_SECOND), sansLecon: !ligne.a[etoile.index]});
+    });
+    return dues.sort((p, q) => Number(q.second) - Number(p.second) || (p.echeance < q.echeance ? -1 : p.echeance > q.echeance ? 1 : 0)
+      || p.boite - q.boite || p.etoile.rang - q.etoile.rang);
+  }
+
+  // Le paquet à jouer maintenant : `maximum` étoiles dues au plus (10 par
+  // défaut ; dans une séance qui a un paquet en cours, ce qu'il en reste).
+  // [{module, niveau, du: true, second, premierRetour}] — `second` : c'est
+  // son 2e calcul qui est attendu (un calcul d'une autre sorte que le
+  // premier) ; `premierRetour` : un exemple résolu d'abord (lot C3).
+  function tirerCalculsDuJour(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, maximum = null} = {}) {
+    const p = normaliserParcours(parcours, {aujourdhui});
+    const dues = etoilesDues(p, planDeCarte(carte), aujourdhui, palierDeSeance(palier));
+    const enCours = seanceOuverte(p, aujourdhui) ? p.seance.p[PLAN.paquet] : 0;
+    const nombre = Number.isInteger(maximum) && maximum > 0 ? maximum : enCours || SEUILS.jour.paquet;
+    return dues.slice(0, nombre).map(c => ({module: c.etoile.module, niveau: c.etoile.niveau, du: true, second: c.second, premierRetour: c.sansLecon}));
+  }
+
+  // Combien d'étoiles sont dues (« Mes calculs du jour : encore 14 »), et
+  // combien ont 3 jours de retard ou plus.
+  function compterDues(parcours, plan, aujourdhui, reglage) {
+    const dues = etoilesDues(parcours, plan, aujourdhui, reglage);
+    const limite = ajouterJours(aujourdhui, -SEUILS.jour.retard);
+    return {dues: dues.length, enRetard: dues.filter(c => c.echeance <= limite).length};
+  }
+
+  // ------------------------------------------------------------------ la séance
 
   function aujourdhuiFinie(parcours, aujourdhui) {
     return parcours.seances.includes(aujourdhui);
@@ -1331,388 +1457,277 @@
     return parcours.seance.jour === aujourdhui && parcours.seance.p[PLAN.ouverte] === 1;
   }
 
-  // Un entraînement raté aujourd'hui : rien de nouveau avant demain.
-  function nouveauteArretee(parcours, aujourdhui) {
-    return parcours.seance.jour === aujourdhui && parcours.seance.p[PLAN.nouveaute] === NOUVEAUTE.arretee;
-  }
-
-  // Toutes les compétences entrées dans les boîtes, des modules construits.
-  function competencesEntrees(parcours, carte) {
-    const liste = [];
-    construits(carte).forEach((fiche, ordre) => {
-      const ligne = parcours.modules[fiche.id];
-      if (!ligne) return;
-      ligne.b.forEach((boite, index) => {
-        if (boite) liste.push({module: fiche.id, niveau: index + 1, boite, echeance: ligne.e[index], echecs: ligne.x[index], appris: ligne.a[index], ordre: ordre * 10 + index});
-      });
-    });
-    return liste;
-  }
-
-  const parRetard = (p, q) => p.boite - q.boite || String(p.echeance).localeCompare(String(q.echeance)) || p.ordre - q.ordre;
-
-  // Mes calculs du jour : un calcul par compétence DUE (31/10 : plus de
-  // calculs d'entretien — réviser avant l'oubli n'apporte presque rien), les
-  // plus en retard d'abord (boîte la plus basse, puis échéance la plus
-  // ancienne), 20 au plus. Rien de dû : l'étape disparaît. Une compétence
-  // revenue de sa mise de côté ne se joue pas ici avant d'avoir refait
-  // J'apprends (elle revient par la séance). La seconde séance d'un même
-  // jour ne rejoue que ce qui est encore dû.
-  function tirerCalculsDuJour(parcours, carte, {aujourdhui = jourLocal()} = {}) {
-    return competencesEntrees(parcours, carte)
-      .filter(c => c.echeance <= aujourdhui && !(c.echecs >= SEUILS.rattrapage.deCote && !c.appris))
-      .sort(parRetard).slice(0, SEUILS.jour.maximum)
-      .map(c => ({module: c.module, niveau: c.niveau, du: true}));
-  }
-
-  // Les « Je m'entraîne encore » joués aujourd'hui (`t`), et la place qui
-  // reste dans cette séance : 3 par séance (« Encore une séance » en
-  // redonne 3).
-  function rattrapagesPossibles(parcours, aujourdhui) {
-    const faits = Object.values(parcours.modules).reduce((somme, ligne) => somme + (ligne.vu === aujourdhui ? ligne.t.filter(Boolean).length : 0), 0);
-    const finies = parcours.seances.filter(jour => jour === aujourdhui).length;
-    return faits < SEUILS.rattrapage.parSeance * (finies + 1);
-  }
-
-  // La compétence rouge à entraîner maintenant : parmi celles qui n'ont pas
-  // encore été entraînées aujourd'hui, la boîte la plus basse, puis l'ordre
-  // de la carte ; null s'il n'y en a pas, ou si la séance en a déjà eu 3.
-  function aEntrainer(parcours, carte, aujourdhui) {
-    if (!rattrapagesPossibles(parcours, aujourdhui)) return null;
-    const liste = rouges(parcours, carte, aujourdhui, {nonEntrainees: true})
-      .map(c => Object.assign({boite: ligneDe(parcours, c.module).b[c.niveau - 1]}, c))
-      .sort((p, q) => p.boite - q.boite);
-    return liste.length ? {module: liste[0].module, niveau: liste[0].niveau} : null;
-  }
-
-  // Les calculs du jour d'une séance : ce qui est dû.
-  function calculsDeSeance(parcours, carte, aujourdhui) {
-    return {calculs: tirerCalculsDuJour(parcours, carte, {aujourdhui}).length};
-  }
-
-  // Le plan d'une séance qui commence : ce qui est décidé à l'ouverture. La
-  // compétence rouge à entraîner n'est décidée qu'après Mes calculs du jour
-  // (c'est là que les rouges apparaissent) ; sans calculs du jour, tout de
-  // suite.
-  // `minutes` : le réglage (10 ou 15), rangé dans le plan : la séance garde
-  // cette durée jusqu'au bout, ici ou sur un autre appareil.
-  function planNeuf(parcours, carte, aujourdhui, minutes) {
-    const jour = calculsDeSeance(parcours, carte, aujourdhui).calculs ? 1 : 0;
-    const rouge = jour ? null : aEntrainer(parcours, carte, aujourdhui);
-    const plan = planVide();
-    plan[PLAN.jour] = jour;
-    plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
-    plan[PLAN.nouveaute] = nouveauteArretee(parcours, aujourdhui) ? NOUVEAUTE.arretee : NOUVEAUTE.aFaire;
-    plan[PLAN.minutes] = minutesDeSeance(minutes);
-    return plan;
-  }
-
-  function planDe(parcours, carte, aujourdhui, minutes) {
-    return seanceOuverte(parcours, aujourdhui) ? parcours.seance.p.slice() : planNeuf(parcours, carte, aujourdhui, minutes);
-  }
-
   // Le temps actif de la séance ouverte, en secondes (0 si elle ne l'est pas).
   function secondesDeSeance(parcours, aujourdhui) {
     return seanceOuverte(parcours, aujourdhui) ? parcours.seance.j[EN_COURS.secondes] : 0;
   }
 
-  // Lot F4 : J'apprends d'une compétence testée aujourd'hui et ratée (jouée
-  // au test, jamais apprise ni arrêtée) — il suit le test, garanti.
-  function apresTestRate(ligne, index, aujourdhui) {
-    return ligne.vu === aujourdhui && !ligne.b[index] && ligne.f[index] > 0 && !ligne.a[index] && !ligne.ar[index];
+  // Une séance change : son compteur monte (la fusion de deux appareils
+  // garde la séance la plus avancée, voir fusionner). Il repart de 1 à
+  // chaque séance ouverte.
+  function marquerSeance(copie) {
+    copie.seance.g = Math.min(SEUILS.compteur, copie.seance.g + 1);
   }
 
-  // ------------------------------------------------------- le test de palier
-  //
-  // Lot F4 (18/11/2026, choix de Gwenaël) : au début de chaque palier pas
-  // encore commencé (rien d'entré, de joué ni d'appris dans ses compétences
-  // construites, et son test pas encore joué), une dizaine de calculs, les
-  // plus durs du palier. Tout juste (un faux permis) : tout le palier passe.
-  // Sinon, les tests module par module, sans rien perdre.
+  // L'identité d'une séance qui s'ouvre : 1 à 9 999. `alea` (un nombre de 0
+  // à 1, pour les tests et le simulateur) ; sinon le hasard du poste.
+  function identiteNeuve(alea) {
+    const tirage = typeof alea === "number" && alea >= 0 && alea < 1 ? alea : Math.random();
+    return 1 + Math.floor(tirage * IDENTITE_MAX);
+  }
 
-  // Les compétences du test de palier : le dernier niveau de chaque module
-  // dans ce palier, les 12 derniers dans l'ordre de la carte, rendus dans
-  // cet ordre. [{module, niveau}].
-  function calculsDuTestDePalier(carte, palier) {
-    const derniers = new Map();
-    parcoursConstruit(carte).forEach(({module: id, niveau}) => {
-      if (palierDe(carte, id, niveau) !== palier) return;
-      const deja = derniers.get(id);
-      if (!deja || niveau > deja.niveau) derniers.set(id, {module: id, niveau});
+  // Ouvre une séance neuve dans la copie. Le premier paquet de Mes calculs
+  // du jour est le passage obligé de la PREMIÈRE séance du jour (une 2e
+  // séance ne les refait pas : ce qui reste dû se joue par le bouton « Mes
+  // calculs du jour : encore N »).
+  function ouvrir(copie, plan, aujourdhui, minutes, reglage, alea) {
+    // Une séance laissée ouverte un autre jour : elle se ferme et compte
+    // pour son jour, si elle a fait quelque chose.
+    if (copie.seance.p[PLAN.ouverte] === 1 && copie.seance.jour !== aujourdhui) {
+      if (copie.seance.etape > 0 || copie.seance.j[EN_COURS.calculs] > 0) fermer(copie, copie.seance.jour);
+    }
+    const p = planVide();
+    p[PLAN.ouverte] = 1;
+    p[PLAN.minutes] = minutesDeSeance(minutes);
+    const dues = aujourdhuiFinie(copie, aujourdhui) ? 0 : compterDues(copie, plan, aujourdhui, reglage).dues;
+    if (dues) { p[PLAN.obligatoire] = 1; p[PLAN.paquet] = Math.min(SEUILS.jour.paquet, dues); }
+    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, i: identiteNeuve(alea), g: 1, p, j: enCoursVide()};
+  }
+
+  // « Commencer » : la séance est ouverte et rangée, pour qu'elle se
+  // reprenne telle quelle le jour même, ici ou sur un autre appareil. Une
+  // séance déjà ouverte aujourd'hui n'est pas touchée.
+  // `minutes` et `palier` : les réglages du professeur.
+  function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut, palier = SEUILS.seance.paliers, alea = null} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    if (seanceOuverte(copie, aujourdhui)) return copie;
+    ouvrir(copie, planDeCarte(carte), aujourdhui, minutes, palierDeSeance(palier), alea);
+    return copie;
+  }
+
+  // Ce qui reste du paquet en cours : jamais plus que ce qui est dû.
+  function resteDuPaquet(parcours, plan, aujourdhui, reglage) {
+    if (!seanceOuverte(parcours, aujourdhui) || !parcours.seance.p[PLAN.paquet]) return 0;
+    return Math.min(parcours.seance.p[PLAN.paquet], compterDues(parcours, plan, aujourdhui, reglage).dues);
+  }
+
+  // Une étape de la carte peut-elle commencer ? La première d'une séance,
+  // toujours ; ensuite, seulement si le temps actif plus sa durée habituelle
+  // tient dans les minutes prévues, plus une minute (décision du lot K0 :
+  // sans cela, un J'apprends lancé à la 9e minute s'arrêtait aussitôt et
+  // comptait comme un arrêt). `action` : "tente", "apprends", "encore",
+  // "ceinture".
+  function tientDansLeTemps(parcours, action, aujourdhui) {
+    if (!seanceOuverte(parcours, aujourdhui)) return true;
+    const p = parcours.seance.p;
+    if (!p[PLAN.commences]) return true;
+    const duree = SEUILS.seance.durees[action] || SEUILS.seance.durees.tente;
+    return parcours.seance.j[EN_COURS.secondes] + duree <= minutesDeSeance(p[PLAN.minutes]) * 60 + SEUILS.seance.tolerance;
+  }
+
+  // Le temps prévu est-il passé (sans la minute de tolérance) ? Passé, la
+  // séance ne propose plus de paquet de Mes calculs du jour en plus (le
+  // bouton « encore N » reste : c'est l'élève qui choisit).
+  function tempsPasse(parcours, aujourdhui) {
+    return seanceOuverte(parcours, aujourdhui) && parcours.seance.j[EN_COURS.secondes] >= minutesDeSeance(parcours.seance.p[PLAN.minutes]) * 60;
+  }
+
+  function peutCommencer(parcours, action, {aujourdhui = jourLocal()} = {}) {
+    return tientDansLeTemps(normaliserParcours(parcours, {aujourdhui}), action, aujourdhui);
+  }
+
+  // « Continuer » : ce que la séance propose maintenant, recalculé à chaque
+  // fois sur l'état des étoiles (jamais lu dans un plan : G6).
+  //   {type: "paquet", calculs, raison}   Mes calculs du jour : "obligatoire"
+  //        (le premier paquet, avant la carte), "encours" (un paquet
+  //        commencé), "retard" (une étoile a 3 jours de retard : le paquet
+  //        suivant passe avant une nouvelle étoile, décision du lot K0) ;
+  //   {type: "etoile", module, niveau, action, raison, depart}   une étoile :
+  //        "enCours" (le J'apprends commencé, `depart` : où il reprend),
+  //        puis "aRegagner" (« D'abord : … »), puis "suivante" (la première
+  //        étoile à gagner dans l'ordre de la carte, hors étoile « à voir en
+  //        classe » qui attend). `action` : "apprends" pour un J'apprends
+  //        commencé ou quand « Je tente » est fermé sur elle, sinon "tente"
+  //        (le panneau de l'étoile propose toujours les deux quand ils sont
+  //        permis) ;
+  //   {type: "rien", toutGagne, prochainRetour}   plus rien à gagner (ou
+  //        tout attend) : `prochainRetour`, dans combien de jours revient la
+  //        prochaine étoile (« Tout est gagné. Tes étoiles reviennent dans 3
+  //        jours. » ; null : aucune).
+  // `sansPaquet` : l'étoile seulement (le but du jour, « Aujourd'hui :
+  // l'étoile … »).
+  function continuerSur(parcours, plan, aujourdhui, reglage, sansPaquet = false) {
+    if (!sansPaquet) {
+      const reste = resteDuPaquet(parcours, plan, aujourdhui, reglage);
+      if (reste) return {type: "paquet", calculs: reste, raison: parcours.seance.p[PLAN.obligatoire] ? "obligatoire" : "encours"};
+      const compte = compterDues(parcours, plan, aujourdhui, reglage);
+      // Avant « Commencer » : le premier paquet de la première séance du jour.
+      if (!seanceOuverte(parcours, aujourdhui) && !aujourdhuiFinie(parcours, aujourdhui) && compte.dues) return {type: "paquet", calculs: Math.min(SEUILS.jour.paquet, compte.dues), raison: "obligatoire"};
+      if (compte.enRetard && !tempsPasse(parcours, aujourdhui)) return {type: "paquet", calculs: Math.min(SEUILS.jour.paquet, compte.dues), raison: "retard"};
+    }
+    let enCours = null;
+    let aRegagner = null;
+    let suivante = null;
+    let aGagner = 0;
+    let visibles = 0;
+    for (const etoile of plan.ordre) {
+      if (etoile.etage > reglage) continue;
+      visibles += 1;
+      const etat = etatDe(parcours, plan, etoile, aujourdhui, reglage);
+      if (etat.etat !== "gagnee") aGagner += 1;
+      if (etat.etat !== "aGagner" || etat.attend) continue;
+      if (etat.enCours && !enCours) enCours = etat;
+      else if (etat.aRegagner && !aRegagner) aRegagner = etat;
+      else if (!suivante) suivante = etat;
+    }
+    const choisie = enCours || aRegagner || suivante;
+    if (choisie) {
+      return {type: "etoile", module: choisie.module, niveau: choisie.niveau, raison: choisie === enCours ? "enCours" : choisie === aRegagner ? "aRegagner" : "suivante",
+        action: choisie === enCours || !choisie.actions.tente ? "apprends" : "tente", depart: choisie.reprise};
+    }
+    let prochain = null;
+    plan.ordre.forEach(etoile => {
+      const ligne = parcours.modules[etoile.module];
+      if (etoile.etage > reglage || !ligne || !tenue(ligne, etoile.index)) return;
+      if (!prochain || ligne.e[etoile.index] < prochain) prochain = ligne.e[etoile.index];
     });
-    const rang = c => parcoursConstruit(carte).findIndex(x => x.module === c.module && x.niveau === c.niveau);
-    return [...derniers.values()].sort((x, y) => rang(x) - rang(y)).slice(-SEUILS.palier.calculs);
+    return {type: "rien", toutGagne: visibles > 0 && aGagner === 0, prochainRetour: prochain ? Math.max(0, ecartJours(aujourdhui, prochain)) : null};
   }
 
-  // Le palier à tester maintenant (son numéro), ou 0 : celui de la
-  // compétence courante, s'il n'est pas commencé et que son test n'a pas
-  // été joué.
-  function palierATester(parcours, carte, courante, reglage = SEUILS.seance.paliers) {
-    if (!courante) return 0;
-    const palier = palierDe(carte, courante.module, courante.niveau);
-    if (!palier || palier > palierDeSeance(reglage)) return 0;
-    if (parcours.paliers && parcours.paliers[palier - 1]) return 0;
-    const liste = competencesDuPalier(parcours, carte, palier);
-    if (liste.length < SEUILS.palier.calculs) return 0;
-    return palierCommence(parcours, carte, palier) ? 0 : palier;
+  function continuer(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, sansPaquet = false} = {}) {
+    return continuerSur(normaliserParcours(parcours, {aujourdhui}), planDeCarte(carte), aujourdhui, palierDeSeance(palier), sansPaquet);
   }
 
-  // Un palier est commencé dès qu'une de ses compétences construites est
-  // entrée, jouée, apprise ou arrêtée.
-  function palierCommence(parcours, carte, palier) {
-    return competencesDuPalier(parcours, carte, palier)
-      .some(c => c.ligne.b[c.niveau - 1] || c.ligne.f[c.niveau - 1] || c.ligne.a[c.niveau - 1] || c.ligne.ar[c.niveau - 1]);
+  // Reste-t-il quelque chose à faire dans la séance ouverte ? Du temps pour
+  // la plus courte des étapes (« Je tente ») — ou la première étape de la
+  // carte, toujours permise —, et de quoi le remplir : un paquet, une étoile
+  // à gagner, ou un test de ceinture proposé.
+  function resteAFaire(parcours, plan, aujourdhui, reglage) {
+    if (resteDuPaquet(parcours, plan, aujourdhui, reglage)) return true;
+    if (!tientDansLeTemps(parcours, "tente", aujourdhui)) return false;
+    if (continuerSur(parcours, plan, aujourdhui, reglage).type !== "rien") return true;
+    if (compterDues(parcours, plan, aujourdhui, reglage).dues && !tempsPasse(parcours, aujourdhui)) return true;
+    for (let etage = 1; etage <= reglage; etage += 1) if (testDeCeinturePropose(parcours, plan, etage, reglage)) return true;
+    return false;
   }
 
-  // Correctif F4 (point 8) : le test de palier de la compétence courante a
-  // été joué (et raté) AUJOURD'HUI, et rien n'a encore été joué dans le
-  // palier — l'étape qui le suit (le test du premier module) est garantie :
-  // la séance ne finit pas sur lui. Dès ce test joué, le palier est
-  // commencé et la règle ordinaire reprend (le J'apprends qui suit un test
-  // raté est garanti, lui aussi).
-  function apresPalierRate(parcours, carte, courante, aujourdhui) {
-    const palier = palierDe(carte, courante.module, courante.niveau);
-    return Boolean(palier) && Boolean(parcours.paliers) && parcours.paliers[palier - 1] === aujourdhui && !palierCommence(parcours, carte, palier);
+  // Où en est la séance, pour l'accueil et la carte :
+  //   ouverte, finies (les séances finies aujourd'hui), minutes, secondes ;
+  //   obligatoire   les étoiles du premier paquet à jouer avant la carte
+  //                 (« Avant : tes 6 calculs du jour. ») ; 0 : la carte ;
+  //   paquet        ce qui reste d'un paquet commencé (obligatoire ou non) ;
+  //   encore        les étoiles encore dues en plus (« Mes calculs du jour :
+  //                 encore 14 ») ;
+  //   continuer     ce que « Continuer » propose (voir continuer) ;
+  //   but           le but du jour : l'étoile de « Continuer », sans paquet ;
+  //   tempsPasse    plus assez de temps pour une étape de plus ;
+  //   aFermer       une séance ouverte qui n'a plus rien à jouer (le temps
+  //                 est passé pendant une étape quittée au milieu) : la page
+  //                 appelle fermerSeance.
+  function etatSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut, palier = SEUILS.seance.paliers} = {}) {
+    const p = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
+    const ouverte = seanceOuverte(p, aujourdhui);
+    const compte = compterDues(p, plan, aujourdhui, reglage);
+    const reste = resteDuPaquet(p, plan, aujourdhui, reglage);
+    const premier = !ouverte && !aujourdhuiFinie(p, aujourdhui) ? Math.min(SEUILS.jour.paquet, compte.dues) : 0;
+    const obligatoire = ouverte ? (p.seance.p[PLAN.obligatoire] ? reste : 0) : premier;
+    const paquet = ouverte ? reste : premier;
+    return {
+      ouverte,
+      finies: p.seances.filter(jour => jour === aujourdhui).length,
+      minutes: ouverte ? minutesDeSeance(p.seance.p[PLAN.minutes]) : minutesDeSeance(minutes),
+      secondes: secondesDeSeance(p, aujourdhui),
+      etape: ouverte ? p.seance.etape : 0,
+      obligatoire,
+      paquet,
+      encore: compte.dues - paquet,
+      continuer: continuerSur(p, plan, aujourdhui, reglage),
+      but: continuerSur(p, plan, aujourdhui, reglage, true),
+      tempsPasse: ouverte && !tientDansLeTemps(p, "tente", aujourdhui),
+      // Le temps prévu est passé : plus de paquet proposé en plus.
+      tempsEcoule: tempsPasse(p, aujourdhui),
+      aFermer: ouverte && !resteAFaire(p, plan, aujourdhui, reglage)
+    };
   }
 
-  // Le test de palier joué. `test` : {palier, justes, total}. Réussi (tous
-  // les calculs joués, un faux au plus) : toutes les compétences
-  // construites du palier pas encore entrées entrent sues (boîte 4), leurs
-  // retours étalés de 7 à 13 jours (sinon 40 calculs reviendraient le même
-  // jour) ; les ceintures suivent. Raté : rien ne bouge, le test est noté
-  // joué (il ne revient pas). Dans la séance : un test de plus.
-  function appliquerTestPalier(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier: reglage = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours, {aujourdhui});
-    const copie = cloner(avant);
-    const palier = entier(test && test.palier, 0, SEUILS.seance.paliers);
-    if (!palier || !carte) return {parcours: copie, reussi: false, entrees: 0, finie: false, ceintures: []};
-    const attendus = calculsDuTestDePalier(carte, palier).length;
-    const total = entier(test.total, 0, 99);
-    const justes = Math.min(total, entier(test.justes, 0, 99));
-    // Correctif F4 (point 1, relecture de Codex) : à la remise, tout ce que
-    // vérifiait la proposition est revérifié — le palier n'a pas déjà été
-    // joué (une autre copie synchronisée pendant le test), rien n'y est
-    // commencé, et il est dans le réglage du professeur. Sinon, rien n'entre
-    // (et rien n'est noté) ; dans la séance, l'étape compte comme jouée.
-    const permis = !avant.paliers[palier - 1] && palier <= palierDeSeance(reglage) && !palierCommence(avant, carte, palier);
-    const reussi = permis && attendus > 0 && total >= attendus && total - justes <= SEUILS.palier.fauxPermis;
-    noterJour(copie, aujourdhui);
-    if (permis) copie.paliers[palier - 1] = aujourdhui;
-    let entrees = 0;
-    if (reussi) {
-      // Correctif F4 (point 2) : un module qui a un niveau « à voir en
-      // classe » encore en attente ne bouge pas à partir de ce niveau — ni
-      // lui, ni la suite du module (on n'apprend pas le niveau 2 sans le 1).
-      const attend = id => {
-        const ligne = ligneDe(copie, id);
-        const i = ligne.b.findIndex((_, index) => enAttente(ligne, index, aujourdhui));
-        return i < 0 ? Infinity : i;
-      };
-      competencesDuPalier(copie, carte, palier).forEach(({module: id, niveau}, rang) => {
-        if (niveau - 1 >= attend(id)) return;
-        const ligne = ligneDe(copie, id);
-        poserLigne(copie, id, ligne);
-        toucher(ligne, aujourdhui);
-        const index = niveau - 1;
-        if (ligne.b[index]) return;
-        ligne.b[index] = SEUILS.revision.dessous;
-        ligne.e[index] = ajouterJours(aujourdhui, delaiDeBoite(SEUILS.revision.dessous) + (rang % SEUILS.palier.etale));
-        ligne.d[index] = ligne.d[index] || aujourdhui;
-        ligne.s[index] = ligne.s[index] || aujourdhui;
-        ligne.a[index] = 1;
-        ligne.ar[index] = 0;
-        if (!ligne.ok && toutSu(ligne)) ligne.ok = aujourdhui;
-        entrees += 1;
-      });
-    }
-    const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
-    let finie = false;
-    if (seance) compterEnCours(copie, EN_COURS.prouvees, entrees);
-    if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); }, reglage);
-    return {parcours: copie, reussi, entrees, finie, ceintures};
-  }
-
-  // La file de la séance : les étapes qui RESTENT, d'après le plan et l'état.
-  //   {type: "jour", calculs}             Mes calculs du jour
-  //   {type: "apprends", module, niveau}  J'apprends, en une seule étape (lot 2) :
-  //                                       on montre, puis l'élève fait jusqu'à 5
-  //                                       justes de suite sans aide (nouveauté,
-  //                                       ou rouge ratée deux fois)
-  //   {type: "rattrape", module, niveau}  Je m'entraîne encore (une compétence rouge)
-  //   {type: "test", module}              Tu connais déjà ? (le test en escalier)
-  //   {type: "avance"}                    « Puis j'avance dans mon parcours » :
-  //                                       la dernière ligne, qui ne se joue pas,
-  //                                       tant que le temps n'est pas épuisé.
-  // La séance au temps (lot 1, 12/11/2026) : Mes calculs du jour, les rouges
-  // (3 au plus), puis l'avancée — un module jamais commencé est TOUJOURS
-  // testé (jamais de leçon d'office), ce qu'il rate, il l'apprend (J'apprends,
-  // une seule étape depuis le lot 2), puis les tests
-  // reprennent. L'avancée est garantie jusqu'au premier apprentissage
-  // compris ; ensuite, un bloc ne commence que s'il tient dans le temps.
-  // Une étape commencée se finit toujours : le temps n'est versé qu'à la fin
-  // d'une étape, la file ne change pas pendant qu'elle se joue.
-  // Rend aussi `faites` (les étapes déjà jouées), `ouverte`, `finie` (une
-  // séance a fini aujourd'hui, ou un entraînement raté a tout arrêté),
-  // `minutes` (la durée prévue) et `aFermer` (une séance ouverte qui n'a plus
-  // rien à jouer : le temps est passé pendant une étape quittée au milieu).
-  // `minutes` et `palier` : les réglages, pour une séance pas encore ouverte
-  // (une séance ouverte garde ses minutes ; le palier est relu à chaque fois).
-  function fileSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut, palier = SEUILS.seance.paliers} = {}) {
-    const ouverte = seanceOuverte(parcours, aujourdhui);
-    const plan = planDe(parcours, carte, aujourdhui, minutes);
-    const etapes = [];
-    const budget = minutesDuPlan(plan) * 60 + SEUILS.seance.tolerance;
-    const secondes = secondesDeSeance(parcours, aujourdhui);
-    let garanti = plan[PLAN.commences] === 0;
-    if (plan[PLAN.jour] && calculsDeSeance(parcours, carte, aujourdhui).calculs) {
-      // Après les calculs du jour : l'avancée (les rouges ne sont connues
-      // qu'après les calculs ; elles s'intercalent alors avant elle).
-      etapes.push({type: "jour", calculs: calculsDeSeance(parcours, carte, aujourdhui).calculs});
-      avancee();
-      return resultat();
-    }
-    if (plan[PLAN.rattrapage]) {
-      const rouge = competenceDeRang(plan[PLAN.rattrapage] - 1);
-      const ligne = ligneDe(parcours, rouge.module);
-      // Ratée deux fois de suite : elle refait J'apprends, qui contient
-      // l'entraînement (lot 2) ; sinon Je m'entraîne encore.
-      etapes.push({type: ligne.a[rouge.niveau - 1] ? "rattrape" : "apprends", module: rouge.module, niveau: rouge.niveau});
-    }
-    avancee();
-    return resultat();
-
-    // Le prochain bloc d'avancée, s'il a le temps ; puis la ligne « Puis
-    // j'avance… ». Avant les calculs du jour ou une rouge, le temps de ce
-    // qui vient d'abord n'est pas connu : le bloc est montré s'il est garanti
-    // ou si le temps déjà passé le permet (il sera revu à son tour).
-    function avancee() {
-      if (plan[PLAN.nouveaute] !== NOUVEAUTE.aFaire) return;
-      const courante = competenceCourante(parcours, carte, palier, aujourdhui);
-      if (!courante) return;
-      const ligne = ligneDe(parcours, courante.module);
-      const bloc = [];
-      let duree = 0;
-      const tp = palierATester(parcours, carte, courante, palier);
-      if (tp) {
-        // Lot F4 : le test de palier, au début d'un palier pas commencé.
-        if (plan[PLAN.tests] >= SEUILS.test.parSeance) return;
-        bloc.push({type: "palier", palier: tp});
-        // Pas garanti, il ne commence que s'il reste aussi le temps du test
-        // d'un module et d'un début de J'apprends : la séance ne finit pas
-        // sur un test de palier raté.
-        duree = SEUILS.seance.durees.palier + SEUILS.seance.durees.test + SEUILS.seance.durees.apresTest;
-      } else if (estIntact(ligne) || testDeReprise(parcours, carte, courante)) {
-        // Lot 7-0 : les marches d'un palier plus haut d'un module commencé
-        // sont testées, comme un module intact.
-        // Un module jamais commencé est toujours testé ; plus de test
-        // possible dans cette séance : il attend la suivante.
-        if (plan[PLAN.tests] >= SEUILS.test.parSeance) return;
-        bloc.push({type: "test", module: courante.module});
-        // Lot F4 : « une séance ne finit jamais sur un test raté » — un test
-        // qui n'est pas garanti ne commence que s'il reste aussi le temps
-        // d'un début de J'apprends (le J'apprends d'après un test raté, lui,
-        // est garanti, et s'arrête au bout du temps).
-        duree = SEUILS.seance.durees.test + SEUILS.seance.durees.apresTest;
-        // Correctif F4 (point 8) : le test qui suit un test de palier raté
-        // aujourd'hui est garanti, comme le J'apprends qui suit un test raté.
-        if (apresPalierRate(parcours, carte, courante, aujourdhui)) garanti = true;
-      } else {
-        // Lot 2 : J'apprends en une étape (on montre, puis l'élève fait).
-        // Lot F4 : il reprend où il s'était arrêté (`depart`), et celui qui
-        // suit un test raté aujourd'hui est garanti.
-        const depart = repriseDe(ligne, courante.niveau - 1);
-        bloc.push(Object.assign({type: "apprends", module: courante.module, niveau: courante.niveau}, depart ? {depart} : {}));
-        duree = SEUILS.seance.durees.apprends;
-        if (apresTestRate(ligne, courante.niveau - 1, aujourdhui)) garanti = true;
-      }
-      if (!garanti && secondes + duree > budget) return;
-      etapes.push(...bloc);
-      // « Puis j'avance… » : s'il restera du temps après ce bloc (sans la
-      // minute de tolérance).
-      if (secondes + duree < minutesDuPlan(plan) * 60) etapes.push({type: "avance"});
-    }
-
-    function resultat() {
-      const jouables = etapes.filter(etape => etape.type !== "avance");
-      return {
-        etapes,
-        jouables: jouables.length,
-        faites: ouverte ? parcours.seance.etape : 0,
-        ouverte,
-        finie: aujourdhuiFinie(parcours, aujourdhui) || nouveauteArretee(parcours, aujourdhui),
-        aFermer: ouverte && !jouables.length,
-        minutes: minutesDuPlan(plan)
-      };
-    }
-  }
-
-  // Une étape vient d'être jouée : le plan avance. Quand il ne reste rien,
-  // la séance est finie et comptée. `changer(plan)` dit ce que l'étape change.
-  // Le plan est décidé sur l'état d'AVANT l'étape (`avant`).
-  // Une séance commencée hier et continuée après minuit repart sur un plan
-  // neuf, avec les minutes prévues hier (relecture de Codex, lot F1).
-  // `palier` : le réglage (la file ne regarde pas au-delà).
-  function avancerSeance(copie, avant, carte, aujourdhui, changer, palier = SEUILS.seance.paliers) {
-    const plan = planDe(avant, carte, aujourdhui, minutesDuPlan(avant.seance.p));
-    const etape = seanceOuverte(avant, aujourdhui) ? avant.seance.etape : 0;
-    // Ce qui a été fait avant minuit suit la séance (lot G1) ; après minuit,
-    // le plan neuf ne garantit plus rien de ce qui l'était hier.
-    if (!seanceOuverte(avant, aujourdhui) && avant.seance.p[PLAN.ouverte] === 1) plan[PLAN.commences] = avant.seance.p[PLAN.commences];
-    changer(plan);
-    plan[PLAN.ouverte] = 1;
-    // Ce que la séance a fait la suit, même après minuit (lot G1) : elle
-    // compte pour le jour où elle finit.
-    const fait = copie.seance.j.slice();
-    copie.seance = {jour: aujourdhui, etape: Math.min(SEUILS.seance.etapes, etape + 1), n: copie.seance.n, p: plan, j: fait};
-    if (fileSeance(copie, carte, {aujourdhui, palier}).jouables) return false;
+  // Une étape vient d'être jouée dans la séance : elle avance. Quand il ne
+  // reste rien à faire (ou plus de temps), la séance est finie et comptée.
+  // Une séance commencée hier et continuée après minuit continue : elle
+  // compte pour le jour où elle finit. Sans séance ouverte, une séance
+  // s'ouvre (la page appelle « Commencer » d'abord ; ceci est un filet).
+  // `deCarte` : une étape de la carte (« Je tente », J'apprends, un test de
+  // ceinture), qui compte pour « la première est toujours permise ».
+  function avancerSeance(copie, plan, aujourdhui, reglage, deCarte) {
+    if (copie.seance.p[PLAN.ouverte] !== 1) ouvrir(copie, plan, aujourdhui, SEUILS.seance.defaut, reglage, null);
+    const s = copie.seance;
+    s.jour = aujourdhui;
+    s.etape = Math.min(SEUILS.seance.etapes, s.etape + 1);
+    if (deCarte) s.p[PLAN.commences] = Math.min(PLAN_MAX[PLAN.commences], s.p[PLAN.commences] + 1);
+    marquerSeance(copie);
+    if (resteAFaire(copie, plan, aujourdhui, reglage)) return false;
     fermer(copie, aujourdhui);
     return true;
   }
 
-  // La séance ouverte est finie : elle compte, et le plan se referme.
-  // L'arrêt après un entraînement raté reste noté jusqu'à demain. Son
-  // journal est écrit à la place de la séance (lot G1).
-  function fermer(copie, aujourdhui) {
-    const plan = copie.seance.p;
+  // La séance ouverte est finie : elle compte, et le plan se referme. Sa
+  // ligne est écrite au journal, sous son identité.
+  function fermer(copie, jour) {
     const fait = copie.seance.j.slice();
-    const ferme = planVide();
-    ferme[PLAN.nouveaute] = plan[PLAN.nouveaute] === NOUVEAUTE.arretee ? NOUVEAUTE.arretee : 0;
+    const identite = copie.seance.i;
     copie.seance = {
-      jour: aujourdhui,
+      jour,
       etape: 0,
       n: Math.min(SEUILS.compteur, copie.seance.n + 1),
-      p: ferme,
+      i: 0,
+      g: 0,
+      p: planVide(),
       j: enCoursVide()
     };
     const secondes = fait[EN_COURS.secondes];
-    const entree = [fait[EN_COURS.calculs], fait[EN_COURS.justes], fait[EN_COURS.nouveautes], fait[EN_COURS.prouvees], fait[EN_COURS.rouges],
-      secondes ? Math.max(1, Math.min(SEUILS.journal.minutes, Math.round(secondes / 60))) : 0];
+    const entree = JOURNAL.map(() => -1);
+    const poser = (champ, valeur) => { entree[JOURNAL.indexOf(champ)] = valeur; };
+    poser("calculs", fait[EN_COURS.calculs]);
+    poser("justes", fait[EN_COURS.justes]);
+    poser("nouveautes", fait[EN_COURS.nouveautes]);
+    poser("prouvees", fait[EN_COURS.prouvees]);
+    poser("rouges", fait[EN_COURS.rouges]);
+    poser("minutes", secondes ? Math.max(1, Math.min(SEUILS.journal.minutes, Math.round(secondes / 60))) : 0);
+    poser("seuls", fait[EN_COURS.seuls]);
+    poser("seulsJustes", fait[EN_COURS.seulsJustes]);
+    poser("tests", fait[EN_COURS.tests]);
+    poser("testsRates", fait[EN_COURS.testsRates]);
     const dejaFinies = pairesDe(copie);
-    const propre = entreePropre([...entree, -1]);
-    propre[I_NUMERO] = numeroNeuf(dejaFinies, aujourdhui, propre);
-    const rangees = rangerSeances([...dejaFinies, {jour: aujourdhui, entree: propre}]);
+    const propre = entreePropre(entree);
+    propre[I_NUMERO] = numeroNeuf(dejaFinies, jour, propre, identite);
+    const rangees = rangerSeances([...dejaFinies, {jour, entree: propre}]);
     copie.seances = rangees.seances;
     copie.journal = rangees.journal;
   }
 
-  // Une séance ouverte qui n'a plus rien à jouer (`aFermer` : le temps est
-  // passé pendant une étape quittée au milieu) se ferme et compte. Rien
-  // d'autre ne change.
-  function fermerSeance(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
+  // Une séance ouverte qui n'a plus rien à jouer (`aFermer`), ou que l'élève
+  // arrête lui-même (`force` : « Séance terminée » demandé par la page) : elle se
+  // ferme et compte. Rien d'autre ne change.
+  function fermerSeance(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, force = false} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
-    if (!fileSeance(copie, carte, {aujourdhui, palier}).aFermer) return {parcours: copie, fermee: false};
+    if (!seanceOuverte(copie, aujourdhui)) return {parcours: copie, fermee: false};
+    if (!force && resteAFaire(copie, planDeCarte(carte), aujourdhui, palierDeSeance(palier))) return {parcours: copie, fermee: false};
     fermer(copie, aujourdhui);
     return {parcours: copie, fermee: true};
   }
 
   // Le temps actif d'une étape (lot G1) : la page le mesure (les gestes de
   // l'élève, les silences comptés une minute au plus) et le donne à la fin
-  // de chaque étape. Il s'ajoute à la séance ouverte, et seulement à elle.
+  // de chaque étape, AVANT d'appliquer l'étape (c'est sur lui que la séance
+  // décide si elle continue). Il s'ajoute à la séance ouverte, et seulement
+  // à elle.
   function noterTemps(parcours, secondes) {
     const copie = normaliserParcours(parcours);
     const ajout = entier(Math.round(Number(secondes)), 0, SEUILS.journal.secondes);
     if (copie.seance.p[PLAN.ouverte] !== 1 || !ajout) return copie;
     copie.seance.j[EN_COURS.secondes] = Math.min(SEUILS.journal.secondes, copie.seance.j[EN_COURS.secondes] + ajout);
+    marquerSeance(copie);
     return copie;
   }
 
@@ -1722,11 +1737,38 @@
     parcours.seance.j[index] = Math.min(EN_COURS_MAX[index], parcours.seance.j[index] + ajout);
   }
 
-  // Un module est joué aujourd'hui : son jour `vu` change, et ce qui ne
-  // valait que pour l'ancien jour (`t`, entraînée avec l'aide) s'efface.
-  function toucher(ligne, aujourdhui) {
-    if (ligne.vu !== aujourdhui) ligne.t = ligne.t.map(() => 0);
-    ligne.vu = aujourdhui;
+  // Un paquet de Mes calculs du jour commence (le bouton « Mes calculs du
+  // jour : encore N », ou le paquet que « Continuer » propose quand une
+  // étoile a 3 jours de retard) : 10 étoiles dues au plus. Un paquet déjà en
+  // cours n'est pas touché ; sans séance ouverte, elle s'ouvre.
+  function commencerPaquet(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
+    if (!seanceOuverte(copie, aujourdhui)) ouvrir(copie, plan, aujourdhui, minutesDeSeance(copie.seance.p[PLAN.minutes]), reglage, null);
+    if (resteDuPaquet(copie, plan, aujourdhui, reglage)) return copie;
+    const dues = compterDues(copie, plan, aujourdhui, reglage).dues;
+    copie.seance.p[PLAN.paquet] = Math.min(SEUILS.jour.paquet, dues);
+    copie.seance.p[PLAN.obligatoire] = 0;
+    marquerSeance(copie);
+    return copie;
+  }
+
+  // Le paquet en cours est fini (la page l'appelle quand elle n'a plus de
+  // calcul à poser) : l'étape est faite. Ce qui n'a pas été joué reste dû —
+  // rien ne se perd, rien n'est sanctionné. Rend `encore` : les étoiles
+  // encore dues.
+  function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
+    // Sans séance ouverte, il n'y a pas d'étape à compter.
+    if (copie.seance.p[PLAN.ouverte] !== 1) return {parcours: copie, finie: false, encore: compterDues(copie, plan, aujourdhui, reglage).dues, ceintures};
+    copie.seance.p[PLAN.paquet] = 0;
+    copie.seance.p[PLAN.obligatoire] = 0;
+    const finie = avancerSeance(copie, plan, aujourdhui, reglage, false);
+    return {parcours: copie, finie, encore: compterDues(copie, plan, aujourdhui, reglage).dues, ceintures};
   }
 
   // ---------------------------------------------------------- apprendre, s'entraîner
@@ -1874,342 +1916,368 @@
     });
   }
 
+  // ------------------------------------------------- gagner, perdre une étoile
+
+  // L'étoile change : son compteur monte d'un cran (c'est lui qui départage
+  // deux appareils, étoile par étoile).
+  function marquer(ligne, index) {
+    ligne.g[index] = Math.min(SEUILS.compteur, ligne.g[index] + 1);
+  }
+
+  // L'étoile est gagnée : elle entre dans les boîtes (au début, boîte 2,
+  // retour le lendemain ; `boite` et `echeance` pour un test de ceinture),
+  // tout de suite (une seule marque pour l'élève, choix de Gwenaël du 21/11).
+  // `lecon` : par J'apprends (sa leçon est faite).
+  function gagner(ligne, index, aujourdhui, {boite = SEUILS.revision.entree, echeance = null, lecon = false} = {}) {
+    ligne.b[index] = boite;
+    ligne.e[index] = echeance || echeanceDeBoite(boite, aujourdhui);
+    ligne.x[index] = 0;
+    ligne.ar[index] = 0;
+    ligne.r[index] = 0;
+    ligne.q[index] = null;
+    if (!ligne.d[index]) ligne.d[index] = aujourdhui;
+    if (boite >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
+    if (lecon) ligne.a[index] = 1;
+    marquer(ligne, index);
+  }
+
+  // L'étoile est perdue : elle sort des boîtes et se regagne comme une
+  // étoile à gagner (« Je tente », le jour même s'il veut, ou J'apprends ;
+  // ses deux essais de « Je tente » repartent de zéro). Rien de ce qu'elle
+  // avait ouvert ne se referme (`d` reste). Perdue 3 fois : « à voir en
+  // classe ».
+  function perdre(ligne, index) {
+    ligne.b[index] = 0;
+    ligne.e[index] = null;
+    ligne.x[index] = 0;
+    ligne.ar[index] = 0;
+    ligne.r[index] = 0;
+    ligne.q[index] = null;
+    ligne.pe[index] = Math.min(SEUILS.retour.perdues, ligne.pe[index] + 1);
+    marquer(ligne, index);
+  }
+
+  // Ce que rend une étape refusée : rien n'a changé. `refuse` dit pourquoi
+  // ("inconnue" : pas sur la carte ; "fermee" ; "gagnee" ; "attend" : « à
+  // voir en classe », pas encore revenue ; "tente" : « Je tente » fermé ;
+  // "pasGagnee" ; "pasDue" ; "ceinture" : le test de ceinture n'est pas
+  // proposé). Relecture de Codex du 22/11 (G1, G6) : à la remise d'une
+  // étape, tout ce que vérifiait sa proposition est revérifié — une autre
+  // copie a pu arriver entre-temps.
+  const refus = (copie, raison, plus = {}) => Object.assign({parcours: copie, refuse: raison, evenements: [], finie: false, ceintures: []}, plus);
+
   // Une série finie, hors Mes calculs du jour. `serie` :
-  //   {module, niveau, genre: "apprends" | "entraine" | "rattrape",
-  //    reponses: [{juste, outil}], causes: {cause: nombre}}
+  //   {module, niveau, genre: "apprends" | "encore",
+  //    reponses: [{juste, outil}], causes: {cause: nombre},
+  //    manip, toutesFormesVues, tempsFini}
   // Avec `seance: true`, la série est une étape de la séance du jour.
-  //  - apprends (lot 2, J'apprends en une étape : on montre, puis l'élève
-  //    fait, jusqu'à 5 justes de suite sans outil) : une compétence pas
-  //    encore entrée, comme « entraine » ci-dessous, et « J'apprends fait »
-  //    quand c'est réussi ; une compétence rouge ratée deux fois de suite,
-  //    comme « rattrape » (sa boîte ne bouge pas), et « J'apprends fait » ;
-  //  - entraine : réussi (5 justes de suite sans outil), la compétence entre
-  //    en boîte 2 et revient demain ; raté (20 calculs), rien ne bouge —
-  //    dans la séance, rien de nouveau avant demain, et demain repart de
-  //    « J'apprends » ;
-  //  - rattrape : la compétence rouge a été entraînée avec l'aide
-  //    aujourd'hui ; sa boîte ne bouge pas, ses échecs non plus (ce sont les
-  //    calculs du jour qui jugent).
-  // Une erreur ne fait JAMAIS descendre ici.
+  //  - apprends (J'apprends, lot F4 : on montre, puis l'élève fait, jusqu'à
+  //    5 justes sur les 6 derniers sans aide) : sur une étoile À GAGNER.
+  //    Réussi, l'étoile est gagnée, tout de suite, et sa leçon est faite ;
+  //    arrêté (« On continue demain »), il garde où l'élève en est ; au 3e
+  //    arrêt sur la même étoile, « à voir en classe » : elle attend 7 jours,
+  //    l'étoile suivante de sa ligne aussi, les autres lignes restent
+  //    ouvertes ;
+  //  - encore (« Je m'entraîne encore ») : sur une étoile GAGNÉE, sans aucun
+  //    effet sur les boîtes — s'entraîner ne fait perdre aucune étoile.
+  //    (« entraine » et « rattrape », les anciens noms, sont lus « encore ».)
+  // Une erreur ne fait JAMAIS rien perdre ici.
   function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours, {aujourdhui});
-    const copie = cloner(avant);
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
     const id = serie && serie.module;
+    const etoile = Object.prototype.hasOwnProperty.call(NIVEAUX, id) ? plan.etoiles.get(`${id}-${entier(serie.niveau, 1, NIVEAUX[id], 1)}`) : null;
+    if (!etoile) return refus(copie, "inconnue", {verdict: null});
+    const etat = etatDe(copie, plan, etoile, aujourdhui, reglage);
+    const apprends = serie.genre === "apprends";
+    if (apprends && etat.etat !== "aGagner") return refus(copie, etat.etat === "gagnee" ? "gagnee" : "fermee", {verdict: null});
+    if (apprends && etat.attend) return refus(copie, "attend", {verdict: null});
+    if (!apprends && etat.etat !== "gagnee") return refus(copie, "pasGagnee", {verdict: null});
+    const n = etoile.niveau;
+    const ligne = ligneAChanger(copie, id, aujourdhui);
     const evenements = [];
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, verdict: null, evenements, finie: false};
-    const n = entier(serie.niveau, 1, NIVEAUX[id], 1);
-    const ligne = ligneDe(copie, id);
-    poserLigne(copie, id, ligne);
-    toucher(ligne, aujourdhui);
-    let finie = false;
-    const genre = ["apprends", "entraine", "rattrape"].includes(serie.genre) ? serie.genre : "entraine";
-    // Lot F4 : un J'apprends arrêté reprend là où il en était (le moteur le
-    // sait : `ar`, jamais la page).
-    const depart = genre === "apprends" && !ligne.b[n - 1] ? repriseDe(ligne, n - 1) : 0;
-    // Correctif F4 (point 3, relecture de Codex) : les règles de l'écran —
-    // le niveau a-t-il un outil à manipuler (`manip`), toutes ses formes
-    // ont-elles été vues (`toutesFormesVues`), le temps de la séance est-il
-    // passé (`tempsFini`). Le résultat est calculé ici, une fois, avec elles :
-    // la page montre ce que le moteur enregistre (un niveau n'est jamais
-    // appris à la fin du temps tant qu'une forme reste à voir). Absentes (le
-    // simulateur, les anciens appels) : comme avant.
-    const suivi = suivreEntrainement(Array.isArray(serie.reponses) ? serie.reponses : [], {genre, depart,
+    const reponses = Array.isArray(serie.reponses) ? serie.reponses.filter(Boolean) : [];
+    // Un J'apprends arrêté reprend là où il en était (le moteur le sait :
+    // `ar`, jamais la page). Les règles de l'écran — le niveau a-t-il un
+    // outil à manipuler (`manip`), toutes ses formes ont-elles été vues
+    // (`toutesFormesVues`), le temps de la séance est-il passé
+    // (`tempsFini`) — viennent de la page ; le résultat est calculé ici, une
+    // fois, avec elles.
+    const depart = apprends ? repriseDe(ligne, n - 1) : 0;
+    const suivi = suivreEntrainement(reponses, {genre: apprends ? "apprends" : "rattrape", depart,
       manip: serie.manip !== false, toutesFormesVues: serie.toutesFormesVues !== false, tempsFini: serie.tempsFini === true});
     const verdict = {justes: suivi.justes, total: suivi.total, reussi: suivi.reussi};
-    ligne.f[n - 1] = Math.min(SEUILS.compteur, ligne.f[n - 1] + 1);
     ajouterCauses(ligne, serie.causes);
     noterJour(copie, aujourdhui);
-    // J'apprends d'une compétence rouge (ratée deux fois de suite) : c'est
-    // son rattrapage ; J'apprends est fait, même raté (lot 2).
-    const rouge = genre === "apprends" && ligne.b[n - 1] > 0;
-    if (rouge) ligne.a[n - 1] = 1;
-    if (genre === "rattrape" || rouge) {
-      if (ligne.b[n - 1]) ligne.t[n - 1] = 1;
-      if (seance) compterEnCours(copie, EN_COURS.rouges, 1);
-      // La rouge suivante (3 par séance au plus), sinon la nouveauté.
-      if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-        const suivante = aEntrainer(copie, carte, aujourdhui);
-        plan[PLAN.rattrapage] = suivante ? rangDe(suivante.module, suivante.niveau) + 1 : 0;
-      }, palier);
-      return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
-    }
-    const nouvelle = !ligne.b[n - 1];
-    // J'apprends en une étape réussi : J'apprends est fait (lot 2).
-    if (genre === "apprends" && verdict.reussi) ligne.a[n - 1] = 1;
-    if (verdict.reussi && nouvelle) {
-      ligne.b[n - 1] = SEUILS.revision.entraine;
-      ligne.e[n - 1] = echeanceDeBoite(SEUILS.revision.entraine, aujourdhui);
-      if (!ligne.d[n - 1]) ligne.d[n - 1] = aujourdhui;
-      evenements.push({type: "entree", module: id, niveau: n, boite: SEUILS.revision.entraine});
-    }
-    // Une nouveauté réussie compte dans la séance ouverte, tout de suite
-    // (correctif G1 : elle reste comptée si la séance continue après minuit).
-    if (seance && verdict.reussi && nouvelle) compterEnCours(copie, EN_COURS.nouveautes, 1);
-    // Lot F4 : J'apprends ne se rate plus — arrêté, il garde où l'élève en
-    // est ; au 3e arrêt sur ce niveau, « à voir en classe » : il attend 7
-    // jours, l'élève passe à la suite.
-    if (genre === "apprends" && nouvelle && !verdict.reussi && suivi.total) {
-      const arrets = arretSuivant(arretsDe(ligne, n - 1));
-      poserArret(ligne, n - 1, arrets, suivi.reprise);
-      const deCote = arrets % SEUILS.apprends.arrets === 0;
-      if (deCote) ligne.e[n - 1] = ajouterJours(aujourdhui, SEUILS.apprends.joursDeCote);
-      evenements.push({type: "arrete", module: id, niveau: n, reprise: suivi.reprise, arrets, aVoir: deCote, retour: deCote ? ligne.e[n - 1] : null});
-    }
-    if (verdict.reussi && nouvelle) ligne.ar[n - 1] = 0;
-    if (seance) {
-      // Raté : demain repart de « J'apprends », rien de nouveau aujourd'hui.
-      if (!verdict.reussi) ligne.a[n - 1] = 0;
-      // Un apprentissage a été commencé (s'il ne l'était pas par J'apprends)
-      // ; réussi, la séance continue tant qu'elle a le temps (lot 1) ; raté,
-      // plus rien de nouveau aujourd'hui.
-      finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-        plan[PLAN.commences] = genre === "apprends"
-          ? Math.min(PLAN_MAX[PLAN.commences], plan[PLAN.commences] + 1)
-          : Math.max(1, plan[PLAN.commences]);
-        if (!verdict.reussi) plan[PLAN.nouveaute] = NOUVEAUTE.arretee;
-      }, palier);
-    }
-    return {parcours: copie, verdict, evenements, finie, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
-  }
-
-  // ------------------------------------------------------------ le test d'entrée
-
-  // « Tu connais déjà ? », en escalier. `test` :
-  //   {module, marche, niveaux: [{niveau, justes, total}], causes}
-  // `marche` : la marche la plus haute prouvée (0 : aucune). Elle entre en
-  // boîte 3 (revient dans 3 jours) ; les marches en dessous entrent en boîte
-  // 4 (sues, reviennent dans 7 jours) ; les autres restent à apprendre. Le
-  // test ne fait qu'entrer : il ne descend rien, ne touche pas une
-  // compétence déjà entrée.
-  function appliquerTest(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours, {aujourdhui});
-    const copie = cloner(avant);
-    const id = test && test.module;
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, bilan: [], tout: false, marche: 0, finie: false};
-    const ligne = ligneDe(copie, id);
-    poserLigne(copie, id, ligne);
-    toucher(ligne, aujourdhui);
-    noterJour(copie, aujourdhui);
-    ajouterCauses(ligne, test.causes);
-    const resultats = Array.from({length: NIVEAUX[id]}, (_, index) => {
-      const resultat = (Array.isArray(test.niveaux) ? test.niveaux : []).find(r => r && r.niveau === index + 1) || {};
-      const total = entier(resultat.total, 0, 99);
-      return {total, justes: entier(resultat.justes, 0, total)};
-    });
-    // La marche annoncée ne dépasse jamais ce que les résultats prouvent :
-    // des marches montées l'une après l'autre, chacune avec 3 justes au
-    // moins et un faux au plus (lot 1 : « 3 justes sur 4 pour monter »).
-    const montee = r => r.justes >= SEUILS.test.parMarche && r.total - r.justes <= SEUILS.test.fauxPermis;
-    // Lot 7-0 : un test peut commencer plus haut que le niveau 1 (les
-    // marches d'un palier plus haut d'un module commencé) — à la première
-    // marche jouée, si tous les niveaux en dessous sont déjà entrés.
-    const premiere = resultats.findIndex(r => r.total > 0);
-    const de = premiere > 0 && ligne.b.slice(0, premiere).every(Boolean) ? premiere : 0;
-    let prouvee = de;
-    while (prouvee < NIVEAUX[id] && montee(resultats[prouvee])) prouvee += 1;
-    const marche = Math.min(entier(test.marche, 0, NIVEAUX[id]), prouvee);
-    const bilan = resultats.map(({total, justes}, index) => {
-      const connu = index + 1 <= marche;
-      if (total) ligne.f[index] = Math.min(SEUILS.compteur, ligne.f[index] + 1);
-      const boite = index + 1 === marche ? SEUILS.revision.test : SEUILS.revision.dessous;
-      const entre = connu && !ligne.b[index];
-      if (entre) {
-        ligne.b[index] = boite;
-        ligne.e[index] = echeanceDeBoite(boite, aujourdhui);
-        // Lot G1 : entrée aujourd'hui ; sue aujourd'hui si elle entre en
-        // boîte 4 (une marche en dessous de la plus haute prouvée).
-        if (!ligne.d[index]) ligne.d[index] = aujourdhui;
-        if (boite >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
-        // Une marche prouvée compte comme « J'apprends fait » (31/10) : il ne
-        // revient qu'après deux échecs de suite.
-        ligne.a[index] = 1;
+    if (apprends) {
+      // Le journal : les calculs faits sans aide, et combien étaient justes
+      // (le rappel au dessin d'une écriture nouvelle ne compte pas).
+      const seuls = reponses.filter(r => r.outil === "aucun" && !r.rappel);
+      if (seance) {
+        compterEnCours(copie, EN_COURS.seuls, seuls.length);
+        compterEnCours(copie, EN_COURS.seulsJustes, seuls.filter(r => r.juste).length);
       }
-      return {niveau: index + 1, justes, total, connu, entre, boite: connu ? boite : 0, jouee: total > 0};
-    });
-    if (!ligne.ok && toutSu(ligne)) ligne.ok = aujourdhui;
-    const ceintures = gagnerCeintures(copie, carte, aujourdhui, palier);
-    const tout = marche === NIVEAUX[id];
-    let finie = false;
-    if (seance) compterEnCours(copie, EN_COURS.prouvees, bilan.filter(niveau => niveau.entre).length);
-    if (seance) finie = avancerSeance(copie, avant, carte, aujourdhui, plan => { plan[PLAN.tests] = Math.min(SEUILS.test.parSeance, plan[PLAN.tests] + 1); }, palier);
-    return {parcours: copie, bilan, tout, marche, finie, ceintures, de: de + 1};
+      if (verdict.reussi) {
+        gagner(ligne, n - 1, aujourdhui, {lecon: true});
+        evenements.push({type: "gagnee", module: id, niveau: n, par: "apprends"});
+        if (seance) compterEnCours(copie, EN_COURS.nouveautes, 1);
+      } else if (suivi.total) {
+        const arrets = arretSuivant(arretsDe(ligne, n - 1));
+        poserArret(ligne, n - 1, arrets, suivi.reprise);
+        const deCote = arrets % SEUILS.apprends.arrets === 0;
+        ligne.e[n - 1] = deCote ? ajouterJours(aujourdhui, SEUILS.apprends.joursDeCote) : arrets >= SEUILS.apprends.arrets ? ligne.e[n - 1] : null;
+        marquer(ligne, n - 1);
+        evenements.push({type: "arrete", module: id, niveau: n, reprise: suivi.reprise, arrets, aVoir: deCote, retour: deCote ? ligne.e[n - 1] : null});
+      }
+    }
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
+    const finie = seance ? avancerSeance(copie, plan, aujourdhui, reglage, true) : false;
+    return {parcours: copie, verdict, evenements, finie, ceintures};
   }
 
-  // -------------------------------------------------------- Mes calculs du jour
+  // ------------------------------------------------------------------ « Je tente »
 
-  // UNE réponse de Mes calculs du jour — le seul moment qui compte. `retour` :
-  //   {module, niveau, juste, ms, type: "F" | "P", cause}
-  //  - juste et due : la boîte monte (7 au plus), nouvelle échéance ;
-  //  - juste et pas due : rien ;
-  //  - fausse ou « Je ne sais pas » : la boîte descend (1 au moins), échéance
-  //    demain, un échec consécutif de plus ; au deuxième échec de suite,
-  //    « J'apprends » est à refaire ; au troisième, la compétence est mise de
-  //    côté 3 jours (boîte 1) et signalée au professeur.
-  // Le faux s'applique TOUT DE SUITE (quitter avant le 2e calcul ne fait
-  // rien gagner) ; dans une séance ouverte, ce qu'il a changé est rangé dans
-  // le plan pour le 2e calcul (`deuxieme`, lot 1, décision 4 de
-  // « fonctionnement 3 », choix de Gwenaël) :
-  //  - `{deuxieme: true}` juste : c'était un accident — la boîte, les échecs
-  //    et « J'apprends fait » d'avant sont rendus, la compétence revient
-  //    demain ; le faux ne compte pas comme un échec ;
-  //  - `{deuxieme: true}` faux : rien de plus (le 1er faux compte déjà).
-  //  Un 2e calcul d'une autre compétence que celle qui attend ne rend rien.
-  // Le « lent » (niveaux « par cœur », juste et due au-delà de 5 s ; lot 1,
-  // décision 9) : la 1re fois, la boîte reste et la compétence revient
-  // demain ; lent deux fois de suite, c'est un faux (elle descend, rouge),
-  // sans 2e calcul — événement « lent2 ». Juste rapide ou faux : remis à 0.
-  // Une compétence ne monte pas deux fois le même jour : montée ou descendue,
-  // elle n'est plus due aujourd'hui.
-  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), deuxieme = false} = {}) {
+  // « Je tente » joué. `tentative` : {module, niveau, reponses: [{juste, ms}],
+  // causes}. Le compte est fait ICI, sur les réponses : 6 calculs au plus,
+  // gagné à 5 justes avec un faux au plus ; pour un niveau « par cœur »
+  // (type F), un calcul juste mais lent (plus de 5 s) deux fois de suite
+  // compte faux. Gagnée : l'étoile entre au début des boîtes, elle revient
+  // le lendemain. Ratée : « Je tente » est fermé sur cette étoile jusqu'au
+  // lendemain ; ratée deux fois, pour de bon (elle ne propose plus que
+  // J'apprends, jusqu'à ce qu'elle soit gagnée). Les autres étoiles ne sont
+  // pas touchées.
+  function appliquerTentative(parcours, tentative, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
+    const id = tentative && tentative.module;
+    const etoile = Object.prototype.hasOwnProperty.call(NIVEAUX, id) ? plan.etoiles.get(`${id}-${entier(tentative.niveau, 1, NIVEAUX[id], 1)}`) : null;
+    const vide = {reussi: false, justes: 0, faux: 0, total: 0};
+    if (!etoile) return refus(copie, "inconnue", vide);
+    const etat = etatDe(copie, plan, etoile, aujourdhui, reglage);
+    if (etat.etat !== "aGagner") return refus(copie, etat.etat === "gagnee" ? "gagnee" : "fermee", vide);
+    if (etat.attend) return refus(copie, "attend", vide);
+    if (!etat.actions.tente) return refus(copie, "tente", vide);
+    const reponses = (Array.isArray(tentative.reponses) ? tentative.reponses.filter(Boolean) : []).slice(0, SEUILS.tente.calculs);
+    if (!reponses.length) return refus(copie, "vide", vide);
+    let justes = 0;
+    let faux = 0;
+    let lents = 0;
+    reponses.forEach(reponse => {
+      let juste = Boolean(reponse.juste);
+      if (juste && etoile.type === "F" && Number(reponse.ms) > SEUILS.tente.lentMs) {
+        lents += 1;
+        if (lents >= 2) { juste = false; lents = 0; }
+      } else lents = 0;
+      if (juste) justes += 1;
+      else faux += 1;
+    });
+    const reussi = justes >= SEUILS.tente.justes && faux <= SEUILS.tente.fauxPermis;
+    const n = etoile.niveau;
+    const ligne = ligneAChanger(copie, id, aujourdhui);
+    const evenements = [];
+    ajouterCauses(ligne, tentative.causes);
+    noterJour(copie, aujourdhui);
+    if (reussi) {
+      gagner(ligne, n - 1, aujourdhui);
+      evenements.push({type: "gagnee", module: id, niveau: n, par: "tente"});
+      if (seance) compterEnCours(copie, EN_COURS.prouvees, 1);
+    } else {
+      ligne.r[n - 1] = Math.min(SEUILS.tente.essais, ligne.r[n - 1] + 1);
+      ligne.q[n - 1] = aujourdhui;
+      marquer(ligne, n - 1);
+      evenements.push({type: "tenteRate", module: id, niveau: n, ferme: ligne.r[n - 1] >= SEUILS.tente.essais});
+    }
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
+    const finie = seance ? avancerSeance(copie, plan, aujourdhui, reglage, true) : false;
+    return {parcours: copie, reussi, justes, faux, total: reponses.length, evenements, finie, ceintures};
+  }
+
+  // -------------------------------------------- « Tente toute la ceinture » joué
+
+  // `test` : {etage, reponses: [{module, niveau, juste}]} — les 12 calculs de
+  // calculsDuTestDeCeinture, tous joués (pas d'arrêt, pas d'écran rouge).
+  //  - un faux au plus : toutes les étoiles de l'étage sont gagnées ;
+  //  - sinon : les modules dont le calcul est juste gardent leurs étoiles de
+  //    l'étage (arbitrage du lot K0), les autres t'attendent sur la carte.
+  // Ces étoiles entrent en boîte 4, sans leçon, leurs retours étalés (8 par
+  // jour au plus, à partir du 7e jour) : c'est le filet contre un placement
+  // à tort. Le test est noté joué (une fois par étage), réussi ou non.
+  // À la remise, tout est revérifié (G1) : l'étage est dans le réglage, sa
+  // porte est ouverte, son test n'a pas déjà été joué, rien n'y est
+  // commencé ; une étoile déjà gagnée n'est pas rejouée, une étoile « à voir
+  // en classe » qui attend n'entre pas et garde son signalement.
+  function appliquerTestCeinture(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    const plan = planDeCarte(carte);
+    const reglage = palierDeSeance(palier);
+    const etage = entier(test && test.etage, 0, SEUILS.ceintures.nombre);
+    const vide = {reussi: false, entrees: 0, justes: 0, total: 0};
+    if (!etage || !testDeCeinturePropose(copie, plan, etage, reglage)) return refus(copie, "ceinture", vide);
+    const attendus = calculsDuTestDeCeinture(carte, etage);
+    const reponses = Array.isArray(test.reponses) ? test.reponses.filter(Boolean) : [];
+    const juste = c => reponses.some(r => r.module === c.module && r.niveau === c.niveau && r.juste === true);
+    const jouee = c => reponses.some(r => r.module === c.module && r.niveau === c.niveau);
+    const total = attendus.filter(jouee).length;
+    const justes = attendus.filter(juste);
+    if (!total) return refus(copie, "vide", vide);
+    const reussi = total >= attendus.length && attendus.length - justes.length <= SEUILS.ceinture.fauxPermis;
+    noterJour(copie, aujourdhui);
+    copie.paliers[etage - 1] = aujourdhui;
+    const modulesJustes = new Set(justes.map(c => c.module));
+    // La charge des jours à venir : les étoiles déjà attendues ce jour-là.
+    const charge = new Map();
+    plan.ordre.forEach(e => {
+      const l = copie.modules[e.module];
+      if (l && tenue(l, e.index)) charge.set(l.e[e.index], (charge.get(l.e[e.index]) || 0) + 1);
+    });
+    const evenements = [];
+    let entrees = 0;
+    etoilesDeLEtage(plan, etage).forEach(e => {
+      if (!reussi && !modulesJustes.has(e.module)) return;
+      const lue = ligneDe(copie, e.module);
+      if (tenue(lue, e.index) || enAttente(lue, e.index, aujourdhui)) return;
+      const ligne = ligneAChanger(copie, e.module, aujourdhui);
+      gagner(ligne, e.index, aujourdhui, {boite: SEUILS.revision.ceinture, echeance: jourDeRetourEtale(charge, aujourdhui)});
+      evenements.push({type: "gagnee", module: e.module, niveau: e.niveau, par: "ceinture"});
+      entrees += 1;
+    });
+    if (seance) compterEnCours(copie, EN_COURS.prouvees, entrees);
+    const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
+    const finie = seance ? avancerSeance(copie, plan, aujourdhui, reglage, true) : false;
+    return {parcours: copie, reussi, entrees, justes: justes.length, total, evenements, finie, ceintures};
+  }
+
+  // -------------------------------------------------------- un retour
+
+  // UNE réponse de Mes calculs du jour — le seul moment où une étoile peut
+  // se perdre. `retour` : {module, niveau, juste, ms, cause}. L'étoile doit
+  // être tenue et due.
+  //  Le premier calcul :
+  //  - juste : la boîte monte (7 au plus), nouvelle échéance ; pour un niveau
+  //    « par cœur », juste mais lent (plus de 5 s) : elle ne monte pas et
+  //    revient demain — une réponse lente ne fait jamais perdre l'étoile
+  //    (décision du lot K0) ;
+  //  - faux (ou « Je ne sais pas ») : RIEN ne bouge encore, un 2e calcul est
+  //    attendu (`secondAVenir`). Il est noté sur l'étoile : la page fermée
+  //    entre les deux, il sera reposé au retour de l'élève, ici ou sur un
+  //    autre appareil, même si rien d'autre n'est dû (G2).
+  //  Le 2e calcul :
+  //  - juste : c'était un accident — rien ne bouge, elle revient demain ;
+  //  - faux : le retour est raté, l'étoile part (voir SEUILS.retour) ; la
+  //    correction se fait sur un écran, plus aucun réentraînement imposé.
+  // Dans une séance ouverte, le paquet en cours avance d'une étoile quand
+  // son retour est RÉGLÉ (pas après un premier calcul faux).
+  // `mouvement` dit ce qui s'est passé : {module, niveau, avant, apres,
+  // regle, secondAVenir, deuxieme, accident, rate, perdue, lent, monte,
+  // sens, aVoir, jours}.
+  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), carte = null} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
     const id = retour && retour.module;
     const evenements = [];
-    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, mouvement: null, evenements};
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) return {parcours: copie, mouvement: null, evenements, refuse: "inconnue"};
     const index = entier(retour.niveau, 1, NIVEAUX[id], 1) - 1;
-    const ligne = ligneDe(copie, id);
-    const boite = ligne.b[index];
-    if (!boite) return {parcours: copie, mouvement: null, evenements};
-    poserLigne(copie, id, ligne);
-    toucher(ligne, aujourdhui);
+    const avant = ligneDe(copie, id);
+    const boite = avant.b[index];
+    if (!boite) return {parcours: copie, mouvement: null, evenements, refuse: "pasGagnee"};
+    if (avant.e[index] > aujourdhui) return {parcours: copie, mouvement: null, evenements, refuse: "pasDue"};
+    const ligne = ligneAChanger(copie, id, aujourdhui);
     noterJour(copie, aujourdhui);
-    // Le journal (lot G1) : un calcul du jour de plus dans la séance ouverte,
-    // juste ou pas — le 2e calcul compte aussi.
+    const juste = retour.juste === true;
+    // Le journal : un calcul du jour de plus dans la séance ouverte, juste
+    // ou pas — le 2e calcul compte aussi.
     compterEnCours(copie, EN_COURS.calculs, 1);
-    if (retour.juste) compterEnCours(copie, EN_COURS.justes, 1);
-    const ouverte = copie.seance.p[PLAN.ouverte] === 1;
-    const plan = copie.seance.p;
-    const rang = rangDe(id, index + 1) + 1;
-    if (deuxieme) {
-      const attendu = ouverte && plan[PLAN.second] === rang;
-      let rendu = false;
-      if (attendu && retour.juste) {
-        ligne.b[index] = plan[PLAN.secondBoite];
-        ligne.x[index] = plan[PLAN.secondEchecs];
-        ligne.a[index] = plan[PLAN.secondAppris];
-        ligne.e[index] = ajouterJours(aujourdhui, 1);
-        rendu = true;
-      }
-      if (attendu) [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
-      const apres = ligne.b[index];
-      return {
-        parcours: copie,
-        mouvement: {
-          module: id, niveau: index + 1, avant: boite, apres, due: false, deuxieme: true, rendu,
-          sens: apres > boite ? "monte" : "reste",
-          couleur: couleurDeBoite(apres),
-          rouge: estRouge(ligne, index, aujourdhui),
-          deCote: estDeCote(ligne, index, aujourdhui),
-          jours: ecartJours(aujourdhui, ligne.e[index])
-        },
-        evenements
-      };
+    if (juste) compterEnCours(copie, EN_COURS.justes, 1);
+    const deuxieme = Boolean(ligne.x[index] & X_SECOND);
+    const type = retour.type === "F" || retour.type === "P" ? retour.type : carte ? typeDe(carte, id, index + 1) : "P";
+    const mouvement = {module: id, niveau: index + 1, avant: boite, apres: boite, regle: true, secondAVenir: false, deuxieme,
+      accident: false, rate: false, perdue: false, lent: false, monte: false, sens: "reste", aVoir: false, jours: 0};
+    if (!juste && !deuxieme) {
+      // Le premier calcul est faux : le 2e est attendu, rien d'autre ne bouge.
+      ligne.x[index] |= X_SECOND;
+      marquer(ligne, index);
+      if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
+      Object.assign(mouvement, {regle: false, secondAVenir: true, jours: ecartJours(aujourdhui, ligne.e[index])});
+      marquerSeanceOuverte(copie);
+      return {parcours: copie, mouvement, evenements};
     }
-    const due = ligne.e[index] <= aujourdhui;
-    const lent = retour.juste && due && retour.type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
-    const lent2 = lent && ligne.l[index] === 1;
-    const faux = !retour.juste || lent2;
-    if (!faux) {
-      if (due && lent) { ligne.e[index] = ajouterJours(aujourdhui, 1); ligne.l[index] = 1; }
-      else if (due) {
+    // Le retour est réglé. Un premier retour d'une étoile placée par un test
+    // de ceinture (boîte 4, sans leçon, jamais revenue) : compté au journal.
+    const duTest = !ligne.a[index] && boite === SEUILS.revision.ceinture;
+    if (duTest) compterEnCours(copie, EN_COURS.tests, 1);
+    ligne.x[index] &= ~X_SECOND;
+    if (juste && deuxieme) {
+      ligne.e[index] = ajouterJours(aujourdhui, 1);
+      mouvement.accident = true;
+    } else if (juste) {
+      const lent = type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
+      if (lent) {
+        ligne.e[index] = ajouterJours(aujourdhui, 1);
+        mouvement.lent = true;
+      } else {
         ligne.b[index] = Math.min(SEUILS.revision.boites, boite + 1);
         ligne.e[index] = echeanceDeBoite(ligne.b[index], aujourdhui);
-        // Lot G1 : la boîte 4 atteinte pour la première fois — sue.
-        if (boite < SEUILS.revision.su && ligne.b[index] >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
-        ligne.l[index] = 0;
+        ligne.x[index] = 0;
+        if (ligne.b[index] >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
+        mouvement.monte = true;
       }
-      ligne.x[index] = 0;
     } else {
-      // Ce que le faux change, rangé pour le 2e calcul (pas après un lent).
-      if (ouverte && !lent2) {
-        plan[PLAN.second] = rang;
-        plan[PLAN.secondBoite] = boite;
-        plan[PLAN.secondEchecs] = ligne.x[index];
-        plan[PLAN.secondAppris] = ligne.a[index];
-      }
-      ligne.l[index] = 0;
-      ligne.x[index] = Math.min(SEUILS.rattrapage.deCote, ligne.x[index] + 1);
-      if (ligne.x[index] >= SEUILS.rattrapage.echecs) ligne.a[index] = 0;
-      if (ligne.x[index] >= SEUILS.rattrapage.deCote) {
-        ligne.b[index] = 1;
-        ligne.e[index] = ajouterJours(aujourdhui, SEUILS.rattrapage.joursDeCote);
+      // Les deux calculs faux : le retour est raté.
+      if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
+      if (duTest) compterEnCours(copie, EN_COURS.testsRates, 1);
+      mouvement.rate = true;
+      const rates = (ligne.x[index] & X_RATE) + 1;
+      if (rates >= SEUILS.retour.ratesDeSuite) {
+        ligne.a[index] = 1;
+        perdre(ligne, index);
+        mouvement.perdue = true;
+        compterEnCours(copie, EN_COURS.rouges, 1);
+        evenements.push({type: "perdue", module: id, niveau: index + 1, aVoir: ligne.pe[index] >= SEUILS.retour.perdues});
       } else {
         ligne.b[index] = Math.max(1, boite - 1);
         ligne.e[index] = ajouterJours(aujourdhui, 1);
+        ligne.x[index] = X_RATE;
       }
-      if (retour.cause && !retour.juste) ajouterCauses(ligne, {[retour.cause]: 1});
-      if (lent2) evenements.push({type: "lent2", module: id, niveau: index + 1});
     }
-    // Le module devient su : la date est posée une fois, elle ne s'efface pas.
-    if (!ligne.ok && toutSu(ligne)) {
-      ligne.ok = aujourdhui;
-      evenements.push({type: "module", module: id});
-    }
+    // Elle est revenue une fois : plus d'exemple résolu à son retour.
+    ligne.a[index] = 1;
+    if (!mouvement.perdue) marquer(ligne, index);
+    if (copie.seance.p[PLAN.ouverte] === 1 && copie.seance.p[PLAN.paquet] > 0) copie.seance.p[PLAN.paquet] -= 1;
+    marquerSeanceOuverte(copie);
     const apres = ligne.b[index];
-    return {
-      parcours: copie,
-      mouvement: {
-        module: id, niveau: index + 1, avant: boite, apres, due, lent: lent && !lent2, lent2,
-        // Un 2e calcul suit : un faux (pas un lent) dans une séance ouverte.
-        deuxiemeAVenir: faux && !lent2 && ouverte,
-        sens: apres > boite ? "monte" : faux ? "descend" : "reste",
-        couleur: couleurDeBoite(apres),
-        rouge: estRouge(ligne, index, aujourdhui),
-        deCote: estDeCote(ligne, index, aujourdhui),
-        jours: ecartJours(aujourdhui, ligne.e[index])
-      },
-      evenements
-    };
+    Object.assign(mouvement, {apres, sens: apres > boite ? "monte" : apres < boite ? "descend" : "reste", aVoir: aVoirEnClasse(ligne, index),
+      jours: apres ? ecartJours(aujourdhui, ligne.e[index]) : 0});
+    return {parcours: copie, mouvement, evenements};
   }
 
-  // Le 2e calcul qui attend dans la séance ouverte (la page rechargée entre
-  // le faux et lui) : {module, niveau}, ou null.
-  function deuxiemeEnAttente(parcours, aujourdhui = jourLocal()) {
+  function marquerSeanceOuverte(copie) {
+    if (copie.seance.p[PLAN.ouverte] === 1) marquerSeance(copie);
+  }
+
+  // Le 2e calcul qui attend (la page rechargée entre le faux et lui) : la
+  // première étoile due dont le premier calcul était faux, {module, niveau},
+  // ou null.
+  function deuxiemeEnAttente(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
     const p = normaliserParcours(parcours, {aujourdhui});
-    if (!seanceOuverte(p, aujourdhui) || !p.seance.p[PLAN.second]) return null;
-    return competenceDeRang(p.seance.p[PLAN.second] - 1);
+    const premiere = etoilesDues(p, planDeCarte(carte), aujourdhui, palierDeSeance(palier)).find(c => c.second);
+    return premiere ? {module: premiere.etoile.module, niveau: premiere.etoile.niveau} : null;
   }
 
-  // Mes calculs du jour sont finis : l'étape est faite, et la suite se
-  // décide — la première compétence rouge à entraîner, s'il y en a une.
-  function terminerCalculsDuJour(parcours, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
-    const avant = normaliserParcours(parcours, {aujourdhui});
-    const copie = cloner(avant);
-    const rouge = aEntrainer(copie, carte, aujourdhui);
-    // Un 2e calcul resté en attente (la page fermée entre les deux) : la
-    // compétence garde son faux.
-    const finie = avancerSeance(copie, avant, carte, aujourdhui, plan => {
-      plan[PLAN.jour] = 0;
-      plan[PLAN.rattrapage] = rouge ? rangDe(rouge.module, rouge.niveau) + 1 : 0;
-      [PLAN.second, PLAN.secondBoite, PLAN.secondEchecs, PLAN.secondAppris].forEach(i => { plan[i] = 0; });
-    }, palier);
-    return {parcours: copie, finie, rouge, ceintures: gagnerCeintures(copie, carte, aujourdhui, palier)};
-  }
-
-  // « Commencer » : le plan de la séance est décidé et rangé, pour qu'elle se
-  // reprenne telle quelle le jour même, ici ou sur un autre appareil. Une
-  // séance déjà ouverte aujourd'hui n'est pas touchée.
-  // `minutes` : le réglage (10 ou 15), rangé dans le plan.
-  function ouvrirSeance(parcours, carte, {aujourdhui = jourLocal(), minutes = SEUILS.seance.defaut} = {}) {
-    const copie = normaliserParcours(parcours, {aujourdhui});
-    if (seanceOuverte(copie, aujourdhui)) return copie;
-    const plan = planNeuf(copie, carte, aujourdhui, minutes);
-    plan[PLAN.ouverte] = 1;
-    // Une séance NEUVE part de zéro (lot G1) : ce qu'avait fait une séance
-    // laissée ouverte un autre jour ne la suit pas.
-    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, p: plan, j: enCoursVide()};
-    return copie;
-  }
-
-  // « Demain : … » : la compétence qui vient (ou la rouge à reprendre), et
-  // les calculs qui reviennent.
-  function demain(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
-    const lendemain = ajouterJours(aujourdhui, 1);
-    const rougesDemain = rouges(parcours, carte, lendemain);
-    return {
-      prochaine: competenceCourante(parcours, carte, palier, lendemain),
-      rouge: rougesDemain.length ? {module: rougesDemain[0].module, niveau: rougesDemain[0].niveau} : null,
-      reviennent: tirerCalculsDuJour(parcours, carte, {aujourdhui: lendemain}).length
-    };
+  // La séance s'arrête sur un J'apprends en cours : un dernier calcul pris
+  // dans ce que l'élève sait la clôt (arbitrage du 21/11). L'étoile tenue la
+  // plus solide (la boîte la plus haute, puis l'ordre de la carte), {module,
+  // niveau}, ou null ; ce calcul ne compte pas (aucun effet sur les boîtes).
+  function etoileDeCloture(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers} = {}) {
+    const p = normaliserParcours(parcours, {aujourdhui});
+    const reglage = palierDeSeance(palier);
+    let choisie = null;
+    planDeCarte(carte).ordre.forEach(etoile => {
+      const ligne = p.modules[etoile.module];
+      if (etoile.etage > reglage || !ligne || !tenue(ligne, etoile.index)) return;
+      if (!choisie || ligne.b[etoile.index] > choisie.boite) choisie = {module: etoile.module, niveau: etoile.niveau, boite: ligne.b[etoile.index]};
+    });
+    return choisie ? {module: choisie.module, niveau: choisie.niveau} : null;
   }
 
   // « N fois cette semaine » : les séances finies depuis lundi.
@@ -2439,6 +2507,9 @@
     return codeValide(code) ? definirPrenom(parcours, "") : parcours;
   }
 
+  // Une copie écrite par une page plus récente (versionEnAvance) n'est pas
+  // interprétée : le parcours rendu est vide, et rien ne s'écrira par-dessus
+  // (sauver le refuse). Une copie d'une version d'avant la 12 repart de zéro.
   function charger(stockage, code) {
     try {
       const brut = stockage && stockage.getItem(cleStockage(code, stockage));
@@ -2460,9 +2531,7 @@
     try {
       const brut = stockage && stockage.getItem(cleStockage(code, stockage));
       if (!brut) return false;
-      const lu = JSON.parse(brut);
-      const version = Number(lu && lu.version);
-      return Number.isInteger(version) && version > VERSION;
+      return tropRecente(JSON.parse(brut));
     } catch (_) {
       return false;
     }
@@ -2736,6 +2805,31 @@
   }
 
   // ------------------------------------------------------------------ la fusion
+  //
+  // Deux états du même élève (cet appareil et le serveur, ou deux
+  // appareils). Version 12, après la relecture de Codex du 22/11 (B2) : la
+  // décision se prend ÉTOILE PAR ÉTOILE, avec ce que cette étoile garde, et
+  // plus jamais sur la date ou la somme des boîtes de son module.
+  //  - Une étoile a un COMPTEUR `g`, qui monte à chaque fois qu'elle change.
+  //    Des deux côtés, on garde EN BLOC l'état de celui dont le compteur est
+  //    le plus haut (sa boîte, son échéance, son retour en cours, ses
+  //    arrêts, ses « Je tente » ratés) : c'est celui qui en sait le plus sur
+  //    elle. À compteur égal et états différents (chaque appareil a fait UN
+  //    geste sur la même étoile sans voir l'autre), le plus prudent — la
+  //    boîte la plus basse, puis un choix fixe qui ne dépend pas du sens.
+  //  - Ce qui ne se défait jamais se réunit à part : gagnée un jour (`d`) et
+  //    solide un jour (`s`), le jour le plus ancien ; perdue (`pe`) et
+  //    « leçon faite ou déjà revenue » (`a`), le plus grand.
+  // D'où les trois égalités, vérifiées par les tests sur des milliers
+  // d'états : fusion(A, B) = fusion(B, A) ; fusion(A, A) = A ;
+  // fusion(fusion(A, B), A) = fusion(A, B) — une vieille copie qui revient
+  // ne change rien. Et un appareil qui a continué à partir d'un état garde
+  // tout son travail en fusionnant avec cet état : une réponse juste n'est
+  // jamais annulée par une copie plus ancienne.
+  // Limite connue : quand deux appareils changent la MÊME étoile chacun de
+  // son côté sans se voir, un seul des deux gestes est gardé ; de même, un
+  // compte d'erreurs par cause monté des deux côtés garde le plus grand, pas
+  // la somme (un compte exact demanderait de garder les écarts par appareil).
 
   function dateLaPlusRecente(premiere, seconde) {
     if (!premiere) return seconde || null;
@@ -2749,16 +2843,14 @@
     return premiere <= seconde ? premiere : seconde;
   }
 
-  // Lequel des deux côtés a vu le module le plus récemment ; à égalité, un
-  // choix qui ne dépend pas de l'ordre des arguments (les boîtes les plus
-  // basses, puis le texte le plus petit).
-  function coteLePlusRecent(a, b) {
-    const va = a.vu || "";
-    const vb = b.vu || "";
-    if (va !== vb) return va > vb ? a : b;
-    const somme = ligne => ligne.b.reduce((s, boite) => s + boite, 0);
-    if (somme(a) !== somme(b)) return somme(a) < somme(b) ? a : b;
-    return JSON.stringify(a) <= JSON.stringify(b) ? a : b;
+  // Ce qu'une étoile garde en bloc, et l'ordre fixe entre deux blocs de
+  // même compteur : la boîte la plus basse d'abord, puis le texte.
+  const BLOC = Object.freeze(["b", "e", "x", "ar", "r", "q"]);
+  const blocDe = (ligne, i) => BLOC.map(cle => ligne[cle][i]);
+  function blocGarde(a, b, i) {
+    if (a.g[i] !== b.g[i]) return a.g[i] > b.g[i] ? a : b;
+    if (a.b[i] !== b.b[i]) return a.b[i] < b.b[i] ? a : b;
+    return JSON.stringify(blocDe(a, i)) <= JSON.stringify(blocDe(b, i)) ? a : b;
   }
 
   function fusionnerModule(id, a, b) {
@@ -2767,148 +2859,128 @@
     const k = NIVEAUX[id];
     const ligne = moduleVide(id);
     ligne.vu = dateLaPlusRecente(a.vu, b.vu);
-    ligne.ok = dateLaPlusAncienne(a.ok, b.ok);
-    // Les boîtes, les échéances, les échecs et « J'apprends à refaire » : en
-    // bloc, du côté qui a vu le module le plus récemment. Une compétence
-    // entrée seulement de l'autre côté n'est pas perdue : elle garde sa boîte
-    // de là-bas. `a` (J'apprends fait) suit le bloc d'une compétence entrée
-    // (remis à 0 par deux échecs, il ne revient pas à 1 par l'autre côté) ;
-    // pas entrée, une leçon faite d'un côté compte ; le même jour des deux
-    // côtés, le plus prudent : refaire une leçon coûte moins que la sauter.
-    // `t` (entraînée avec l'aide le jour `vu`) vaut pour le jour le plus
-    // récent ; ce jour-là, entraînée d'un côté suffit.
-    const recent = coteLePlusRecent(a, b);
-    const autre = recent === a ? b : a;
     for (let i = 0; i < k; i += 1) {
-      ligne.f[i] = Math.max(a.f[i], b.f[i]);
-      const source = recent.b[i] || !autre.b[i] ? recent : autre;
-      ligne.a[i] = a.vu === b.vu ? Math.min(a.a[i], b.a[i]) : source.b[i] ? source.a[i] : Math.max(a.a[i], b.a[i]);
-      ligne.b[i] = source.b[i];
-      ligne.e[i] = source.e[i];
-      ligne.x[i] = source.x[i];
-      // Le « lent » (lot 1) suit le bloc, comme les échecs.
-      ligne.l[i] = ligne.b[i] ? source.l[i] : 0;
-      ligne.t[i] = ligne.b[i] ? Math.max(a.vu === ligne.vu ? a.t[i] : 0, b.vu === ligne.vu ? b.t[i] : 0) : 0;
-      // Les deux dates (lot G1) : le premier jour connu d'un côté ou de
-      // l'autre — elles ne sont posées qu'une fois, la plus ancienne est la
-      // vraie. Pas entrée : pas de date.
-      ligne.d[i] = ligne.b[i] ? dateLaPlusAncienne(a.d[i], b.d[i]) : null;
-      ligne.s[i] = ligne.b[i] ? dateLaPlusAncienne(a.s[i], b.s[i]) : null;
-      // Lot F4 : un J'apprends arrêté (pas entrée seulement). Les arrêts : le
-      // plus grand des deux (deux appareils ne font pas oublier un arrêt) ;
-      // la reprise et le jour de retour, du côté qui en a le plus (à
-      // égalité : la reprise la plus prudente, le retour le plus tardif).
-      if (ligne.b[i]) ligne.ar[i] = 0;
-      else {
-        const [na, nb] = [arretsDe(a, i), arretsDe(b, i)];
-        const plus = na !== nb ? (na > nb ? a : b) : null;
-        ligne.ar[i] = plus ? plus.ar[i] : Math.min(a.ar[i], b.ar[i]);
-        ligne.e[i] = plus ? plus.e[i] : dateLaPlusRecente(a.b[i] ? null : a.e[i], b.b[i] ? null : b.e[i]);
-      }
+      const source = blocGarde(a, b, i);
+      BLOC.forEach(cle => { ligne[cle][i] = source[cle][i]; });
+      ligne.g[i] = Math.max(a.g[i], b.g[i]);
+      ligne.a[i] = Math.max(a.a[i], b.a[i]);
+      ligne.pe[i] = Math.max(a.pe[i], b.pe[i]);
+      ligne.d[i] = dateLaPlusAncienne(a.d[i], b.d[i]);
+      ligne.s[i] = dateLaPlusAncienne(a.s[i], b.s[i]);
     }
-    [...new Set([...Object.keys(a.c), ...Object.keys(b.c)])].sort((x, y) => Number(x) - Number(y)).forEach(cause => {
+    [...new Set([...Object.keys(a.c), ...Object.keys(b.c)])].sort((x, y) => Number(x) - Number(y)).slice(0, SEUILS.causes).forEach(cause => {
       ligne.c[cause] = Math.max(a.c[cause] || 0, b.c[cause] || 0);
     });
-    // Deux appareils qui ont chacun une partie des compétences sues.
-    if (!ligne.ok && toutSu(ligne)) ligne.ok = ligne.vu;
     return ligne;
   }
 
-  // Deux états du même élève (cet appareil et le serveur, ou deux
-  // appareils) : on garde le plus avancé, jamais d'écrasement.
-  // `aujourdhui` (correctif F4, point 6) : le jour de retour d'un niveau « à
-  // voir en classe » reste borné à 7 jours après lui, d'où qu'il vienne.
+  // La séance la plus avancée des deux : le plus de séances finies, puis le
+  // jour le plus récent, puis l'OUVERTE (une séance ne se referme qu'en
+  // finissant : son compte monte), puis son compteur ; à égalité complète,
+  // un choix fixe sur le texte. Gardée en bloc, avec ce qu'elle a fait.
+  function seanceGardee(a, b) {
+    const rang = s => [s.n, s.jour || "", s.p[PLAN.ouverte], s.g];
+    const [ra, rb] = [rang(a), rang(b)];
+    for (let i = 0; i < ra.length; i += 1) if (ra[i] !== rb[i]) return ra[i] > rb[i] ? a : b;
+    return JSON.stringify(a) <= JSON.stringify(b) ? a : b;
+  }
+
+  // `aujourdhui` : le jour de la fusion (les bornes des dates se calculent
+  // sur lui, d'où qu'elles viennent).
+  // Une copie d'une version PLUS RÉCENTE que ce moteur n'est jamais
+  // fusionnée (B1) : l'autre côté est rendu tel quel. La page ne doit pas
+  // enregistrer par-dessus : voir recevoir.
   function fusionner(premier, second, {aujourdhui = jourLocal()} = {}) {
     const a = normaliserParcours(premier, {aujourdhui});
     const b = normaliserParcours(second, {aujourdhui});
-    // L'époque la plus haute gagne en bloc (« Recommencer à zéro »).
+    if (tropRecente(second)) return a;
+    if (tropRecente(premier)) return b;
+    // L'époque la plus haute gagne en bloc (« Recommencer à zéro », une
+    // version restaurée par le professeur).
     if (a.epoque !== b.epoque) return a.epoque > b.epoque ? a : b;
     const fusion = creerParcours();
     fusion.epoque = a.epoque;
-    fusion.prenom = a.prenom || b.prenom;
+    // Le prénom (un visiteur sans code ; il ne part jamais au serveur) :
+    // celui qui existe ; deux prénoms, un choix fixe.
+    fusion.prenom = !a.prenom || !b.prenom ? a.prenom || b.prenom : a.prenom <= b.prenom ? a.prenom : b.prenom;
     CODES.forEach(id => {
       if (a.modules[id] || b.modules[id]) fusion.modules[id] = fusionnerModule(id, a.modules[id], b.modules[id]);
     });
-    // La séance et son plan : du côté qui a le plus de séances finies, puis
-    // le jour le plus récent, puis l'étape la plus avancée, puis la séance
-    // OUVERTE ; à égalité complète, le texte le plus petit.
-    // Correctif G1 : une séance ne se referme qu'en finissant (son compte
-    // monte) — au même compte, au même jour et à la même étape, l'ouverte
-    // est donc la plus récente. Avant, le texte le plus petit (la fermée)
-    // gagnait : une séance ouverte sans étape finie, rechargée avant que le
-    // serveur l'ait reçue, se refermait et perdait ce qu'elle avait fait.
-    const rang = cote => [cote.seance.n, cote.seance.jour || "", cote.seance.etape, cote.seance.p[PLAN.ouverte], JSON.stringify(cote.seance.p)];
-    const [ra, rb] = [rang(a), rang(b)];
-    const aDevant = ra[0] !== rb[0] ? ra[0] > rb[0] : ra[1] !== rb[1] ? ra[1] > rb[1] : ra[2] !== rb[2] ? ra[2] > rb[2]
-      : ra[3] !== rb[3] ? ra[3] > rb[3] : ra[4] <= rb[4];
-    fusion.seance = cloner(aDevant ? a.seance : b.seance);
-    // La même séance des deux côtés (même compte, même jour) : les tests
-    // faits, la nouveauté (0 à faire < 2 faite < 3 arrêtée), les nouveautés
-    // prévues et réussies sont le plus grand des deux (lot F1, relecture de
-    // Codex) — un plan à 5 nombres (relu 0, 0) ou tronqué par une page
-    // d'avant F1 ne fait pas perdre le réglage, ni revenir le compteur des
-    // tests à 0 ; un entraînement raté d'un côté arrête aussi l'autre. Le
-    // nombre réglé atteint : plus de nouveauté.
-    // Lot 1 : les minutes prévues et les apprentissages commencés aussi ; le
-    // 2e calcul en attente reste celui du côté gardé.
-    if (ra[0] === rb[0] && ra[1] === rb[1] && fusion.seance.jour) {
-      const p = fusion.seance.p;
-      [PLAN.tests, PLAN.nouveaute, PLAN.minutes, PLAN.commences].forEach(i => {
-        p[i] = Math.max(a.seance.p[i], b.seance.p[i]);
-      });
-      // Ce que la séance a fait (lot G1) : le plus grand des deux, compte
-      // par compte, comme le plan. Ouverte d'un côté seulement : celui-là.
-      if (p[PLAN.ouverte] === 1) {
-        const ouverte = cote => (cote.seance.p[PLAN.ouverte] === 1 ? cote.seance.j : enCoursVide());
-        fusion.seance.j = EN_COURS_MAX.map((_, i) => Math.max(ouverte(a)[i], ouverte(b)[i]));
-      }
-    }
-    if (fusion.seance.p[PLAN.ouverte] !== 1) fusion.seance.j = enCoursVide();
-    // Les séances finies et leur journal (lot G1 ; correctif du lot S1 après
-    // la relecture de Codex) : réunies séance par séance, par leur numéro
-    // (reunirSeances) — un jour vu de deux appareils compte le plus grand
-    // des deux comptes, plus les séances faites de chaque côté sans l'autre ;
-    // les 60 plus récentes, après la réunion. Une copie sans journal n'efface
-    // rien, et l'ordre des fusions ne change rien.
-    const rangees = reunirSeances(pairesDe(a), pairesDe(b));
+    fusion.seance = cloner(seanceGardee(a.seance, b.seance));
+    // Les séances finies et leur journal : réunies séance par séance, par
+    // leur numéro (reunirSeances) — une copie de la même séance se
+    // dédoublonne, deux séances différentes restent deux (G3). Le compte des
+    // séances finies suit : celles d'un côté, plus celles que l'autre a
+    // finies sans lui.
+    // (Une séance plus ancienne que la plus ancienne des 60 que l'autre côté
+    // garde n'est pas « en plus » : il a pu l'avoir, et ne plus la garder.)
+    const [pa, pb] = [pairesDe(a), pairesDe(b)];
+    const cleDe = p => `${p.jour} ${numeroDe(p.entree)}`;
+    const enPlus = (x, y) => {
+      const connues = new Set(y.map(cleDe));
+      const plein = y.length >= SEUILS.seance.garder ? y[0].jour : "";
+      return x.filter(p => numeroDe(p.entree) >= 0 && p.jour >= plein && !connues.has(cleDe(p))).length;
+    };
+    fusion.seance.n = Math.min(SEUILS.compteur, Math.max(a.seance.n + enPlus(pb, pa), b.seance.n + enPlus(pa, pb)));
+    const rangees = reunirSeances(pa, pb);
     fusion.seances = rangees.seances;
     fusion.journal = rangees.journal;
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
-    // Lot 4 : une ceinture gagnée d'un côté l'est des deux ; le jour le plus
-    // ancien.
+    // Une ceinture gagnée d'un côté l'est des deux, un test de ceinture joué
+    // d'un côté l'est des deux : le jour le plus ancien. Le remplissage à
+    // garder : le plus grand.
     fusion.ceintures = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.ceintures[index], b.ceintures[index]));
-    // Lot F4 : un test de palier joué d'un côté l'est des deux.
     fusion.paliers = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.paliers[index], b.paliers[index]));
+    fusion.quarts = quartsVides().map((_, index) => Math.max(a.quarts[index], b.quarts[index]));
     return normaliserParcours(fusion, {aujourdhui});
+  }
+
+  // Un parcours REÇU (lu au serveur, rendu avec un 409, relu d'une autre
+  // case) : avant de l'interpréter, de le fusionner ou de l'enregistrer, sa
+  // version est contrôlée (B1).
+  //  - plus récente que ce moteur : rien n'est fusionné — `parcours` est le
+  //    parcours local, inchangé, et `lectureSeule` vaut true : la page ne
+  //    doit plus rien écrire ni envoyer (« Page ancienne : recharge la
+  //    page. ») ;
+  //  - sinon : la fusion. `apporte` dit si le local apporte quelque chose au
+  //    reçu (sinon la page ne renvoie rien : chaque ouverture ne fait pas
+  //    monter la révision pour rien).
+  function recevoir(local, recu, {aujourdhui = jourLocal()} = {}) {
+    const ici = normaliserParcours(local, {aujourdhui});
+    if (tropRecente(recu)) return {parcours: ici, lectureSeule: true, apporte: false};
+    const distant = normaliserParcours(recu, {aujourdhui});
+    const fusion = fusionner(ici, distant, {aujourdhui});
+    const sansPrenom = p => JSON.stringify(Object.assign({}, p, {prenom: ""}));
+    return {parcours: fusion, lectureSeule: false, apporte: sansPrenom(fusion) !== sansPrenom(distant)};
   }
 
   // ---------------------------------------------- ce que lit le professeur
   //
   // Lot 2b (31/10/2026) : la page « Ma classe » de suivi.mathsgo.re et la
   // tuile de Mon espace lisent un parcours par cette fonction, et par elle
-  // seule — la page ne touche jamais aux boîtes. Elle rend ce qu'on affiche,
-  // jamais un texte : les noms viennent de defi_calcul_core.js, côté page.
-  // Un parcours abîmé ou absent est d'abord renormalisé (bornes du moteur) ;
-  // `lisible` dit si quelque chose a pu être lu.
+  // seule. Elle rend ce qu'on affiche, jamais un texte : les noms viennent
+  // de defi_calcul_core.js, côté page. Lot K1 : la FORME de la réponse ne
+  // change pas (le nouvel affichage du professeur est le lot K2) ; ce
+  // qu'elle dit suit la carte.
   //
-  // L'état d'une compétence, tel que le professeur le voit :
-  //   gris    pas entrée (à apprendre) ;
-  //   route   entrée, en route (boîtes 2 et 3) ;
-  //   su      sue (boîtes 4 à 7) ;
-  //   revoir  rouge pour la séance (boîte 1, ou ratée aujourd'hui) ;
-  //   classe  « à voir en classe » : mise de côté au 3e échec de suite, tant
-  //           qu'un calcul du jour juste ne l'a pas remise à zéro — pendant
-  //           ses jours de côté, et après, quand elle est revenue rouge.
-  function etatCompetence(ligne, index, aujourdhui) {
-    if (!ligne.b[index]) return aVoirEnClasse(ligne, index) ? "classe" : "gris";
+  // L'état d'une étoile, tel que le professeur le voit :
+  //   gris    pas gagnée (à gagner, ou fermée) ;
+  //   route   gagnée, en route (boîtes 1 à 3) ;
+  //   su      solide (boîtes 4 à 7) ;
+  //   revoir  à regagner (gagnée un jour, perdue à un retour), ou gagnée
+  //           avec un retour raté ;
+  //   classe  « à voir en classe » : J'apprends arrêté 3 fois, ou perdue 3
+  //           fois (tant qu'elle n'est pas redevenue solide).
+  function etatCompetence(ligne, index) {
     if (aVoirEnClasse(ligne, index)) return "classe";
-    if (estRouge(ligne, index, aujourdhui)) return "revoir";
+    if (!ligne.b[index]) return ligne.d[index] ? "revoir" : "gris";
+    if (ligne.x[index] & X_RATE) return "revoir";
     return ligne.b[index] >= SEUILS.revision.su ? "su" : "route";
   }
 
   function resumeProf(brut, carte, aujourdhui = jourLocal()) {
     const parcours = normaliserParcours(brut, {aujourdhui});
-    const lisible = Boolean(brut && typeof brut === "object");
+    const lisible = Boolean(brut && typeof brut === "object") && !tropRecente(brut);
     const compte = compter(parcours, carte);
     // Le même compte sur les seuls modules construits : ce que l'appli
     // propose aujourd'hui (la page du professeur compte là-dessus ; la tuile
@@ -2919,36 +2991,41 @@
     const revoir = [];
     normaliserCarte(carte).modules.filter(fiche => Object.prototype.hasOwnProperty.call(NIVEAUX, fiche.id)).forEach(fiche => {
       const ligne = ligneDe(parcours, fiche.id);
-      const etats = ligne.b.map((_, index) => etatCompetence(ligne, index, aujourdhui));
+      const etats = ligne.b.map((_, index) => etatCompetence(ligne, index));
+      const paliers = ligne.b.map((_, index) => palierDe(carte, fiche.id, index + 1));
       modules.push({
         id: fiche.id,
         construit: Boolean(fiche.construit),
         niveaux: NIVEAUX[fiche.id],
         etats,
-        paliers: ligne.b.map((_, index) => palierDe(carte, fiche.id, index + 1)),
+        paliers,
         boites: ligne.b.slice(),
-        su: Boolean(ligne.ok),
+        // Toutes les étoiles du module sont solides.
+        su: paliers.some(Boolean) && ligne.b.every((boite, index) => !paliers[index] || boite >= SEUILS.revision.su),
         vu: ligne.vu,
-        // Lot G1 (pour la page prof, lot G2) : le jour où chaque compétence
-        // est entrée, et celui où elle est devenue sue (null : pas connu).
+        // Le jour où chaque étoile a été gagnée pour la première fois, et
+        // celui où elle est devenue solide (null : pas connu).
         entrees: ligne.d.slice(),
-        sues: ligne.s.slice()
+        sues: ligne.s.slice(),
+        // Lot K1 (pour la page du professeur du lot K2) : combien de fois
+        // chaque étoile a été perdue.
+        perdues: ligne.pe.slice()
       });
       etats.forEach((etat, index) => {
         if (etat !== "revoir" && etat !== "classe") return;
+        const attend = enAttente(ligne, index, aujourdhui);
         revoir.push({
           module: fiche.id, niveau: index + 1, etat,
-          deCote: estDeCote(ligne, index, aujourdhui),
+          deCote: attend,
           echeance: ligne.e[index],
-          // « J'apprends à refaire » : après deux échecs de suite.
-          apprends: ligne.a[index] === 0,
-          echecs: ligne.x[index],
-          // Déjà réentraînée avec l'aide aujourd'hui (le rouge d'abord).
-          entrainee: entraineeAujourdhui(ligne, index, aujourdhui),
-          // Lot F4 : jamais apprise — J'apprends arrêté 3 fois ; le jour où
-          // elle revient dans le parcours (null : elle est déjà revenue).
-          pasApprise: !ligne.b[index],
-          retour: !ligne.b[index] && ligne.e[index] && ligne.e[index] > aujourdhui ? ligne.e[index] : null
+          // À regagner ou à apprendre : l'étoile n'est pas tenue.
+          apprends: !ligne.b[index],
+          echecs: ligne.pe[index],
+          entrainee: false,
+          // Jamais gagnée — J'apprends arrêté 3 fois ; le jour où elle se
+          // rejoue (null : elle se joue déjà).
+          pasApprise: !ligne.b[index] && !ligne.d[index],
+          retour: attend ? ligne.e[index] : null
         });
       });
     });
@@ -2979,21 +3056,21 @@
       causes,
       seances: {semaine: seances.filter(jour => jour >= lundi).length, quatreSemaines: seances.filter(jour => jour >= depuis).length,
         total: parcours.seances.length, jours: joursSemaine},
-      // Lot G1 (pour la page prof, lot G2) : les 4 dernières semaines, et le
-      // journal, une séance finie par ligne, de la plus ancienne à la plus
-      // récente — null : pas connu (une séance finie avant le lot G1).
+      // Les 4 dernières semaines, et le journal, une séance finie par ligne,
+      // de la plus ancienne à la plus récente — null : pas connu.
       semaines: seancesParSemaine(parcours, aujourdhui),
       journal: pairesDe(parcours).map(({jour, entree}) => {
         const ligne = {jour};
         JOURNAL.forEach((champ, index) => { if (champ !== "numero") ligne[champ] = entree[index] >= 0 ? entree[index] : null; });
         return ligne;
       }),
-      // Lot 4 : la ceinture portée, les jours où chacune a été gagnée, les
-      // barrettes vers la suivante (tous les paliers : la page du professeur
+      // La ceinture portée, les jours où chacune a été gagnée, le
+      // remplissage de la suivante (tous les étages : la page du professeur
       // ne lit pas le réglage de l'élève ici).
       ceintures: (() => {
         const etat = etatCeintures(parcours, carte);
-        return {porte: etat.porte, dates: etat.dates, barrettes: etat.barrettes, prochaine: etat.prochaine, solides: etat.solides, total: etat.total};
+        return {porte: etat.porte, dates: etat.dates, barrettes: etat.barrettes, prochaine: etat.prochaine, solides: etat.solides, total: etat.total,
+          etoiles: etat.etoiles, quarts: etat.quarts};
       })(),
       dernier: dernier && vus.length ? (dernier >= vus[vus.length - 1] ? dernier : vus[vus.length - 1]) : dernier || (vus.length ? vus[vus.length - 1] : null)
     };
@@ -3054,7 +3131,9 @@
     const jours = [];
     passees.filter(paire => paire.jour >= debut).forEach(({jour, entree}) => {
       const ligne = {};
-      JOURNAL.forEach((champ, index) => { if (champ !== "minutes" && champ !== "numero") ligne[champ] = nombre(entree[index]); });
+      // (Les cinq comptes du lot S1, pas plus : la page « Suivre ses
+      // élèves » lit la même forme pour les cinq applis.)
+      ["calculs", "justes", "nouveautes", "prouvees", "rouges"].forEach(champ => { ligne[champ] = nombre(entree[JOURNAL.indexOf(champ)]); });
       const dernierJour = jours[jours.length - 1];
       if (dernierJour && dernierJour.jour === jour) dernierJour.lignes.push(ligne);
       else jours.push({jour, lignes: [ligne]});
@@ -3124,9 +3203,14 @@
     CODES,
     SEUILS,
     PLAN,
-    NOUVEAUTE,
+    REPRISE,
+    JOURNAL,
     creerParcours,
     normaliserParcours,
+    // B1 : la version d'une progression brute, et « écrite par une page plus
+    // récente que ce moteur ».
+    versionDe,
+    tropRecente,
     nettoyerPrenom,
     definirPrenom,
     remettreAZero,
@@ -3140,50 +3224,48 @@
     couleurDeBoite,
     rangDe,
     competenceDeRang,
-    estSu,
-    estIntact,
-    etatModule,
-    competenceCourante,
     arretsDe,
     repriseDe,
-    marchesDuTest,
-    testDeReprise,
-    moduleCourant,
     parcoursConstruit,
     palierDe,
     typeDe,
-    // Lot C3 : le premier retour d’une compétence entrée sans J’apprends.
+    // Lot K1 : la carte de l'élève et l'état de ses étoiles.
+    carteEleve,
+    etatEtoile,
     premierRetourSansLecon,
-    rouges,
-    estDeCote,
     aVoirEnClasse,
     enAttente,
     compter,
     competencesDuPalier,
     etatCeintures,
+    garderRemplissage,
+    // J'apprends, « Je m'entraîne encore ».
     suivreEntrainement,
     verdictEntrainement,
     appliquerSerie,
-    appliquerTest,
-    appliquerTestPalier,
-    calculsDuTestDePalier,
-    palierATester,
-    REPRISE,
-    appliquerRetour,
-    terminerCalculsDuJour,
+    // « Je tente », « Tente toute la ceinture ».
+    appliquerTentative,
+    calculsDuTestDeCeinture,
+    appliquerTestCeinture,
+    // Mes calculs du jour.
     tirerCalculsDuJour,
+    appliquerRetour,
+    deuxiemeEnAttente,
+    commencerPaquet,
+    terminerCalculsDuJour,
+    // La séance.
     ouvrirSeance,
     seanceOuverte,
-    fileSeance,
+    etatSeance,
+    continuer,
+    peutCommencer,
     fermerSeance,
-    deuxiemeEnAttente,
-    demain,
+    etoileDeCloture,
+    noterTemps,
     bilanSeances,
     seancesParSemaine,
     texteSemaine,
     semaineEleve,
-    noterTemps,
-    JOURNAL,
     etatCompetence,
     resumeProf,
     resumeSuivi,
@@ -3225,6 +3307,7 @@
     chargerReglagesOnglet,
     sauverReglagesOnglet,
     effacerReglagesOnglet,
-    fusionner
+    fusionner,
+    recevoir
   });
 });

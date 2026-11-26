@@ -196,6 +196,24 @@ try {
         if ($ligne === null) {
             repondre(['ok' => true, 'existe' => false, 'parcours' => null, 'maj_le' => null, 'revision' => 0]);
         }
+        // Lot K1 de Défi calcul (relecture de Codex du 22/11, B1) : le
+        // serveur ne sert pas une progression à une page qui ne saurait pas
+        // la lire. La page dit sa version (« version », un entier) ; sans
+        // elle, c'est une page d'avant ce lot (lib/applis.php,
+        // « version_sans_declaration »). Si la progression enregistrée est
+        // d'une version plus haute : 400, le même message que pour une
+        // écriture trop ancienne — rien de plus n'est révélé. La page garde
+        // son travail dans l'appareil (pour elle, c'est une panne du
+        // réseau) ; rechargée, elle lira. Les applis qui ne déclarent rien
+        // ne changent pas.
+        $sansDeclaration = CATALOGUE_APPLIS[$appli]['version_sans_declaration'] ?? null;
+        if (is_int($sansDeclaration)) {
+            $lecteur = is_int($corps['version'] ?? null) ? $corps['version'] : $sansDeclaration;
+            $enregistree = is_object($ligne['parcours']) ? ($ligne['parcours']->version ?? null) : null;
+            if (is_int($enregistree) && $enregistree > $lecteur) {
+                erreur("Page ancienne : recharge la page.", 400);
+            }
+        }
         repondre(['ok' => true, 'existe' => true] + $ligne);
     }
 
@@ -246,6 +264,17 @@ try {
 
     $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base);
     if (isset($resultat['conflit'])) {
+        // Lot K1 de Défi calcul (B1) : l'état rendu avec le conflit est une
+        // LECTURE, lui aussi — pas servi à une page d'une version plus
+        // basse que lui (sa version est celle de ce qu'elle vient d'envoyer).
+        if (is_int(CATALOGUE_APPLIS[$appli]['version_sans_declaration'] ?? null)) {
+            $actuel = $resultat['actuel']['parcours'] ?? null;
+            $enregistree = is_object($actuel) ? ($actuel->version ?? null) : null;
+            $ecrite = $parcoursBrut->version ?? null;
+            if (is_int($enregistree) && is_int($ecrite) && $enregistree > $ecrite) {
+                erreur("Page ancienne : recharge la page.", 400);
+            }
+        }
         // L'appli fusionne avec cet état, puis renvoie avec la bonne révision.
         repondre(['ok' => false, 'conflit' => true, 'erreur' => "La progression a changé entre-temps."] + $resultat['actuel'], 409);
     }

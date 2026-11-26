@@ -1,15 +1,16 @@
 // La progression de référence de Défi calcul : une progression COMPLÈTE telle
-// que defi_calcul_mon_parcours.js la produit, dans son format définitif
-// (lot 2a, version 2 au lot 3) — les 74 modules, toutes les compétences dans
-// une boîte (1 à 7 depuis le lot F1), toutes les causes, la séance et son plan, les dates. Elle sert
-// de garde-fou entre l'appli et le serveur (lot 2b) : le serveur ne garde que
-// ce qu'il connaît (lib/progression.php), et ce fichier doit ressortir
-// identique de son filtre. Si l'appli gagne un champ, la référence change
-// (tests/defi-calcul-mon-parcours.test.mjs le vérifie).
+// que defi_calcul_mon_parcours.js la produit, dans son format (version 12
+// depuis le lot K1 « la carte chez l'élève », 25/11/2026) — les 74 modules,
+// toutes les étoiles dans une boîte (1 à 7), toutes les causes, la séance et
+// son plan, les dates. Elle sert de garde-fou entre l'appli et le serveur
+// (lot 2b) : le serveur ne garde que ce qu'il connaît (lib/progression.php),
+// et ce fichier doit ressortir identique de son filtre. Si l'appli gagne un
+// champ, la référence change (tests/defi-calcul-mon-parcours.test.mjs le
+// vérifie).
 //
 // Usage :
 //   node scripts/generer-parcours-reference-defi-calcul.mjs            (affiche la référence)
-//   node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire   (lot 2b : écrit
+//   node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire   (écrit
 //       _serveur/tests/parcours-reference-defi-calcul.json)
 
 import {createRequire} from "node:module";
@@ -19,25 +20,25 @@ import {fileURLToPath} from "node:url";
 const require = createRequire(import.meta.url);
 const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 
-// Les clés que le serveur devra déclarer pour « defi-calcul » (document de
-// l'étape 5a, § 9, plus `p` : le plan de la séance, et `t` : entraînée avec
-// l'aide le jour `vu`, lot 3 ; `test` a disparu au lot 3 ; `d`, `s`, `j`,
-// `journal` et ses six listes au lot G1, `numero` au correctif du lot S1),
-// en plus des 74 codes de module et
-// des numéros de cause.
-// Lot 1 « la séance » (12/11/2026) : `l`, le « lent » de chaque compétence.
-export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "ok", "b", "e", "a", "f", "x", "t", "l", "d", "s", "c",
-  "seance", "jour", "etape", "n", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "jours", "numero",
-  // Lot 4 « les ceintures » (14/11/2026) : les ceintures gagnées.
-  "ceintures",
-  // Lot F4 « personne ne reste bloqué » (18/11/2026) : `ar` (un J'apprends
-  // arrêté : 3 × les arrêts + la reprise) et `paliers` (les tests de palier
-  // joués).
-  "ar", "paliers"]);
+// Les clés que le serveur déclare pour « defi-calcul » (lib/applis.php), en
+// plus des 74 codes de module et des numéros de cause. Version 12 : par
+// étoile `b`, `e`, `a`, `x`, `r`, `q`, `pe`, `d`, `s`, `ar`, `g` ; la séance
+// `jour`, `etape`, `n`, `i`, `g`, `p`, `j` ; le journal et ses onze listes ;
+// `ceintures`, `paliers`, `quarts`.
+export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "c",
+  "seance", "jour", "etape", "n", "i", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero",
+  "seuls", "seulsJustes", "tests", "testsRates", "jours", "ceintures", "paliers", "quarts"]);
 
-// `entier` : toutes les compétences des 74 modules dans une boîte (le pire
-// cas pour la taille).
-export function parcoursComplet({causes = 8, entier = false} = {}) {
+// Le jour de la relecture : fixe, pour que la référence ne dépende pas de
+// l'horloge du poste (toutes ses dates sont avant lui).
+const JOUR = "2026-11-25";
+
+// `entier` : toutes les étoiles des 74 modules dans une boîte.
+// `pire` : le pire cas pour la TAILLE — aucune étoile tenue, mais toutes
+// gagnées un jour, solides un jour, perdues trois fois, « à voir en classe »
+// avec leur jour de retour, deux « Je tente » ratés et leur jour, le
+// compteur au plus haut : quatre dates par étoile et les plus grands nombres.
+export function parcoursComplet({causes = 8, entier = false, pire = false} = {}) {
   const p = PARCOURS.creerParcours();
   p.epoque = 3;
   // Le prénom reste sur l'appareil : le paquet envoyé au serveur le vide.
@@ -46,59 +47,79 @@ export function parcoursComplet({causes = 8, entier = false} = {}) {
     const k = PARCOURS.NIVEAUX[id];
     const jour = `2026-10-${String(1 + (index % 28)).padStart(2, "0")}`;
     const boites = Array.from({length: k}, (_, i) => 1 + ((index + i) % PARCOURS.SEUILS.revision.boites));
-    p.modules[id] = {
+    p.modules[id] = pire ? {
       vu: jour,
-      ok: jour,
-      b: boites,
-      e: boites.map(boite => PARCOURS.echeanceDeBoite(boite, jour)),
+      b: Array.from({length: k}, () => 0),
+      e: Array.from({length: k}, () => "2026-11-20"),
       a: Array.from({length: k}, () => 1),
-      f: Array.from({length: k}, () => PARCOURS.SEUILS.compteur),
-      x: Array.from({length: k}, (_, i) => (index + i) % 3),
-      t: Array.from({length: k}, (_, i) => (index + i) % 2),
-      l: Array.from({length: k}, (_, i) => (index + i + 1) % 2),
-      // Lot G1 : les deux dates de chaque compétence (le pire cas : toutes
-      // posées).
+      x: Array.from({length: k}, () => 0),
+      r: Array.from({length: k}, () => PARCOURS.SEUILS.tente.essais),
+      q: Array.from({length: k}, () => "2026-11-19"),
+      pe: Array.from({length: k}, () => PARCOURS.SEUILS.retour.perdues),
       d: Array.from({length: k}, () => "2026-09-15"),
       s: Array.from({length: k}, () => "2026-09-29"),
-      // Lot F4 : rien d'arrêté sur une compétence entrée.
+      ar: Array.from({length: k}, () => 29),
+      g: Array.from({length: k}, () => PARCOURS.SEUILS.compteur),
+      c: Object.fromEntries(Array.from({length: causes}, (_, c) => [String(c + 1), PARCOURS.SEUILS.compteur]))
+    } : {
+      vu: jour,
+      b: boites,
+      e: boites.map(boite => PARCOURS.echeanceDeBoite(boite, jour)),
+      a: Array.from({length: k}, (_, i) => (index + i) % 2),
+      // Le 2e calcul qui attend (2), un retour raté (1), les deux (3).
+      x: Array.from({length: k}, (_, i) => (index + i) % 4),
+      // Rien de tenté ni d'arrêté sur une étoile tenue.
+      r: Array.from({length: k}, () => 0),
+      q: Array.from({length: k}, () => null),
+      pe: Array.from({length: k}, (_, i) => (index + i) % 4),
+      // Les deux dates de chaque étoile (le pire cas : toutes posées).
+      d: Array.from({length: k}, () => "2026-09-15"),
+      s: Array.from({length: k}, () => "2026-09-29"),
       ar: Array.from({length: k}, () => 0),
+      g: Array.from({length: k}, (_, i) => (i ? 1 + index + i : PARCOURS.SEUILS.compteur)),
       c: Object.fromEntries(Array.from({length: causes}, (_, c) => [String(c + 1), PARCOURS.SEUILS.compteur]))
     };
   });
-  // Le dernier module n'est qu'à moitié entré : une compétence sans boîte n'a
-  // pas d'échéance (null), et le serveur doit la rendre telle quelle.
-  if (!entier) {
+  // Le dernier module n'est qu'à moitié tenu : une étoile sans boîte n'a pas
+  // d'échéance (null), et le serveur doit la rendre telle quelle.
+  if (!entier && !pire) {
     const dernier = p.modules[PARCOURS.CODES[PARCOURS.CODES.length - 1]];
-    dernier.ok = null;
     dernier.b = dernier.b.map((boite, i) => (i === 0 ? boite : 0));
-    // Lot F4 : le niveau 2, J'apprends arrêté 3 fois (« à voir en classe »,
-    // repris sans aide : 3 × 3 + 2), revient le 2026-11-04 (son échéance) ;
-    // le niveau 3, arrêté une fois au dessin (3 × 1 + 1), sans échéance.
+    // Le niveau 2 : J'apprends arrêté 3 fois (« à voir en classe », repris
+    // sans aide : 3 × 3 + 2), il revient le 2026-11-04 (son échéance), deux
+    // « Je tente » ratés, le dernier le 2026-10-27 ; le niveau 3 : arrêté une
+    // fois au dessin (3 × 1 + 1), sans échéance, perdu une fois (il garde le
+    // jour où il a été gagné), un « Je tente » raté.
     dernier.ar = dernier.b.map((_, i) => (i === 1 ? 11 : i === 2 ? 4 : 0));
     dernier.e = dernier.e.map((jour, i) => (i === 0 ? jour : i === 1 ? "2026-11-04" : null));
+    dernier.r = dernier.b.map((_, i) => (i === 1 ? 2 : i === 2 ? 1 : 0));
+    dernier.q = dernier.b.map((_, i) => (i === 1 ? "2026-10-27" : i === 2 ? "2026-10-28" : null));
+    dernier.x = dernier.b.map((_, i) => (i === 0 ? 2 : 0));
+    dernier.d = dernier.b.map((_, i) => (i === 1 ? null : "2026-09-15"));
+    dernier.s = dernier.b.map((_, i) => (i === 0 ? "2026-09-29" : null));
   }
-  // Lot F1 : le plan a sept nombres (8 tests, 3 nouveautés prévues, 2 réussies).
-  // Lot G1 : ce que la séance ouverte a fait (j, six nombres depuis le
-  // correctif : les nouveautés en 6e), et le journal des 60
-  // séances (les plus grands nombres, le pire cas pour la taille ; une
-  // séance d'avant G1 en -1).
-  // Lot 1 « la séance » : le plan a onze nombres (12 tests, 15 minutes, 3
-  // apprentissages commencés, un 2e calcul en attente avec ce qu'il rendra).
-  p.seance = {jour: "2026-10-28", etape: 2, n: 60, p: [1, 1, PARCOURS.rangDe("A5", 2) + 1, 12, 0, 15, 3, PARCOURS.rangDe("A5", 1) + 1, 4, 2, 1], j: [999, 999, 999, 999, 5400, 99]};
+  // La séance ouverte : son identité, son compteur, son plan à cinq nombres
+  // (15 minutes, un paquet obligé de 10 étoiles, 3 étapes de la carte), et ce
+  // qu'elle a fait (dix nombres, les plus grands) ; le journal des 60 séances
+  // (onze listes, les plus grands nombres : le pire cas pour la taille).
+  p.seance = {jour: "2026-10-28", etape: 2, n: 60, i: 9999, g: 9999, p: [1, 15, 1, 10, 3], j: [999, 999, 999, 999, 5400, 99, 999, 999, 999, 999]};
   p.seances = Array.from({length: PARCOURS.SEUILS.seance.garder}, (_, i) => PARCOURS.ajouterJours("2026-09-01", Math.floor(i / 2)));
   const garder = PARCOURS.SEUILS.seance.garder;
   p.journal = {calculs: Array(garder).fill(999), justes: Array(garder).fill(999), nouveautes: Array(garder).fill(99),
     prouvees: Array(garder).fill(999), rouges: Array(garder).fill(999), minutes: Array(garder).fill(90),
-    // Correctif S1 : le numéro de chaque séance (les plus grands, le pire cas).
-    numero: Array.from({length: garder}, (_, i) => 999999 - i)};
-  // Lot 4 : deux ceintures gagnées, deux pas encore (une date, puis null :
-  // le serveur doit garder les null à leur place).
+    // Le numéro de chaque séance (les plus grands, le pire cas).
+    numero: Array.from({length: garder}, (_, i) => 999999 - i),
+    seuls: Array(garder).fill(999), seulsJustes: Array(garder).fill(999), tests: Array(garder).fill(999), testsRates: Array(garder).fill(999)};
+  // Deux ceintures gagnées, deux pas encore (une date, puis null : le
+  // serveur doit garder les null à leur place) ; deux tests de ceinture
+  // joués ; un remplissage gardé.
   p.ceintures = ["2026-10-02", "2026-10-20", null, null];
-  // Lot F4 : deux tests de palier joués, deux pas encore.
   p.paliers = ["2026-10-01", "2026-10-19", null, null];
+  p.quarts = [0, 0, 2, 3];
+  // Une séance dont rien n'est connu : -1 partout, gardé par le filtre.
   Object.keys(p.journal).forEach(champ => { p.journal[champ][0] = -1; });
   p.jours = Array.from({length: PARCOURS.SEUILS.jours.garder}, (_, i) => PARCOURS.ajouterJours("2026-10-15", i));
-  return PARCOURS.normaliserParcours(p);
+  return PARCOURS.normaliserParcours(p, {aujourdhui: JOUR});
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

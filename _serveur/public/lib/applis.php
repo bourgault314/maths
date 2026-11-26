@@ -268,9 +268,16 @@ const CATALOGUE_APPLIS = [
         // Lot 1 « la séance » (12/11/2026) : `l` (le « lent » d'une
         // compétence, une liste de 0 et de 1) ; le plan `p` passe à 11 nombres
         // (rien à déclarer : une liste d'entiers).
-        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'ok', 'b', 'e', 'a', 'f', 'x', 't', 'l', 'd', 's', 'c',
-            'seance', 'jour', 'etape', 'n', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
-            'rouges', 'minutes', 'jours', 'numero', 'ceintures', 'ar', 'paliers'],
+        // Lot K1 « la carte chez l'élève » (25/11/2026), version 12 : par
+        // étoile, `r` (les « Je tente » ratés), `q` (le jour du dernier),
+        // `pe` (combien de fois perdue), `g` (son compteur, qui départage
+        // deux appareils) ; `ok`, `f`, `t` et `l` ont disparu. La séance :
+        // `i` (son identité) et `g` (son compteur). Le journal : `seuls`,
+        // `seulsJustes`, `tests`, `testsRates`. `quarts` (le remplissage
+        // des ceintures à ne pas faire reculer).
+        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
+            'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
+            'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],
         'mots' => [],
         'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances finies
@@ -316,19 +323,48 @@ const CATALOGUE_APPLIS = [
         // D8 5 (les moitiés à part, chacune à sa place) : une page de version
         // 10 lirait leurs listes avec les anciens numéros (et couperait les
         // dernières cases).
-        'version_min' => 11,
+        // Lot K1 « la carte chez l'élève » (25/11/2026) : 12. Le format change
+        // en entier (des étoiles, leur compteur, plus de `ok`, `f`, `t`, `l`,
+        // un plan de séance à 5 nombres) : une page de version 11 ne saurait
+        // ni le lire ni l'écrire.
+        'version_min' => 12,
+        // Lot K1 (relecture de Codex du 22/11, B1) : la LECTURE aussi est
+        // protégée. Une page dit sa version en lisant (« version » dans le
+        // corps) ; le serveur ne lui sert pas une progression d'une version
+        // plus haute, qu'elle ne saurait pas lire — elle en fabriquait une
+        // autre en la relisant, puis la renvoyait. Une page qui ne dit rien
+        // (toutes celles d'avant ce lot, déjà distribuées) vaut au plus
+        // cette version-ci. Voir api/parcours.php.
+        'version_sans_declaration' => 11,
         // Correctif F4 (21/11/2026, relecture de Codex, point 7) : la version
         // la plus haute acceptée (le moteur relit la même borne) — au-delà,
         // l'écriture est refusée (400). Avant, 1500 entrait, et le moteur la
         // relisait comme une version ANCIENNE (F6 et F9 décalés, le plan de
         // la séance refermé).
         'version_max' => 999,
-        // Et la forme de deux listes, valeur par valeur : `paliers`, des dates
-        // ou null ; `ar`, des entiers de 0 à 29 (9 arrêts × 3 + la reprise).
-        // Une valeur hors format est REMPLACÉE à sa place (null, ou 0), jamais
-        // retirée : retirée, les suivantes glissaient d'une case (une date au
-        // mauvais palier). Voir lib/progression.php, valeur_de_liste().
-        'listes' => ['paliers' => ['date'], 'ar' => ['entier', 0, 29]],
+        // Et la forme des listes, valeur par valeur. Une valeur hors format est
+        // REMPLACÉE à sa place (null pour une date, le minimum pour un
+        // entier), jamais retirée : retirée, les suivantes glissaient d'une
+        // case (une boîte au mauvais niveau, une date au mauvais palier).
+        // Voir lib/progression.php, valeur_de_liste().
+        // Lot K1 (relecture de Codex du 22/11, G5) : TOUTES les listes où la
+        // place compte sont déclarées — par étoile (une case par niveau), le
+        // plan de la séance et ce qu'elle a fait, les dates par étage, les
+        // séances et leur journal (alignés : une date refusée devient null,
+        // et le moteur écarte la séance AVEC sa ligne de journal). Les
+        // bornes sont celles du moteur, qui renormalise tout ce qu'il relit.
+        'listes' => [
+            'b' => ['entier', 0, 7], 'a' => ['entier', 0, 1], 'x' => ['entier', 0, 3], 'r' => ['entier', 0, 2],
+            'pe' => ['entier', 0, 3], 'ar' => ['entier', 0, 29], 'g' => ['entier', 0, 9999],
+            'e' => ['date'], 'q' => ['date'], 'd' => ['date'], 's' => ['date'],
+            'p' => ['entier', 0, 99], 'j' => ['entier', 0, 5400],
+            'ceintures' => ['date'], 'paliers' => ['date'], 'quarts' => ['entier', 0, 3],
+            'seances' => ['date'],
+            'calculs' => ['entier', -1, 999], 'justes' => ['entier', -1, 999], 'nouveautes' => ['entier', -1, 99],
+            'prouvees' => ['entier', -1, 999], 'rouges' => ['entier', -1, 999], 'minutes' => ['entier', -1, 90],
+            'numero' => ['entier', -1, 999999], 'seuls' => ['entier', -1, 999], 'seulsJustes' => ['entier', -1, 999],
+            'tests' => ['entier', -1, 999], 'testsRates' => ['entier', -1, 999],
+        ],
     ],
     'automatismes' => [
         'nom' => 'Automatismes',
