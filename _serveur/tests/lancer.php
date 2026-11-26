@@ -7427,7 +7427,9 @@ verifier("defi-calcul — un texte, un prénom, un code de module inconnu, une c
     // NOMBRES de calculs) — la clé passe, mais aucun texte ne passe dans une
     // liste : chaque texte vaut -1 (« pas connu »), il ne reste rien du
     // calcul posé.
-    egal([-1, -1], $obtenu->calculs ?? [], 'aucun calcul posé n’est gardé (un texte dans une liste du journal vaut -1)');
+    // Correctif K1 (26/11/2026) : hors du journal, « calculs » n'est plus à
+    // sa place — la clé est retirée (avant : gardée, chaque texte valant -1).
+    vrai(!isset($obtenu->calculs), 'aucun calcul posé n’est gardé (« calculs » n’a sa place que dans le journal)');
     vrai(!isset($obtenu->reponses), 'aucune réponse d’élève n’est gardée');
     vrai(!isset($obtenu->seance->commentaire), 'pas de texte dans la séance');
     $texte = json_encode($obtenu, JSON_UNESCAPED_UNICODE);
@@ -9838,6 +9840,183 @@ verifier("aujourdhui-B3, correctif (Codex 1, 6, 7, 11) — les portes partent av
     vrai(!str_contains(substr($tableau, $reperes['l’instantané'], $reperes['la fin de l’instantané'] - $reperes['l’instantané']), 'FOR UPDATE'), 'sans verrou');
     egal(200, ecrire_jour($id, ['jour' => []], $jetonS1)['code']);
     egal(200, donner((int)$e1['id'], new stdClass(), $jetonS1)['code']);
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// Défi calcul, lot K1 — le correctif de la relecture de Codex du 26/11/2026.
+//  - Codex 8 : le filtre gardait des valeurs hors du format de la version 12
+//    (`i` à 10 000, un plan qui commence par 5, un booléen dans `jours`, une
+//    cause négative, « prenom » quand il ressemble à une date). Chaque champ
+//    est maintenant jugé À SA PLACE (lib/applis.php, « emplacements »).
+//  - Codex 9 : la version qui arrive est comparée à celle de la ligne SOUS
+//    LE VERROU — une page de version 12 qui présente la bonne révision
+//    n'écrit plus par-dessus une ligne de version 13.
+//  - Codex 15 : Mon espace annonce, en lisant, le format que sait lire le
+//    moteur qu'il charge — il lit de nouveau une progression de version 12.
+verifier("defi-calcul lot K1, correctif (Codex 8) — chaque champ à sa place et dans ses bornes : rien d'autre n'est gardé, la référence ressort identique", function () use (&$jetonS1) {
+    require_once dirname(__DIR__) . '/public/lib/applis.php';
+    require_once dirname(__DIR__) . '/public/lib/progression.php';
+    $texte = (string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json');
+    $filtrer = fn (callable $abimer) => (function () use ($texte, $abimer) {
+        $objet = json_decode($texte, false);
+        $abimer($objet);
+        return filtrer_progression('defi-calcul', $objet);
+    })();
+    // Les valeurs du rapport de Codex, une par une.
+    $o = $filtrer(function ($p) {
+        $p->seance->i = 10000;
+        $p->seance->p = [5, 15, 1, 10, 3];
+        $p->jours[0] = true;
+        $p->modules->A1->c->{'2'} = -3;
+        $p->prenom = '2026-11-26';
+    });
+    vrai(!isset($o->seance->i), '`seance.i` à 10 000 : retiré (le moteur relit 0, la séance est fermée)');
+    egal([0, 15, 1, 10, 3], $o->seance->p, 'un plan qui commence par 5 : la place « ouverte » ne vaut que 0 ou 1');
+    egal(null, $o->jours[0], 'un booléen dans `jours` devient null');
+    vrai(!isset($o->modules->A1->c->{'2'}), 'un compte de cause négatif est retiré');
+    vrai(isset($o->modules->A1->c->{'1'}), 'les autres causes restent');
+    vrai(!isset($o->prenom), '« prenom » n’est plus une clé du serveur, même quand il ressemble à une date');
+    vrai(!in_array('prenom', CATALOGUE_APPLIS['defi-calcul']['cles'], true), '« prenom » a quitté les clés déclarées');
+    // Chaque place du plan et de ce que la séance a fait a SES bornes.
+    $o = $filtrer(function ($p) {
+        $p->seance->p = [1, 16, 2, 11, 100, 7];
+        $p->seance->j = [1000, 999, 999, 999, 5400, 100, 999, 999, 999, 1000, 4];
+    });
+    egal([1, 0, 0, 0, 0], $o->seance->p, 'le plan : 16 minutes, un paquet « obligé » à 2, 11 étoiles, 100 étapes — chacun remplacé à sa place ; la 6e valeur est coupée');
+    egal([0, 999, 999, 999, 5400, 0, 999, 999, 999, 0], $o->seance->j, 'ce que la séance a fait : 999 au plus, 5 400 pour les secondes, 99 pour les étoiles apprises ; dix nombres');
+    // Les parts : onze nombres par onglet, un groupe incomplet est coupé, une valeur hors bornes remplacée à sa place.
+    $o = $filtrer(function ($p) {
+        $p->seance->parts = [10000, 1, 2, 3, 4, 5401, 100, 7, 8, 9, 10,  42, 1, 2, 3, 4, 5400, 99, 7, 8, 9, 10,  7, 1, 2];
+    });
+    egal([0, 1, 2, 3, 4, 0, 0, 7, 8, 9, 10,  42, 1, 2, 3, 4, 5400, 99, 7, 8, 9, 10], $o->seance->parts, 'les parts');
+    // Un champ connu posé AILLEURS que là où le moteur l'écrit n'est pas gardé.
+    $o = $filtrer(function ($p) {
+        $p->seance->b = [1, 2];
+        $p->seance->modules = $p->modules->A1;
+        $p->modules->A1->i = 4;
+        $p->modules->A1->jour = '2026-11-26';
+        $p->modules->A1->c->seance = 3;
+        $p->journal->b = [1];
+        $p->journal->jour = '2026-11-26';
+        $p->b = [1];
+        $p->calculs = [1, 2];
+        $p->vu = '2026-11-26';
+        $p->i = 3;
+    });
+    foreach (['b', 'modules'] as $cle) vrai(!isset($o->seance->{$cle}), "`seance.$cle` n’existe pas dans le format");
+    foreach (['i', 'jour'] as $cle) vrai(!isset($o->modules->A1->{$cle}), "`modules.A1.$cle` non plus");
+    vrai(!isset($o->modules->A1->c->seance), 'ni une clé qui n’est pas un numéro de cause');
+    foreach (['b', 'jour'] as $cle) vrai(!isset($o->journal->{$cle}), "`journal.$cle` non plus");
+    foreach (['b', 'calculs', 'vu', 'i'] as $cle) vrai(!isset($o->{$cle}), "`$cle` en tête de progression non plus");
+    // Les valeurs seules : hors bornes, retirées (le moteur reprend son défaut) ; une date qui n'en est pas une aussi.
+    $o = $filtrer(function ($p) {
+        $p->epoque = 1000001;
+        $p->seance->etape = 100;
+        $p->seance->n = -1;
+        $p->seance->g = 10000;
+        $p->seance->jour = '2026-02-30';
+        $p->modules->A1->vu = true;
+        $p->modules->A2->c->{'1'} = 0;
+        $p->modules->A3 = [1, 2, 3];
+        $p->journal = [1, 2];
+    });
+    foreach (['etape', 'n', 'g', 'jour'] as $cle) vrai(!property_exists($o->seance, $cle), "`seance.$cle` hors de sa forme : retiré");
+    vrai(!isset($o->epoque) && !property_exists($o->modules->A1, 'vu') && !isset($o->modules->A2->c->{'1'}), 'une époque au-delà du million, un booléen pour une date, une cause à 0');
+    vrai(!isset($o->modules->A3) && !isset($o->journal), 'une liste à la place d’un objet');
+    // Une date absente reste null à sa place.
+    $o = $filtrer(function ($p) { $p->seance->jour = null; $p->modules->A1->vu = null; });
+    vrai(property_exists($o->seance, 'jour') && $o->seance->jour === null && property_exists($o->modules->A1, 'vu') && $o->modules->A1->vu === null, 'null reste null');
+    // Les autres applis ne déclarent pas d'emplacements : leur filtre n'a pas bougé.
+    foreach (CATALOGUE_APPLIS as $cle => $fiche) {
+        if ($cle !== 'defi-calcul') vrai(!array_key_exists('emplacements', $fiche), "$cle : pas d’emplacements");
+    }
+    // Et par l'API : écrit puis relu.
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c8', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0]['code'];
+    $reference = json_decode($texte, true);
+    $sale = $reference;
+    $sale['prenom'] = '2026-11-26';
+    $sale['seance']['i'] = 10000;
+    $sale['seance']['p'] = [5, 15, 1, 10, 3];
+    $sale['jours'][0] = true;
+    $sale['modules']['A1']['c']['2'] = -3;
+    egal(200, ecrire($code, $sale, 0, 'defi-calcul')['code'], 'accepté, nettoyé');
+    $r = lire($code, 'defi-calcul')['json']['parcours'];
+    vrai(!array_key_exists('prenom', $r) && !array_key_exists('i', $r['seance']) && !array_key_exists('2', $r['modules']['A1']['c']), 'rien de tout cela n’est en base');
+    egal([[0, 15, 1, 10, 3], null], [$r['seance']['p'], $r['jours'][0]], 'le plan et les jours');
+    egal($reference['seance']['parts'], $r['seance']['parts'], 'les parts de la référence reviennent telles quelles (huit onglets, onze nombres chacun)');
+    egal($reference['modules']['A2'], $r['modules']['A2'], 'un module revient tel quel');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("defi-calcul lot K1, correctif (Codex 9) — la version est comparée sous le verrou : une page de version 12 n'écrit pas par-dessus une ligne de version 13, même avec la bonne révision", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c9', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0]['code'];
+    $v12 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $v13 = $v12;
+    $v13['version'] = 13;
+    $lireEn = fn (int $version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true, 'version' => $version]);
+    egal([200, 1], [($w = ecrire($code, $v12, 0, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 12 s’enregistre');
+    egal([200, 2], [($w = ecrire($code, $v13, 1, 'defi-calcul'))['code'], $w['json']['revision']], 'une page plus récente écrit en version 13');
+    // La page de version 12 présente la révision EXACTE de la ligne : refusée quand même.
+    $w = ecrire($code, $v12, 2, 'defi-calcul');
+    egal(400, $w['code'], 'version 12, révision exacte, ligne en version 13 : refusé');
+    egal('Page ancienne : recharge la page.', $w['json']['erreur'] ?? null, 'le même message');
+    vrai(!array_key_exists('parcours', $w['json']) && !array_key_exists('revision', $w['json']), 'rien n’est rendu avec le refus');
+    $r = $lireEn(13);
+    egal([13, 2], [$r['json']['parcours']['version'], $r['json']['revision']], 'la ligne n’a pas bougé : version 13, révision 2');
+    $avant = bd_test()->prepare("SELECT p.donnees_avant FROM progressions p JOIN eleves e ON e.id = p.eleve_id WHERE e.code = ? AND p.appli = 'defi-calcul'");
+    $avant->execute([$code]);
+    $donneesAvant = (string)$avant->fetchColumn();
+    // (Le curseur est refermé tout de suite : laissé ouvert, il garde un verrou de lecture sur SQLite.)
+    $avant->closeCursor();
+    egal(12, json_decode($donneesAvant, true)['version'], '« Revenir à… » garde toujours la version 12 d’avant : rien n’a été écrit');
+    // Une révision périmée, ou 0 (« je n'ai rien lu ») : refusé pareil, jamais un 409 qui rendrait la version 13.
+    foreach ([1, 0, 7] as $base) egal(400, ecrire($code, $v12, $base, 'defi-calcul')['code'], "version 12, révision $base : refusé");
+    egal(2, $lireEn(13)['json']['revision'], 'toujours la révision 2');
+    // À version égale ou plus haute, tout marche comme avant.
+    egal([200, 3], [($w = ecrire($code, $v13, 2, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 13 continue d’écrire');
+    egal(409, ecrire($code, $v13, 2, 'defi-calcul')['code'], 'à version égale, une révision périmée rend le conflit');
+    $v14 = $v12;
+    $v14['version'] = 14;
+    egal(200, ecrire($code, $v14, 3, 'defi-calcul')['code'], 'une version plus haute écrit par-dessus');
+    egal(400, ecrire($code, $v13, 4, 'defi-calcul')['code'], 'et la version 13 est refusée à son tour');
+    // Défi tables ne protège pas sa lecture par version : rien ne change pour lui.
+    $tables = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference.json'), true);
+    egal(200, ecrire($code, $tables, 0, 'defi-tables')['code'], 'Défi tables écrit');
+    egal(200, ecrire($code, $tables, 1, 'defi-tables')['code'], 'et réécrit avec sa révision, comme avant');
+    // Dans le code : la comparaison vient après la lecture sous verrou, et avant l'UPDATE.
+    $api = (string)file_get_contents(dirname(__DIR__) . '/public/api/parcours.php');
+    $lecture = strpos($api, "pour_mise_a_jour(\$pdo));");
+    $compare = strpos($api, "version_rangee((string)\$ligne['donnees'])");
+    $ecrit = strpos($api, 'UPDATE progressions SET donnees_avant');
+    vrai($lecture !== false && $compare !== false && $ecrit !== false && $lecture < $compare && $compare < $ecrit, 'la version est comparée après la lecture sous verrou et avant l’écriture');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+verifier("defi-calcul lot K1, correctif (Codex 15) — Mon espace annonce le format que lit son moteur : une progression de version 12 lui est servie", function () use (&$jetonS1) {
+    vider_compteurs();
+    $moteur = (string)file_get_contents(dirname(__DIR__) . '/public/prof/defi_calcul_mon_parcours.js');
+    vrai(preg_match('/^\s*const VERSION = (\d{1,3});/m', $moteur, $m) === 1, 'le moteur dit sa version sur une ligne « const VERSION = N; »');
+    $format = (int)$m[1];
+    egal(12, $format, 'le moteur servi d’ici lit la version 12');
+    $accueil = page('/');
+    egal(200, $accueil['code'], 'Mon espace répond');
+    vrai(str_contains($accueil['texte'], "      version: Number(\"$format\") || null,\n"), 'la page porte ce format, pour Défi calcul');
+    egal(1, substr_count($accueil['texte'], '      version: '), 'et pour lui seul : les autres activités ne disent rien, comme avant');
+    vrai(str_contains($accueil['texte'], 'JSON.stringify(Object.assign({code, appli: cle, lire: true}, format))'), 'la lecture du parcours l’envoie');
+    // Le trajet du serveur : avec ce que la page envoie, la progression de version 12 est servie ; sans, refusée.
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c15', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0]['code'];
+    $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    egal(200, ecrire($code, $reference, 0, 'defi-calcul')['code']);
+    $r = appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true, 'version' => $format]);
+    egal([200, true, 12], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version']], 'ce que Mon espace envoie maintenant : servi');
+    egal(400, appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true])['code'], 'ce qu’il envoyait avant (rien) : refusé — la tuile restait vide');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

@@ -301,7 +301,7 @@ function avantM12() {
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
   assert.match(page, /defi_calcul\.css\?v=20261125-7/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)

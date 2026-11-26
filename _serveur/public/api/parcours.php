@@ -58,9 +58,24 @@ function lire_progression(PDO $pdo, int $eleveId, string $appli): ?array
 //     cran. La version du JOUR est rangée dans le même mouvement
 //     (lib/versions.php) : une ligne par journée, sept journées gardées.
 //  3. Un interblocage ou un verrou refusé se réessaie deux fois (lib/bd.php).
-function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
+//  4. Correctif K1 de Défi calcul (26/11/2026, relecture de Codex) : pour
+//     une appli dont la lecture est protégée par version (lib/applis.php,
+//     « version_sans_declaration »), la version qui arrive est comparée à
+//     celle de la ligne SOUS LE VERROU, avant d'écrire. Avant, elle ne
+//     l'était que sur le chemin du 409 : une page de version 12 qui
+//     présentait la bonne révision écrivait par-dessus une ligne de version
+//     13. $versionEntrante null : l'appli ne protège rien, rien ne change.
+function ecrire_progression(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base, ?int $versionEntrante = null): array
 {
-    return avec_reprise($pdo, fn () => ecrire_progression_une_fois($pdo, $eleveId, $appli, $donnees, $base));
+    return avec_reprise($pdo, fn () => ecrire_progression_une_fois($pdo, $eleveId, $appli, $donnees, $base, $versionEntrante));
+}
+
+// La version d'une progression rangée (un entier), ou null.
+function version_rangee(string $donneesJson): ?int
+{
+    $objet = json_decode($donneesJson, false);
+    $version = is_object($objet) ? ($objet->version ?? null) : null;
+    return is_int($version) ? $version : null;
 }
 
 // Ce que l'appli reçoit avec un 409 quand la ligne n'existe pas (ou plus) :
@@ -72,7 +87,7 @@ function etat_absent(): array
     return ['parcours' => null, 'maj_le' => null, 'revision' => 0];
 }
 
-function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base): array
+function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, string $donnees, int $base, ?int $versionEntrante = null): array
 {
     $maj = aujourdhui();
 
@@ -116,6 +131,16 @@ function ecrire_progression_une_fois(PDO $pdo, int $eleveId, string $appli, stri
         return ['conflit' => true, 'actuel' => etat_absent()];
     }
     $revision = (int)$ligne['revision'];
+    // La ligne est d'une version PLUS HAUTE que la page qui écrit : refusé,
+    // que la révision présentée soit la bonne ou non (elle ne saurait ni la
+    // lire ni la fusionner).
+    if ($versionEntrante !== null) {
+        $enBase = version_rangee((string)$ligne['donnees']);
+        if ($enBase !== null && $enBase > $versionEntrante) {
+            transaction_annuler($pdo);
+            return ['ancienne' => true];
+        }
+    }
     if ($base !== $revision) {
         transaction_annuler($pdo);
         return ['conflit' => true, 'actuel' => [
@@ -262,7 +287,14 @@ try {
         }
     }
 
-    $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base);
+    // La version qui arrive, pour une appli dont la lecture est protégée :
+    // comparée sous le verrou à celle de la ligne (voir ecrire_progression).
+    $versionEntrante = is_int(CATALOGUE_APPLIS[$appli]['version_sans_declaration'] ?? null) && is_int($parcoursBrut->version ?? null)
+        ? $parcoursBrut->version : null;
+    $resultat = ecrire_progression($pdo, $eleveId, $appli, $donnees, $base, $versionEntrante);
+    if (isset($resultat['ancienne'])) {
+        erreur("Page ancienne : recharge la page.", 400);
+    }
     if (isset($resultat['conflit'])) {
         // Lot K1 de Défi calcul (B1) : l'état rendu avec le conflit est une
         // LECTURE, lui aussi — pas servi à une page d'une version plus

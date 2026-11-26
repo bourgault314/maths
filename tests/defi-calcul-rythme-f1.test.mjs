@@ -34,7 +34,8 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /function optionsSeance\(aujourdhui = jourCourant\(\)\) \{\s*return Object\.assign\(\{aujourdhui\}, reglagesSeance\(\)\);/);
   // Le palier aussi là où la séance avance (les étapes jouées). (Lot K1 :
   // « Mon module » et `competenceCourante` sont partis.)
-  assert.match(page, /const options = \{aujourdhui: jourCourant\(\), carte: CARTE, seance: enSeance\(\) && !MODE_PROF, palier: palierRegle\(\)\};/);
+  // (Correctif K1, 26/11 : avec la source de l'onglet, pour le temps réuni de deux appareils.)
+  assert.match(page, /const options = \{aujourdhui: jourCourant\(\), carte: CARTE, seance: enSeance\(\) && !MODE_PROF, palier: palierRegle\(\), source: SOURCE\};/);
   assert.doesNotMatch(page, /PARCOURS\.(moduleCourant|competenceCourante|fileSeance)\(/, "plus d'ancien moteur");
   // Les deux réponses du serveur qui portent les réglages.
   assert.equal((page.match(/noterReglages\(code, (?:reponse\.donnees|donnees)\.reglages\)/g) || []).length, 2, "identité et billet");
@@ -51,7 +52,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261125-7/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/, "le moteur change d'adresse");
 });
 
 test("page élève : la carte n'a d'étage ouvert que jusqu'au réglage du professeur (lot K1)", async () => {

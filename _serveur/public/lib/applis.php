@@ -275,8 +275,14 @@ const CATALOGUE_APPLIS = [
         // `i` (son identité) et `g` (son compteur). Le journal : `seuls`,
         // `seulsJustes`, `tests`, `testsRates`. `quarts` (le remplissage
         // des ceintures à ne pas faire reculer).
-        'cles' => ['version', 'epoque', 'prenom', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
-            'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
+        // Correctif K1 (26/11/2026, relecture de Codex) : `prenom` n'est plus
+        // une clé — c'est le prénom d'un visiteur SANS code, qui reste sur
+        // son appareil ; la page ne l'envoie pas, et une date glissée là
+        // (« 2026-11-26 » passait pour une valeur permise) n'est plus gardée.
+        // `parts` : ce que chaque onglet a fait dans la séance ouverte (onze
+        // nombres par onglet : sa source, puis ses dix comptes).
+        'cles' => ['version', 'epoque', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
+            'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'parts', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],
         'mots' => [],
         'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
@@ -357,13 +363,76 @@ const CATALOGUE_APPLIS = [
             'b' => ['entier', 0, 7], 'a' => ['entier', 0, 1], 'x' => ['entier', 0, 3], 'r' => ['entier', 0, 2],
             'pe' => ['entier', 0, 3], 'ar' => ['entier', 0, 29], 'g' => ['entier', 0, 9999],
             'e' => ['date'], 'q' => ['date'], 'd' => ['date'], 's' => ['date'],
-            'p' => ['entier', 0, 99], 'j' => ['entier', 0, 5400],
+            'p' => ['entier', 0, 99], 'j' => ['entier', 0, 5400], 'parts' => ['entier', 0, 9999],
             'ceintures' => ['date'], 'paliers' => ['date'], 'quarts' => ['entier', 0, 3],
-            'seances' => ['date'],
+            'seances' => ['date'], 'jours' => ['date'],
             'calculs' => ['entier', -1, 999], 'justes' => ['entier', -1, 999], 'nouveautes' => ['entier', -1, 99],
             'prouvees' => ['entier', -1, 999], 'rouges' => ['entier', -1, 999], 'minutes' => ['entier', -1, 90],
             'numero' => ['entier', -1, 999999], 'seuls' => ['entier', -1, 999], 'seulsJustes' => ['entier', -1, 999],
             'tests' => ['entier', -1, 999], 'testsRates' => ['entier', -1, 999],
+        ],
+        // Correctif K1 (26/11/2026, relecture de Codex) : la forme PAR
+        // EMPLACEMENT. Les règles ci-dessus vont par NOM de clé, à toute
+        // profondeur : `i` valait 10 000, un plan commençait par 5, un
+        // booléen entrait dans `jours`, une cause comptait −3, et une liste
+        // `b` posée sous `seance` passait. Ici, chaque champ est déclaré là
+        // où le moteur l'écrit, avec SES bornes ; tout ce qui n'est pas à sa
+        // place est retiré (voir lib/progression.php, valeur_a_sa_place) :
+        //   ['objet']            ses clés sont celles déclarées dessous ;
+        //   ['motif', n]         ses clés suivent le motif n° n de « motifs »
+        //                        (0 : un code de module, 1 : un numéro de
+        //                        cause), et se déclarent « .* » ;
+        //   ['liste', forme]     chaque valeur, à sa place (remplacée, jamais
+        //                        retirée) ;
+        //   ['places', bornes]   une liste où chaque place a ses bornes,
+        //                        coupée à leur nombre ; avec 'cycle', elles
+        //                        se répètent (`parts` : onze nombres par onglet) ;
+        //   ['entier', min, max], ['date']   une valeur seule (hors bornes :
+        //                        retirée, le moteur reprend son défaut).
+        // Les bornes sont celles du moteur (defi_calcul_mon_parcours.js) ; le
+        // garde-fou est le même : la référence doit ressortir identique.
+        'emplacements' => [
+            '' => ['objet'],
+            'version' => ['entier', 1, 999],
+            'epoque' => ['entier', 0, 1000000],
+            'modules' => ['motif', 0],
+            'modules.*' => ['objet'],
+            'modules.*.vu' => ['date'],
+            'modules.*.b' => ['liste', ['entier', 0, 7]], 'modules.*.a' => ['liste', ['entier', 0, 1]],
+            'modules.*.x' => ['liste', ['entier', 0, 3]], 'modules.*.r' => ['liste', ['entier', 0, 2]],
+            'modules.*.pe' => ['liste', ['entier', 0, 3]], 'modules.*.ar' => ['liste', ['entier', 0, 29]],
+            'modules.*.g' => ['liste', ['entier', 0, 9999]],
+            'modules.*.e' => ['liste', ['date']], 'modules.*.q' => ['liste', ['date']],
+            'modules.*.d' => ['liste', ['date']], 'modules.*.s' => ['liste', ['date']],
+            'modules.*.c' => ['motif', 1],
+            'modules.*.c.*' => ['entier', 1, 9999],
+            'seance' => ['objet'],
+            'seance.jour' => ['date'],
+            'seance.etape' => ['entier', 0, 99],
+            'seance.n' => ['entier', 0, 9999],
+            'seance.i' => ['entier', 0, 9999],
+            'seance.g' => ['entier', 0, 9999],
+            // Le plan : ouverte (0 ou 1), les minutes (15 au plus), le paquet
+            // obligé (0 ou 1), ce qu'il en reste (10 au plus), les étapes
+            // commencées (99 au plus).
+            'seance.p' => ['places', [[0, 1], [0, 15], [0, 1], [0, 10], [0, 99]]],
+            // Ce que la séance a fait : dix comptes, 999 au plus — sauf les
+            // secondes (5 400) et les étoiles gagnées par J'apprends (99).
+            'seance.j' => ['places', [[0, 999], [0, 999], [0, 999], [0, 999], [0, 5400], [0, 99], [0, 999], [0, 999], [0, 999], [0, 999]]],
+            // La même chose par onglet : sa source (9 999 au plus), puis ses
+            // dix comptes ; un groupe incomplet en bout de liste est coupé.
+            'seance.parts' => ['places', [[0, 9999], [0, 999], [0, 999], [0, 999], [0, 999], [0, 5400], [0, 99], [0, 999], [0, 999], [0, 999], [0, 999]], 'cycle'],
+            'seances' => ['liste', ['date']],
+            'journal' => ['objet'],
+            'journal.calculs' => ['liste', ['entier', -1, 999]], 'journal.justes' => ['liste', ['entier', -1, 999]],
+            'journal.nouveautes' => ['liste', ['entier', -1, 99]], 'journal.prouvees' => ['liste', ['entier', -1, 999]],
+            'journal.rouges' => ['liste', ['entier', -1, 999]], 'journal.minutes' => ['liste', ['entier', -1, 90]],
+            'journal.numero' => ['liste', ['entier', -1, 999999]], 'journal.seuls' => ['liste', ['entier', -1, 999]],
+            'journal.seulsJustes' => ['liste', ['entier', -1, 999]], 'journal.tests' => ['liste', ['entier', -1, 999]],
+            'journal.testsRates' => ['liste', ['entier', -1, 999]],
+            'jours' => ['liste', ['date']],
+            'ceintures' => ['liste', ['date']], 'paliers' => ['liste', ['date']],
+            'quarts' => ['liste', ['entier', 0, 3]],
         ],
     ],
     'automatismes' => [

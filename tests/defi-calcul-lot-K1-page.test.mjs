@@ -153,7 +153,9 @@ test("4. le temps est versé avant chaque étape appliquée ; le professeur n'en
   // Une écriture refusée parce que le serveur garde plus récent : la ligne le dit, plus rien ne part.
   assert.match(corps("traiterReponseEnvoi"), /if \(reponse\.statut === 400 && donnees && donnees\.erreur === "Page ancienne : recharge la page\."\) \{\s*erreurDefinitive = true;\s*pageAncienne = true;\s*renderRepere\(\);\s*return;/);
   // Une séance ouverte sans rien à jouer se ferme à l'accueil (jamais en mode professeur, jamais en page ancienne).
-  assert.match(corps("renderAccueil"), /if \(!MODE_PROF && !suiviAttendu && !pageAncienne && etatDuJour\(\)\.aFermer\)/);
+  // (Correctif K1 : la règle a son nom, fermerSeanceFinie, appelée par l'accueil.)
+  assert.match(corps("renderAccueil"), /fermerSeanceFinie\(\);/);
+  assert.match(corps("fermerSeanceFinie"), /if \(MODE_PROF \|\| suiviAttendu \|\| pageAncienne \|\| !etatDuJour\(\)\.aFermer\) return;/);
 });
 
 // ------------------------------------------------------------------ 5.

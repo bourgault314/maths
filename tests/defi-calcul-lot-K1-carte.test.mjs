@@ -326,7 +326,8 @@ test("G2 — le 2e calcul n'est jamais perdu : la page fermée entre les deux, i
   p = P.normaliserParcours(JSON.parse(JSON.stringify(p)), {aujourdhui: J});
   const etatS = P.etatSeance(p, CARTE, {aujourdhui: J});
   assert.deepEqual([etatS.obligatoire, etatS.continuer], [1, {type: "paquet", calculs: 1, raison: "obligatoire"}], "Mes calculs du jour sont toujours là, pour ce seul calcul");
-  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}), [{module: "A10", niveau: 1, du: true, second: true, premierRetour: false}]);
+  // (Correctif K1 : `premierLe`, le jour où le premier calcul a été posé — la page en repose un AUTRE.)
+  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}), [{module: "A10", niveau: 1, du: true, second: true, premierLe: J, premierRetour: false}]);
   // Le lendemain, sans y être revenu : c'est encore son 2e calcul.
   assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: plus(1)}).map(c => c.second), [true]);
   // Sur un autre appareil, qui avait la copie d'avant le faux.
@@ -601,7 +602,8 @@ test("« Continuer » : le J'apprends commencé, puis l'étoile à regagner, pui
   assert.deepEqual([cle(c), c.raison, c.action], ["M1-1", "enCours", "apprends"]);
   // Tout est gagné, rien n'est dû.
   const tout = tenir(CARTE.ordre, {b: 5, e: plus(3)});
-  assert.deepEqual(P.continuer(tout, CARTE, {aujourdhui: J}), {type: "rien", toutGagne: true, prochainRetour: 3}, "« Tout est gagné. Tes étoiles reviennent dans 3 jours. »");
+  // (Correctif K1 : `tempsFini` dit quand il reste des étoiles mais que plus rien ne tient dans la séance.)
+  assert.deepEqual(P.continuer(tout, CARTE, {aujourdhui: J}), {type: "rien", toutGagne: true, tempsFini: false, prochainRetour: 3}, "« Tout est gagné. Tes étoiles reviennent dans 3 jours. »");
 });
 
 test("G6 — rien de ce que la séance propose n'est lu dans un plan : un plan trafiqué ne désigne aucune étoile", () => {

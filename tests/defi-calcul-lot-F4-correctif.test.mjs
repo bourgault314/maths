@@ -138,7 +138,8 @@ test("12. une série d'entraînement qui manque de calculs se reconstitue jusqu'
   assert.match(page, /manip: regles\.manip, toutesFormesVues: regles\.toutesFormesVues !== false, tempsFini: regles\.tempsFini === true/);
   // Et elle passe en lecture seule devant une copie plus récente (point 5).
   assert.match(page, /if \(pageAncienne \|\| verifierPageAncienne\(\)\) \{ renderRepere\(\); return; \}/);
-  assert.match(page, /if \(pageAncienne\) return false;\s*return suiviActif\(\)/);
+  // (Correctif K1, 26/11 : la case est RELUE à chaque envoi — pagePlusAncienne —, plus seulement le drapeau du démarrage.)
+  assert.match(page, /if \(pagePlusAncienne\(\)\) return false;\s*return suiviActif\(\)/);
   assert.match(page, /repere\.textContent = "Page ancienne : recharge la page\.";/);
 });
 

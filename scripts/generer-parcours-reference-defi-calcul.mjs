@@ -23,10 +23,14 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 // Les clés que le serveur déclare pour « defi-calcul » (lib/applis.php), en
 // plus des 74 codes de module et des numéros de cause. Version 12 : par
 // étoile `b`, `e`, `a`, `x`, `r`, `q`, `pe`, `d`, `s`, `ar`, `g` ; la séance
-// `jour`, `etape`, `n`, `i`, `g`, `p`, `j` ; le journal et ses onze listes ;
-// `ceintures`, `paliers`, `quarts`.
-export const CLES_DECLAREES = Object.freeze(["version", "epoque", "prenom", "modules", "vu", "b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "c",
-  "seance", "jour", "etape", "n", "i", "p", "j", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero",
+// `jour`, `etape`, `n`, `i`, `g`, `p`, `j`, `parts` ; le journal et ses onze
+// listes ; `ceintures`, `paliers`, `quarts`.
+// Correctif K1 (26/11/2026) : `prenom` n'en est plus — le prénom d'un
+// visiteur sans code reste sur l'appareil, le paquet envoyé ne le porte pas
+// et le serveur ne le garderait pas ; `parts` (ce que chaque onglet a fait
+// dans la séance ouverte) s'ajoute.
+export const CLES_DECLAREES = Object.freeze(["version", "epoque", "modules", "vu", "b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "c",
+  "seance", "jour", "etape", "n", "i", "p", "j", "parts", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero",
   "seuls", "seulsJustes", "tests", "testsRates", "jours", "ceintures", "paliers", "quarts"]);
 
 // Le jour de la relecture : fixe, pour que la référence ne dépende pas de
@@ -102,7 +106,11 @@ export function parcoursComplet({causes = 8, entier = false, pire = false} = {})
   // (15 minutes, un paquet obligé de 10 étoiles, 3 étapes de la carte), et ce
   // qu'elle a fait (dix nombres, les plus grands) ; le journal des 60 séances
   // (onze listes, les plus grands nombres : le pire cas pour la taille).
-  p.seance = {jour: "2026-10-28", etape: 2, n: 60, i: 9999, g: 9999, p: [1, 15, 1, 10, 3], j: [999, 999, 999, 999, 5400, 99, 999, 999, 999, 999]};
+  // Ses parts (correctif K1) : huit onglets, onze nombres chacun (la source,
+  // puis ses dix comptes), les plus grands — `j` en est la somme, bornée.
+  const plein = [999, 999, 999, 999, 5400, 99, 999, 999, 999, 999];
+  p.seance = {jour: "2026-10-28", etape: 2, n: 60, i: 9999, g: 9999, p: [1, 15, 1, 10, 3], j: plein,
+    parts: [].concat(...Array.from({length: 8}, (_, i) => [9992 + i, ...plein]))};
   p.seances = Array.from({length: PARCOURS.SEUILS.seance.garder}, (_, i) => PARCOURS.ajouterJours("2026-09-01", Math.floor(i / 2)));
   const garder = PARCOURS.SEUILS.seance.garder;
   p.journal = {calculs: Array(garder).fill(999), justes: Array(garder).fill(999), nouveautes: Array(garder).fill(99),

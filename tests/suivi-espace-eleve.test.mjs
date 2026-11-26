@@ -493,7 +493,9 @@ test("lire un parcours n'écrit jamais le code dans une adresse", () => {
   const bloc = page.slice(debut, page.indexOf("\n  }", debut));
   assert.match(bloc, /fetch\("api\/parcours\.php", \{\s*\n\s*method: "POST"/,
     "le code voyage dans le corps : une adresse s'inscrit en clair dans les journaux de l'hébergeur");
-  assert.match(bloc, /body: JSON\.stringify\(\{code, appli: cle, lire: true\}\)/);
+  // (Correctif K1 : la lecture annonce en plus la version du moteur que la
+  // page sait lire — le code reste dans le corps, jamais dans l'adresse.)
+  assert.match(bloc, /body: JSON\.stringify\(Object\.assign\(\{code, appli: cle, lire: true\}, format\)\)/);
   assert.doesNotMatch(page, /parcours\.php\?/, "aucun paramètre d'adresse sur ce point d'entrée");
   assert.match(bloc, /catch \(_\) \{ return null; \}/, "toute avarie rend null : pas de message d'erreur à l'élève");
 });

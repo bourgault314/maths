@@ -103,6 +103,11 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-C4c-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C4d-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-K1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  // Le correctif du lot K1 (26/11/2026) : la page (deux appareils, une page plus ancienne, les renvois) et Mon espace
+  // avec le VRAI serveur PHP — rejouée aussi quand la lecture d'un parcours change côté serveur (sans PHP sur le
+  // poste, ce trajet-là est sauté, et dit).
+  { fichier: "tests/defi-calcul-lot-K1-correctif-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"],
+    garde: [...DEFI_CALCUL, "_serveur/public/index.php", "_serveur/public/api/parcours.php", "_serveur/public/lib/applis.php", "_serveur/public/lib/progression.php", "_serveur/public/prof/defi_calcul"] },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

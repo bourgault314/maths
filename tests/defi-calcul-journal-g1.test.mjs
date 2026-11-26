@@ -109,7 +109,7 @@ test("taille : un élève qui a tout rempli tient sous les bornes du serveur", a
 
 test("la page élève : le temps actif donné au moteur", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
   assert.match(page, /defi_calcul\.css\?v=20261125-7/, "la feuille a changé au lot 3b « Chaque sorte annoncée »");
   // (Lot K1 : l'accueil ne montre plus la semaine — la ligne des jours est
   // sur Mon espace.)

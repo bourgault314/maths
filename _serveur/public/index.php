@@ -23,6 +23,22 @@ $versionCoffres = version_moteur('coffres-parcours.js');
 $versionAnzan = version_moteur('flash_anzan_parcours.js');
 $versionCalculCore = version_moteur('defi_calcul_core.js');
 $versionCalcul = version_moteur('defi_calcul_mon_parcours.js');
+// Correctif K1 de Défi calcul (26/11/2026, relecture de Codex) : le FORMAT
+// que sait lire un moteur servi d'ici (sa ligne « const VERSION = 12; »). La
+// page l'annonce en lisant le parcours (api/parcours.php : le serveur ne sert
+// pas une progression à une page qui ne dit pas savoir la lire). Avant, Mon
+// espace lisait sans rien dire : pris pour une page d'avant le lot K1, il
+// recevait un refus pour toute progression de version 12, et la tuile Défi
+// calcul restait vide pour tous les élèves. Lu dans le fichier même que la
+// page chargera (son empreinte est dans l'adresse) : les deux vont ensemble.
+function format_moteur(string $fichier): ?int
+{
+    $chemin = __DIR__ . '/prof/' . $fichier;
+    $texte = is_file($chemin) ? file_get_contents($chemin) : false;
+    if (!is_string($texte) || preg_match('/^\s*const VERSION = (\d{1,3});/m', $texte, $trouve) !== 1) return null;
+    return (int)$trouve[1];
+}
+$formatCalcul = format_moteur('defi_calcul_mon_parcours.js');
 // Serveur pro (31/10/2026) : la charte commune, chargée AVANT le style de la
 // page, avec son empreinte dans l'adresse (comme prof/index.php).
 $charte = __DIR__ . '/suivi.css';
@@ -1332,6 +1348,9 @@ try {
       avant: {url: "prof/defi_calcul_core.js?v=<?= htmlspecialchars($versionCalculCore, ENT_QUOTES) ?>", global: "MATHSGO_DEFI_CALCUL_CORE"},
       url: "prof/defi_calcul_mon_parcours.js?v=<?= htmlspecialchars($versionCalcul, ENT_QUOTES) ?>",
       global: "MATHSGO_DEFI_CALCUL_MON_PARCOURS",
+      // Correctif K1 : le format que lit ce moteur, annoncé à la lecture du
+      // parcours (voir lireParcours). null : le fichier manque.
+      version: Number("<?= $formatCalcul === null ? '' : (int)$formatCalcul ?>") || null,
       // Lot K1 « la carte » (25/11/2026) : la ceinture de l'étage en cours,
       // remplie de sa couleur quart par quart, et « Ceinture jaune · 17
       // étoiles sur 44 » — le compte de l'accueil de l'appli, jusqu'à l'étage
@@ -1341,7 +1360,10 @@ try {
         if (!CORE || typeof P.carteEleve !== "function") return null;
         const jusqua = typeof P.reglagesDeSeance === "function" ? P.reglagesDeSeance(reglages).palier : 4;
         const carte = P.carteEleve(brut, CORE.carte(), {palier: jusqua});
-        if (!carte.etoiles) return null;
+        // Rien tant qu'aucune étoile n'est gagnée — sauf une ceinture déjà
+        // acquise (elle ne se reprend jamais : correctif K1, elle
+        // disparaissait de la tuile quand plus aucune étoile n'était tenue).
+        if (!carte.etoiles && !carte.etages.some(e => e.ceinture)) return null;
         const etage = carte.etages.find(e => e.etage === carte.courant) || carte.etages[0];
         if (!etage) return null;
         const ceinture = CORE.CEINTURES && CORE.CEINTURES[etage.etage];
@@ -1450,12 +1472,16 @@ try {
 
   // Le parcours d'une activité, lu comme tout le reste : le code dans le CORPS
   // d'un POST, jamais dans l'adresse. Toute avarie rend null.
+  // Correctif K1 : une activité dont la lecture est protégée par version
+  // (Défi calcul) annonce le format que lit son moteur, celui que la page
+  // chargera (JAUGES, « version ») ; les autres ne disent rien, comme avant.
   async function lireParcours(code, cle) {
     try {
+      const format = JAUGES[cle] && Number.isInteger(JAUGES[cle].version) ? {version: JAUGES[cle].version} : {};
       const reponse = await fetch("api/parcours.php", {
         method: "POST",
         headers: {"Content-Type": "text/plain;charset=UTF-8"},
-        body: JSON.stringify({code, appli: cle, lire: true}),
+        body: JSON.stringify(Object.assign({code, appli: cle, lire: true}, format)),
         cache: "no-store"
       });
       if (!reponse.ok) return null;

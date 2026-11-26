@@ -64,7 +64,8 @@ function seance(p, jour, {alea = .5, secondes = 120, juste = () => true, etoile 
 test("le format : version 12, rien d'autre que ce que le moteur décrit", () => {
   assert.deepEqual(P.creerParcours(), {
     version: 12, epoque: 0, prenom: "", modules: {},
-    seance: {jour: null, etape: 0, n: 0, i: 0, g: 0, p: [0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
+    // (Correctif K1 : `parts`, ce que chaque onglet a fait dans la séance ouverte ; `j` en est la somme.)
+    seance: {jour: null, etape: 0, n: 0, i: 0, g: 0, p: [0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], parts: []},
     seances: [],
     journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: [], seuls: [], seulsJustes: [], tests: [], testsRates: []},
     jours: [], ceintures: [null, null, null, null], paliers: [null, null, null, null], quarts: [0, 0, 0, 0]
@@ -96,7 +97,11 @@ test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas"
   // Une étoile tenue n'a ni arrêt ni « Je tente » raté ; une étoile pas tenue n'a pas de retour en cours.
   const brut = {version: 12, modules: {A1: {b: [3, 0, 0], e: ["2026-11-20", "2026-11-21", null], ar: [5, 4, 9], r: [2, 1, 0], q: ["2026-11-01", "2026-11-02", "2026-11-03"], x: [2, 3, 1], s: [null, "2026-11-01", null]}}};
   const lu = P.normaliserParcours(brut, {aujourdhui: "2026-11-25"}).modules.A1;
-  assert.deepEqual([lu.ar, lu.r, lu.q, lu.x], [[0, 4, 9], [0, 1, 0], [null, "2026-11-02", null], [2, 0, 0]]);
+  // (Correctif K1 : une étoile tenue dont le 2e calcul attend garde `q`, le jour de son premier calcul faux.)
+  assert.deepEqual([lu.ar, lu.r, lu.q, lu.x], [[0, 4, 9], [0, 1, 0], ["2026-11-01", "2026-11-02", null], [2, 0, 0]]);
+  const sans2e = JSON.parse(JSON.stringify(brut));
+  sans2e.modules.A1.x[0] = 1;
+  assert.equal(P.normaliserParcours(sans2e, {aujourdhui: "2026-11-25"}).modules.A1.q[0], null, "tenue, sans 2e calcul qui attend : pas de jour");
   assert.deepEqual(lu.e, ["2026-11-20", null, null], "pas tenue : une échéance seulement au 3e arrêt (« à voir en classe »)");
   assert.deepEqual(lu.s, [null, null, null], "solide un jour : seulement une étoile gagnée un jour");
   // Le jour de retour d'une étoile « à voir en classe » : au plus dans 7 jours.
@@ -113,7 +118,10 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   };
   voir(complet);
   const inconnues = [...cles].filter(cle => !CLES_DECLAREES.includes(cle) && !P.CODES.includes(cle) && !/^\d{1,2}$/.test(cle));
-  assert.deepEqual(inconnues, [], "toute clé de la référence est déclarée");
+  // (Correctif K1 : `prenom` est la seule clé du format que le serveur ne connaît pas — le prénom d'un visiteur
+  // sans code reste sur l'appareil.)
+  assert.deepEqual(inconnues, ["prenom"], "toute clé de la référence est déclarée, sauf le prénom, qui ne part pas");
+  assert.ok(!CLES_DECLAREES.includes("prenom"));
   assert.deepEqual(CLES_DECLAREES.filter(cle => !cles.has(cle)), [], "toute clé déclarée est dans la référence");
   assert.equal(JSON.stringify(complet, null, 2) + "\n", await lire("../_serveur/tests/parcours-reference-defi-calcul.json"), "le fichier de référence est à jour : node scripts/generer-parcours-reference-defi-calcul.mjs --ecrire");
   // Les bornes du serveur : 2 000 clés, 40 000 octets. Le pire cas pour les
@@ -121,8 +129,9 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // tenue, quatre dates par étoile, les plus grands nombres partout), à la
   // clé et à l'octet près : si le format grossit, ce test le dit.
   const mesure = options => P.mesurer(Object.assign({}, parcoursComplet(options), {prenom: ""}));
-  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1953, octets: 32663});
-  assert.deepEqual(mesure({pire: true, causes: 12}), {cles: 1953, octets: 34932});
+  // (Correctif K1 : une clé de plus, `parts`, et ses 88 nombres au pire — il reste 46 clés et 4 698 octets de marge.)
+  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1954, octets: 33033});
+  assert.deepEqual(mesure({pire: true, causes: 12}), {cles: 1954, octets: 35302});
   // Les listes ne comptent pas comme des clés : une case par étoile ne coûte rien.
   assert.equal(P.mesurer({b: [1, 2, 3, 4, 5], e: [null, null]}).cles, 2);
 });
@@ -137,7 +146,7 @@ test("le serveur : les clés du moteur, version_min 12, la lecture protégée, t
   assert.match(bloc, /'version_sans_declaration' => 11,/, "une page qui ne dit pas sa version en lisant vaut au plus la version 11 (B1)");
   const listes = bloc.slice(bloc.indexOf("'listes' => ["));
   // Toute liste du format où la place compte : par étoile, le plan, ce que la séance a fait, les dates par étage, les séances et leur journal.
-  const positionnelles = ["b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "p", "j", "ceintures", "paliers", "quarts", "seances", ...P.JOURNAL];
+  const positionnelles = ["b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "p", "j", "parts", "ceintures", "paliers", "quarts", "seances", ...P.JOURNAL];
   positionnelles.forEach(cle => assert.match(listes, new RegExp(`'${cle}' => \\[`), `« ${cle} » : sa forme est déclarée (une valeur refusée est remplacée à sa place)`));
   const api = await lire("../_serveur/public/api/parcours.php");
   assert.match(api, /version_sans_declaration/);

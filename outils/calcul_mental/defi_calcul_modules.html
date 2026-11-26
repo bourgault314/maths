@@ -299,7 +299,7 @@
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
   <script src="./defi_calcul_core.js?v=20261125-7"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261125-7"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261126-1"></script>
   <script src="./defi_calcul_aides.js?v=20261125-2"></script>
   <script>
     (() => {
@@ -508,6 +508,16 @@
       function optionsSeance(aujourdhui = jourCourant()) {
         return Object.assign({aujourdhui}, reglagesSeance());
       }
+      // Correctif K1 : la SOURCE de cet onglet (un nombre tiré une fois,
+      // gardé dans l'onglet) — ce que la séance ouverte a fait est gardé par
+      // onglet, pour que deux appareils réunissent leur temps sans le compter
+      // deux fois (le moteur : `seance.parts`).
+      const SOURCE = PARCOURS.chargerSourceOnglet(stockageSession());
+      // Ce que le moteur demande pour fusionner : le jour, et la carte (une
+      // ceinture complétée par la fusion est donnée tout de suite).
+      function optionsFusion() {
+        return {aujourdhui: jourCourant(), carte: CARTE, palier: palierRegle()};
+      }
       let suiviHorsLigne = false;
       let envoiEnAttente = null;
       // Vrai tant qu'un envoi groupé est programmé et n'est pas encore parti
@@ -523,7 +533,19 @@
       // périmé) ou "injoignable". Le repère l'affiche, avec le chemin du retour.
       let entreeRefusee = null;
 
+      // La case relue : écrite depuis par une page plus récente ? La ligne du
+      // haut le dit dès que cette page le découvre.
+      function pagePlusAncienne() {
+        if (pageAncienne) return true;
+        if (!verifierPageAncienne()) return false;
+        renderRepere();
+        return true;
+      }
+
       function sauverSync() {
+        // (Correctif K1 : pas par-dessus les repères d'une page plus récente —
+        // le retour d'une lecture les réécrivait encore.)
+        if (pagePlusAncienne()) return;
         // Une case datée, toujours : c'est sur « maj » que la purge compte.
         if (!sync.maj) sync.maj = Date.now();
         PARCOURS.sauverSync(storage(), codeSuivi, sync);
@@ -727,8 +749,11 @@
       // refuse (409) d'écrire par-dessus un état qu'on n'a pas vu, et renvoie
       // cet état : on fusionne, on renvoie. Plus jamais « le dernier paquet
       // arrivé écrase l'autre ».
+      // (Correctif K1 : la clé « prenom » n'est plus dans le paquet du tout —
+      // le serveur ne la connaît plus.)
       function paquetParcours(code, source, baseRevision) {
-        const sansPrenom = Object.assign({}, source, {prenom: ""});
+        const sansPrenom = Object.assign({}, source);
+        delete sansPrenom.prenom;
         const paquet = {code, appli: "defi-calcul", parcours: sansPrenom};
         if (Number.isInteger(baseRevision)) paquet.base_revision = baseRevision;
         return JSON.stringify(paquet);
@@ -741,8 +766,11 @@
         // envoi de fermeture d'onglet. Le travail reste rangé ici et part quand
         // l'élève a retapé son code (ou à sa prochaine entrée sur cet appareil).
         // (Correctif F4, point 5 : une page plus ancienne que la copie de
-        // l'appareil n'envoie rien.)
-        if (pageAncienne) return false;
+        // l'appareil n'envoie rien. Correctif K1, relecture de Codex du
+        // 26/11 : la case est RELUE à chaque fois — un autre onglet, mis à
+        // jour, a pu l'écrire depuis l'ouverture de cette page ; avant, un
+        // envoi différé se fiait à ce que la page savait à son démarrage.)
+        if (pagePlusAncienne()) return false;
         return suiviActif() && !sync.detache && !erreurDefinitive && !envoisRetenus();
       }
 
@@ -837,7 +865,7 @@
           // toute fusion (PARCOURS.recevoir). Écrit par une page plus
           // récente : rien n'est fusionné, rien ne s'écrit ni ne part plus
           // d'ici — lecture seule, « Page ancienne : recharge la page. ».
-          const recu = PARCOURS.recevoir(parcours, donnees.parcours);
+          const recu = PARCOURS.recevoir(parcours, donnees.parcours, optionsFusion());
           if (recu.lectureSeule) {
             pageAncienne = true;
             renderRepere();
@@ -845,10 +873,22 @@
           }
           parcours = recu.parcours;
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
-          sync.dirty = true;
+          // (Correctif K1, relecture de Codex du 26/11 : quand le serveur
+          // contient déjà tout — la fusion n'apporte rien —, plus rien
+          // n'attend ; avant, un renvoi partait quand même et la révision
+          // montait pour rien.)
+          sync.dirty = recu.apporte;
           sauverCase();
           sauverSync();
           if (!state.running) renderParcours();
+          if (!recu.apporte) {
+            annulerEnvoiGroupe();
+            renvoiDemande = false;
+            fusionsSuccessives = 0;
+            suiviHorsLigne = false;
+            renderRepere();
+            return;
+          }
           fusionsSuccessives++;
           if (fusionsSuccessives <= 2) envoyerMaintenant();
           else planifierRelance(10000);
@@ -1437,7 +1477,7 @@
           // la reçoit quand même (un serveur d'avant ce lot) — dans les deux
           // cas, lecture seule : rien n'est fusionné, écrit ni envoyé.
           const refusee = reponse.statut === 400 && reponse.donnees && reponse.donnees.erreur === "Page ancienne : recharge la page.";
-          const recu = !suiviHorsLigne && reponse.donnees.existe ? PARCOURS.recevoir(parcours, reponse.donnees.parcours) : null;
+          const recu = !suiviHorsLigne && reponse.donnees.existe ? PARCOURS.recevoir(parcours, reponse.donnees.parcours, optionsFusion()) : null;
           if (refusee || (recu && recu.lectureSeule)) {
             pageAncienne = true;
             renderRepere();
@@ -1449,7 +1489,10 @@
             sync.revision = Number.isInteger(reponse.donnees.revision) ? reponse.donnees.revision : 0;
             // On ne renvoie que si cet appareil apporte quelque chose : sinon
             // chaque ouverture ferait monter la révision pour rien.
-            const apporte = sync.dirty || recu.apporte;
+            // (Correctif K1, relecture de Codex du 26/11 : `dirty` seul ne
+            // suffit plus — l'envoi de fermeture a pu arriver sans que sa
+            // réponse soit lue ; si le serveur a déjà tout, rien ne repart.)
+            const apporte = recu.apporte;
             parcours = fusion;
             sauverCase();
             sync.dirty = apporte;
@@ -2142,16 +2185,20 @@
         return but && but.type === "etoile" ? soude(`Aujourd’hui : l’étoile ${nomCompetence(but.module, but.niveau)}`) : "";
       }
 
+      // Une séance ouverte qui n'a plus rien à jouer se ferme et compte, à
+      // l'accueil (jamais en mode professeur, jamais en page ancienne).
+      function fermerSeanceFinie() {
+        if (MODE_PROF || suiviAttendu || pageAncienne || !etatDuJour().aFermer) return;
+        parcours = PARCOURS.fermerSeance(parcours, CARTE, optionsSeance()).parcours;
+        sauverParcours();
+      }
+
       function renderAccueil() {
         const acc = document.querySelector(".acc");
         // Tant que le serveur n'a pas dit qui est l'élève, l'accueil attend.
         acc.classList.toggle("en-attente", suiviAttendu);
         document.body.classList.toggle("accueil-en-attente", suiviAttendu && !$("intro").hidden);
-        // Une séance ouverte qui n'a plus rien à jouer se ferme et compte.
-        if (!MODE_PROF && !suiviAttendu && !pageAncienne && etatDuJour().aFermer) {
-          parcours = PARCOURS.fermerSeance(parcours, CARTE, optionsSeance()).parcours;
-          sauverParcours();
-        }
+        fermerSeanceFinie();
         const carte = carteDuJour();
         const etage = etageCourant(carte);
         const s = etatDuJour();
@@ -2195,6 +2242,10 @@
       }
       function effacerHistorique() {
         if (!peutEffacer()) return;
+        // (Correctif K1, relecture de Codex du 26/11 : la case est relue
+        // AVANT d'effacer — un autre onglet, mis à jour, a pu y écrire une
+        // progression que cette page ne sait pas lire ; elle n'y touche pas.)
+        if (verifierPageAncienne()) { renderAccueil(); renderRepere(); return; }
         arreterActivite();
         PARCOURS.effacer(storage(), "");
         parcours = caseSansCode();
@@ -2286,14 +2337,16 @@
         $("carte-jour-encore").textContent = soude(`encore ${encore} →`);
         const bouton = $("carte-continuer");
         const petit = document.createElement("small");
-        const fin = suite.type === "rien";
+        // (Correctif K1 : dans une séance ouverte où plus rien ne tient dans
+        // le temps, « Continuer » reste — il mène à « Séance terminée ».)
+        const fin = suite.type === "rien" && !(s.ouverte && suite.tempsFini);
         bouton.hidden = fin;
         $("carte-tout").hidden = !fin || !suite.toutGagne;
         $("carte-tout").textContent = fin && suite.toutGagne ? soude(`Tout est gagné. ${texteRetour(suite.prochainRetour)}`) : "";
         if (!fin) {
           if (suite.type === "paquet") petit.textContent = soude(s.obligatoire ? `Avant : tes ${s.obligatoire} calculs du jour.` : "Mes calculs du jour");
-          else petit.textContent = soude(`${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
-          bouton.replaceChildren(document.createTextNode("Continuer"), petit);
+          else if (suite.type === "etoile") petit.textContent = soude(`${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
+          bouton.replaceChildren(document.createTextNode("Continuer"), ...(petit.textContent ? [petit] : []));
         }
       }
 
@@ -2912,7 +2965,7 @@
         actif.ms -= secondes * 1000;
         if (!secondes) return false;
         const avant = parcours.seance.j[4];
-        parcours = PARCOURS.noterTemps(parcours, secondes);
+        parcours = PARCOURS.noterTemps(parcours, secondes, {source: SOURCE});
         return parcours.seance.j[4] !== avant;
       }
       ["pointerdown", "keydown"].forEach(type => document.addEventListener(type, compterTempsActif, true));
@@ -3814,8 +3867,7 @@
         sauverParcours();
         const tirage = PARCOURS.tirerCalculsDuJour(parcours, CARTE, {aujourdhui, palier: palierRegle()});
         // L'écriture change d'un retour à l'autre : à tour de rôle, d'après
-        // le jour (le même sur deux appareils).
-        const tourDuJour = Math.round(Date.parse(`${aujourdhui}T12:00:00Z`) / 86400000);
+        // le jour (le même sur deux appareils ; voir premierCalcul).
         const graine = CORE.graineDe(`${aujourdhui}:${codeSuivi}`);
         const rng = CORE.mulberry32(graine);
         // L'ordre est mélangé (le 2e calcul qui attend reste en tête).
@@ -3825,14 +3877,26 @@
           const j = Math.floor(rng() * (i + 1));
           [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
         }
-        const questions = [...seconds, ...ordre].map(tire => {
+        // Le premier calcul d'une étoile, le jour `jour` : toujours le même
+        // (le jour, le code), ici comme sur un autre appareil.
+        const premierCalcul = (tire, jour) => {
           const rang = PARCOURS.rangDe(tire.module, tire.niveau);
+          const tour = Math.round(Date.parse(`${jour}T12:00:00Z`) / 86400000);
+          return CORE.genererUn(cleDe(tire.module, tire.niveau), (CORE.graineDe(`${jour}:${codeSuivi}`) + rang * 977) >>> 0, {tour: tour + rang});
+        };
+        const questions = [...seconds, ...ordre].map(tire => {
+          // (Correctif K1, relecture de Codex du 26/11 : le 2e calcul qui
+          // attendait — la page fermée entre les deux — est un AUTRE calcul
+          // que le premier, retrouvé par le jour où il a été posé ; avant, il
+          // était tiré au hasard et pouvait être le même.)
           const calcul = tire.second
-            ? CORE.genererUn(cleDe(tire.module, tire.niveau), nouvelleGraine())
-            : CORE.genererUn(cleDe(tire.module, tire.niveau), (graine + rang * 977) >>> 0, {tour: tourDuJour + rang});
+            ? CORE.genererUn(cleDe(tire.module, tire.niveau), nouvelleGraine(), {autreQue: premierCalcul(tire, tire.premierLe || aujourdhui)})
+            : premierCalcul(tire, aujourdhui);
           return calcul ? Object.assign({calcul, retour: false}, tire.second ? {deuxieme: true} : {}) : null;
         }).filter(Boolean);
         if (!questions.length) {
+          // (Correctif K1 : le temps d'abord, puis l'étape — rangés ensemble.)
+          verserTempsActif();
           const fin = PARCOURS.terminerCalculsDuJour(parcours, {aujourdhui, carte: CARTE, palier: palierRegle()});
           parcours = fin.parcours;
           sauverParcours();
@@ -4491,11 +4555,18 @@
       // suite. Un premier calcul faux ne change rien : un 2e est attendu
       // (`secondAVenir`) ; les deux faux, l'étoile part (`perdue`) — sa
       // ligne est au bilan, avec de quoi la regagner (planche K1-4).
-      function noterRetour(serie, calcul, juste, ms, cause) {
+      // Correctif K1 (relecture de Codex du 26/11) : le temps actif est versé
+      // AVANT la réponse, et les deux sont rangés ensemble (avant, la boîte
+      // partait tout de suite et le temps restait en mémoire jusqu'au
+      // bilan) ; la page dit au moteur à quel calcul l'élève répond
+      // (`deuxieme`) — une réponse à un premier calcul auquel un autre
+      // appareil a déjà répondu est périmée, elle ne compte pas.
+      function noterRetour(serie, calcul, juste, ms, cause, deuxieme = false) {
+        verserTempsActif();
         const suivi = PARCOURS.appliquerRetour(parcours, {
-          module: calcul.module, niveau: calcul.niveau, juste, ms,
+          module: calcul.module, niveau: calcul.niveau, juste, ms, deuxieme: Boolean(deuxieme),
           type: PARCOURS.typeDe(CARTE, calcul.module, calcul.niveau), cause: cause ? cause.c : 0
-        }, {aujourdhui: jourCourant(), carte: CARTE});
+        }, {aujourdhui: jourCourant(), carte: CARTE, source: SOURCE});
         parcours = suivi.parcours;
         sauverParcours();
         const m = suivi.mouvement || {};
@@ -4535,7 +4606,7 @@
             !passe && saisieFraction() ? {ecrit: state.answer} : {},
             question.rappel ? {rappel: true} : {}, question.deuxieme ? {deuxieme: true} : {}));
           if (serie.genre === "jour") {
-            const mouvement = noterRetour(serie, question.calcul, juste, ms, cause);
+            const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, question.deuxieme);
             // Lot 1 (planche 4, choix de Gwenaël) : un faux appelle un 2e
             // calcul du même niveau, d'une autre sorte (ou d'une autre
             // écriture), tout de suite après la correction. Le calcul raté ne
@@ -4544,7 +4615,7 @@
               const autre = CORE.genererUn(`${question.calcul.module}-${question.calcul.niveau}`, nouvelleGraine(), {autreQue: question.calcul});
               if (autre) serie.questions.splice(serie.index + 1, 0, {calcul: autre, retour: false, deuxieme: true});
             }
-            if (juste && question.deuxieme) texteJuste = "Bravo ! Tu le savais.";
+            if (juste && question.deuxieme && !mouvement.perime) texteJuste = "Bravo ! Tu le savais.";
           }
           if (serie.genre === "tente" || serie.genre === "ceinture") renderPoints();
         }
@@ -4618,7 +4689,7 @@
         if (!state.running) return;
         const serie = state.serie;
         arreterActivite();
-        const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance() && !MODE_PROF, palier: palierRegle()};
+        const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance() && !MODE_PROF, palier: palierRegle(), source: SOURCE};
         // Le temps actif d'abord : c'est sur lui que la séance décide si elle
         // continue (lot G1).
         verserTempsActif();
@@ -4838,7 +4909,11 @@
           const boutons = [];
           if (e.actions.tente) boutons.push(["Je tente", "secondary", () => lancerTentative(id, n)]);
           if (e.actions.apprends) boutons.push(["J’apprends", "secondary", () => lancerDepuisCarte(() => { marquerEtape("apprends", id, n); lancerApprends(id, n, "seance", {depart: e.reprise || 0}); })]);
-          ligne.append(dessinEtoile("aGagner", 40), nom, texte, ...(boutons.length && !fin ? [boutonsDeSuite(...boutons)] : []));
+          // (Correctif K1, relecture de Codex du 26/11 : les deux boutons
+          // restent quand le paquet a fini la séance — planche K1-4, § 12.8 —,
+          // la phrase dit « quand tu veux ». Ils ouvrent alors une séance
+          // neuve : lancerTentative et lancerDepuisCarte s'en chargent.)
+          ligne.append(dessinEtoile("aGagner", 40), nom, texte, ...(boutons.length ? [boutonsDeSuite(...boutons)] : []));
           return ligne;
         });
         $("result-suite").replaceChildren(...lignes, ...basDeBilan(fin));

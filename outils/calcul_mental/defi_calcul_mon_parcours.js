@@ -168,6 +168,22 @@
   // reculer (G9). Le serveur refuse l'écriture d'une page de version 11
   // (« version_min » 12), et ne sert plus une progression à une page qui ne
   // saurait pas la lire (B1).
+  // Correctif du lot K1 (26/11/2026, relecture de Codex ; la version 12
+  // n'était pas encore en ligne, elle ne change pas de numéro) :
+  //  - `seance.parts` : ce que la séance ouverte a fait, PAR ONGLET (onze
+  //    nombres par onglet : sa source, puis ses dix comptes) ; `seance.j` en
+  //    est la somme. Deux appareils réunissent ainsi leur temps sans le
+  //    compter deux fois ;
+  //  - `q`, pour une étoile TENUE dont le 2e calcul attend : le jour où le
+  //    premier calcul a été posé (la page le retrouve et en pose un autre) ;
+  //  - une séance du journal se reconnaît à son jour et à son IDENTITÉ (les
+  //    quatre derniers chiffres de `numero`), plus à son numéro entier : la
+  //    même séance close à deux rangs différents n'en fait qu'une ;
+  //  - une boîte abîmée n'est pas une étoile perdue, une version illisible
+  //    n'est pas une remise à zéro, un jour d'entrée sans étoile jamais tenue
+  //    est écarté ;
+  //  - le prénom (un visiteur sans code) ne part plus du tout au serveur, qui
+  //    ne connaît plus cette clé.
   const VERSION = 12;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
@@ -287,7 +303,10 @@
     // Le journal d'une séance (lot G1) : des comptes bornés, la durée en
     // minutes de temps actif (90 au plus). La séance ouverte compte ses
     // secondes (90 minutes au plus).
-    journal: Object.freeze({compte: 999, minutes: 90, secondes: 5400}),
+    // `tempsSeul` (correctif K1) : une séance laissée ouverte où rien n'a été
+    // fini (ni étape, ni calcul du jour) compte quand même pour son jour à
+    // partir d'une minute de travail.
+    journal: Object.freeze({compte: 999, minutes: 90, secondes: 5400, tempsSeul: 60}),
     jours: Object.freeze({garder: 14}),
     compteur: 9999,
     causes: 12,
@@ -360,6 +379,56 @@
   const EN_COURS_MAX = Object.freeze([SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte,
     SEUILS.journal.compte, SEUILS.journal.secondes, SEUILS.nouveautes.maximum,
     SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte, SEUILS.journal.compte]);
+
+  // Correctif K1 (relecture de Codex du 26/11) : ce que la séance ouverte a
+  // fait est gardé PAR ONGLET, `seance.parts` — une liste à plat, onze
+  // nombres par onglet qui y a travaillé : sa SOURCE (un nombre de 1 à
+  // 9 999 tiré par l'onglet, gardé dans l'onglet seulement ; 0 : pas connue),
+  // puis ses dix comptes (l'ordre de `seance.j`). `seance.j` en est la somme,
+  // recalculée à chaque relecture. La fusion de deux appareils réunit les
+  // parts : pour une même source, le plus grand de chaque compte (un onglet
+  // ne fait que monter les siens) ; d'une source à l'autre, la somme. Le
+  // temps commun n'est donc compté qu'une fois, et ce que chaque appareil a
+  // ajouté de son côté est gardé (avant : la séance d'un seul des deux, en
+  // bloc). Huit onglets au plus ; au-delà, on ajoute à la dernière part.
+  const SOURCE_MAX = 9999;
+  const PARTS_MAX = 8;
+  const PART = 1 + EN_COURS_MAX.length;
+
+  // Les parts lues : [{source, valeurs}], une par source (la même source
+  // deux fois : le plus grand de chaque compte), sans part vide, triées par
+  // source, huit au plus (les plus petites sources : le même choix sur
+  // chaque appareil).
+  function lireParts(brut) {
+    const liste = Array.isArray(brut) ? brut : [];
+    const parSource = new Map();
+    for (let debut = 0; debut + PART <= liste.length; debut += PART) {
+      const source = entier(liste[debut], 0, SOURCE_MAX, -1);
+      if (source < 0) continue;
+      const valeurs = EN_COURS_MAX.map((maximum, index) => entier(liste[debut + 1 + index], 0, maximum));
+      if (!valeurs.some(Boolean)) continue;
+      const avant = parSource.get(source);
+      parSource.set(source, avant ? avant.map((valeur, index) => Math.max(valeur, valeurs[index])) : valeurs);
+    }
+    return [...parSource.keys()].sort((x, y) => x - y).slice(0, PARTS_MAX).map(source => ({source, valeurs: parSource.get(source)}));
+  }
+
+  // Les parts posées dans la séance, et leur somme dans `j` (jamais plus de
+  // justes que de calculs, ni de ratés que de retours).
+  function poserParts(seance, groupes) {
+    const ranges = groupes.slice().sort((x, y) => x.source - y.source);
+    seance.parts = [].concat(...ranges.map(groupe => [groupe.source, ...groupe.valeurs]));
+    const j = EN_COURS_MAX.map((maximum, index) => Math.min(maximum, ranges.reduce((somme, groupe) => somme + groupe.valeurs[index], 0)));
+    if (j[EN_COURS.justes] > j[EN_COURS.calculs]) j[EN_COURS.justes] = j[EN_COURS.calculs];
+    if (j[EN_COURS.seulsJustes] > j[EN_COURS.seuls]) j[EN_COURS.seulsJustes] = j[EN_COURS.seuls];
+    if (j[EN_COURS.testsRates] > j[EN_COURS.tests]) j[EN_COURS.testsRates] = j[EN_COURS.tests];
+    seance.j = j;
+  }
+
+  // Les parts de deux copies, réunies (voir ci-dessus).
+  function reunirParts(premieres, secondes) {
+    return lireParts([].concat(...[...premieres, ...secondes].map(groupe => [groupe.source, ...groupe.valeurs])));
+  }
 
   // Les minutes d'une séance : 10 ou 15 (un vrai nombre, pas « 15 » en
   // texte) ; tout le reste vaut 10.
@@ -526,16 +595,30 @@
   const estBlanche = entree => entree.every((valeur, index) => index === I_NUMERO || valeur < 0) && numeroDe(entree) < 0;
   const entreeBlanche = () => JOURNAL.map(() => -1);
   const rangDuNumero = numero => (numero >= NUMERO_RANG ? Math.floor(numero / NUMERO_RANG) : 0);
+  // Correctif K1 (relecture de Codex du 26/11) : une séance du journal se
+  // RECONNAÎT à son identité (les quatre derniers chiffres de son numéro) et
+  // à son jour ; son rang ne sert qu'à la ranger dans sa journée. Avant, la
+  // même séance close au rang 2 sur un appareil et au rang 3 sur l'autre
+  // restait deux séances, et ses minutes comptaient deux fois.
+  const identiteDuNumero = numero => (numero >= NUMERO_RANG ? numero % NUMERO_RANG : -1);
+  const cleDeSeance = paire => `${paire.jour} ${identiteDuNumero(numeroDe(paire.entree))}`;
 
-  // Deux copies d'une même séance (le même numéro) : celle qui en sait le
-  // plus (le moins de « pas connu »), puis le plus grand total, puis un choix
-  // fixe sur le texte — la même dans les deux sens, et quel que soit l'ordre.
+  // Deux copies d'une même séance (le même jour, la même identité) : celle
+  // qui en sait le plus (le moins de « pas connu »), puis le plus grand
+  // total, puis un choix fixe sur le texte — la même dans les deux sens, et
+  // quel que soit l'ordre. Le numéro n'entre pas dans le choix ; la séance
+  // garde le plus petit de ses deux rangs.
   function meilleureEntree(x, y) {
-    const connues = entree => entree.filter(v => v >= 0).length;
-    const total = entree => entree.reduce((somme, v) => somme + Math.max(0, v), 0);
-    if (connues(x) !== connues(y)) return connues(x) > connues(y) ? x : y;
-    if (total(x) !== total(y)) return total(x) > total(y) ? x : y;
-    return JSON.stringify(x) >= JSON.stringify(y) ? x : y;
+    const sans = entree => entree.filter((_, index) => index !== I_NUMERO);
+    const connues = entree => sans(entree).filter(v => v >= 0).length;
+    const total = entree => sans(entree).reduce((somme, v) => somme + Math.max(0, v), 0);
+    let choisie;
+    if (connues(x) !== connues(y)) choisie = connues(x) > connues(y) ? x : y;
+    else if (total(x) !== total(y)) choisie = total(x) > total(y) ? x : y;
+    else choisie = JSON.stringify(sans(x)) >= JSON.stringify(sans(y)) ? x : y;
+    const copie = choisie.slice();
+    copie[I_NUMERO] = Math.min(numeroDe(x), numeroDe(y));
+    return copie;
   }
 
   // L'empreinte des nombres d'une entrée (FNV-1a), de 0 à 9 999.
@@ -550,15 +633,21 @@
   }
 
   // Des paires {jour, entree} triées par jour : une entrée connue sans
-  // numéro en reçoit un (sa place dans la journée, son empreinte).
+  // numéro en reçoit un (sa place dans la journée, son empreinte). Deux
+  // entrées sans numéro aux mêmes nombres le même jour restent deux séances :
+  // la 2e prend l'empreinte suivante.
   function numeroter(paires) {
     const places = new Map();
+    const empreintes = new Map();
     return paires.map(({jour, entree}) => {
       const place = (places.get(jour) || 0) + 1;
       places.set(jour, place);
       if (numeroDe(entree) >= 0 || estBlanche(entree)) return {jour, entree};
       const copie = entree.slice();
-      copie[I_NUMERO] = Math.min(place, NUMERO_RANGS) * NUMERO_RANG + empreinteEntree(entree);
+      const empreinte = empreinteEntree(entree);
+      const deja = empreintes.get(`${jour} ${empreinte}`) || 0;
+      empreintes.set(`${jour} ${empreinte}`, deja + 1);
+      copie[I_NUMERO] = Math.min(place, NUMERO_RANGS) * NUMERO_RANG + (empreinte + deja) % NUMERO_RANG;
       return {jour, entree: copie};
     });
   }
@@ -573,7 +662,7 @@
     return rang * NUMERO_RANG + (identite >= 1 && identite <= IDENTITE_MAX ? identite : empreinteEntree(entree));
   }
 
-  // Des paires {jour, entree} : une seule par numéro et par jour (la
+  // Des paires {jour, entree} : une seule par identité et par jour (la
   // meilleure), triées par jour, les blanches d'abord puis par numéro (une
   // journée dans l'ordre où elle a été jouée), les 60 plus récentes — en
   // deux formes, `seances` (les dates) et `journal`.
@@ -586,7 +675,7 @@
         gardees.push(paire);
         return;
       }
-      const cle = `${paire.jour} ${numero}`;
+      const cle = cleDeSeance(paire);
       const avant = vues.get(cle);
       if (!avant) {
         const copie = {jour: paire.jour, entree: paire.entree};
@@ -620,8 +709,10 @@
         if (!parJour.has(jour)) parJour.set(jour, {seances: 0, numeros: new Map()});
         const numero = numeroDe(entree);
         if (numero < 0) return;
+        // (Par identité : la même séance close à deux rangs n'en fait qu'une.)
         const numeros = parJour.get(jour).numeros;
-        numeros.set(numero, numeros.has(numero) ? meilleureEntree(numeros.get(numero), entree) : entree.slice());
+        const identite = identiteDuNumero(numero);
+        numeros.set(identite, numeros.has(identite) ? meilleureEntree(numeros.get(identite), entree) : entree.slice());
       });
       comptes.forEach((compte, jour) => {
         const j = parJour.get(jour);
@@ -638,6 +729,11 @@
 
   function pairesDe(parcours) {
     return parcours.seances.map((jour, index) => ({jour, entree: JOURNAL.map(champ => parcours.journal[champ][index])}));
+  }
+
+  // La séance d'identité `identite` est-elle au journal de `jour` ?
+  function seanceAuJournal(parcours, jour, identite) {
+    return identite > 0 && parcours.seances.some((date, index) => date === jour && identiteDuNumero(parcours.journal.numero[index]) === identite);
   }
 
   function enCoursVide() {
@@ -690,7 +786,7 @@
   }
 
   function seanceVide() {
-    return {jour: null, etape: 0, n: 0, i: 0, g: 0, p: planVide(), j: enCoursVide()};
+    return {jour: null, etape: 0, n: 0, i: 0, g: 0, p: planVide(), j: enCoursVide(), parts: []};
   }
 
   function creerParcours() {
@@ -765,13 +861,25 @@
     ligne.s = normaliserDates(brut.s, k);
     const echeances = Array.isArray(brut.e) ? brut.e : [];
     const rates = normaliserDates(brut.q, k);
+    const boites = Array.isArray(brut.b) ? brut.b : [];
     for (let i = 0; i < k; i += 1) {
+      // Correctif K1 (relecture de Codex du 26/11) : une boîte ABÎMÉE (99,
+      // un texte, une case qui manque) n'est pas une étoile perdue. Cette
+      // copie ne sait plus rien de cette étoile : son compteur vaut 0, et à
+      // la fusion toute copie valide passe devant (avant, la boîte lue 0
+      // gagnait à compteur égal, et l'étoile partait).
+      if (entier(boites[i], 0, SEUILS.revision.boites, -1) < 0) {
+        ligne.x[i] = 0; ligne.ar[i] = 0; ligne.r[i] = 0; ligne.g[i] = 0;
+      }
       if (ligne.b[i]) {
         // Gagnée : une échéance (abîmée ou absente : le jour de la
         // relecture, elle revient tout de suite) ; plus rien d'arrêté ni de
-        // tenté.
+        // tenté. `q` : le jour de son premier calcul faux tant que le 2e
+        // attend (pour que le 2e calcul soit un AUTRE calcul, même la page
+        // rechargée entre les deux).
         ligne.e[i] = dateOuNull(echeances[i]) || jour;
         ligne.ar[i] = 0; ligne.r[i] = 0;
+        ligne.q[i] = ligne.x[i] & X_SECOND ? rates[i] : null;
       } else {
         // Pas tenue : rien du retour ; l'échéance ne vaut que pour une
         // étoile « à voir en classe » (3 arrêts) ; le jour du dernier « Je
@@ -779,6 +887,12 @@
         ligne.x[i] = 0;
         ligne.e[i] = arretsDe(ligne, i) >= SEUILS.apprends.arrets ? retourBorne(echeances[i], jour) : null;
         ligne.q[i] = ligne.r[i] ? rates[i] : null;
+        // Jamais perdue et pas tenue : elle n'a jamais été gagnée (une
+        // étoile ne quitte ses boîtes qu'en se perdant, et `pe` monte). Un
+        // jour d'entrée resté là est incohérent (une copie abîmée) : écarté —
+        // Mon espace comptait « +1 étoile cette semaine » sur une étoile
+        // jamais tenue. Gagnée puis perdue, elle garde son jour d'entrée.
+        if (!ligne.pe[i]) ligne.d[i] = null;
       }
       // Solide un jour : seulement une étoile déjà gagnée un jour.
       if (!ligne.d[i] && !ligne.b[i]) ligne.s[i] = null;
@@ -835,8 +949,13 @@
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return parcours;
     if (tropRecente(brut)) return parcours;
-    parcours.epoque = entier(brut.epoque, 0, 1000000);
     parcours.prenom = nettoyerPrenom(brut.prenom);
+    // Correctif K1 (relecture de Codex du 26/11) : une version ILLISIBLE
+    // (« 12 » en texte, absente) n'est pas une remise à zéro — son époque ne
+    // vaut rien. Avant, cette copie vide gardait son époque, et une époque
+    // plus haute effaçait en bloc le travail valide de l'autre appareil.
+    if (!versionDe(brut)) return parcours;
+    parcours.epoque = entier(brut.epoque, 0, 1000000);
     if (versionDe(brut) !== VERSION) return parcours;
     const jour = dateOuNull(aujourdhui) || jourLocal();
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
@@ -853,22 +972,26 @@
       i: entier(seance.i, 0, IDENTITE_MAX),
       g: entier(seance.g, 0, SEUILS.compteur),
       p: normaliserPlan(seance.p),
-      j: enCoursVide()
+      j: enCoursVide(),
+      parts: []
     };
     // Une séance ouverte a un jour et une identité ; sinon elle est fermée.
     if (parcours.seance.p[PLAN.ouverte] === 1 && (!parcours.seance.jour || !parcours.seance.i)) parcours.seance.p = planVide();
-    if (parcours.seance.p[PLAN.ouverte] !== 1) { parcours.seance.etape = 0; parcours.seance.i = 0; }
-    // Ce que la séance ouverte a fait : rien quand elle n'est pas ouverte.
-    if (parcours.seance.p[PLAN.ouverte] === 1 && Array.isArray(seance.j)) {
-      parcours.seance.j = EN_COURS_MAX.map((maximum, index) => entier(seance.j[index], 0, maximum));
-      const j = parcours.seance.j;
-      if (j[EN_COURS.justes] > j[EN_COURS.calculs]) j[EN_COURS.justes] = j[EN_COURS.calculs];
-      if (j[EN_COURS.seulsJustes] > j[EN_COURS.seuls]) j[EN_COURS.seulsJustes] = j[EN_COURS.seuls];
-      if (j[EN_COURS.testsRates] > j[EN_COURS.tests]) j[EN_COURS.testsRates] = j[EN_COURS.tests];
-    }
     const rangees = normaliserSeancesEtJournal(brut.seances, brut.journal);
     parcours.seances = rangees.seances;
     parcours.journal = rangees.journal;
+    // Correctif K1 : une séance ouverte que le journal dit finie (le même
+    // jour, la même identité : close sur un autre appareil) est finie.
+    if (parcours.seance.p[PLAN.ouverte] === 1 && seanceAuJournal(parcours, parcours.seance.jour, parcours.seance.i)) parcours.seance.p = planVide();
+    if (parcours.seance.p[PLAN.ouverte] !== 1) { parcours.seance.etape = 0; parcours.seance.i = 0; parcours.seance.g = 0; }
+    // Ce que la séance ouverte a fait : rien quand elle n'est pas ouverte.
+    // Ses parts font foi ; `j` seul (une copie sans parts) devient la part
+    // d'une source pas connue.
+    if (parcours.seance.p[PLAN.ouverte] === 1) {
+      let groupes = lireParts(seance.parts);
+      if (!groupes.length && Array.isArray(seance.j)) groupes = lireParts([0, ...EN_COURS_MAX.map((_, index) => seance.j[index])]);
+      poserParts(parcours.seance, groupes);
+    }
     parcours.jours = normaliserJours(brut.jours);
     parcours.ceintures = normaliserDates(brut.ceintures, SEUILS.ceintures.nombre);
     parcours.paliers = normaliserDates(brut.paliers, SEUILS.ceintures.nombre);
@@ -1249,6 +1372,9 @@
 
   // Donne les ceintures que les étoiles méritent (dans l'ordre, à la suite
   // de celles déjà gagnées). Modifie `copie` ; rend les étages gagnés.
+  // `aujourdhui` null (une ceinture complétée par la fusion de deux
+  // appareils) : son jour est le plus récent des jours où ses étoiles ont
+  // été gagnées — le même, quel que soit l'appareil qui fusionne, et quand.
   function gagnerCeintures(copie, carte, aujourdhui, palierMax = SEUILS.seance.paliers) {
     const gagnees = [];
     if (!carte) return gagnees;
@@ -1258,7 +1384,10 @@
       if (copie.ceintures[etage - 1]) continue;
       const liste = etoilesDeLEtage(plan, etage);
       if (!liste.length || !liste.every(e => tenue(ligneDe(copie, e.module), e.index))) break;
-      copie.ceintures[etage - 1] = aujourdhui;
+      const jour = aujourdhui || liste.map(e => ligneDe(copie, e.module).d[e.index]).filter(Boolean).sort().pop();
+      // (Aucun jour d'entrée connu : la prochaine étape jouée la donnera.)
+      if (!jour) break;
+      copie.ceintures[etage - 1] = jour;
       gagnees.push(etage);
     }
     return gagnees;
@@ -1418,7 +1547,8 @@
       if (etoile.etage > reglage) return;
       const ligne = parcours.modules[etoile.module];
       if (!ligne || !tenue(ligne, etoile.index) || ligne.e[etoile.index] > aujourdhui) return;
-      dues.push({etoile, echeance: ligne.e[etoile.index], boite: ligne.b[etoile.index], second: Boolean(ligne.x[etoile.index] & X_SECOND), sansLecon: !ligne.a[etoile.index]});
+      const second = Boolean(ligne.x[etoile.index] & X_SECOND);
+      dues.push({etoile, echeance: ligne.e[etoile.index], boite: ligne.b[etoile.index], second, premierLe: second ? ligne.q[etoile.index] : null, sansLecon: !ligne.a[etoile.index]});
     });
     return dues.sort((p, q) => Number(q.second) - Number(p.second) || (p.echeance < q.echeance ? -1 : p.echeance > q.echeance ? 1 : 0)
       || p.boite - q.boite || p.etoile.rang - q.etoile.rang);
@@ -1426,15 +1556,17 @@
 
   // Le paquet à jouer maintenant : `maximum` étoiles dues au plus (10 par
   // défaut ; dans une séance qui a un paquet en cours, ce qu'il en reste).
-  // [{module, niveau, du: true, second, premierRetour}] — `second` : c'est
-  // son 2e calcul qui est attendu (un calcul d'une autre sorte que le
-  // premier) ; `premierRetour` : un exemple résolu d'abord (lot C3).
+  // [{module, niveau, du: true, second, premierLe, premierRetour}] —
+  // `second` : c'est son 2e calcul qui est attendu (un calcul d'une autre
+  // sorte que le premier ; `premierLe` : le jour où le premier a été posé,
+  // pour que la page le retrouve) ; `premierRetour` : un exemple résolu
+  // d'abord (lot C3).
   function tirerCalculsDuJour(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, maximum = null} = {}) {
     const p = normaliserParcours(parcours, {aujourdhui});
     const dues = etoilesDues(p, planDeCarte(carte), aujourdhui, palierDeSeance(palier));
     const enCours = seanceOuverte(p, aujourdhui) ? p.seance.p[PLAN.paquet] : 0;
     const nombre = Number.isInteger(maximum) && maximum > 0 ? maximum : enCours || SEUILS.jour.paquet;
-    return dues.slice(0, nombre).map(c => ({module: c.etoile.module, niveau: c.etoile.niveau, du: true, second: c.second, premierRetour: c.sansLecon}));
+    return dues.slice(0, nombre).map(c => ({module: c.etoile.module, niveau: c.etoile.niveau, du: true, second: c.second, premierLe: c.premierLe, premierRetour: c.sansLecon}));
   }
 
   // Combien d'étoiles sont dues (« Mes calculs du jour : encore 14 »), et
@@ -1483,15 +1615,29 @@
   function ouvrir(copie, plan, aujourdhui, minutes, reglage, alea) {
     // Une séance laissée ouverte un autre jour : elle se ferme et compte
     // pour son jour, si elle a fait quelque chose.
+    // (Correctif K1 : le temps seul compte aussi, dès une minute — deux
+    // minutes d'un J'apprends quitté avant la fin disparaissaient le
+    // lendemain.)
     if (copie.seance.p[PLAN.ouverte] === 1 && copie.seance.jour !== aujourdhui) {
-      if (copie.seance.etape > 0 || copie.seance.j[EN_COURS.calculs] > 0) fermer(copie, copie.seance.jour);
+      if (seanceAFaitQuelqueChose(copie.seance)) fermer(copie, copie.seance.jour);
     }
     const p = planVide();
     p[PLAN.ouverte] = 1;
     p[PLAN.minutes] = minutesDeSeance(minutes);
     const dues = aujourdhuiFinie(copie, aujourdhui) ? 0 : compterDues(copie, plan, aujourdhui, reglage).dues;
     if (dues) { p[PLAN.obligatoire] = 1; p[PLAN.paquet] = Math.min(SEUILS.jour.paquet, dues); }
-    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, i: identiteNeuve(alea), g: 1, p, j: enCoursVide()};
+    // (Une identité déjà prise par une séance finie ce jour-là : la suivante.)
+    let identite = identiteNeuve(alea);
+    while (seanceAuJournal(copie, aujourdhui, identite)) identite = identite % IDENTITE_MAX + 1;
+    copie.seance = {jour: aujourdhui, etape: 0, n: copie.seance.n, i: identite, g: 1, p, j: enCoursVide(), parts: []};
+  }
+
+  // Une séance ouverte qui a fait quelque chose compte pour son jour quand
+  // elle est laissée là : une étape, un calcul du jour, ou au moins une
+  // minute de travail (quelques secondes d'un écran ouvert puis quitté ne
+  // font pas une séance au journal).
+  function seanceAFaitQuelqueChose(seance) {
+    return seance.etape > 0 || seance.j[EN_COURS.calculs] > 0 || seance.j[EN_COURS.secondes] >= SEUILS.journal.tempsSeul;
   }
 
   // « Commencer » : la séance est ouverte et rangée, pour qu'elle se
@@ -1555,7 +1701,18 @@
   //        prochaine étoile (« Tout est gagné. Tes étoiles reviennent dans 3
   //        jours. » ; null : aucune).
   // `sansPaquet` : l'étoile seulement (le but du jour, « Aujourd'hui :
-  // l'étoile … »).
+  // l'étoile … »), sans regarder le temps de la séance — le but du jour ne
+  // change pas parce que la séance avance.
+  // Correctif K1 (relecture de Codex du 26/11) : dans une séance ouverte,
+  // « Continuer » ne propose que ce qui TIENT ENCORE dans le temps — la
+  // première étoile, dans l'ordre ci-dessus, dont l'action tient
+  // (tientDansLeTemps). C'est la même sélection qui dit si la séance a
+  // encore quelque chose à jouer (resteAFaire, `aFermer`). Avant, à 8 min
+  // 20 après un « Je tente » raté, la séance restait ouverte (un « Je
+  // tente » tenait encore), « Continuer » proposait le J'apprends de cette
+  // étoile (4 minutes : il ne tenait plus), et la page fermait la séance
+  // alors qu'une autre étoile pouvait encore se tenter. Quand il reste des
+  // étoiles mais que plus rien ne tient : {type: "rien", tempsFini: true}.
   function continuerSur(parcours, plan, aujourdhui, reglage, sansPaquet = false) {
     if (!sansPaquet) {
       const reste = resteDuPaquet(parcours, plan, aujourdhui, reglage);
@@ -1570,12 +1727,19 @@
     let suivante = null;
     let aGagner = 0;
     let visibles = 0;
+    let jouables = 0;
+    // Un J'apprends commencé se reprend ; « Je tente » fermé sur l'étoile :
+    // J'apprends ; sinon « Je tente ».
+    const actionDe = etat => (etat.enCours || !etat.actions.tente ? "apprends" : "tente");
+    const tient = etat => sansPaquet || tientDansLeTemps(parcours, actionDe(etat), aujourdhui);
     for (const etoile of plan.ordre) {
       if (etoile.etage > reglage) continue;
       visibles += 1;
       const etat = etatDe(parcours, plan, etoile, aujourdhui, reglage);
       if (etat.etat !== "gagnee") aGagner += 1;
       if (etat.etat !== "aGagner" || etat.attend) continue;
+      jouables += 1;
+      if (!tient(etat)) continue;
       if (etat.enCours && !enCours) enCours = etat;
       else if (etat.aRegagner && !aRegagner) aRegagner = etat;
       else if (!suivante) suivante = etat;
@@ -1583,7 +1747,7 @@
     const choisie = enCours || aRegagner || suivante;
     if (choisie) {
       return {type: "etoile", module: choisie.module, niveau: choisie.niveau, raison: choisie === enCours ? "enCours" : choisie === aRegagner ? "aRegagner" : "suivante",
-        action: choisie === enCours || !choisie.actions.tente ? "apprends" : "tente", depart: choisie.reprise};
+        action: actionDe(choisie), depart: choisie.reprise};
     }
     let prochain = null;
     plan.ordre.forEach(etoile => {
@@ -1591,7 +1755,7 @@
       if (etoile.etage > reglage || !ligne || !tenue(ligne, etoile.index)) return;
       if (!prochain || ligne.e[etoile.index] < prochain) prochain = ligne.e[etoile.index];
     });
-    return {type: "rien", toutGagne: visibles > 0 && aGagner === 0, prochainRetour: prochain ? Math.max(0, ecartJours(aujourdhui, prochain)) : null};
+    return {type: "rien", toutGagne: visibles > 0 && aGagner === 0, tempsFini: jouables > 0, prochainRetour: prochain ? Math.max(0, ecartJours(aujourdhui, prochain)) : null};
   }
 
   function continuer(parcours, carte, {aujourdhui = jourLocal(), palier = SEUILS.seance.paliers, sansPaquet = false} = {}) {
@@ -1602,10 +1766,12 @@
   // la plus courte des étapes (« Je tente ») — ou la première étape de la
   // carte, toujours permise —, et de quoi le remplir : un paquet, une étoile
   // à gagner, ou un test de ceinture proposé.
+  // (Correctif K1 : ce que « Continuer » propose est ce qui tient encore —
+  // la même sélection, continuerSur.)
   function resteAFaire(parcours, plan, aujourdhui, reglage) {
     if (resteDuPaquet(parcours, plan, aujourdhui, reglage)) return true;
-    if (!tientDansLeTemps(parcours, "tente", aujourdhui)) return false;
     if (continuerSur(parcours, plan, aujourdhui, reglage).type !== "rien") return true;
+    if (!tientDansLeTemps(parcours, "tente", aujourdhui)) return false;
     if (compterDues(parcours, plan, aujourdhui, reglage).dues && !tempsPasse(parcours, aujourdhui)) return true;
     for (let etage = 1; etage <= reglage; etage += 1) if (testDeCeinturePropose(parcours, plan, etage, reglage)) return true;
     return false;
@@ -1683,7 +1849,8 @@
       i: 0,
       g: 0,
       p: planVide(),
-      j: enCoursVide()
+      j: enCoursVide(),
+      parts: []
     };
     const secondes = fait[EN_COURS.secondes];
     const entree = JOURNAL.map(() => -1);
@@ -1722,19 +1889,33 @@
   // de chaque étape, AVANT d'appliquer l'étape (c'est sur lui que la séance
   // décide si elle continue). Il s'ajoute à la séance ouverte, et seulement
   // à elle.
-  function noterTemps(parcours, secondes) {
+  // `source` : l'onglet qui a mesuré ce temps (voir `seance.parts`).
+  function noterTemps(parcours, secondes, {source = 0} = {}) {
     const copie = normaliserParcours(parcours);
     const ajout = entier(Math.round(Number(secondes)), 0, SEUILS.journal.secondes);
     if (copie.seance.p[PLAN.ouverte] !== 1 || !ajout) return copie;
-    copie.seance.j[EN_COURS.secondes] = Math.min(SEUILS.journal.secondes, copie.seance.j[EN_COURS.secondes] + ajout);
+    compterEnCours(copie, EN_COURS.secondes, ajout, source);
     marquerSeance(copie);
     return copie;
   }
 
-  // Ajoute à ce que la séance ouverte a fait.
-  function compterEnCours(parcours, index, ajout) {
+  // Ajoute à ce que la séance ouverte a fait, dans la part de `source`
+  // (l'onglet qui joue ; 0 : pas connue). Une 9e source ajoute à la dernière
+  // part.
+  function compterEnCours(parcours, index, ajout, source = 0) {
     if (parcours.seance.p[PLAN.ouverte] !== 1 || !ajout) return;
-    parcours.seance.j[index] = Math.min(EN_COURS_MAX[index], parcours.seance.j[index] + ajout);
+    const cle = entier(source, 0, SOURCE_MAX);
+    const groupes = lireParts(parcours.seance.parts);
+    let groupe = groupes.find(g => g.source === cle);
+    if (!groupe && groupes.length >= PARTS_MAX) groupe = groupes[groupes.length - 1];
+    if (!groupe) {
+      groupe = {source: cle, valeurs: enCoursVide()};
+      groupes.push(groupe);
+    }
+    // (Jamais plus que ce que la séance entière peut porter.)
+    const place = EN_COURS_MAX[index] - (parcours.seance.j[index] - groupe.valeurs[index]);
+    groupe.valeurs[index] = Math.max(groupe.valeurs[index], Math.min(place, groupe.valeurs[index] + ajout));
+    poserParts(parcours.seance, groupes);
   }
 
   // Un paquet de Mes calculs du jour commence (le bouton « Mes calculs du
@@ -1982,7 +2163,7 @@
   //    effet sur les boîtes — s'entraîner ne fait perdre aucune étoile.
   //    (« entraine » et « rattrape », les anciens noms, sont lus « encore ».)
   // Une erreur ne fait JAMAIS rien perdre ici.
-  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
+  function appliquerSerie(parcours, serie, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers, source = 0} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
     const plan = planDeCarte(carte);
     const reglage = palierDeSeance(palier);
@@ -2015,13 +2196,13 @@
       // (le rappel au dessin d'une écriture nouvelle ne compte pas).
       const seuls = reponses.filter(r => r.outil === "aucun" && !r.rappel);
       if (seance) {
-        compterEnCours(copie, EN_COURS.seuls, seuls.length);
-        compterEnCours(copie, EN_COURS.seulsJustes, seuls.filter(r => r.juste).length);
+        compterEnCours(copie, EN_COURS.seuls, seuls.length, source);
+        compterEnCours(copie, EN_COURS.seulsJustes, seuls.filter(r => r.juste).length, source);
       }
       if (verdict.reussi) {
         gagner(ligne, n - 1, aujourdhui, {lecon: true});
         evenements.push({type: "gagnee", module: id, niveau: n, par: "apprends"});
-        if (seance) compterEnCours(copie, EN_COURS.nouveautes, 1);
+        if (seance) compterEnCours(copie, EN_COURS.nouveautes, 1, source);
       } else if (suivi.total) {
         const arrets = arretSuivant(arretsDe(ligne, n - 1));
         poserArret(ligne, n - 1, arrets, suivi.reprise);
@@ -2047,7 +2228,7 @@
   // lendemain ; ratée deux fois, pour de bon (elle ne propose plus que
   // J'apprends, jusqu'à ce qu'elle soit gagnée). Les autres étoiles ne sont
   // pas touchées.
-  function appliquerTentative(parcours, tentative, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
+  function appliquerTentative(parcours, tentative, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers, source = 0} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
     const plan = planDeCarte(carte);
     const reglage = palierDeSeance(palier);
@@ -2082,7 +2263,7 @@
     if (reussi) {
       gagner(ligne, n - 1, aujourdhui);
       evenements.push({type: "gagnee", module: id, niveau: n, par: "tente"});
-      if (seance) compterEnCours(copie, EN_COURS.prouvees, 1);
+      if (seance) compterEnCours(copie, EN_COURS.prouvees, 1, source);
     } else {
       ligne.r[n - 1] = Math.min(SEUILS.tente.essais, ligne.r[n - 1] + 1);
       ligne.q[n - 1] = aujourdhui;
@@ -2108,7 +2289,7 @@
   // porte est ouverte, son test n'a pas déjà été joué, rien n'y est
   // commencé ; une étoile déjà gagnée n'est pas rejouée, une étoile « à voir
   // en classe » qui attend n'entre pas et garde son signalement.
-  function appliquerTestCeinture(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers} = {}) {
+  function appliquerTestCeinture(parcours, test, {aujourdhui = jourLocal(), carte = null, seance = false, palier = SEUILS.seance.paliers, source = 0} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
     const plan = planDeCarte(carte);
     const reglage = palierDeSeance(palier);
@@ -2143,7 +2324,7 @@
       evenements.push({type: "gagnee", module: e.module, niveau: e.niveau, par: "ceinture"});
       entrees += 1;
     });
-    if (seance) compterEnCours(copie, EN_COURS.prouvees, entrees);
+    if (seance) compterEnCours(copie, EN_COURS.prouvees, entrees, source);
     const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
     const finie = seance ? avancerSeance(copie, plan, aujourdhui, reglage, true) : false;
     return {parcours: copie, reussi, entrees, justes: justes.length, total, evenements, finie, ceintures};
@@ -2172,7 +2353,7 @@
   // `mouvement` dit ce qui s'est passé : {module, niveau, avant, apres,
   // regle, secondAVenir, deuxieme, accident, rate, perdue, lent, monte,
   // sens, aVoir, jours}.
-  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), carte = null} = {}) {
+  function appliquerRetour(parcours, retour, {aujourdhui = jourLocal(), carte = null, source = 0} = {}) {
     const copie = normaliserParcours(parcours, {aujourdhui});
     const id = retour && retour.module;
     const evenements = [];
@@ -2182,13 +2363,26 @@
     const boite = avant.b[index];
     if (!boite) return {parcours: copie, mouvement: null, evenements, refuse: "pasGagnee"};
     if (avant.e[index] > aujourdhui) return {parcours: copie, mouvement: null, evenements, refuse: "pasDue"};
+    // Correctif K1 (relecture de Codex du 26/11) : la page dit À QUEL calcul
+    // l'élève répond (`deuxieme` : le premier, ou le 2e). Si l'étoile n'en
+    // est pas là — un autre appareil a répondu entre-temps, et son état est
+    // arrivé pendant que ce calcul était à l'écran —, la réponse est
+    // périmée : rien ne change. `secondAVenir` dit alors si un 2e calcul
+    // attend (la page le pose). Avant, une réponse fausse au PREMIER calcul,
+    // donnée sur chaque appareil, comptait pour deux faux : l'étoile partait.
+    const attendu = Boolean(avant.x[index] & X_SECOND);
+    if (typeof retour.deuxieme === "boolean" && retour.deuxieme !== attendu) {
+      return {parcours: copie, evenements, refuse: "perime",
+        mouvement: {module: id, niveau: index + 1, avant: boite, apres: boite, regle: false, perime: true, secondAVenir: attendu, deuxieme: attendu,
+          accident: false, rate: false, perdue: false, lent: false, monte: false, sens: "reste", aVoir: false, jours: 0}};
+    }
     const ligne = ligneAChanger(copie, id, aujourdhui);
     noterJour(copie, aujourdhui);
     const juste = retour.juste === true;
     // Le journal : un calcul du jour de plus dans la séance ouverte, juste
     // ou pas — le 2e calcul compte aussi.
-    compterEnCours(copie, EN_COURS.calculs, 1);
-    if (juste) compterEnCours(copie, EN_COURS.justes, 1);
+    compterEnCours(copie, EN_COURS.calculs, 1, source);
+    if (juste) compterEnCours(copie, EN_COURS.justes, 1, source);
     const deuxieme = Boolean(ligne.x[index] & X_SECOND);
     const type = retour.type === "F" || retour.type === "P" ? retour.type : carte ? typeDe(carte, id, index + 1) : "P";
     const mouvement = {module: id, niveau: index + 1, avant: boite, apres: boite, regle: true, secondAVenir: false, deuxieme,
@@ -2196,6 +2390,7 @@
     if (!juste && !deuxieme) {
       // Le premier calcul est faux : le 2e est attendu, rien d'autre ne bouge.
       ligne.x[index] |= X_SECOND;
+      ligne.q[index] = aujourdhui;
       marquer(ligne, index);
       if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
       Object.assign(mouvement, {regle: false, secondAVenir: true, jours: ecartJours(aujourdhui, ligne.e[index])});
@@ -2205,8 +2400,9 @@
     // Le retour est réglé. Un premier retour d'une étoile placée par un test
     // de ceinture (boîte 4, sans leçon, jamais revenue) : compté au journal.
     const duTest = !ligne.a[index] && boite === SEUILS.revision.ceinture;
-    if (duTest) compterEnCours(copie, EN_COURS.tests, 1);
+    if (duTest) compterEnCours(copie, EN_COURS.tests, 1, source);
     ligne.x[index] &= ~X_SECOND;
+    ligne.q[index] = null;
     if (juste && deuxieme) {
       ligne.e[index] = ajouterJours(aujourdhui, 1);
       mouvement.accident = true;
@@ -2225,14 +2421,14 @@
     } else {
       // Les deux calculs faux : le retour est raté.
       if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
-      if (duTest) compterEnCours(copie, EN_COURS.testsRates, 1);
+      if (duTest) compterEnCours(copie, EN_COURS.testsRates, 1, source);
       mouvement.rate = true;
       const rates = (ligne.x[index] & X_RATE) + 1;
       if (rates >= SEUILS.retour.ratesDeSuite) {
         ligne.a[index] = 1;
         perdre(ligne, index);
         mouvement.perdue = true;
-        compterEnCours(copie, EN_COURS.rouges, 1);
+        compterEnCours(copie, EN_COURS.rouges, 1, source);
         evenements.push({type: "perdue", module: id, niveau: index + 1, aVoir: ligne.pe[index] >= SEUILS.retour.perdues});
       } else {
         ligne.b[index] = Math.max(1, boite - 1);
@@ -2747,6 +2943,25 @@
     }
   }
 
+  // La SOURCE de cet onglet (correctif K1) : un nombre de 1 à 9 999 tiré
+  // une fois, gardé dans l'onglet seulement (il survit au rechargement, pas
+  // à la fermeture). Il dit seulement « ce que cet onglet a fait dans la
+  // séance ouverte » (voir `seance.parts`) : ni l'élève, ni l'appareil, et
+  // il disparaît du parcours quand la séance finit. Sans stockage : un
+  // nombre pour la durée de la page.
+  const CLE_SOURCE = "mathsgo-defi-calcul-source";
+
+  function chargerSourceOnglet(stockage, alea = null) {
+    try {
+      const lue = stockage ? Number(stockage.getItem(CLE_SOURCE)) : 0;
+      if (Number.isInteger(lue) && lue >= 1 && lue <= SOURCE_MAX) return lue;
+    } catch (_) {}
+    const tirage = typeof alea === "number" && alea >= 0 && alea < 1 ? alea : Math.random();
+    const source = 1 + Math.floor(tirage * SOURCE_MAX);
+    try { if (stockage) stockage.setItem(CLE_SOURCE, String(source)); } catch (_) {}
+    return source;
+  }
+
   // Les réglages de la séance (lot 1 « la séance », 12/11/2026 ; lot F1 avant
   // pour les nouveautés) : les minutes (10 ou 15) et jusqu'à quel palier va
   // l'appli (1 à 4), que le serveur rend avec l'identité (api/eleve.php,
@@ -2847,7 +3062,14 @@
   // même compteur : la boîte la plus basse d'abord, puis le texte.
   const BLOC = Object.freeze(["b", "e", "x", "ar", "r", "q"]);
   const blocDe = (ligne, i) => BLOC.map(cle => ligne[cle][i]);
+  // Jamais tenue : ni dans les boîtes, ni perdue (voir normaliserModule).
+  const jamaisTenue = (ligne, i) => !ligne.b[i] && !ligne.pe[i];
   function blocGarde(a, b, i) {
+    // Correctif K1 : une étoile gagnée d'un côté n'est jamais défaite par des
+    // essais ratés de l'autre (des « Je tente », des arrêts de J'apprends
+    // faits sans la voir gagnée) — une étoile ne quitte ses boîtes qu'en se
+    // perdant. Le côté qui l'a tenue passe devant, quel que soit le compteur.
+    if (jamaisTenue(a, i) !== jamaisTenue(b, i)) return jamaisTenue(a, i) ? b : a;
     if (a.g[i] !== b.g[i]) return a.g[i] > b.g[i] ? a : b;
     if (a.b[i] !== b.b[i]) return a.b[i] < b.b[i] ? a : b;
     return JSON.stringify(blocDe(a, i)) <= JSON.stringify(blocDe(b, i)) ? a : b;
@@ -2874,15 +3096,43 @@
     return ligne;
   }
 
-  // La séance la plus avancée des deux : le plus de séances finies, puis le
-  // jour le plus récent, puis l'OUVERTE (une séance ne se referme qu'en
-  // finissant : son compte monte), puis son compteur ; à égalité complète,
-  // un choix fixe sur le texte. Gardée en bloc, avec ce qu'elle a fait.
+  // La séance gardée des deux : celle du jour le plus récent, puis
+  // l'OUVERTE, puis le plus de séances finies et le compteur ; à égalité
+  // complète, un choix fixe sur le texte.
+  // Correctif K1 (relecture de Codex du 26/11) : une séance ouverte ne
+  // disparaît plus parce que l'autre appareil a fini plus de séances. Elle
+  // se referme seulement si le journal de l'autre côté dit qu'ELLE est finie
+  // (seanceSaufFinie), ou si l'autre côté est déjà passé à un jour suivant —
+  // elle est alors comptée au journal de son jour, comme quand l'élève
+  // rouvre l'appli le lendemain (fusionner). Et deux séances OUVERTES le
+  // même jour (la même, continuée sur deux appareils ; ou deux séances
+  // ouvertes chacune de son côté) n'en font qu'une, où rien ne se perd —
+  // leurs parts sont réunies (voir `seance.parts` : le temps commun compté
+  // une fois, ce que chaque appareil a ajouté gardé), l'étape et le compteur
+  // les plus hauts, le plan de la plus avancée (à compteur égal, le plus
+  // grand de chaque nombre), la plus petite identité. Avant : la séance d'un
+  // seul des deux, en bloc — deux séances de 120 et 180 secondes en
+  // donnaient une de 120.
   function seanceGardee(a, b) {
-    const rang = s => [s.n, s.jour || "", s.p[PLAN.ouverte], s.g];
+    if (a.p[PLAN.ouverte] === 1 && b.p[PLAN.ouverte] === 1 && a.jour === b.jour) {
+      const plan = a.g !== b.g ? (a.g > b.g ? a.p : b.p).slice() : a.p.map((valeur, index) => Math.max(valeur, b.p[index]));
+      plan[PLAN.commences] = Math.max(a.p[PLAN.commences], b.p[PLAN.commences]);
+      const seance = {jour: a.jour, etape: Math.max(a.etape, b.etape), n: Math.max(a.n, b.n), i: Math.min(a.i, b.i), g: Math.max(a.g, b.g), p: plan, j: enCoursVide(), parts: []};
+      poserParts(seance, reunirParts(lireParts(a.parts), lireParts(b.parts)));
+      return seance;
+    }
+    const rang = s => [s.jour || "", s.p[PLAN.ouverte], s.n, s.g];
     const [ra, rb] = [rang(a), rang(b)];
     for (let i = 0; i < ra.length; i += 1) if (ra[i] !== rb[i]) return ra[i] > rb[i] ? a : b;
     return JSON.stringify(a) <= JSON.stringify(b) ? a : b;
+  }
+
+  // Une séance ouverte dont le journal de l'autre côté dit qu'elle est finie
+  // (le même jour, la même identité) : elle l'est. Rend la séance refermée.
+  function seanceSaufFinie(parcours, finies) {
+    const s = parcours.seance;
+    if (s.p[PLAN.ouverte] !== 1 || !finies.has(`${s.jour} ${s.i}`)) return s;
+    return {jour: s.jour, etape: 0, n: s.n, i: 0, g: 0, p: planVide(), j: enCoursVide(), parts: []};
   }
 
   // `aujourdhui` : le jour de la fusion (les bornes des dates se calculent
@@ -2890,7 +3140,12 @@
   // Une copie d'une version PLUS RÉCENTE que ce moteur n'est jamais
   // fusionnée (B1) : l'autre côté est rendu tel quel. La page ne doit pas
   // enregistrer par-dessus : voir recevoir.
-  function fusionner(premier, second, {aujourdhui = jourLocal()} = {}) {
+  // `carte` et `palier` (correctif K1) : avec eux, une ceinture que la
+  // fusion complète est donnée tout de suite (chaque appareil a gagné une
+  // des deux dernières étoiles : 44 sur 44, et la ceinture manquait jusqu'au
+  // geste suivant). Son jour ne dépend que des données : le plus récent des
+  // jours où ses étoiles ont été gagnées.
+  function fusionner(premier, second, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
     const a = normaliserParcours(premier, {aujourdhui});
     const b = normaliserParcours(second, {aujourdhui});
     if (tropRecente(second)) return a;
@@ -2906,23 +3161,37 @@
     CODES.forEach(id => {
       if (a.modules[id] || b.modules[id]) fusion.modules[id] = fusionnerModule(id, a.modules[id], b.modules[id]);
     });
-    fusion.seance = cloner(seanceGardee(a.seance, b.seance));
     // Les séances finies et leur journal : réunies séance par séance, par
-    // leur numéro (reunirSeances) — une copie de la même séance se
-    // dédoublonne, deux séances différentes restent deux (G3). Le compte des
-    // séances finies suit : celles d'un côté, plus celles que l'autre a
-    // finies sans lui.
-    // (Une séance plus ancienne que la plus ancienne des 60 que l'autre côté
-    // garde n'est pas « en plus » : il a pu l'avoir, et ne plus la garder.)
-    const [pa, pb] = [pairesDe(a), pairesDe(b)];
-    const cleDe = p => `${p.jour} ${numeroDe(p.entree)}`;
-    const enPlus = (x, y) => {
-      const connues = new Set(y.map(cleDe));
-      const plein = y.length >= SEUILS.seance.garder ? y[0].jour : "";
-      return x.filter(p => numeroDe(p.entree) >= 0 && p.jour >= plein && !connues.has(cleDe(p))).length;
+    // leur jour et leur identité (reunirSeances) — une copie de la même
+    // séance se dédoublonne, même close à deux rangs différents ; deux
+    // séances différentes restent deux (G3). Le compte des séances finies
+    // suit : celles d'un côté, plus celles que l'autre a finies sans lui.
+    // Correctif K1 (relecture de Codex du 26/11) : « en plus » veut dire
+    // GARDÉE par la réunion (dans ses 60 plus récentes) et pas connue de
+    // l'autre côté. Avant, la date seule décidait à la borne : une vieille
+    // copie rapportait une séance aussitôt évincée (la première de deux
+    // séances du même jour), et le compte montait à chaque retour, 61 → 62
+    // → 63, pour les mêmes 60 séances.
+    // Une séance restée ouverte un jour que l'autre côté a dépassé : elle
+    // compte pour son jour si elle a fait quelque chose (une étape, un
+    // calcul du jour, du temps), exactement comme à l'ouverture d'une séance
+    // le lendemain (ouvrir). `a` et `b` sont des copies : rien d'autre ne bouge.
+    const clore = (x, y) => {
+      if (x.seance.p[PLAN.ouverte] === 1 && y.seance.jour && x.seance.jour < y.seance.jour && seanceAFaitQuelqueChose(x.seance)) fermer(x, x.seance.jour);
     };
-    fusion.seance.n = Math.min(SEUILS.compteur, Math.max(a.seance.n + enPlus(pb, pa), b.seance.n + enPlus(pa, pb)));
+    clore(a, b);
+    clore(b, a);
+    const [pa, pb] = [pairesDe(a), pairesDe(b)];
     const rangees = reunirSeances(pa, pb);
+    const gardees = new Set(pairesDe(rangees).map(cleDeSeance));
+    const enPlus = (x, y) => {
+      const connues = new Set(y.map(cleDeSeance));
+      return x.filter(p => numeroDe(p.entree) >= 0 && gardees.has(cleDeSeance(p)) && !connues.has(cleDeSeance(p))).length;
+    };
+    // Une séance ouverte d'un côté et finie de l'autre est finie.
+    const finies = new Set([...pa, ...pb].filter(p => numeroDe(p.entree) >= 0).map(cleDeSeance));
+    fusion.seance = cloner(seanceGardee(seanceSaufFinie(a, finies), seanceSaufFinie(b, finies)));
+    fusion.seance.n = Math.min(SEUILS.compteur, Math.max(a.seance.n + enPlus(pb, pa), b.seance.n + enPlus(pa, pb)));
     fusion.seances = rangees.seances;
     fusion.journal = rangees.journal;
     fusion.jours = normaliserJours([...a.jours, ...b.jours]);
@@ -2932,6 +3201,7 @@
     fusion.ceintures = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.ceintures[index], b.ceintures[index]));
     fusion.paliers = ceinturesVides().map((_, index) => dateLaPlusAncienne(a.paliers[index], b.paliers[index]));
     fusion.quarts = quartsVides().map((_, index) => Math.max(a.quarts[index], b.quarts[index]));
+    if (carte) gagnerCeintures(fusion, carte, null, palier);
     return normaliserParcours(fusion, {aujourdhui});
   }
 
@@ -2945,11 +3215,12 @@
   //  - sinon : la fusion. `apporte` dit si le local apporte quelque chose au
   //    reçu (sinon la page ne renvoie rien : chaque ouverture ne fait pas
   //    monter la révision pour rien).
-  function recevoir(local, recu, {aujourdhui = jourLocal()} = {}) {
+  // `carte`, `palier` : voir fusionner (une ceinture que la fusion complète).
+  function recevoir(local, recu, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
     const ici = normaliserParcours(local, {aujourdhui});
     if (tropRecente(recu)) return {parcours: ici, lectureSeule: true, apporte: false};
     const distant = normaliserParcours(recu, {aujourdhui});
-    const fusion = fusionner(ici, distant, {aujourdhui});
+    const fusion = fusionner(ici, distant, {aujourdhui, carte, palier});
     const sansPrenom = p => JSON.stringify(Object.assign({}, p, {prenom: ""}));
     return {parcours: fusion, lectureSeule: false, apporte: sansPrenom(fusion) !== sansPrenom(distant)};
   }
@@ -3299,6 +3570,8 @@
     effacerCode,
     chargerIdentiteOnglet,
     sauverIdentiteOnglet,
+    CLE_SOURCE,
+    chargerSourceOnglet,
     CLE_REGLAGES,
     minutesDeSeance,
     palierDeSeance,

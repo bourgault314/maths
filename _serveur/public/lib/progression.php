@@ -40,6 +40,83 @@ function regles_progression(string $appli): array
     ];
 }
 
+// Correctif K1 de Défi calcul (26/11/2026, relecture de Codex) : la forme
+// PAR EMPLACEMENT, pour une appli qui la déclare (lib/applis.php,
+// « emplacements »). Le filtre générique, plus bas, juge une clé par son nom
+// seul, à toute profondeur, et un entier par une borne commune : tout champ
+// connu passait n'importe où, avec n'importe quelle valeur jusqu'à un
+// million. Ici, chaque valeur est jugée À SA PLACE (le chemin de ses clés,
+// « seance.i », « modules.*.c.* ») :
+//  - une clé sans emplacement déclaré est retirée ;
+//  - une valeur seule hors de sa forme est retirée (le moteur reprend son
+//    défaut) ; null reste null à la place d'une date ;
+//  - dans une liste, une valeur hors de sa forme est REMPLACÉE à sa place
+//    (valeur_de_liste), jamais retirée ; une liste « places » a des bornes
+//    place par place, et se coupe à leur nombre (ou, en « cycle », au
+//    dernier groupe complet).
+// Renvoie la valeur nettoyée, ou null avec $garder = false si elle saute.
+function valeur_a_sa_place(mixed $valeur, array $emplacements, array $motifs, string $chemin, bool &$garder): mixed
+{
+    $garder = true;
+    $forme = $emplacements[$chemin] ?? null;
+    $sorte = is_array($forme) ? ($forme[0] ?? '') : '';
+    if ($sorte === 'objet' || $sorte === 'motif') {
+        if (!is_object($valeur)) { $garder = false; return null; }
+        $motif = $sorte === 'motif' ? ($motifs[(int)($forme[1] ?? -1)] ?? null) : null;
+        $objet = new stdClass();
+        foreach (get_object_vars($valeur) as $cle => $element) {
+            $cle = (string)$cle;
+            if ($sorte === 'motif') {
+                if (!is_string($motif) || preg_match($motif, $cle) !== 1) continue;
+                $suite = $chemin . '.*';
+            } else {
+                $suite = $chemin === '' ? $cle : $chemin . '.' . $cle;
+            }
+            if (!isset($emplacements[$suite])) continue;
+            $ok = true;
+            $propre = valeur_a_sa_place($element, $emplacements, $motifs, $suite, $ok);
+            if ($ok) $objet->{$cle} = $propre;
+        }
+        return $objet;
+    }
+    if ($sorte === 'liste') {
+        if (!is_array($valeur)) { $garder = false; return null; }
+        $une = is_array($forme[1] ?? null) ? $forme[1] : [];
+        return array_map(fn($v) => valeur_de_liste($v, $une), array_slice($valeur, 0, PROGRESSION_LISTE_MAX));
+    }
+    if ($sorte === 'places') {
+        $places = is_array($forme[1] ?? null) ? $forme[1] : [];
+        $nombre = count($places);
+        if (!is_array($valeur) || $nombre === 0) { $garder = false; return null; }
+        if (($forme[2] ?? '') === 'cycle') {
+            $liste = array_slice($valeur, 0, PROGRESSION_LISTE_MAX);
+            $liste = array_slice($liste, 0, intdiv(count($liste), $nombre) * $nombre);
+        } else {
+            $liste = array_slice($valeur, 0, $nombre);
+        }
+        $propre = [];
+        foreach ($liste as $rang => $v) {
+            $bornes = $places[$rang % $nombre];
+            $propre[] = valeur_de_liste($v, ['entier', $bornes[0], $bornes[1]]);
+        }
+        return $propre;
+    }
+    if ($sorte === 'date') {
+        if ($valeur === null) return null;
+        if (is_string($valeur) && date_reelle($valeur)) return $valeur;
+        $garder = false;
+        return null;
+    }
+    if ($sorte === 'entier') {
+        if (is_float($valeur) && floor($valeur) === $valeur) $valeur = (int)$valeur;
+        if (is_int($valeur) && $valeur >= (int)($forme[1] ?? 0) && $valeur <= (int)($forme[2] ?? PROGRESSION_ENTIER_MAX)) return $valeur;
+        $garder = false;
+        return null;
+    }
+    $garder = false;
+    return null;
+}
+
 // Correctif F4 de Défi calcul (21/11/2026, relecture de Codex) : une liste
 // dont l'appli déclare la forme (lib/applis.php, « listes ») garde sa
 // longueur — chaque valeur hors format est REMPLACÉE à sa place (null pour
@@ -147,7 +224,14 @@ function filtrer_progression(string $appli, object $donnees): stdClass
     $compte = 0;
     $garder = true;
     $propre = valeur_progression_acceptee($donnees, $regles, 0, $compte, $garder);
-    return $propre instanceof stdClass ? $propre : new stdClass();
+    $propre = $propre instanceof stdClass ? $propre : new stdClass();
+    // Puis, pour une appli qui la déclare, la forme par emplacement.
+    $emplacements = CATALOGUE_APPLIS[$appli]['emplacements'] ?? null;
+    if (is_array($emplacements)) {
+        $aSaPlace = valeur_a_sa_place($propre, $emplacements, $regles['motifs'], '', $garder);
+        $propre = $aSaPlace instanceof stdClass ? $aSaPlace : new stdClass();
+    }
+    return $propre;
 }
 
 // ------------------------------------------------- l'époque d'une progression
