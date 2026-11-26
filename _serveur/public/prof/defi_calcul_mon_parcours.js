@@ -214,6 +214,23 @@
   //    garde, dans `quarts`, le remplissage qu'il voyait sur la ceinture des
   //    bases ;
   //  - la séance, le journal, les jours ne changent pas.
+  // Correctif K1b (relecture de Codex du 26/11, bloquant) — le COMPTEUR d'une
+  // moitié du haut a deux étages. Reporté de l'étoile d'avant par la reprise,
+  // il reste de 0 à 4 999 (COMPTEUR_HERITE_MAX) : c'est le compteur de la
+  // version 12, il départage deux copies de version 12 comme leur fusion
+  // l'aurait fait. Au premier geste fait EN VERSION 13 sur cette moitié du
+  // haut (un retour, un « Je tente », un J'apprends, un test de ceinture), il
+  // repart au-dessus de 5 000 (COMPTEUR_JOUE) et compte les gestes de la
+  // version 13 : 5 001, 5 002… La fusion, qui garde le compteur le plus haut,
+  // n'a pas changé d'une ligne — mais ce qui est JOUÉ sur une moitié du haut
+  // passe ainsi toujours devant ce qui n'est que REPORTÉ d'avant. Avant ce
+  // correctif, un appareil resté hors ligne en version 12 qui avait perdu
+  // l'étoile d'avant (compteur 4) effaçait, en arrivant, le retour réussi
+  // depuis en version 13 sur la moitié du haut (compteur 2 + 1) : les deux
+  // compteurs n'avaient pas la même origine. (Pas d'ordre par les dates : la
+  // version 12 ne garde pas le jour où une étoile a été perdue.) La moitié du
+  // bas et les autres étoiles gardent leur compteur d'un seul tenant : pour
+  // elles, c'est la même étoile qu'avant.
   // Les versions 2 à 11 repartent toujours de zéro (aucun élève n'avait
   // joué). Le serveur refuse l'écriture d'une page de version 12
   // (« version_min » 13). Le réglage du professeur « jusqu'où va l'appli »
@@ -269,6 +286,14 @@
         "M8-2", "F6-1", "F9-1"])
     ])
   });
+
+  // Correctif K1b : les deux étages du compteur `g` d'une moitié du haut
+  // (voir en tête, « Correctif K1b »). `HAUTES` : par module, les rangs (de
+  // 0) des neuf moitiés du haut.
+  const COMPTEUR_HERITE_MAX = 4999;
+  const COMPTEUR_JOUE = 5000;
+  const HAUTES = Object.freeze(Object.fromEntries(Object.entries(COUPE_K1B.moities).map(([id, paires]) => [id, Object.freeze(paires.map(([, haut]) => haut))])));
+  const moitieDuHaut = (id, index) => Object.prototype.hasOwnProperty.call(HAUTES, id) && HAUTES[id].includes(index);
 
   // Le rang d'une compétence : sa place dans la liste de toutes les
   // compétences (227 depuis la version 13), module après module. Plus rien
@@ -1042,9 +1067,14 @@
         // Le compteur suit toujours (c'est lui qui départage deux appareils :
         // les deux moitiés doivent départager pareil). Jamais gagnée : rien
         // d'autre ne passe à la moitié du haut.
-        neuve.g[haut] = ligne.g[bas];
+        // Correctif K1b : il reste dans l'étage « reporté d'avant » (4 999
+        // au plus) — un geste fait en version 13 sur la moitié du haut passe
+        // toujours devant (marquer).
+        const herite = Math.min(COMPTEUR_HERITE_MAX, ligne.g[bas]);
+        neuve.g[haut] = herite;
         if (!ligne.b[bas] && !ligne.d[bas]) return;
         PAR_ETOILE_12.forEach(cle => { neuve[cle][haut] = ligne[cle][bas]; });
+        neuve.g[haut] = herite;
         // Un J'apprends ne se partage pas ; le 2e calcul qui attend reste à
         // la moitié du bas (celle du haut revient avec un premier calcul).
         neuve.ar[haut] = 0;
@@ -2271,15 +2301,22 @@
 
   // L'étoile change : son compteur monte d'un cran (c'est lui qui départage
   // deux appareils, étoile par étoile).
-  function marquer(ligne, index) {
-    ligne.g[index] = Math.min(SEUILS.compteur, ligne.g[index] + 1);
+  // Correctif K1b : pour une MOITIÉ DU HAUT, le premier geste de la version
+  // 13 fait repartir le compteur au-dessus de ce que la reprise a pu
+  // reporter de la version 12 (5 001, puis 5 002…) — voir en tête. Le module
+  // est demandé à chaque appel, et un module inconnu arrête tout : un geste
+  // ajouté plus tard ne peut pas l'oublier sans qu'un test le dise.
+  function marquer(id, ligne, index) {
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, id)) throw new TypeError("marquer : module inconnu");
+    const depart = moitieDuHaut(id, index) ? Math.max(ligne.g[index], COMPTEUR_JOUE) : ligne.g[index];
+    ligne.g[index] = Math.min(SEUILS.compteur, depart + 1);
   }
 
   // L'étoile est gagnée : elle entre dans les boîtes (au début, boîte 2,
   // retour le lendemain ; `boite` et `echeance` pour un test de ceinture),
   // tout de suite (une seule marque pour l'élève, choix de Gwenaël du 21/11).
   // `lecon` : par J'apprends (sa leçon est faite).
-  function gagner(ligne, index, aujourdhui, {boite = SEUILS.revision.entree, echeance = null, lecon = false} = {}) {
+  function gagner(id, ligne, index, aujourdhui, {boite = SEUILS.revision.entree, echeance = null, lecon = false} = {}) {
     ligne.b[index] = boite;
     ligne.e[index] = echeance || echeanceDeBoite(boite, aujourdhui);
     ligne.x[index] = 0;
@@ -2289,7 +2326,7 @@
     if (!ligne.d[index]) ligne.d[index] = aujourdhui;
     if (boite >= SEUILS.revision.su && !ligne.s[index]) ligne.s[index] = aujourdhui;
     if (lecon) ligne.a[index] = 1;
-    marquer(ligne, index);
+    marquer(id, ligne, index);
   }
 
   // L'étoile est perdue : elle sort des boîtes et se regagne comme une
@@ -2297,7 +2334,7 @@
   // ses deux essais de « Je tente » repartent de zéro). Rien de ce qu'elle
   // avait ouvert ne se referme (`d` reste). Perdue 3 fois : « à voir en
   // classe ».
-  function perdre(ligne, index) {
+  function perdre(id, ligne, index) {
     ligne.b[index] = 0;
     ligne.e[index] = null;
     ligne.x[index] = 0;
@@ -2305,7 +2342,7 @@
     ligne.r[index] = 0;
     ligne.q[index] = null;
     ligne.pe[index] = Math.min(SEUILS.retour.perdues, ligne.pe[index] + 1);
-    marquer(ligne, index);
+    marquer(id, ligne, index);
   }
 
   // Ce que rend une étape refusée : rien n'a changé. `refuse` dit pourquoi
@@ -2370,7 +2407,7 @@
         compterEnCours(copie, EN_COURS.seulsJustes, seuls.filter(r => r.juste).length, source);
       }
       if (verdict.reussi) {
-        gagner(ligne, n - 1, aujourdhui, {lecon: true});
+        gagner(id, ligne, n - 1, aujourdhui, {lecon: true});
         evenements.push({type: "gagnee", module: id, niveau: n, par: "apprends"});
         if (seance) compterEnCours(copie, EN_COURS.nouveautes, 1, source);
       } else if (suivi.total) {
@@ -2378,7 +2415,7 @@
         poserArret(ligne, n - 1, arrets, suivi.reprise);
         const deCote = arrets % SEUILS.apprends.arrets === 0;
         ligne.e[n - 1] = deCote ? ajouterJours(aujourdhui, SEUILS.apprends.joursDeCote) : arrets >= SEUILS.apprends.arrets ? ligne.e[n - 1] : null;
-        marquer(ligne, n - 1);
+        marquer(id, ligne, n - 1);
         evenements.push({type: "arrete", module: id, niveau: n, reprise: suivi.reprise, arrets, aVoir: deCote, retour: deCote ? ligne.e[n - 1] : null});
       }
     }
@@ -2431,13 +2468,13 @@
     ajouterCauses(ligne, tentative.causes);
     noterJour(copie, aujourdhui);
     if (reussi) {
-      gagner(ligne, n - 1, aujourdhui);
+      gagner(id, ligne, n - 1, aujourdhui);
       evenements.push({type: "gagnee", module: id, niveau: n, par: "tente"});
       if (seance) compterEnCours(copie, EN_COURS.prouvees, 1, source);
     } else {
       ligne.r[n - 1] = Math.min(SEUILS.tente.essais, ligne.r[n - 1] + 1);
       ligne.q[n - 1] = aujourdhui;
-      marquer(ligne, n - 1);
+      marquer(id, ligne, n - 1);
       evenements.push({type: "tenteRate", module: id, niveau: n, ferme: ligne.r[n - 1] >= SEUILS.tente.essais});
     }
     const ceintures = gagnerCeintures(copie, carte, aujourdhui, reglage);
@@ -2490,7 +2527,7 @@
       const lue = ligneDe(copie, e.module);
       if (tenue(lue, e.index) || enAttente(lue, e.index, aujourdhui)) return;
       const ligne = ligneAChanger(copie, e.module, aujourdhui);
-      gagner(ligne, e.index, aujourdhui, {boite: SEUILS.revision.ceinture, echeance: jourDeRetourEtale(charge, aujourdhui)});
+      gagner(e.module, ligne, e.index, aujourdhui, {boite: SEUILS.revision.ceinture, echeance: jourDeRetourEtale(charge, aujourdhui)});
       evenements.push({type: "gagnee", module: e.module, niveau: e.niveau, par: "ceinture"});
       entrees += 1;
     });
@@ -2561,7 +2598,7 @@
       // Le premier calcul est faux : le 2e est attendu, rien d'autre ne bouge.
       ligne.x[index] |= X_SECOND;
       ligne.q[index] = aujourdhui;
-      marquer(ligne, index);
+      marquer(id, ligne, index);
       if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
       Object.assign(mouvement, {regle: false, secondAVenir: true, jours: ecartJours(aujourdhui, ligne.e[index])});
       marquerSeanceOuverte(copie);
@@ -2596,7 +2633,7 @@
       const rates = (ligne.x[index] & X_RATE) + 1;
       if (rates >= SEUILS.retour.ratesDeSuite) {
         ligne.a[index] = 1;
-        perdre(ligne, index);
+        perdre(id, ligne, index);
         mouvement.perdue = true;
         compterEnCours(copie, EN_COURS.rouges, 1, source);
         evenements.push({type: "perdue", module: id, niveau: index + 1, aVoir: ligne.pe[index] >= SEUILS.retour.perdues});
@@ -2608,7 +2645,7 @@
     }
     // Elle est revenue une fois : plus d'exemple résolu à son retour.
     ligne.a[index] = 1;
-    if (!mouvement.perdue) marquer(ligne, index);
+    if (!mouvement.perdue) marquer(id, ligne, index);
     if (copie.seance.p[PLAN.ouverte] === 1 && copie.seance.p[PLAN.paquet] > 0) copie.seance.p[PLAN.paquet] -= 1;
     marquerSeanceOuverte(copie);
     const apres = ligne.b[index];
@@ -3389,6 +3426,14 @@
   //  - sinon : la fusion. `apporte` dit si le local apporte quelque chose au
   //    reçu (sinon la page ne renvoie rien : chaque ouverture ne fait pas
   //    monter la révision pour rien).
+  //    Correctif K1b (relecture de Codex du 26/11) : une progression reçue en
+  //    VERSION 12 est à récrire en version 13, même quand cet appareil
+  //    n'apporte aucune étoile — `apporte` vaut alors true, et la page envoie
+  //    UNE fois, avec la révision qu'elle vient de lire. Avant, la
+  //    comparaison se faisait après la reprise des deux côtés : rien ne
+  //    partait, et la ligne du serveur pouvait rester en version 12 (qu'une
+  //    page de version 12 restée ouverte relisait encore). Une fois récrite,
+  //    elle est lue en version 13 : plus rien ne repart.
   // `carte`, `palier` : voir fusionner (une ceinture que la fusion complète).
   function recevoir(local, recu, {aujourdhui = jourLocal(), carte = null, palier = SEUILS.seance.paliers} = {}) {
     const ici = normaliserParcours(local, {aujourdhui});
@@ -3396,7 +3441,7 @@
     const distant = normaliserParcours(recu, {aujourdhui});
     const fusion = fusionner(ici, distant, {aujourdhui, carte, palier});
     const sansPrenom = p => JSON.stringify(Object.assign({}, p, {prenom: ""}));
-    return {parcours: fusion, lectureSeule: false, apporte: sansPrenom(fusion) !== sansPrenom(distant)};
+    return {parcours: fusion, lectureSeule: false, apporte: versionDe(recu) === VERSION_REPRISE || sansPrenom(fusion) !== sansPrenom(distant)};
   }
 
   // ---------------------------------------------- ce que lit le professeur
@@ -3645,6 +3690,8 @@
     VERSION,
     VERSION_REPRISE,
     COUPE_K1B,
+    // Correctif K1b : les deux étages du compteur d'une moitié du haut.
+    COMPTEURS_K1B: Object.freeze({heriteMax: COMPTEUR_HERITE_MAX, joue: COMPTEUR_JOUE}),
     CLE_STOCKAGE,
     NIVEAUX,
     CODES,

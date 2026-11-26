@@ -173,7 +173,8 @@ test("lib/applis.php déclare pour « defi-calcul » les clés du moteur, les 74
   // nouveautés par séance (1 à 3, 1 par défaut).
   // (Lot K1b : six étages — le réglage s'appelle « etage », 6 par défaut ; l'ancien « palier » se relit encore.)
   assert.match(bloc, /'reglages' => \['minutes' => \['choix' => \[10, 15\]\], 'etage' => \['choix' => \[6, 1, 2, 3, 4, 5\]\]\],/, "lot 1 : la durée ; lot K1b : l'étage");
-  assert.match(bloc, /'reglages_anciens' => \['palier' => \['vers' => 'etage', 'valeurs' => \[1 => 3, 2 => 4, 3 => 5, 4 => 6\]\]\],/);
+  // (Correctif K1b : « rendu » — l'ancien « palier » que reçoit, à côté d'« etage », une page de version 12 restée ouverte.)
+  assert.match(bloc, /'reglages_anciens' => \['palier' => \['vers' => 'etage', 'valeurs' => \[1 => 3, 2 => 4, 3 => 5, 4 => 6\],\s+'rendu' => \[1 => 1, 2 => 1, 3 => 1, 4 => 2, 5 => 3, 6 => 4\]\]\],/);
   assert.match(await lire("../_serveur/public/api/parcours.php"), /const APPLIS_CONNUES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat'\];/);
   assert.match(await lire("../_serveur/public/api/prof.php"), /const APPLIS_PROPOSABLES = \['defi-tables', 'coffres', 'flash-anzan', 'defi-calcul', 'automatismes', 'splat', 'cours'\];/);
   // La référence écrite pour le serveur est bien celle du générateur.

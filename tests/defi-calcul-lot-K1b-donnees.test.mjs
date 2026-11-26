@@ -302,9 +302,13 @@ test("la fusion entre une version 12 et une version 13, dans les deux sens : la 
     const jour = P.ajouterJours(vu.jour, 1);
     const options = {aujourdhui: jour, carte: CARTE};
     const repris = P.normaliserParcours(parcours, {aujourdhui: jour});
-    // La page neuve relit la copie de version 12 du serveur : rien à renvoyer, rien de changé.
+    // La page neuve relit la copie de version 12 du serveur : rien de changé. (Correctif K1b, relecture de
+    // Codex du 26/11 : elle la renvoie quand même UNE fois, pour que la ligne du serveur ne reste pas en
+    // version 12 — avant, `apporte` valait false ; relue en version 13, plus rien ne repart.)
     const recu = P.recevoir(repris, parcours, options);
-    assert.deepEqual([recu.lectureSeule, recu.apporte], [false, false], `${nom} : la même copie, relue`);
+    assert.deepEqual([recu.lectureSeule, recu.apporte], [false, true], `${nom} : la même copie, relue — récrite une fois en version 13`);
+    assert.deepEqual(recu.parcours, repris, `${nom} : rien de changé`);
+    assert.equal(P.recevoir(repris, JSON.parse(JSON.stringify(Object.assign({}, repris, {prenom: ""}))), options).apporte, false, `${nom} : relue en version 13, rien ne repart`);
     // (La fusion, elle, peut donner une ceinture que la carte complète.)
     assert.deepEqual(P.fusionner(parcours, parcours, options), P.fusionner(repris, repris, options), `${nom} : fusion d'une copie avec elle-même`);
     // L'appareil passé en version 13 a continué : une étoile de plus.

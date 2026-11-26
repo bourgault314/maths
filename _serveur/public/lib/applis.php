@@ -315,8 +315,18 @@ const CATALOGUE_APPLIS = [
         // enregistrement de la classe ou de l'élève. Envoyé par une page du
         // professeur restée ouverte, il est refusé (« Réglage inconnu. ») :
         // elle se recharge. Voir reglages_anciens_repris().
+        // Correctif K1b (relecture de Codex du 26/11) : « rendu » — ce qu'une
+        // page d'AVANT le lot (version 12), encore ouverte, doit recevoir en
+        // plus pour garder le plafond du professeur : l'ancien « palier »,
+        // dans SA numérotation, à côté d'« etage ». Elle ne connaît pas
+        // « etage » et retombait sur « tout ». Par étage : 4 (CM1) → 2, 5
+        // (CM2) → 3, 6 (tout, quand il est écrit pour un élève) → 4 ; les
+        // étages 1 à 3 (CP, CE1, CE2), qu'elle ne sait pas distinguer → 1
+        // (les bases : son plafond le plus bas). Voir
+        // reglages_pour_les_pages_d_avant().
         'reglages' => ['minutes' => ['choix' => [10, 15]], 'etage' => ['choix' => [6, 1, 2, 3, 4, 5]]],
-        'reglages_anciens' => ['palier' => ['vers' => 'etage', 'valeurs' => [1 => 3, 2 => 4, 3 => 5, 4 => 6]]],
+        'reglages_anciens' => ['palier' => ['vers' => 'etage', 'valeurs' => [1 => 3, 2 => 4, 3 => 5, 4 => 6],
+            'rendu' => [1 => 1, 2 => 1, 3 => 1, 4 => 2, 5 => 3, 6 => 4]]],
         // Lot F1 « rythme » (07/11/2026, relecture de Codex) : la version la
         // plus basse qu'on accepte À L'ÉCRITURE (api/parcours.php). Une page
         // d'avant F1 (version 3), restée ouverte dans un onglet, lirait une
@@ -668,11 +678,18 @@ function mondes_lus(mixed $liste, int $nombre): ?array
 // (« reglages_anciens » : l'ancien nom, le nouveau, et la valeur d'aujourd'hui
 // de chaque ancienne valeur). Une ligne de la base qui porte encore l'ancien
 // nom se relit sous le nouveau, avec la valeur traduite ; l'ancien nom n'est
-// jamais rendu, ni réécrit. Quand le nouveau nom est déjà là, il fait foi
+// jamais réécrit, ni rendu au professeur (à l'élève : voir
+// reglages_pour_les_pages_d_avant). Quand le nouveau nom est déjà là, il fait foi
 // (l'ancien est un reste) ; une ancienne valeur qui n'est pas dans la table
 // ne donne rien (le défaut). Ne sert qu'à la LECTURE de ce qui est rangé : ce
 // qu'une page envoie se lit strictement (reglages_recus, reglages_eleve_recus),
 // et l'ancien nom y est un réglage inconnu.
+// Correctif K1b (relecture de Codex du 26/11) : une ancienne valeur écrite
+// « 2.0 » dans le texte de la base vaut 2. PHP la décode en nombre à virgule,
+// le navigateur (JSON.parse) en entier : le moteur et l'onglet y lisaient le
+// CM1 quand le serveur ne lisait rien. Une seule règle pour les trois
+// lecteurs — un nombre ENTIER, quelle que soit son écriture ; « 2.5 », un
+// texte, une liste ne donnent toujours rien.
 function reglages_anciens_repris(string $cle, array $brut): array
 {
     foreach (CATALOGUE_APPLIS[$cle]['reglages_anciens'] ?? [] as $ancien => $regle) {
@@ -680,9 +697,31 @@ function reglages_anciens_repris(string $cle, array $brut): array
         $valeur = $brut[$ancien];
         unset($brut[$ancien]);
         if (array_key_exists($regle['vers'], $brut)) continue;
+        if (is_float($valeur) && is_finite($valeur) && floor($valeur) === $valeur && abs($valeur) < 1000) $valeur = (int)$valeur;
         if (is_int($valeur) && array_key_exists($valeur, $regle['valeurs'])) $brut[$regle['vers']] = $regle['valeurs'][$valeur];
     }
     return $brut;
+}
+
+// Correctif K1b (relecture de Codex du 26/11) : ce que reçoit L'ÉLÈVE (par son
+// code ou son billet, api/eleve.php) porte, à côté d'un réglage qui a changé
+// de nom, l'ANCIEN nom dans l'ancienne numérotation (« rendu » dans
+// « reglages_anciens »). Une page d'avant le lot restée ouverte ne connaît
+// que lui : sans cela elle ignorait « etage » et ouvrait tout, par-dessus le
+// plafond du professeur. La page d'aujourd'hui lit le nouveau nom, qui fait
+// foi quand les deux sont là. Rien n'est écrit en base, rien ne part vers la
+// page du professeur ; quand le réglage est au défaut (rien d'écrit), rien
+// n'est ajouté — l'ancien défaut était « tout », lui aussi.
+function reglages_pour_les_pages_d_avant(array $reglages): array
+{
+    foreach ($reglages as $cle => $reglage) {
+        if (!is_array($reglage)) continue;
+        foreach (CATALOGUE_APPLIS[$cle]['reglages_anciens'] ?? [] as $ancien => $regle) {
+            $valeur = $reglage[$regle['vers']] ?? null;
+            if (is_int($valeur) && isset($regle['rendu'][$valeur])) $reglages[$cle][$ancien] = $regle['rendu'][$valeur];
+        }
+    }
+    return $reglages;
 }
 
 // Les réglages d'une classe tels qu'on les relit de la base : seulement ce que

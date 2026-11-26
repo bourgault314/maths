@@ -7400,7 +7400,18 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     egal(99, $reference->seance->j[5], 'j : les nouveautés réussies, gardées par le filtre');
     egal(60, compter_elements_declares('defi-calcul', $attendu), '« Revenir à… » compte les séances (60 gardées)');
     vrai(strlen($attendu) < 40000, 'la référence tient sous la borne de 40 ko');
-    // Le pire cas (toutes les compétences entrées, 12 causes) : 1 795 clés, 28 853 octets depuis le correctif du lot G1 (28 851 au lot G1, 1 639 et 21 107 avant).
+    // Correctif K1b (relecture de Codex du 26/11) : les tailles, mesurées. Ce fichier (huit causes par module), tel que le
+    // serveur le garde — sans le prénom : 1 657 clés, 30 686 octets. Toutes les étoiles tenues et 12 causes : 1 954 clés,
+    // 33 599 octets. Le pire cas (aucune tenue, quatre dates par étoile, 12 causes) : 1 954 clés, 35 972 octets.
+    // tests/defi-calcul-lot-K1b-correctif.test.mjs les mesure tous avec le moteur.
+    egal(30686, strlen($attendu), 'la référence versionnée, sans le prénom : 30 686 octets');
+    $cles = 0;
+    $compter = function ($valeur) use (&$compter, &$cles) {
+        if (is_object($valeur)) { foreach (get_object_vars($valeur) as $element) { $cles++; $compter($element); } }
+        elseif (is_array($valeur)) { foreach ($valeur as $element) $compter($element); }
+    };
+    $compter(json_decode($attendu, false));
+    egal(1657, $cles, 'la référence versionnée, sans le prénom : 1 657 clés');
     vrai(strlen($attendu) > 15000, 'la référence est bien un parcours complet');
 });
 
@@ -8143,9 +8154,10 @@ verifier("defi-calcul lot 1 — minutes et étage : le défaut ne s'écrit pas, 
     egal('{"defi-calcul":{"minutes":15,"etage":2}}', classe_en_base($id)['reglages'], 'en base');
     $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
     egal(['defi-calcul' => ['minutes' => 15, 'etage' => 2]], $t['json']['classe']['reglages'], 'tableau');
-    egal(['defi-calcul' => ['minutes' => 15, 'etage' => 2]], identite($eleve['code'])['json']['reglages'], 'l’élève, par son code');
+    // (Correctif K1b : à côté d'« etage », l'ancien « palier » dans son ancienne numérotation, pour une page de version 12 restée ouverte.)
+    egal(['defi-calcul' => ['minutes' => 15, 'etage' => 2, 'palier' => 1]], identite($eleve['code'])['json']['reglages'], 'l’élève, par son code');
     $billet = appel('/api/eleve.php', ['code' => $eleve['code'], 'billet' => true])['json']['billet'];
-    egal(['defi-calcul' => ['minutes' => 15, 'etage' => 2]], echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'], 'l’élève, par le billet');
+    egal(['defi-calcul' => ['minutes' => 15, 'etage' => 2, 'palier' => 1]], echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'], 'l’élève, par le billet');
     // Avec « avant » : en retard → 409 ; juste → écrit. Le défaut revient à « {} ».
     $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['defi-calcul' => ['minutes' => 15]]],
         'reglages' => ['defi-calcul' => ['minutes' => 10, 'etage' => 6]]], ['jeton' => $jetonS1]);
@@ -8191,7 +8203,7 @@ verifier("defi-calcul lot 1 — minutes et étage : une valeur fausse est refus�
     $maj = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
     foreach ([['{"defi-calcul":{"minutes":12}}', '{}'], ['{"defi-calcul":{"minutes":"15"}}', '{}'], ['{"defi-calcul":{"minutes":10}}', '{}'],
               ['{"defi-calcul":{"etage":6}}', '{}'], ['{"defi-calcul":{"etage":9}}', '{}'],
-              ['{"defi-calcul":{"etage":3,"intrus":7}}', '{"defi-calcul":{"etage":3}}'], ['{"defi-calcul":[3]}', '{}']] as [$brut, $attendu]) {
+              ['{"defi-calcul":{"etage":3,"intrus":7}}', '{"defi-calcul":{"etage":3,"palier":1}}'], ['{"defi-calcul":[3]}', '{}']] as [$brut, $attendu]) {
         $maj->execute([$brut, $id]);
         vrai(str_contains(identite($eleve['code'])['texte'], '"reglages":' . $attendu), "« $brut » → $attendu");
     }
@@ -8228,10 +8240,11 @@ verifier("defi-calcul lot 1 — autrement pour quelques élèves (eleves.reglage
     egal(null, $enBase['ajouts'], 'rien dans les ajouts (un ajout ouvrirait l’appli)');
     egal('{"defi-calcul":{"minutes":15,"etage":6}}', $enBase['reglages_eleve'], 'dans sa colonne');
     $i = identite($rania['code']);
-    egal(['defi-calcul' => ['etage' => 6, 'minutes' => 15]], $i['json']['reglages'] ?? null, 'Rania, par son code : ' . $i['texte']);
+    // (Correctif K1b : l'ancien « palier » à côté — 6, « tout », écrit pour Rania → 4 ; l'étage 2 de la classe → 1.)
+    egal(['defi-calcul' => ['etage' => 6, 'minutes' => 15, 'palier' => 4]], $i['json']['reglages'] ?? null, 'Rania, par son code : ' . $i['texte']);
     $billet = appel('/api/eleve.php', ['code' => $rania['code'], 'billet' => true])['json']['billet'];
-    egal(['defi-calcul' => ['etage' => 6, 'minutes' => 15]], echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'], 'Rania, par le billet');
-    egal(['defi-calcul' => ['etage' => 2]], identite($lucas['code'])['json']['reglages'], 'Lucas suit la classe');
+    egal(['defi-calcul' => ['etage' => 6, 'minutes' => 15, 'palier' => 4]], echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'], 'Rania, par le billet');
+    egal(['defi-calcul' => ['etage' => 2, 'palier' => 1]], identite($lucas['code'])['json']['reglages'], 'Lucas suit la classe');
     $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
     $parId = array_column($t['json']['eleves'], null, 'id');
     egal(['defi-calcul' => ['minutes' => 15, 'etage' => 6]], $parId[$rania['id']]['reglages'], 'tableau : le rangé de Rania');
@@ -8261,7 +8274,7 @@ verifier("defi-calcul lot 1 — autrement pour quelques élèves (eleves.reglage
     $ligne->execute([$rania['id']]);
     egal(null, $ligne->fetch()['reglages_eleve'], 'NULL en base');
     $ligne->closeCursor();
-    egal(['defi-calcul' => ['etage' => 2]], identite($rania['code'])['json']['reglages'], 'Rania suit la classe');
+    egal(['defi-calcul' => ['etage' => 2, 'palier' => 1]], identite($rania['code'])['json']['reglages'], 'Rania suit la classe');
     // La règle, seule : la classe n'a pas Défi calcul → le réglage de l'élève ne lui donne pas l'appli.
     egal(['applis' => [], 'reglages' => []], acces_de_l_eleve(['applis' => '', 'reglages' => null], null, '{"defi-calcul":{"minutes":15}}'), 'un réglage n’ouvre rien');
     egal(['defi-calcul' => ['minutes' => 15]], reglages_eleve_lus('{"defi-calcul":{"minutes":15,"etage":7,"x":1},"splat":{"mondes":[1]}}'), 'lecture : le valide seulement');
@@ -8391,8 +8404,10 @@ verifier("defi-calcul lot K1 — une page qui ne saurait pas lire la progression
     $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
     egal(11, CATALOGUE_APPLIS['defi-calcul']['version_sans_declaration'] ?? null, 'une page qui ne dit rien vaut au plus la version 11');
     $lireEn = fn ($version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true] + ($version === null ? [] : ['version' => $version]));
-    // Rien d'enregistré : tout le monde lit « rien ».
-    egal([200, false], [$lireEn(null)['code'], $lireEn(null)['json']['existe']], 'rien encore : la vieille page lit « rien »');
+    // Rien d'enregistré : la page d'aujourd'hui lit « rien ». (Correctif K1b : une page d'une version que le
+    // serveur n'accepte plus à l'écriture n'est plus servie, même quand il n'y a rien — avant, elle lisait « rien ».)
+    egal([200, false], [$lireEn(13)['code'], $lireEn(13)['json']['existe']], 'rien encore : la page de version 13 lit « rien »');
+    egal([400, 'Page ancienne : recharge la page.'], [$lireEn(null)['code'], $lireEn(null)['json']['erreur'] ?? null], 'rien encore : la vieille page n’est déjà plus servie');
     egal(200, ecrire($code, $reference, 0, 'defi-calcul')['code'], 'la version 13 s’enregistre');
     // La page d'avant (elle ne dit rien) : refusée, sans rien apprendre de plus.
     $r = $lireEn(null);
@@ -10037,7 +10052,8 @@ verifier("defi-calcul lot K1, correctif (Codex 15) — Mon espace annonce le for
 // le dit encore (étage 4) — jamais « jusqu'au CE1 ».
 verifier("defi-calcul lot K1b — l'ancien réglage « palier » resté en base se relit dans SA numérotation (classe et élève, par le code, le billet et le tableau), disparaît au premier enregistrement, et n'est plus accepté d'une page", function () use (&$jetonS1) {
     vider_compteurs();
-    egal(['palier' => ['vers' => 'etage', 'valeurs' => [1 => 3, 2 => 4, 3 => 5, 4 => 6]]], CATALOGUE_APPLIS['defi-calcul']['reglages_anciens'] ?? null, 'la table de reprise est déclarée');
+    egal(['palier' => ['vers' => 'etage', 'valeurs' => [1 => 3, 2 => 4, 3 => 5, 4 => 6], 'rendu' => [1 => 1, 2 => 1, 3 => 1, 4 => 2, 5 => 3, 6 => 4]]],
+        CATALOGUE_APPLIS['defi-calcul']['reglages_anciens'] ?? null, 'la table de reprise est déclarée (correctif K1b : et ce qui est rendu à une page de version 12)');
     foreach (CATALOGUE_APPLIS as $cle => $fiche) {
         if ($cle !== 'defi-calcul') vrai(!array_key_exists('reglages_anciens', $fiche), "$cle : aucun réglage ancien");
     }
@@ -10050,7 +10066,14 @@ verifier("defi-calcul lot K1b — l'ancien réglage « palier » resté en base 
         $billet = appel('/api/eleve.php', ['code' => $eleve['code'], 'billet' => true])['json']['billet'];
         $parBillet = echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'] ?? null;
         egal($parCode, $parBillet, 'le billet rend ce que rend le code');
-        return $parCode['defi-calcul'] ?? [];
+        $lu = $parCode['defi-calcul'] ?? [];
+        // Correctif K1b : à côté d'« etage », l'élève reçoit l'ancien « palier » dans son ancienne numérotation
+        // (pour une page de version 12 restée ouverte ; son test est plus bas). Vérifié ici à chaque lecture, puis
+        // mis de côté : ce test regarde le NOUVEAU nom.
+        $rendu = [1 => 1, 2 => 1, 3 => 1, 4 => 2, 5 => 3, 6 => 4];
+        egal(isset($lu['etage']) ? $rendu[$lu['etage']] : null, $lu['palier'] ?? null, 'l’ancien « palier » rendu à côté d’« etage » ' . json_encode($lu));
+        unset($lu['palier']);
+        return $lu;
     };
     // 1. La classe : chaque ancienne valeur, telle qu'elle est rangée aujourd'hui.
     foreach ([[1, ['minutes' => 15, 'etage' => 3], '1 (les bases) → jusqu’au CE2'], [2, ['minutes' => 15, 'etage' => 4], '2 → jusqu’au CM1'],
@@ -10150,9 +10173,12 @@ verifier("defi-calcul lot K1b — une progression de version 12 restée en base 
     egal([200, true, 1], [$r['code'], $r['json']['existe'], $r['json']['revision']], 'lecteur 13 : servie');
     egal($v12, $r['json']['parcours'], 'la progression de version 12 revient entière (c’est le moteur qui la relit)');
     egal(400, $lireEn(null)['code'], 'une page qui ne dit rien (version 11 au plus) : pas servie');
-    egal(200, $lireEn(12)['code'], 'une page de version 12 restée ouverte la lit encore…');
+    // Correctif K1b (relecture de Codex du 26/11) : une page de version 12 restée ouverte ne la lit plus — elle
+    // passe en lecture seule dès sa lecture, pas seulement à son premier envoi (avant : 200).
+    $r12 = $lireEn(12);
+    egal([400, 'Page ancienne : recharge la page.'], [$r12['code'], $r12['json']['erreur'] ?? null], 'une page de version 12 restée ouverte ne la lit plus…');
     $w = ecrire($code, $v12, 1, 'defi-calcul');
-    egal([400, 'Page ancienne : recharge la page.'], [$w['code'], $w['json']['erreur'] ?? null], '… mais ne l’écrit plus : elle se recharge');
+    egal([400, 'Page ancienne : recharge la page.'], [$w['code'], $w['json']['erreur'] ?? null], '… et ne l’écrit plus : elle se recharge');
     egal($v12, $lireEn(13)['json']['parcours'], 'rien n’a bougé');
     // La page de ce lot écrit en version 13, avec la révision qu'elle a lue.
     $w = ecrire($code, $v13, 1, 'defi-calcul');
@@ -10168,6 +10194,185 @@ verifier("defi-calcul lot K1b — une progression de version 12 restée en base 
     $w = ecrire($code, $v13, 1, 'defi-calcul');
     egal([409, 13], [$w['code'], $w['json']['parcours']['version'] ?? null], 'à version égale, le conflit rend l’état');
     egal(400, ecrire($code, $v12, 2, 'defi-calcul')['code'], 'et la version 12 reste refusée, même avec la bonne révision');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------- Défi calcul, lot K1b : le correctif après Codex (26/11/2026)
+//
+// Relecture de Codex du 26/11 sur la PR du lot K1b, côté serveur :
+//  - GÊNANT : entre la mise à jour du serveur et celle du site, une page de
+//    version 12 lisait encore une ligne de version 12, recevait « etage »
+//    qu'elle ne connaît pas (elle ouvrait tout), jouait et enregistrait dans
+//    l'appareil avant d'apprendre, à son premier envoi, qu'elle était trop
+//    ancienne. Elle n'est plus servie du tout (elle passe en lecture seule à
+//    sa lecture), et ce que reçoit l'élève porte l'ancien « palier » à côté
+//    d'« etage », dans l'ancienne numérotation.
+//  - DÉTAIL : un ancien « palier » écrit « 2.0 » en base était écarté par
+//    PHP et lu 2 par le navigateur. Un nombre entier, quelle que soit son
+//    écriture, vaut cet entier.
+// (La part « moteur » du correctif : tests/defi-calcul-lot-K1b-correctif.test.mjs.)
+verifier("defi-calcul lot K1b, correctif — une page de version 12 n'est plus servie dès que le serveur est à jour (ligne de version 12, de version 13, ou rien) ; la page de version 13 lit tout ; les autres applis ne changent pas", function () use (&$jetonS1) {
+    vider_compteurs();
+    egal([13, 11], [CATALOGUE_APPLIS['defi-calcul']['version_min'], CATALOGUE_APPLIS['defi-calcul']['version_sans_declaration']], 'le catalogue');
+    $v12Texte = (string)file_get_contents(__DIR__ . '/parcours-version-12-defi-calcul.json');
+    $v12 = json_decode($v12Texte, true);
+    $v13 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1b-c1', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $eleve['code'];
+    $lireEn = fn ($version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true] + ($version === null ? [] : ['version' => $version]));
+    $refuse = function (array $r, string $quoi) {
+        egal([400, false, 'Page ancienne : recharge la page.'], [$r['code'], $r['json']['ok'] ?? null, $r['json']['erreur'] ?? null], $quoi);
+        vrai(!array_key_exists('parcours', $r['json']) && !array_key_exists('revision', $r['json']) && !array_key_exists('existe', $r['json']), "$quoi : rien d’autre n’est rendu");
+    };
+    // Une version qui n'est pas un entier ne passe pas pour une version 13 (elle vaut « rien dit » : 11).
+    $versionsFausses = function (string $quand) use ($code, $refuse) {
+        foreach (['"13"', '13.0', '[13]', 'true', 'null'] as $texte) {
+            $refuse(appel('/api/parcours.php', '{"code":' . json_encode($code) . ',"appli":"defi-calcul","lire":true,"version":' . $texte . '}'), "$quand, une version $texte");
+        }
+    };
+    // 1. Rien d'enregistré.
+    foreach ([null, 1, 11, 12] as $version) $refuse($lireEn($version), 'rien en base, lecteur ' . json_encode($version));
+    $versionsFausses('rien en base');
+    $r = $lireEn(13);
+    egal([200, true, false, 0], [$r['code'], $r['json']['ok'], $r['json']['existe'], $r['json']['revision']], 'rien en base, lecteur 13 : « rien »');
+    // 2. Une ligne de version 12 (posée en base comme elle y est aujourd'hui).
+    egal(200, ecrire($code, $v13, 0, 'defi-calcul')['code'], 'une ligne est créée');
+    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")
+        ->execute([json_encode(json_decode($v12Texte, false), JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
+    foreach ([null, 11, 12] as $version) $refuse($lireEn($version), 'ligne de version 12, lecteur ' . json_encode($version));
+    $r = $lireEn(13);
+    egal([200, true, 12, 1], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version'], $r['json']['revision']], 'ligne de version 12, lecteur 13 : servie telle quelle, avec sa révision');
+    $versionsFausses('ligne de version 12');
+    // La page de version 13 la récrit en version 13, avec la révision lue (le moteur l'envoie une fois, même sans
+    // étoile de plus : tests/defi-calcul-lot-K1b-correctif.test.mjs).
+    $w = ecrire($code, $v13, 1, 'defi-calcul');
+    egal([200, 2], [$w['code'], $w['json']['revision']], 'récrite en version 13 avec la révision lue');
+    // 3. Une ligne de version 13.
+    foreach ([null, 11, 12] as $version) $refuse($lireEn($version), 'ligne de version 13, lecteur ' . json_encode($version));
+    $versionsFausses('ligne de version 13');
+    egal([200, 13], [$lireEn(13)['code'], $lireEn(13)['json']['parcours']['version']], 'ligne de version 13, lecteur 13');
+    // Une page plus récente que le serveur (version 14) lit aussi : c'est elle qui sait.
+    egal(200, $lireEn(14)['code'], 'lecteur 14 : servi');
+    // Le contrôle du lot K1 tient toujours, à côté du nouveau : une ligne PLUS RÉCENTE que la page (une version 14,
+    // posée en base : un jour, une page d'un lot suivant l'aura écrite) n'est pas servie à la page de version 13.
+    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), false);
+    $v14->version = 14;
+    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([json_encode($v14, JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
+    $refuse($lireEn(13), 'ligne de version 14, lecteur 13');
+    $refuse($lireEn(12), 'ligne de version 14, lecteur 12');
+    egal([200, 14], [$lireEn(14)['code'], $lireEn(14)['json']['parcours']['version']], 'ligne de version 14, lecteur 14 : servie');
+    // 4. Une appli dont la lecture n'est pas protégée ne change pas : Défi tables lit sans dire sa version, et en la disant.
+    foreach ([[], ['version' => 1], ['version' => 99]] as $enPlus) {
+        $r = appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-tables', 'lire' => true] + $enPlus);
+        egal([200, true, false], [$r['code'], $r['json']['ok'], $r['json']['existe']], 'Défi tables, ' . json_encode($enPlus) . ' : lu');
+    }
+    foreach (CATALOGUE_APPLIS as $cle => $fiche) {
+        if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_sans_declaration', $fiche), "$cle : lecture pas protégée, rien ne change");
+    }
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("defi-calcul lot K1b, correctif — l'élève reçoit l'ancien « palier » à côté d'« etage », dans l'ancienne numérotation (code et billet) ; rien au défaut ; rien vers le professeur, rien en base", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1b-c2', 'applis' => ['defi-calcul', 'splat']], ['jeton' => $jetonS1])['json']['id'];
+    [$rania, $lucas] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $recu = function (array $eleve) {
+        $parCode = identite($eleve['code'])['json']['reglages'] ?? null;
+        $billet = appel('/api/eleve.php', ['code' => $eleve['code'], 'billet' => true])['json']['billet'];
+        egal($parCode, echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages'] ?? null, 'le billet rend ce que rend le code');
+        return $parCode;
+    };
+    // Le défaut (tout) : rien d'écrit, rien de rendu — une page de version 12 ouvre tout, comme la page d'aujourd'hui.
+    vrai(str_contains(identite($lucas['code'])['texte'], '"reglages":{}'), 'au défaut : « {} », pas de « palier »');
+    // La classe réglée par la page d'aujourd'hui, à chaque étage.
+    foreach ([[1, 1, 'le CP → les bases (le plafond le plus bas d’une page de version 12)'], [2, 1, 'le CE1 → les bases'], [3, 1, 'le CE2 → les bases'],
+              [4, 2, 'le CM1 → 2'], [5, 3, 'le CM2 → 3']] as [$etage, $palier, $quoi]) {
+        $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'reglages' => ['defi-calcul' => ['etage' => $etage]]], ['jeton' => $jetonS1]);
+        egal(200, $r['code'], "étage $etage : rangé");
+        egal(['defi-calcul' => ['etage' => $etage]], $r['json']['reglages'], "étage $etage : le professeur ne reçoit que le nouveau nom");
+        egal('{"defi-calcul":{"etage":' . $etage . '}}', classe_en_base($id)['reglages'], "étage $etage : en base, le nouveau nom seul");
+        egal(['defi-calcul' => ['etage' => $etage, 'palier' => $palier]], $recu($lucas), "l’élève : $quoi");
+    }
+    // Une ligne d'avant le lot (l'ancien nom en base) : les deux noms sont rendus, et se disent la même chose.
+    $majClasse = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    foreach ([[1, 3], [2, 4], [3, 5]] as [$palier, $etage]) {
+        $majClasse->execute(['{"defi-calcul":{"palier":' . $palier . '}}', $id]);
+        egal(['defi-calcul' => ['etage' => $etage, 'palier' => $palier]], $recu($lucas), "ancien palier $palier en base : étage $etage pour la page d’aujourd’hui, palier $palier pour celle d’avant");
+    }
+    $majClasse->execute(['{"defi-calcul":{"palier":4}}', $id]);
+    vrai(str_contains(identite($lucas['code'])['texte'], '"reglages":{}'), 'ancien palier 4 (tout) : rien, des deux côtés');
+    // L'élève réglé à part : « tout » écrit pour lui l'emporte sur la classe — rendu 4 (tout) à la page d'avant.
+    $majClasse->execute(['{"defi-calcul":{"etage":2},"splat":{"mondes":[1,2]}}', $id]);
+    $r = appel('/api/prof.php', ['action' => 'eleves.reglages', 'eleve_id' => $rania['id'], 'avant' => new stdClass(), 'reglages' => ['defi-calcul' => ['etage' => 6]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'Rania : tout, à part');
+    egal(['defi-calcul' => ['etage' => 6]], $r['json']['reglages'], 'le rangé : le nouveau nom seul');
+    egal(['defi-calcul' => ['etage' => 6], 'splat' => ['mondes' => [1, 2]]], $r['json']['acces']['reglages'], 'le calculé rendu au professeur : pas de « palier »');
+    egal(['defi-calcul' => ['etage' => 6, 'palier' => 4], 'splat' => ['mondes' => [1, 2]]], $recu($rania), 'Rania : tout (palier 4) ; SPLAT! n’est pas touché');
+    egal(['defi-calcul' => ['etage' => 2, 'palier' => 1], 'splat' => ['mondes' => [1, 2]]], $recu($lucas), 'Lucas suit la classe');
+    // Rien vers le professeur : ni le tableau, ni la liste des classes.
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    vrai(!str_contains($t['texte'], '"palier"'), 'le tableau du professeur ne porte jamais « palier »');
+    $l = appel('/api/prof.php', ['action' => 'classes.lister'], ['jeton' => $jetonS1]);
+    vrai(!str_contains($l['texte'], '"palier"'), 'la liste des classes non plus');
+    // Rien en base.
+    egal('{"defi-calcul":{"etage":2},"splat":{"mondes":[1,2]}}', classe_en_base($id)['reglages'], 'la classe n’a pas bougé');
+    $ligne = bd_test()->prepare('SELECT reglages_eleve FROM eleves WHERE id = ?');
+    $ligne->execute([$rania['id']]);
+    egal('{"defi-calcul":{"etage":6}}', $ligne->fetchColumn(), 'la colonne de Rania : le nouveau nom seul');
+    $ligne->closeCursor();
+    // La règle, seule.
+    egal(['defi-calcul' => ['minutes' => 15, 'etage' => 4, 'palier' => 2]], reglages_pour_les_pages_d_avant(['defi-calcul' => ['minutes' => 15, 'etage' => 4]]), 'la règle, seule');
+    egal(['defi-calcul' => ['minutes' => 15]], reglages_pour_les_pages_d_avant(['defi-calcul' => ['minutes' => 15]]), 'sans « etage » : rien');
+    egal(['defi-calcul' => ['etage' => 9]], reglages_pour_les_pages_d_avant(['defi-calcul' => ['etage' => 9]]), 'un étage hors de la table : rien');
+    egal(['splat' => ['mondes' => [1]], 'defi-tables' => ['etage' => 4]], reglages_pour_les_pages_d_avant(['splat' => ['mondes' => [1]], 'defi-tables' => ['etage' => 4]]), 'une autre appli : rien n’est touché');
+    egal([], reglages_pour_les_pages_d_avant([]), 'rien');
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+verifier("defi-calcul lot K1b, correctif — un ancien « palier » écrit « 2.0 » en base vaut 2, comme pour le navigateur : CM1 (classe et élève, code, billet, tableau) ; « 2.5 » et un texte ne donnent toujours rien", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1b-c3', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    [$rania, $lucas] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $majClasse = bd_test()->prepare('UPDATE classes SET reglages = ? WHERE id = ?');
+    $majEleve = bd_test()->prepare('UPDATE eleves SET reglages_eleve = ? WHERE id = ?');
+    $etageRecu = function (array $eleve) {
+        $parCode = identite($eleve['code'])['json']['reglages']['defi-calcul']['etage'] ?? null;
+        $billet = appel('/api/eleve.php', ['code' => $eleve['code'], 'billet' => true])['json']['billet'];
+        egal($parCode, echanger($billet, ['appli' => 'defi-calcul'])['json']['reglages']['defi-calcul']['etage'] ?? null, 'le billet rend ce que rend le code');
+        return $parCode;
+    };
+    // Le texte de la base, tel quel : ce que JSON.parse lit dans le navigateur est écrit à côté.
+    foreach ([['1.0', 3], ['2.0', 4], ['3.0', 5], ['4.0', null], ['2', 4], ['2.00', 4], ['2e0', 4], ['20e-1', 4],
+              ['2.5', null], ['"2"', null], ['"2.0"', null], ['0.0', null], ['5.0', null], ['-2.0', null], ['1e3', null], ['[2.0]', null], ['null', null], ['true', null]] as [$texte, $etage]) {
+        $majClasse->execute(['{"defi-calcul":{"palier":' . $texte . '}}', $id]);
+        egal($etage, $etageRecu($lucas), "classe, palier $texte");
+        $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+        egal($etage, $t['json']['classe']['reglages']['defi-calcul']['etage'] ?? null, "classe, palier $texte : le tableau du professeur");
+    }
+    // L'élève réglé à part : la même règle (4.0, « tout », s'écrit pour lui : étage 6).
+    $majClasse->execute(['{"defi-calcul":{"etage":1}}', $id]);
+    foreach ([['1.0', 3], ['2.0', 4], ['3.0', 5], ['4.0', 6], ['2.5', 1], ['"2"', 1]] as [$texte, $etage]) {
+        $majEleve->execute(['{"defi-calcul":{"palier":' . $texte . '}}', $rania['id']]);
+        egal($etage, $etageRecu($rania), "élève, palier $texte (la classe est à l’étage 1)");
+    }
+    // Le premier enregistrement range un entier sous le nouveau nom.
+    $majClasse->execute(['{"defi-calcul":{"palier":2.0}}', $id]);
+    $r = appel('/api/prof.php', ['action' => 'classes.modifier', 'classe_id' => $id, 'avant' => ['reglages' => ['defi-calcul' => ['etage' => 4]]],
+        'reglages' => ['defi-calcul' => ['minutes' => 15]]], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'le professeur change les minutes : ' . $r['texte']);
+    egal('{"defi-calcul":{"etage":4,"minutes":15}}', classe_en_base($id)['reglages'], 'en base : « etage » 4, un entier');
+    // Ce qu'une page ENVOIE reste lu strictement.
+    $r = appel('/api/prof.php', '{"action":"classes.modifier","classe_id":' . $id . ',"reglages":{"defi-calcul":{"etage":2.0}}}', ['jeton' => $jetonS1]);
+    egal(400, $r['code'], 'une page qui envoie « etage » 2.0 : refusée');
+    // La règle, seule.
+    egal(['etage' => 4], reglages_anciens_repris('defi-calcul', ['palier' => 2.0]), 'la reprise, seule : 2.0');
+    egal([], reglages_anciens_repris('defi-calcul', ['palier' => 2.5]), '2.5 : rien');
+    egal([], reglages_anciens_repris('defi-calcul', ['palier' => INF]), 'l’infini : rien');
+    egal([], reglages_anciens_repris('defi-calcul', ['palier' => NAN]), 'pas un nombre : rien');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

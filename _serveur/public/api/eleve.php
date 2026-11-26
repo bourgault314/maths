@@ -56,9 +56,12 @@ function acces_affichable(array $eleve): array
 {
     $acces = acces_de_l_eleve($eleve, isset($eleve['ajouts']) ? (string)$eleve['ajouts'] : null,
         isset($eleve['reglages_eleve']) ? (string)$eleve['reglages_eleve'] : null);
+    // Correctif K1b (relecture de Codex du 26/11) : avec l'ancien nom d'un
+    // réglage renommé (« palier » de Défi calcul), pour une page d'avant le
+    // lot restée ouverte — lib/applis.php, reglages_pour_les_pages_d_avant.
     return [
         'applis' => array_map('appli_affichable', $acces['applis']),
-        'reglages' => reglages_json($acces['reglages']),
+        'reglages' => reglages_json(reglages_pour_les_pages_d_avant($acces['reglages'])),
     ];
 }
 
