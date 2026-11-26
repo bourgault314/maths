@@ -78,7 +78,6 @@ export const RECETTES = [
   { fichier: "tests/carres-gloutons-layout-regression.cjs", appli: "carres-gloutons", besoin: ["playwright"],
     garde: ["outils/club_maths/carres_gloutons.html", "assets/js/carres-gloutons-embed.js", "assets/js/gloubi-ia.js"] },
 
-  { fichier: "tests/defi-calcul-accueil-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-f1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-g1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-relecture-1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
@@ -87,7 +86,6 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-modules-lot-2-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-3c-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
-  { fichier: "tests/defi-calcul-lot-4-ceintures-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-5-revue-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-7-0-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-7a-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
@@ -96,7 +94,6 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-7d-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   // Lot 6 « fraction à deux cases » (18/11/2026) : « 6 × □/□ = 5 ».
   { fichier: "tests/defi-calcul-lot-6-fraction-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
-  { fichier: "tests/defi-calcul-lot-F4-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-F4-correctif-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C2-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
@@ -105,6 +102,12 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-C4b-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C4c-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   { fichier: "tests/defi-calcul-lot-C4d-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  { fichier: "tests/defi-calcul-lot-K1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  // Le correctif du lot K1 (26/11/2026) : la page (deux appareils, une page plus ancienne, les renvois) et Mon espace
+  // avec le VRAI serveur PHP — rejouée aussi quand la lecture d'un parcours change côté serveur (sans PHP sur le
+  // poste, ce trajet-là est sauté, et dit).
+  { fichier: "tests/defi-calcul-lot-K1-correctif-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"],
+    garde: [...DEFI_CALCUL, "_serveur/public/index.php", "_serveur/public/api/parcours.php", "_serveur/public/lib/applis.php", "_serveur/public/lib/progression.php", "_serveur/public/prof/defi_calcul"] },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
@@ -159,6 +162,17 @@ export const ECARTEES = [
   { fichier: "tests/splat-faux-monde.mjs", raison: "simulateur importé par les tests." },
   { fichier: "tests/splat-suivi-monde.mjs", raison: "simulateur importé par les tests." },
   { fichier: "tests/suivi-regler-banc.mjs", raison: "banc d'essai importé par les tests du suivi." },
+  // Lot K1 de Défi calcul « la carte » (25/11/2026) : ces trois recettes jouent des écrans
+  // partis avec l'ancien moteur. Ce qui reste vrai est rejoué par defi-calcul-lot-K1-ecrans.cjs.
+  { fichier: "tests/defi-calcul-accueil-ecrans.cjs",
+    raison: "l'accueil d'avant la carte (Mon module, la pastille des jours, Mon parcours, le test de module) : " +
+      "parti au lot K1. Le chargement (cadre caché puis immobile, centré) est repris par defi-calcul-lot-K1-ecrans.cjs." },
+  { fichier: "tests/defi-calcul-lot-4-ceintures-ecrans.cjs",
+    raison: "les barrettes, l'écran « Nouvelle ceinture » et Mon parcours : partis au lot K1 (la ceinture se remplit " +
+      "quart par quart). L'écran de la ceinture gagnée est joué par defi-calcul-lot-K1-ecrans.cjs." },
+  { fichier: "tests/defi-calcul-lot-F4-ecrans.cjs",
+    raison: "le test de palier et le test de module : partis au lot K1 (« Je tente », « Tente toute la ceinture »). " +
+      "J'apprends arrêté, le 3e arrêt et la reprise sans aide sont joués par defi-calcul-lot-F4-correctif-ecrans.cjs." },
 ];
 
 /* Ce qui, touché, fait tout rejouer. */

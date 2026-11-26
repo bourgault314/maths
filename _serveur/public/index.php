@@ -23,6 +23,22 @@ $versionCoffres = version_moteur('coffres-parcours.js');
 $versionAnzan = version_moteur('flash_anzan_parcours.js');
 $versionCalculCore = version_moteur('defi_calcul_core.js');
 $versionCalcul = version_moteur('defi_calcul_mon_parcours.js');
+// Correctif K1 de Défi calcul (26/11/2026, relecture de Codex) : le FORMAT
+// que sait lire un moteur servi d'ici (sa ligne « const VERSION = 12; »). La
+// page l'annonce en lisant le parcours (api/parcours.php : le serveur ne sert
+// pas une progression à une page qui ne dit pas savoir la lire). Avant, Mon
+// espace lisait sans rien dire : pris pour une page d'avant le lot K1, il
+// recevait un refus pour toute progression de version 12, et la tuile Défi
+// calcul restait vide pour tous les élèves. Lu dans le fichier même que la
+// page chargera (son empreinte est dans l'adresse) : les deux vont ensemble.
+function format_moteur(string $fichier): ?int
+{
+    $chemin = __DIR__ . '/prof/' . $fichier;
+    $texte = is_file($chemin) ? file_get_contents($chemin) : false;
+    if (!is_string($texte) || preg_match('/^\s*const VERSION = (\d{1,3});/m', $texte, $trouve) !== 1) return null;
+    return (int)$trouve[1];
+}
+$formatCalcul = format_moteur('defi_calcul_mon_parcours.js');
 // Serveur pro (31/10/2026) : la charte commune, chargée AVANT le style de la
 // page, avec son empreinte dans l'adresse (comme prof/index.php).
 $charte = __DIR__ . '/suivi.css';
@@ -1332,24 +1348,33 @@ try {
       avant: {url: "prof/defi_calcul_core.js?v=<?= htmlspecialchars($versionCalculCore, ENT_QUOTES) ?>", global: "MATHSGO_DEFI_CALCUL_CORE"},
       url: "prof/defi_calcul_mon_parcours.js?v=<?= htmlspecialchars($versionCalcul, ENT_QUOTES) ?>",
       global: "MATHSGO_DEFI_CALCUL_MON_PARCOURS",
-      // Lot 4 « les ceintures » (14/11/2026) : la ceinture qu'il porte, avec
-      // ses barrettes, devant le compte ; le compte sur ce que l'appli
-      // propose (les modules construits) jusqu'au palier réglé pour l'élève.
+      // Correctif K1 : le format que lit ce moteur, annoncé à la lecture du
+      // parcours (voir lireParcours). null : le fichier manque.
+      version: Number("<?= $formatCalcul === null ? '' : (int)$formatCalcul ?>") || null,
+      // Lot K1 « la carte » (25/11/2026) : la ceinture de l'étage en cours,
+      // remplie de sa couleur quart par quart, et « Ceinture jaune · 17
+      // étoiles sur 44 » — le compte de l'accueil de l'appli, jusqu'à l'étage
+      // réglé pour l'élève. Rien tant qu'aucune étoile n'est gagnée.
       lecteur: (P, brut, reglages) => {
         const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
-        if (!CORE) return null;
-        const resume = P.resumeProf(brut, CORE.carte());
+        if (!CORE || typeof P.carteEleve !== "function") return null;
         const jusqua = typeof P.reglagesDeSeance === "function" ? P.reglagesDeSeance(reglages).palier : 4;
-        const paliers = ((resume.ouvert && resume.ouvert.paliers) || []).filter(p => p.palier <= jusqua);
-        const sues = paliers.reduce((somme, p) => somme + p.sues, 0);
-        const total = paliers.reduce((somme, p) => somme + p.total, 0);
-        if (!sues) return null;
-        const c = resume.ceintures || {porte: 0, barrettes: 0};
-        const ceinture = CORE.CEINTURES && CORE.CEINTURES[c.porte];
+        const carte = P.carteEleve(brut, CORE.carte(), {palier: jusqua});
+        // Rien tant qu'aucune étoile n'est gagnée — sauf une ceinture déjà
+        // acquise (elle ne se reprend jamais : correctif K1, elle
+        // disparaissait de la tuile quand plus aucune étoile n'était tenue).
+        if (!carte.etoiles && !carte.etages.some(e => e.ceinture)) return null;
+        const etage = carte.etages.find(e => e.etage === carte.courant) || carte.etages[0];
+        if (!etage) return null;
+        const ceinture = CORE.CEINTURES && CORE.CEINTURES[etage.etage];
+        const n = etage.etoiles;
+        // (Un étage qui vient de s'ouvrir : l'insigne montre la ceinture
+        // gagnée juste avant, pleine, plutôt qu'une ceinture vide.)
+        const avant = !n && carte.etages.find(e => e.etage === etage.etage - 1 && e.ceinture);
         return {
-          fait: sues, total,
-          compte: `${ceinture ? `${ceinture.nom} · ` : ""}${sues} compétence${sues > 1 ? "s" : ""} sue${sues > 1 ? "s" : ""} sur ${total}`,
-          ceinture: ceinture && typeof CORE.elementCeinture === "function" ? {n: c.porte, barrettes: c.barrettes} : null,
+          fait: n, total: etage.total,
+          compte: `${ceinture ? `${ceinture.nom} · ` : ""}${n} étoile${n > 1 ? "s" : ""} sur ${etage.total}`,
+          ceinture: ceinture && typeof CORE.elementCeinture === "function" ? (avant ? {n: avant.etage, rempli: 1} : {n: etage.etage, rempli: etage.ceinture ? 1 : etage.quarts / 4}) : null,
           bonus: ""
         };
       }
@@ -1447,12 +1472,16 @@ try {
 
   // Le parcours d'une activité, lu comme tout le reste : le code dans le CORPS
   // d'un POST, jamais dans l'adresse. Toute avarie rend null.
+  // Correctif K1 : une activité dont la lecture est protégée par version
+  // (Défi calcul) annonce le format que lit son moteur, celui que la page
+  // chargera (JAUGES, « version ») ; les autres ne disent rien, comme avant.
   async function lireParcours(code, cle) {
     try {
+      const format = JAUGES[cle] && Number.isInteger(JAUGES[cle].version) ? {version: JAUGES[cle].version} : {};
       const reponse = await fetch("api/parcours.php", {
         method: "POST",
         headers: {"Content-Type": "text/plain;charset=UTF-8"},
-        body: JSON.stringify({code, appli: cle, lire: true}),
+        body: JSON.stringify(Object.assign({code, appli: cle, lire: true}, format)),
         cache: "no-store"
       });
       if (!reponse.ok) return null;
@@ -1558,7 +1587,7 @@ try {
   //  - un jour de travail : la règle de chaque moteur (une séance finie, une
   //    étape jouée, un trésor ouvert) ; une connexion seule ne compte pas ;
   //  - les gains : ceux de « À féliciter » (une table passée, un monde fini,
-  //    un grade), et pour Défi calcul les compétences devenues sues ;
+  //    un grade), et pour Défi calcul les étoiles gagnées (lot K1) ;
   //  - la tuile épurée : la phrase sous le nom de l'appli reste tant que le
   //    serveur n'a aucun parcours de l'élève pour elle (jamais ouverte).
   // Le tout est rangé avec les jauges sous la clé CLE_ESPACE (une clé
@@ -1632,17 +1661,18 @@ try {
       return nom ? `↑ ${nom} réussi cette semaine` : "";
     }
     if (cle === "defi-calcul") {
-      // Les compétences devenues sues depuis lundi, lues par le moteur
-      // (resumeProf : le jour où chacune est devenue sue).
+      // Lot K1 (choix de Gwenaël, 25/11, planche K1-4) : les ÉTOILES gagnées
+      // depuis lundi (resumeProf : le jour où chacune a été gagnée la
+      // première fois) — « ↑ +3 étoiles cette semaine ».
       const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
       if (!CORE || typeof P.resumeProf !== "function") return "";
       const lundi = lundiDeJour(aujourdhui);
       const resume = P.resumeProf(brut, CORE.carte(), aujourdhui);
       let n = 0;
-      (resume.modules || []).forEach(m => (m.sues || []).forEach(jour => {
+      (resume.modules || []).forEach(m => (m.entrees || []).forEach(jour => {
         if (typeof jour === "string" && jour >= lundi && jour <= aujourdhui) n += 1;
       }));
-      return n ? `↑ +${n} cette semaine` : "";
+      return n ? `↑ +${n} étoile${n > 1 ? "s" : ""} cette semaine` : "";
     }
     return "";
   }
@@ -1758,11 +1788,12 @@ try {
     }
     const CORE = window.MATHSGO_DEFI_CALCUL_CORE;
     if (cle === "defi-calcul" && jauge.ceinture && CORE && typeof CORE.elementCeinture === "function") {
-      const n = Math.max(0, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 0)));
-      const barrettes = Math.max(0, Math.min(3, Math.floor(Number(jauge.ceinture.barrettes) || 0)));
+      // Lot K1 : la ceinture de l'étage en cours, remplie quart par quart.
+      const n = Math.max(1, Math.min(4, Math.floor(Number(jauge.ceinture.n) || 1)));
+      const rempli = Math.max(0, Math.min(1, Number(jauge.ceinture.rempli) || 0));
       const ceinture = CORE.CEINTURES && CORE.CEINTURES[n];
-      if ((!n && !barrettes) || !ceinture) return null;
-      insigne.append(CORE.elementCeinture(document, n, {barrettes, taille: 22}), document.createTextNode(ceinture.court));
+      if (!ceinture) return null;
+      insigne.append(CORE.elementCeinture(document, n, {rempli, taille: 22}), document.createTextNode(ceinture.court));
       insigne.setAttribute("aria-label", ceinture.nom);
       return insigne;
     }
@@ -1804,7 +1835,8 @@ try {
     }
     if (cle === "flash-anzan") { ligne.textContent = jauge.colonne ? `Colonne : ${texteCourt(jauge.colonne)}` : texteCourt(jauge.texte); return ligne; }
     if (cle === "defi-calcul" && jauge.fait) {
-      ligne.textContent = `${jauge.fait} compétence${jauge.fait > 1 ? "s" : ""} sue${jauge.fait > 1 ? "s" : ""} sur ${jauge.total}`;
+      // (Lot K1 : les étoiles de l'étage en cours, comme sur l'accueil de l'appli.)
+      ligne.textContent = `${jauge.fait} étoile${jauge.fait > 1 ? "s" : ""} sur ${jauge.total}`;
       return ligne;
     }
     if (cle === "splat" && jauge.fait) {

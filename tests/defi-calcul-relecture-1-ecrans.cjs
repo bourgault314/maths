@@ -206,7 +206,10 @@ function outilFini([cle, outil, sansReponse]) {
     await essai(`perles ${taille.join("x")} : un vrai entraînement, le boulier ne donne pas la réponse`, async () => {
       // A1-2 (sommes jusqu'à 20) : le boulier à chaque calcul où il est montré.
       const {page, contexte, erreurs} = await ouvrir(navigateur, base, taille, "&prof=1&module=A1&niveau=2");
-      await page.locator("button:visible", {hasText: "Je m’entraîne"}).first().click();
+      // (Lot K1 : « Je m'entraîne » de Mon module est parti ; « Je
+      // m'entraîne encore » commence au dessin. Le boulier d'un vrai
+      // entraînement, c'est la pratique de J'apprends, qui commence aux perles.)
+      await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.reprendre("A1", 2, 0));
       await page.waitForTimeout(700);
       let vus = 0;
       for (let i = 0; i < 4; i += 1) {
@@ -375,13 +378,10 @@ function outilFini([cle, outil, sansReponse]) {
     await contexte.close();
   });
 
-  await essai("boutons et pastilles 390x664 : bord de 2 px, chiffre centré", async () => {
-    const {page, contexte, erreurs} = await ouvrir(navigateur, base, [390, 664], "&prof=1&module=M1");
-    await page.locator(".dc-niveaux button").nth(1).click();
-    await page.waitForTimeout(200);
-    const bords = await page.evaluate(() => [...document.querySelectorAll(".dc-niveaux button")].map(b => `${b.className}:${getComputedStyle(b).borderTopWidth}`));
-    assert.ok(bords.length >= 2 && bords.some(b => b.startsWith("ici")), `un niveau choisi (${bords})`);
-    bords.forEach(b => assert.match(b, /:2px$/, `même bord pour tous (${b})`));
+  await essai("le fil de J'apprends 390x664 : le temps nommé, sans pastilles (lot K1)", async () => {
+    // (Lot K1 : les boutons de niveau de « Mon module » sont partis avec lui ;
+    // reste la ligne des temps de J'apprends.)
+    const {page, contexte, erreurs} = await ouvrir(navigateur, base, [390, 664], "&prof=1&module=M1&niveau=2");
     // (Lot 3a : M1-1 commence par le boulier ; M1-2, par le schéma.)
     await page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.apprendre("M1", 2));
     await page.waitForTimeout(300);
@@ -389,9 +389,8 @@ function outilFini([cle, outil, sansReponse]) {
     // se nomme au-dessus de la barre.
     assert.equal(await page.locator("#seance-fil li").count(), 0, "plus de pastilles des temps");
     assert.equal((await page.textContent("#seance-fil b")).trim(), "Je représente");
-    const pastilles = await page.evaluate(() => [...document.querySelectorAll(".seance-fil:not([hidden]) li")].map(li => getComputedStyle(li).textBoxTrim));
-    assert.ok(pastilles.length >= 3, "des pastilles");
-    pastilles.forEach(t => assert.equal(t, "trim-both", "la boîte du chiffre est rognée à sa hauteur"));
+    // (Lot K1 : plus de pastilles numérotées sur le fil de la séance non plus.)
+    assert.equal(await page.locator(".seance-fil:not([hidden]) li").count(), 0, "plus de pastilles");
     assert.deepEqual(erreurs, []);
     await contexte.close();
   });

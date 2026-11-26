@@ -170,26 +170,31 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
 // Lot 4 « les ceintures » (14/11/2026) : la ceinture devant le compte, et le
 // compte sur ce que l'appli propose (les modules construits, 95), jusqu'au
 // palier réglé pour l'élève — plus sur les 125 de la carte.
-test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture … · N compétences sues sur 132 » dès la première", () => {
+test("Mon espace : la tuile Défi calcul charge le noyau puis le moteur, et dit « Ceinture jaune · N étoiles sur 44 » dès la première (lot K1)", () => {
   const JAUGES = new Function("window", `${constante("JAUGES", espace)}\nreturn JAUGES;`.replace(/<\?= .*? \?>/g, "x"))({MATHSGO_DEFI_CALCUL_CORE: CALCUL_CORE});
   const jauge = JAUGES["defi-calcul"];
   assert.deepEqual(jauge.avant, {url: "prof/defi_calcul_core.js?v=x", global: "MATHSGO_DEFI_CALCUL_CORE"});
   assert.equal(jauge.url, "prof/defi_calcul_mon_parcours.js?v=x");
   assert.equal(jauge.global, "MATHSGO_DEFI_CALCUL_MON_PARCOURS");
   assert.equal(jauge.lecteur(CALCUL, null), null, "rien reçu : pas de jauge");
-  const p = CALCUL.creerParcours();
-  p.modules.A2 = {vu: JOUR, ok: null, b: [2, 0, 0, 0], e: ["2026-11-28", null, null, null], a: [1, 0, 0, 0], f: [1, 0, 0, 0], x: [0, 0, 0, 0], t: [0, 0, 0, 0], c: {}};
-  assert.equal(jauge.lecteur(CALCUL, p), null, "en route mais rien de su : pas de jauge (une barre vide ressemble à un reproche)");
-  p.modules.A2.b = [4, 5, 0, 0];
-  p.modules.A2.e = ["2026-12-04", "2026-12-11", null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 2, total: 132, compte: "Ceinture blanche · 2 compétences sues sur 132", ceinture: {n: 0, barrettes: 0}, bonus: ""},
-    "sur ce que l'appli propose (les 132 compétences construites, lot 6 « programmes 2 »)");
-  p.modules.A2.b = [4, 0, 0, 0];
-  assert.equal(jauge.lecteur(CALCUL, p).compte, "Ceinture blanche · 1 compétence sue sur 132");
-  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture blanche · 1 compétence sue sur 44", "jusqu’au palier réglé : les bases (lot C2 : 44)");
-  p.ceintures = ["2026-11-02", null, null, null];
-  assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, barrettes: 0});
-  assert.match(jauge.lecteur(CALCUL, p).compte, /^Ceinture jaune · /);
+  // Lot K1 : le compte est celui de l'accueil de l'appli (les étoiles de
+  // l'étage en cours) ; la ceinture de cet étage, remplie quart par quart.
+  const SIX = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  const carte = CALCUL_CORE.carte();
+  const gagner = (p, cles) => cles.reduce((q, k) => { const [m, n] = k.split("-"); const r = CALCUL.appliquerTentative(q, {module: m, niveau: Number(n), reponses: SIX}, {aujourdhui: JOUR, carte}); return r.refuse ? q : r.parcours; }, p);
+  let p = CALCUL.creerParcours();
+  assert.equal(jauge.lecteur(CALCUL, p), null, "aucune étoile : pas de jauge (une barre vide ressemble à un reproche)");
+  p = gagner(p, carte.ordre.slice(0, 1));
+  assert.deepEqual(jauge.lecteur(CALCUL, p), {fait: 1, total: 44, compte: "Ceinture jaune · 1 étoile sur 44", ceinture: {n: 1, rempli: 0}, bonus: ""});
+  p = gagner(p, carte.ordre.slice(1, 11));
+  assert.deepEqual(jauge.lecteur(CALCUL, p).ceinture, {n: 1, rempli: .25}, "11 étoiles sur 44 : un quart");
+  assert.equal(jauge.lecteur(CALCUL, p, {"defi-calcul": {palier: 1}}).compte, "Ceinture jaune · 11 étoiles sur 44", "jusqu’à l’étage réglé : les bases");
+  // Tout l'étage gagné : l'étage orange s'ouvre, sans étoile ; l'insigne montre la jaune, pleine.
+  const bases = CALCUL.carteEleve(p, carte, {aujourdhui: JOUR}).etages[0].lignes.flatMap(l => l.etoiles.map(e => e.cle));
+  p = gagner(p, carte.ordre.filter(k => bases.includes(k)));
+  const plein = jauge.lecteur(CALCUL, p);
+  assert.match(plein.compte, /^Ceinture orange · /);
+  assert.deepEqual(plein.ceinture, {n: 1, rempli: 1});
   assert.match(fonction("chargerMoteur", espace), /jauge\.avant \? chargerScript\(jauge\.avant\.url, jauge\.avant\.global\)/, "le script d'avant, puis le moteur");
   assert.match(fonction("chargerMoteur", espace), /prealable \? chargerScript\(jauge\.url, jauge\.global\) : null/, "sans le noyau, pas de moteur ni de jauge");
 });
@@ -243,8 +248,8 @@ test("exempleErreur : un calcul regénéré pour chacune des 175 causes des 45 m
 
 test("causePrincipale et ligneCause : la cause la plus fréquente du module, sommée sur les élèves, avec son exemple", () => {
   const o = outils([]);
-  const lea = CALCUL.resumeProf({modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"1": 4, "3": 1}}}}, CARTE, JOUR);
-  const tom = CALCUL.resumeProf({modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"3": 5}}}}, CARTE, JOUR);
+  const lea = CALCUL.resumeProf({version: CALCUL.VERSION, modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"1": 4, "3": 1}}}}, CARTE, JOUR);
+  const tom = CALCUL.resumeProf({version: CALCUL.VERSION, modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"3": 5}}}}, CARTE, JOUR);
   assert.deepEqual(o.causePrincipale([lea], "A5"), {cause: 1, n: 4});
   assert.deepEqual(o.causePrincipale([lea, tom], "A5"), {cause: 3, n: 6}, "la somme sur les deux");
   assert.equal(o.causePrincipale([lea], "M2"), null);
@@ -255,22 +260,23 @@ test("causePrincipale et ligneCause : la cause la plus fréquente du module, som
 });
 
 test("reprendreEnClasse : au moins 2 élèves, ou 1 mis de côté ; les plus partagées d'abord ; 6 au plus", () => {
-  const parcours = (b, x = [0, 0, 0, 0]) => ({modules: {A2: {b, e: [JOUR, JOUR, JOUR, JOUR], x, c: {"2": 1}}}});
+  // (Lot K1 « la carte chez l'élève » : « à revoir », c'est une étoile perdue
+  // — gagnée un jour, sortie des boîtes ; « à voir en classe », perdue 3 fois.)
+  const parcours = (b, pe = [0, 0, 0, 0]) => ({version: CALCUL.VERSION, modules: {A2: {b, e: [JOUR, JOUR, JOUR, JOUR], pe,
+    d: ["2026-10-01", "2026-10-01", "2026-10-01", null], c: {"2": 1}}}});
   const eleve = (id, p) => ({id, lu: CALCUL.resumeProf(p, CARTE, JOUR)});
-  // A2-3 rouge chez 3 élèves, A2-1 rouge chez 1, A2-2 mise de côté chez 1.
+  // A2-3 perdue chez 3 élèves, A2-1 perdue chez 1, A2-2 à voir en classe chez 1.
   const eleves = [
-    eleve(1, parcours([1, 0, 1, 0])), eleve(2, parcours([2, 0, 1, 0])), eleve(3, parcours([2, 0, 1, 0])),
-    eleve(4, parcours([2, 1, 2, 0], [0, 3, 0, 0])), eleve(5, {}), {id: 6, lu: CALCUL.resumeProf(null, CARTE, JOUR)}
+    eleve(1, parcours([0, 2, 0, 0], [1, 0, 1, 0])), eleve(2, parcours([2, 2, 0, 0], [0, 0, 1, 0])), eleve(3, parcours([2, 2, 0, 0], [0, 0, 2, 0])),
+    eleve(4, parcours([2, 0, 2, 0], [0, 3, 0, 0])), eleve(5, {}), {id: 6, lu: CALCUL.resumeProf(null, CARTE, JOUR)}
   ];
   const lignes = outils(eleves).reprendreEnClasse();
   assert.deepEqual(lignes.map(c => [`${c.module}-${c.niveau}`, c.eleves, c.classe]), [["A2-2", 1, 1], ["A2-3", 3, 0]],
     "la mise de côté d'abord, puis la plus partagée ; A2-1 (un seul élève, pas mis de côté) n'y entre pas");
   assert.equal(outils([]).reprendreEnClasse().length, 0);
   // Au-delà de six compétences partagées : six lignes.
-  const beaucoup = [1, 2].map(id => eleve(id, {modules: {
-    A2: {b: [1, 1, 1, 1], e: [JOUR, JOUR, JOUR, JOUR], x: [0, 0, 0, 0], c: {}},
-    A5: {b: [1, 1, 1, 1], e: [JOUR, JOUR, JOUR, JOUR], x: [0, 0, 0, 0], c: {}}
-  }}));
+  const perdu = {b: [0, 0, 0, 0], e: [null, null, null, null], pe: [1, 1, 1, 1], d: ["2026-10-01", "2026-10-01", "2026-10-01", "2026-10-01"], c: {}};
+  const beaucoup = [1, 2].map(id => eleve(id, {version: CALCUL.VERSION, modules: {A2: perdu, A5: perdu}}));
   assert.equal(outils(beaucoup).reprendreEnClasse().length, 6);
 });
 

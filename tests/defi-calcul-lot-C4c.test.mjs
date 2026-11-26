@@ -266,7 +266,8 @@ test("Mon module : après les perles, le vrai dessin de la leçon", async () => 
 // ---------------------------------------------------------------- les données
 test("les données ne changent pas : progression en version 11, clés des calculs, copie serveur, cache", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.match(parcours, /VERSION\s*=\s*11\b/, "la progression reste en version 11");
+  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12.)
+  assert.match(parcours, /VERSION\s*=\s*12\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1)");
   // Les clés des calculs imposés (relevées sur le main 67c92e0a) : les mêmes.
   const CLES = {
     "M2-2": ["M2-2-30-100", "M2-2-35-x-3500", "M2-2-480-q-10"],
@@ -285,7 +286,7 @@ test("les données ne changent pas : progression en version 11, clés des calcul
   TIRAGES["M2-2"].concat(TIRAGES["F5-1"]).forEach(c => assert.match(c.cle, /^(M2|F5)-\d-/));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-7/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
-  assert.match(await lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C4c$|^lot \S+$/m);
+  assert.match(await lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-K1-la-carte$|^lot \S+$/m);
 });

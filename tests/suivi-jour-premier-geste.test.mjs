@@ -142,18 +142,15 @@ test("Défi tables : sans séance en cours, rien ne change", () => {
 const CARTE = (() => { const c = DCORE.carte(); return {modules: c.modules.map(f => Object.assign({}, f, {construit: f.paliers.some(Boolean)})), ordre: c.ordre}; })();
 
 test("Défi calcul : une séance ouverte, pas finie, avec une étape faite compte son jour ; ouverte sans rien fait, non", () => {
-  let p = D.ouvrirSeance(sansTestDePalier(D.creerParcours()), CARTE, {aujourdhui: "2026-11-11", nouveautes: 1});
+  // (Lot K1 : l'étape, c'est l'étoile que « Continuer » propose, apprise.)
+  let p = D.ouvrirSeance(D.creerParcours(), CARTE, {aujourdhui: "2026-11-11", alea: 0.25});
   let r = D.resumeSuivi(p, {aujourdhui: JEUDI});
   assert.deepEqual(r.jours, [], "ouverte, rien de fait : pas un jour de travail");
-  const etape = D.fileSeance(p, CARTE, {aujourdhui: "2026-11-11"}).etapes[0];
-  assert.ok(etape, "la séance a une première étape");
-  if (etape.type === "test") {
-    p = D.appliquerTest(p, {module: etape.module, marche: 1, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
-  } else {
-    // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
-    const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
-    p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
-  }
+  const etape = D.continuer(p, CARTE, {aujourdhui: "2026-11-11"});
+  assert.equal(etape.type, "etoile", "la séance a une première étape");
+  const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
+  p = D.noterTemps(p, 120);
+  p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: "apprends", reponses}, {aujourdhui: "2026-11-11", carte: CARTE, seance: true}).parcours;
   assert.equal(D.normaliserParcours(p).seances.length, 0, "la séance n'est pas finie");
   r = D.resumeSuivi(p, {aujourdhui: JEUDI});
   assert.deepEqual(r.jours.map(j => j.jour), ["2026-11-11"]);
@@ -165,5 +162,5 @@ test("les moteurs de Défi tables et Défi calcul sont copiés octet pour octet 
   assert.equal(lire("../_serveur/public/prof/defi_tables_mon_parcours.js"), lire("../outils/calcul_mental/defi_tables_mon_parcours.js"));
   assert.equal(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
   assert.match(lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261122-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261126-1"/);
 });

@@ -209,15 +209,15 @@ test("SPLAT! : la ligne dit les étapes réussies pour la première fois ce jour
 
 test("Défi calcul : la dernière ligne d'un jour porte les modules avancés ce jour-là (codes, la page écrit le nom)", () => {
   const carte = DCORE.carte();
-  let p = D.ouvrirSeance(sansTestDePalier(D.creerParcours()), carte, {aujourdhui: MARDI});
-  for (let k = 0; k < 30; k += 1) {
-    const f = D.fileSeance(p, carte, {aujourdhui: MARDI});
-    if (!f.etapes.length) break;
-    const et = f.etapes[0];
-    if (et.type === "jour") p = D.terminerCalculsDuJour(p, {aujourdhui: MARDI, carte}).parcours;
-    else if (et.type === "test") p = D.appliquerTest(p, {module: et.module, marche: 1, niveaux: [{niveau: 1, justes: 2, total: 2}]}, {aujourdhui: MARDI, carte, seance: true}).parcours;
-    else p = D.appliquerSerie(p, {module: et.module, niveau: et.niveau, genre: et.type, reponses: Array(8).fill({juste: true, outil: "aucun"}), causes: {}}, {aujourdhui: MARDI, carte, seance: true}).parcours;
+  // (Lot K1 : deux étoiles de suite, celles que « Continuer » propose.)
+  let p = D.ouvrirSeance(D.creerParcours(), carte, {aujourdhui: MARDI, alea: 0.25});
+  for (let k = 0; k < 2; k += 1) {
+    const et = D.continuer(p, carte, {aujourdhui: MARDI});
+    if (et.type !== "etoile" || !D.seanceOuverte(p, MARDI)) break;
+    p = D.noterTemps(p, 200);
+    p = D.appliquerSerie(p, {module: et.module, niveau: et.niveau, genre: "apprends", reponses: Array(8).fill({juste: true, outil: "aucun"}), causes: {}}, {aujourdhui: MARDI, carte, seance: true}).parcours;
   }
+  if (D.seanceOuverte(p, MARDI)) p = D.fermerSeance(p, carte, {aujourdhui: MARDI, force: true}).parcours;
   const r = D.resumeSuivi(p, VENDREDI);
   const lignes = r.jours.find(j => j.jour === MARDI).lignes;
   assert.ok(Array.isArray(lignes[lignes.length - 1].modules) && lignes[lignes.length - 1].modules.length >= 1);
@@ -291,5 +291,5 @@ test("Copies du moteur dans prof/ : identiques octet pour octet ; cache-busters 
   assert.match(lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(lire("../outils/splat.html"), /splat-parcours\.js\?v=20261111-2"/);
   assert.match(lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261122-1"/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261122-1"/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261126-1"/);
 });

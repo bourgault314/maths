@@ -305,45 +305,7 @@ async function attendreQue(page, lire, essais = 40) {
       await s.ctx.close();
     });
 
-    await cas(`${f} : le test s'arrête au palier en cours (A2 : 3 marches) ; les bases finies, A2-4 et A2-5 ont leur test`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(c => c.module === "A2" && c.niveau === 1)});
-      await s.page.click("#acc-carte .go");
-      await pause(s.page, 800);
-      assert.equal(await appel(s.page, "genre"), "test");
-      const marches = await s.page.evaluate(() => document.querySelectorAll("#escalier .marche").length);
-      assert.equal(marches, 3, "trois marches : les bases seulement");
-      for (let i = 0; i < 20; i += 1) {
-        const c = await appel(s.page, "calcul");
-        if (!c || (await appel(s.page, "genre")) !== "test") break;
-        await taper(s.page, c.reponse);
-        await pause(s.page, 1600);
-      }
-      await pause(s.page, 600);
-      assert.equal(await texte(s.page, "#result-title"), "Niveaux 1 à 3 : déjà sus !");
-      assert.match(await texte(s.page, "#result-suite"), /plus tard/);
-      await photo(s.page, `${f}-palier-bilan`);
-      await tient(s.page, largeur, hauteur);
-      await s.ctx.close();
-
-      // Les bases finies : A2-4 vient, par un test (marches 4 et 5).
-      const r = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursAvant(c => P.palierDe(CARTE, c.module, c.niveau) > 1, ["2026-11-10", null, null, null])});
-      await r.page.click("#acc-carte .go");
-      await pause(r.page, 800);
-      assert.equal(await appel(r.page, "genre"), "test");
-      assert.deepEqual(await r.page.evaluate(() => [...document.querySelectorAll("#escalier .marche b")].map(b => b.textContent)), ["4", "5"]);
-      for (let i = 0; i < 20; i += 1) {
-        const c = await appel(r.page, "calcul");
-        if (!c || (await appel(r.page, "genre")) !== "test") break;
-        await taper(r.page, c.reponse);
-        await pause(r.page, 1600);
-      }
-      await pause(r.page, 600);
-      assert.equal(await texte(r.page, "#result-title"), "Niveaux 4 et 5 : déjà sus !");
-      assert.match(await texte(r.page, "#result-score"), /Tu connais déjà/);
-      await photo(r.page, `${f}-palier-reprise`);
-      assert.deepEqual([...s.erreurs, ...r.erreurs], []);
-      await r.ctx.close();
-    });
+    // (Lot K1 : le cas « le test s'arrête au palier en cours » est retiré : plus de test de module.)
   }
 
   await nav.close();

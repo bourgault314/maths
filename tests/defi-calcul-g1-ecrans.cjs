@@ -5,8 +5,16 @@
 //   PLAYWRIGHT_SKIP_BROWSER_GC=1 npm install --no-save playwright
 //   node tests/defi-calcul-g1-ecrans.cjs
 //
+// Lot K1 « la carte » (25/11/2026) : progression en version 12 (deux étoiles
+// gagnées la veille, qui reviennent aujourd'hui) ; « Commencer » ouvre la
+// séance ; l'accueil de ce lot (pastille, Mon parcours) est parti : son cas
+// est retiré (l'accueil K1 est dans defi-calcul-lot-K1-ecrans.cjs). Le
+// journal d'une séance FERMÉE est joué par la séance entière de ce fichier-là.
+//
 // Ce qui est vérifié :
-//   journal    une séance jouée sur la page (Mes calculs du jour, deux
+//   journal    (lot K1) Mes calculs du jour joués sur la page arrivent au
+//              serveur : 2 calculs, 2 justes, le temps de l'étape ;
+//   (avant K1) une séance jouée sur la page (Mes calculs du jour, deux
 //              justes, 20 s entre deux gestes) arrive au serveur avec son
 //              entrée de journal : 2 calculs, 2 justes, une minute au moins ;
 //              les deux compétences passées en boîte 4 ont leur date `s` ;
@@ -45,16 +53,16 @@ function servir() {
   return new Promise(fini => serveur.listen(0, "127.0.0.1", () => fini(serveur)));
 }
 
-// Léa a fait une séance mercredi (version 4 : sans journal), et l'entraînement
-// raté a arrêté les nouveautés pour aujourd'hui : « Encore une séance », ce
-// n'est que Mes calculs du jour — A2-1 et A2-2, en boîte 3, dus aujourd'hui.
-function parcoursDeDepart(jour = MERCREDI) {
-  return {
-    version: 4, epoque: 0, prenom: "",
-    modules: {A2: {vu: "2026-11-08", ok: null, b: [3, 3, 0, 0, 0], e: [jour, jour, null, null, null], a: [1, 1, 0, 0, 0], f: [1, 1, 0, 0, 0], x: [0, 0, 0, 0, 0], t: [0, 0, 0, 0, 0], c: {}}},
-    seance: {jour: MERCREDI, etape: 0, n: 1, p: [0, 0, 0, 0, 3, 0, 0]},
-    seances: [MERCREDI], jours: [MERCREDI]
-  };
+// Léa a gagné deux étoiles mardi (« Je tente ») : elles reviennent
+// aujourd'hui, Mes calculs du jour en a deux (lot K1 : version 12).
+const P12 = require(path.join(RACINE, "outils/calcul_mental/defi_calcul_mon_parcours.js"));
+const CARTE12 = require(path.join(RACINE, "outils/calcul_mental/defi_calcul_core.js")).carte();
+function parcoursDeDepart() {
+  const six = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+  return CARTE12.ordre.slice(0, 2).reduce((p, cle) => {
+    const [m, n] = cle.split("-");
+    return P12.appliquerTentative(p, {module: m, niveau: Number(n), reponses: six}, {aujourdhui: P12.ajouterJours(MERCREDI, -1), carte: CARTE12}).parcours;
+  }, P12.creerParcours());
 }
 
 async function ouvrir(nav, base, {largeur = 390, hauteur = 844, jour = MERCREDI, parcours = parcoursDeDepart(), plein = false} = {}) {
@@ -84,7 +92,7 @@ async function ouvrir(nav, base, {largeur = 390, hauteur = 844, jour = MERCREDI,
     return rendre({ok: true, revision: serveur.revision});
   });
   await page.goto(base + PAGE);
-  await page.waitForSelector("#acc-carte", {state: "visible"});
+  await page.waitForSelector("#acc-commencer", {state: "visible"});
   await page.waitForTimeout(500);
   if (plein) {
     await page.click("[data-fullscreen-toggle]");
@@ -107,11 +115,10 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   const cas = async (nom, fn) => {
     try { await fn(); console.log(`ok      ${nom}`); } catch (e) { echecs += 1; console.log(`ÉCHEC   ${nom} : ${e.message}`); }
   };
-  let apresSeance = null;
 
-  await cas("journal : une séance jouée sur la page arrive au serveur avec son entrée", async () => {
+  await cas("journal : Mes calculs du jour joués sur la page arrivent au serveur, avec leur temps", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     // Attendre que la série ait démarré : sinon calcul() rend null et la boucle
     // sort sans rien jouer (course vue par Code, aussi sur main).
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 8000});
@@ -125,54 +132,27 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
       await s.page.evaluate(() => { window.__decalage += 20000; });
       await s.page.waitForTimeout(1300);
     }
-    await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seances.length === 2, null, {timeout: 8000});
+    await s.page.waitForSelector("#result button.arreter", {state: "visible", timeout: 8000});
     const p = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours());
-    assert.equal(p.version, 11, "version 11 depuis le lot C2 (10 au lot F4, 9 au lot 6 « programmes 2 », 8 au lot 4 « les ceintures », 7 au lot 1 « la séance », 6 au correctif S1 : le numéro des séances)");
-    assert.deepEqual(p.seances, [MERCREDI, MERCREDI]);
-    assert.equal(p.journal.numero[0], -1, "la séance d'avant le journal : pas de numéro");
-    assert.equal(Math.floor(p.journal.numero[1] / 10000), 2, "la séance jouée : la 2e de la journée");
-    assert.deepEqual([p.journal.calculs, p.journal.justes, p.journal.nouveautes, p.journal.prouvees, p.journal.rouges], [[-1, 2], [-1, 2], [-1, 0], [-1, 0], [-1, 0]]);
-    assert.equal(p.journal.minutes[0], -1, "la séance d'avant le journal : pas connue");
-    assert.ok(p.journal.minutes[1] >= 1, `durée : ${p.journal.minutes[1]} min`);
-    assert.deepEqual(p.modules.A2.b.slice(0, 2), [4, 4]);
-    assert.deepEqual(p.modules.A2.s.slice(0, 2), [MERCREDI, MERCREDI], "sues aujourd'hui");
-    assert.deepEqual(p.seance.j, [0, 0, 0, 0, 0, 0]);
+    assert.equal(p.version, 12, "version 12 depuis le lot K1 « la carte »");
+    assert.equal(p.seance.p[0], 1, "la séance reste ouverte (elle continue sur la carte)");
+    assert.deepEqual(p.seance.j.slice(0, 2), [2, 2], "2 calculs, 2 justes");
+    assert.ok(p.seance.j[4] >= 40, `le temps de l'étape (${p.seance.j[4]} s)`);
     await s.page.waitForTimeout(1500);
     const envoye = s.serveur.envois[s.serveur.envois.length - 1];
-    assert.ok(envoye && envoye.journal && envoye.journal.calculs[1] === 2, "le journal est parti au serveur");
-    apresSeance = envoye;
+    assert.ok(envoye && envoye.seance.j[0] === 2 && envoye.seance.j[4] === p.seance.j[4], "c'est parti au serveur");
     assert.deepEqual(s.erreurs, []);
     await s.ctx.close();
   });
 
   // Lot « accueil » (07/11/2026) : l'accueil refait lit la semaine du moteur.
-  await cas("accueil : la pastille des jours, les gains sur la porte et dans Mon parcours, « ↑ cette semaine »", async () => {
-    assert.ok(apresSeance, "la séance a été jouée");
-    for (const [largeur, hauteur] of [[390, 844], [1366, 657]]) {
-      const s = await ouvrir(nav, base, {parcours: apresSeance, largeur, hauteur});
-      const attendu = await s.page.evaluate(() => {
-        const P = window.MATHSGO_DEFI_CALCUL_MON_PARCOURS;
-        const sem = P.semaineEleve(window.__MATHSGO_DEFI_CALCUL_TEST__.parcours(), window.MATHSGO_DEFI_CALCUL_CORE.carte(), P.jourLocal());
-        return {soirs: sem.soirs, sues: sem.sues};
-      });
-      assert.ok(attendu.soirs >= 1 && attendu.sues >= 2, JSON.stringify(attendu));
-      assert.equal(await texte(s.page, "#acc-soirs"), `✓${attendu.soirs} jour${attendu.soirs > 1 ? "s" : ""} cette semaine` /* relecture 2 : « jours » */);
-      assert.ok((await texte(s.page, "#acc-porte-note")).endsWith(` · +${attendu.sues} cette semaine`));
-      assert.equal(await s.page.locator("#acc-semaine").count(), 0, "plus de ligne « N fois cette semaine »");
-      const cadre = await boite(s.page, ".panel");
-      if (largeur > 620) assert.ok(cadre.bas <= hauteur, `cadre entier (${Math.round(cadre.bas)} pour ${hauteur})`);
-      await s.page.click("#acc-porte");
-      await s.page.waitForTimeout(300);
-      assert.equal(await texte(s.page, "#parcours-gains"), `+${attendu.sues} cette semaine`);
-      assert.ok(await s.page.locator('#parcours-modules .dc-mod[data-module="A2"] small b.monte').count() >= 1, "A2 a avancé cette semaine");
-      assert.deepEqual(s.erreurs, []);
-      await s.ctx.close();
-    }
-  });
+  // (Lot K1 : le cas « accueil » — pastille, gains sur la porte et dans Mon
+  // parcours — est retiré avec ces écrans.)
+
 
   await cas("arrêter au milieu : le temps de l'étape compte quand même", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
     await s.page.evaluate(() => { window.__decalage += 30000; });
@@ -200,7 +180,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("recharger au milieu d'une étape : le temps est gardé, dans l'appareil et au serveur", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     // 40 s de réflexion, puis la réponse au 1er calcul.
     await s.page.evaluate(() => { window.__decalage += 40000; });
@@ -208,7 +188,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     await s.page.waitForTimeout(300);
     assert.equal((await lireJ(s.page))[4], 0, "rien n'est encore versé : l'étape n'est pas finie");
     await s.page.reload();
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
     await s.page.waitForTimeout(800);
     const j = await lireJ(s.page);
     assert.equal(j[0], 1, "le calcul fait est là, la séance toujours ouverte");
@@ -221,11 +201,9 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   });
 
   await cas("« Arrêter la séance » sur un bilan : le temps passé sur le bilan compte", async () => {
-    // Une séance à deux étapes : Mes calculs du jour, puis une nouveauté.
-    const depart = parcoursDeDepart();
-    depart.seance.p = [0, 0, 0, 0, 0, 0, 0];
-    const s = await ouvrir(nav, base, {parcours: depart});
-    await s.page.click("#acc-carte");
+    // Une séance : Mes calculs du jour, puis la carte (lot K1).
+    const s = await ouvrir(nav, base);
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     for (let i = 0; i < 6; i += 1) {
       if (!(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul()))) break;
@@ -241,7 +219,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     await s.page.evaluate(() => { window.__decalage += 50000; });
     const envois = s.serveur.envois.length;
     await s.page.click("#result button.arreter");
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
     const apres = await lireJ(s.page);
     assert.ok(apres[4] - avant[4] >= 50 && apres[4] - avant[4] < 55, `le bilan compte (+${apres[4] - avant[4]} s)`);
     await s.page.waitForTimeout(1500);
@@ -252,7 +230,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("onglet caché puis page fermée : le temps compte une fois ; caché, il ne compte pas", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     const visibilite = etat => s.page.evaluate(v => {
       Object.defineProperty(document, "visibilityState", {configurable: true, get: () => v});
@@ -287,5 +265,5 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   await nav.close();
   serveur.close();
   if (echecs) { console.log(`${echecs} échec(s).`); process.exit(1); }
-  console.log("Défi calcul, lot G1 : journal et accueil conformes au navigateur.");
+  console.log("Défi calcul, lot G1 (refait au lot K1) : le temps de la séance est conforme au navigateur.");
 })();

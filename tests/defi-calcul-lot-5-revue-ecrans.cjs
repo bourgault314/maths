@@ -50,28 +50,21 @@ function servir() {
   return new Promise(fini => serveur.listen(0, "127.0.0.1", () => fini(serveur)));
 }
 
-const COMPETENCES = P.parcoursConstruit(CARTE).map(c => Object.assign(c, {palier: P.palierDe(CARTE, c.module, c.niveau)}));
-function parcoursOu(regle, ceintures = [null, null, null, null]) {
-  const brut = {version: P.VERSION, modules: {}, ceintures, jours: ["2026-11-10", "2026-11-11", "2026-11-12"], seances: ["2026-11-10", "2026-11-11", "2026-11-12"]};
-  const rangs = {};
-  COMPETENCES.forEach(c => {
-    rangs[c.palier] = (rangs[c.palier] || 0) + 1;
-    const k = P.NIVEAUX[c.module];
-    const m = brut.modules[c.module] || (brut.modules[c.module] = {vu: "2026-11-12", b: Array(k).fill(0), e: Array(k).fill(null), d: Array(k).fill(null), s: Array(k).fill(null), a: Array(k).fill(0)});
-    const r = regle(c, rangs[c.palier]);
-    if (!r || !r.b) return;
-    m.b[c.niveau - 1] = r.b;
-    m.e[c.niveau - 1] = r.e || "2026-11-20";
-    m.d[c.niveau - 1] = "2026-10-20";
-    m.s[c.niveau - 1] = r.s === undefined ? (r.b >= 4 ? "2026-10-28" : null) : r.s;
-    m.a[c.niveau - 1] = 1;
-  });
-  Object.values(brut.modules).forEach(m => { if (m.b.every(b => b >= 4)) m.ok = "2026-11-01"; });
-  return P.normaliserParcours(brut);
+// Lot K1 « la carte » (25/11/2026) : progressions en version 12, jouées par
+// le vrai moteur. NOAH : les bases gagnées il y a longtemps (le CM1 ouvert) ;
+// MAYA : six étoiles gagnées hier, qui reviennent aujourd'hui ; LEA : deux
+// étoiles gagnées hier, que ses calculs du jour font partir.
+const SIX = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
+function gagner(p, cles, jour) {
+  return cles.reduce((q, k) => { const [m, n] = k.split("-"); const r = P.appliquerTentative(q, {module: m, niveau: Number(n), reponses: SIX}, {aujourdhui: jour, carte: CARTE}); return r.refuse ? q : r.parcours; }, p);
 }
-// Noah : la jaune, le CM1 en route. Maya : 6 compétences des bases reviennent aujourd'hui.
-const NOAH = () => parcoursOu((c, r) => (c.palier === 1 ? {b: 5} : c.palier === 2 && r <= 13 ? {b: 4} : c.palier === 2 && r <= 18 ? {b: 2} : null), ["2026-11-06", null, null, null]);
-const MAYA = () => parcoursOu((c, r) => (c.palier === 1 && r <= 6 ? {b: 2, e: JOUR, s: null} : c.palier === 1 && r <= 20 ? {b: 3, s: null} : null));
+function NOAH() {
+  const p = P.creerParcours();
+  const bases = P.carteEleve(p, CARTE, {aujourdhui: JOUR}).etages[0].lignes.flatMap(l => l.etoiles.map(e => e.cle));
+  return gagner(p, CARTE.ordre.filter(k => bases.includes(k)), P.ajouterJours(JOUR, -30));
+}
+const MAYA = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 6), P.ajouterJours(JOUR, -1));
+const LEA = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 2), P.ajouterJours(JOUR, -1));
 
 async function ouvrir(nav, base, {largeur, hauteur, parcours, connecte = true}) {
   const options = {viewport: {width: largeur, height: hauteur}, deviceScaleFactor: 1, hasTouch: largeur <= 620, timezoneId: "Indian/Reunion", locale: "fr-FR"};
@@ -149,27 +142,23 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
   for (const [largeur, hauteur] of FORMATS) {
     for (const connecte of [true, false]) {
       const qui = connecte ? "élève" : "visiteur";
-      await cas(`${largeur}x${hauteur} ${qui} : l'accueil, Mon parcours (4 paliers), « Comment ça marche ? »`, async () => {
+      await cas(`${largeur}x${hauteur} ${qui} : l'accueil, la carte (4 étages), « Comment ça marche ? » (lot K1)`, async () => {
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: NOAH(), connecte});
         await tient(s.page, largeur, hauteur);
         await photo(s.page, `${largeur}x${hauteur}-${qui}-accueil`);
         await s.page.click("#acc-porte");
         await pause(s.page);
-        if (connecte) assert.equal(await ligneSous(s.page, "ecran-parcours"), true, "la ligne de suivi sous « ← Mon parcours »");
-        const titres = [];
-        const releves = [];
-        for (const n of [1, 2, 3, 4]) {
-          await s.page.click(`#parcours-paliers button:nth-child(${n})`);
+        if (connecte) assert.equal(await ligneSous(s.page, "ecran-carte"), true, "la ligne de suivi sous « ← Accueil · La carte »");
+        const onglets = await s.page.locator("#carte-etages > *").count();
+        assert.equal(onglets, 4, "4 étages");
+        for (let n = 1; n <= onglets; n += 1) {
+          await s.page.locator(`#carte-etages > :nth-child(${n})`).click();
           await pause(s.page, 200);
-          titres.push(await texte(s.page, "#parcours-titre"));
-          assert.equal(await lignes(s.page, "#parcours-titre"), 1, `le titre du palier ${n} tient sur une ligne`);
-          releves.push(JSON.stringify([(await boite(s.page, "#parcours-ceinture")).haut, (await boite(s.page, "#parcours-modules")).haut]));
+          assert.equal(await lignes(s.page, "#carte-porteur .txt b"), 1, `le nom de la ceinture ${n} tient sur une ligne`);
           await tient(s.page, largeur, hauteur);
-          await photo(s.page, `${largeur}x${hauteur}-${qui}-parcours-${n}`);
+          await photo(s.page, `${largeur}x${hauteur}-${qui}-carte-${n}`);
         }
-        assert.deepEqual(titres, ["Palier 1 · Les bases (CP · CE1 · CE2)", "Palier 2 · Le CM1", "Palier 3 · Le CM2", "Palier 4 · Vers la 6e"]);
-        assert.equal(new Set(releves).size, 1, `d'un palier à l'autre, la liste ne bouge pas : ${releves.join(" / ")}`);
-        await s.page.click("#parcours-back");
+        await s.page.click("#carte-back");
         await pause(s.page);
         await s.page.click("#acc-notice-bouton");
         await pause(s.page);
@@ -183,26 +172,23 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
   }
 
   for (const [largeur, hauteur] of [[390, 664], [390, 844], [1366, 657]]) {
-    await cas(`${largeur}x${hauteur} : le bilan de Mes calculs du jour (au téléphone, ce qui arrive sous le nom)`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: MAYA()});
-      await s.page.click("#acc-carte .go");
+    // (Lot K1 : le bilan ne liste plus chaque calcul ; il dit les étoiles parties, planche K1-4.)
+    await cas(`${largeur}x${hauteur} : le bilan de Mes calculs du jour — deux étoiles parties, leurs boutons (lot K1)`, async () => {
+      const s = await ouvrir(nav, base, {largeur, hauteur, parcours: LEA()});
+      await s.page.click("#acc-commencer");
       await pause(s.page, 600);
       for (let i = 0; i < 25; i += 1) {
         const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
         if (!c) break;
-        for (const signe of String(c.reponse).replace(".", ",")) await s.page.click(`#play [data-key="${signe}"]`);
+        for (const signe of String(c.reponse + 1).replace(".", ",")) await s.page.click(`#play [data-key="${signe}"]`);
         await s.page.click("#validate");
         await pause(s.page, 1500);
+        if (await s.page.evaluate(() => !document.getElementById("play").hidden && document.getElementById("validate").textContent.trim() === "Suivant")) { await s.page.click("#validate"); await pause(s.page, 600); }
       }
       await pause(s.page, 600);
-      assert.equal(await texte(s.page, "#result-title"), "Mes calculs du jour");
-      const positions = await s.page.evaluate(() => [...document.querySelectorAll("#result-suite .mouv > span")].map(ligne => {
-        const [nom, suite] = [...ligne.children].map(e => e.getBoundingClientRect());
-        return {dessous: suite.top >= nom.bottom - 1, aCote: Math.abs(suite.top - nom.top) < 4 && suite.left >= nom.right - 1};
-      }));
-      assert.equal(positions.length, 6, "les 6 compétences du jour");
-      if (largeur <= 620) assert.ok(positions.every(p => p.dessous), "au téléphone : sous le nom");
-      else assert.ok(positions.every(p => p.aCote), "à l'ordinateur : à côté");
+      assert.equal(await texte(s.page, "#result-title"), "Tes calculs du jour sont faits.");
+      assert.equal(await s.page.locator("#result-suite .ck-ligne-partie").count(), 2, "deux étoiles parties");
+      assert.equal(await s.page.locator("#result-suite .ck-ligne-partie button").count(), 4, "« Je tente » · « J’apprends » pour chacune");
       await tient(s.page, largeur, hauteur);
       await photo(s.page, `${largeur}x${hauteur}-bilan-du-jour`);
       assert.deepEqual(s.erreurs, []);
@@ -212,14 +198,17 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
 
   await cas("1366x657 : réponses tapées au clavier — le calcul a le focus, sans trait autour", async () => {
     const s = await ouvrir(nav, base, {largeur: 1366, hauteur: 657, parcours: MAYA()});
-    await s.page.click("#acc-carte .go");
+    await s.page.click("#acc-commencer");
     await pause(s.page, 600);
     for (let i = 0; i < 2; i += 1) {
+      // (Lot C3 : un exemple résolu se passe par Entrée — son bouton « À toi → » a le focus.)
+      for (let k = 0; k < 3 && (await s.page.evaluate(() => (window.__MATHSGO_DEFI_CALCUL_TEST__.exempleAffiche() || {}).exemple)); k += 1) { await s.page.keyboard.press("Enter"); await pause(s.page, 600); }
       const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
       await s.page.keyboard.type(String(c.reponse).replace(".", ","));
       await s.page.keyboard.press("Enter");
       await pause(s.page, 1600);
     }
+    for (let k = 0; k < 3 && (await s.page.evaluate(() => (window.__MATHSGO_DEFI_CALCUL_TEST__.exempleAffiche() || {}).exemple)); k += 1) { await s.page.keyboard.press("Enter"); await pause(s.page, 600); }
     const focus = await s.page.evaluate(() => { const a = document.activeElement; return {id: a.id, trait: getComputedStyle(a).outlineStyle}; });
     assert.deepEqual(focus, {id: "expression", trait: "none"});
     await photo(s.page, "1366x657-clavier");

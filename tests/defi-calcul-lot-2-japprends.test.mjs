@@ -29,66 +29,6 @@ const tester = (p, module, marche) => P.appliquerTest(p, {module, marche,
   niveaux: Array.from({length: Math.min(P.NIVEAUX[module], marche + 1)}, (_, i) => ({niveau: i + 1, justes: i < marche ? 3 : 1, total: 3}))},
   {aujourdhui: J, carte: CARTE, seance: true});
 
-test("la file : J'apprends est UNE étape, « Je m'entraîne » n'y vient plus ; 4 minutes", () => {
-  let p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
-  assert.deepEqual(types(p), ["apprends", "avance"]);
-  assert.deepEqual(P.fileSeance(p, CARTE, {aujourdhui: J}).etapes[0], {type: "apprends", module: "A1", niveau: 2});
-  // (Lot F4 : le test de palier, et le temps d'un début de J'apprends
-  // qu'un test pas garanti demande en plus.)
-  assert.deepEqual(Object.keys(P.SEUILS.seance.durees), ["test", "apprends", "rattrape", "palier", "apresTest"]);
-  assert.equal(P.SEUILS.seance.durees.apprends, 240);
-  // Une vieille progression où J'apprends était fait sans l'entraînement : J'apprends, en entier.
-  p.modules.A1.a[1] = 1;
-  assert.deepEqual(types(p), ["apprends", "avance"]);
-});
-
-test("J'apprends réussi : la compétence entre en boîte 2, J'apprends est fait, un apprentissage commencé", () => {
-  const p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
-  const r = apprendre(p, "A1", 2);
-  assert.equal(r.verdict.reussi, true);
-  assert.deepEqual(r.evenements, [{type: "entree", module: "A1", niveau: 2, boite: 2}]);
-  assert.equal(r.parcours.modules.A1.b[1], 2);
-  assert.equal(r.parcours.modules.A1.a[1], 1);
-  assert.equal(r.parcours.modules.A1.f[1], p.modules.A1.f[1] + 1, "une série jouée");
-  assert.equal(r.parcours.seance.p[P.PLAN.commences], 1);
-  assert.equal(r.parcours.seance.j[5], 1, "une nouveauté au journal de la séance");
-});
-
-test("J'apprends arrêté (25 calculs) : rien n'entre, rien de nouveau aujourd'hui, demain J'apprends reprend (lot F4)", () => {
-  const p = tester(P.ouvrirSeance(sansTestDePalier(P.creerParcours()), CARTE, {aujourdhui: J}), "A1", 1).parcours;
-  const r = apprendre(p, "A1", 2, ratee());
-  assert.equal(r.verdict.reussi, false);
-  assert.equal(r.parcours.modules.A1.b[1], 0);
-  assert.equal(r.parcours.modules.A1.a[1], 0);
-  assert.equal(r.finie, true);
-  assert.deepEqual(types(r.parcours), []);
-  const demain = P.fileSeance(r.parcours, CARTE, {aujourdhui: P.ajouterJours(J, 1)}).etapes.filter(e => e.type === "apprends");
-  // Lot F4 : il reprend où il en était (sans aide), pas à « On te montre ».
-  assert.deepEqual(demain[0], {type: "apprends", module: "A1", niveau: 2, depart: 2});
-});
-
-test("une compétence à revoir ratée deux fois de suite : J'apprends seul (plus de « Je m'entraîne encore » derrière), sa boîte ne bouge pas", () => {
-  let p = P.normaliserParcours({modules: {A1: {vu: J, b: [3, 0, 0], e: [J, null, null], a: [1, 0, 0], f: [1, 0, 0], x: [1, 0, 0]}}});
-  p = P.ouvrirSeance(p, CARTE, {aujourdhui: J});
-  p = P.appliquerRetour(p, {module: "A1", niveau: 1, juste: false, ms: 2000, type: "F"}, {aujourdhui: J}).parcours;
-  p = P.appliquerRetour(p, {module: "A1", niveau: 1, juste: false, ms: 2000, type: "F"}, {aujourdhui: J, deuxieme: true}).parcours;
-  p = P.terminerCalculsDuJour(p, {aujourdhui: J, carte: CARTE}).parcours;
-  assert.equal(p.modules.A1.a[0], 0, "ratée deux fois de suite : J'apprends à refaire");
-  const etapes = P.fileSeance(p, CARTE, {aujourdhui: J}).etapes;
-  assert.deepEqual(etapes[0], {type: "apprends", module: "A1", niveau: 1});
-  assert.ok(!etapes.some(e => e.type === "rattrape"), "pas de « Je m'entraîne encore » en plus");
-  const boite = p.modules.A1.b[0];
-  const r = apprendre(p, "A1", 1);
-  assert.equal(r.parcours.modules.A1.b[0], boite, "c'est son rattrapage : la boîte ne bouge pas");
-  assert.equal(r.parcours.modules.A1.a[0], 1);
-  assert.equal(r.parcours.modules.A1.t[0], 1, "entraînée aujourd'hui");
-  assert.deepEqual(r.evenements, []);
-  assert.equal(r.parcours.seance.p[P.PLAN.rattrapage], 0, "plus de rouge à entraîner");
-  // Ratée : pas d'arrêt de la séance (c'était un rattrapage).
-  const rate = apprendre(p, "A1", 1, ratee());
-  assert.equal(rate.parcours.seance.p[P.PLAN.nouveaute], P.NOUVEAUTE.aFaire);
-});
-
 // (Lot 7e-2 : « Différences et trous jusqu'à 20 » et « Compléments à la
 // dizaine » deviennent des procédures, puis « Compléments à 100 : dizaines » — 12 cartes.)
 // (Lot 7b : « Moitié des impairs jusqu'à 15 » — 13 cartes.)
@@ -175,7 +115,8 @@ test("la page : on te montre (le 1er temps de la leçon), puis la série « appr
 test("la page : J'apprends réussi — « ✓ Réussi ! » et À retenir sur un seul écran ; la carte « par cœur »", () => {
   assert.match(PAGE, /<p id="retenir-reussi" class="dc-reussi" hidden><\/p>\s*<div id="result-retenir" class="dc-retenir" hidden>/);
   assert.match(PAGE, /fort\.textContent = soude\("✓ Réussi !"\);/);
-  assert.match(PAGE, /\{reussi: entree \? `\$\{nomCompetence\(serie\.module, serie\.niveau\)\} revient demain\.` : "", finDeSeance: fin\}/);
+  // (Lot K1 : J'apprends réussi donne l'étoile ; elle revient toujours demain.)
+  assert.match(PAGE, /\{reussi: `\$\{nomCompetence\(serie\.module, serie\.niveau\)\} revient demain\.`, finDeSeance: fin\}/);
   assert.ok(!PAGE.includes('"Je m’entraîne →"'), "plus de bouton « Je m'entraîne → » sous À retenir");
   // (Lot 3b : la carte vient sur son écran, « Ma carte à apprendre ».)
   // (Lot 7e-2 : une carte en deux parties, seule la première s'apprend par cœur.)
@@ -183,8 +124,8 @@ test("la page : J'apprends réussi — « ✓ Réussi ! » et À retenir sur un 
   assert.match(PAGE, /const coeur = CORE\.carteParCoeur\(`\$\{serie\.module\}-\$\{serie\.niveau\}`\);/);
   assert.match(CSS, /\.dc-reussi b \{ color: #147447; \}/);
   assert.match(CSS, /\.dc-coeur \{[^}]*border: 2px solid var\(--ink\);/);
-  // La carte de séance (planche 1) et « Comment ça marche ? » (sans mot genré).
-  assert.match(PAGE, /const DETAIL_APPRENDS_SEANCE = `on me montre, puis à moi · \$\{DETAIL_ENTRAINE\}`;/);
+  // « Comment ça marche ? » (sans mot genré). (Lot K1 : la carte de séance
+  // et sa ligne « on me montre, puis à moi » sont parties avec l'ancien accueil.)
   assert.match(PAGE, /c’est réussi à 5&nbsp;justes sur les 6&nbsp;derniers, sans aide\./); // (correctif F4 : la règle des 6 derniers)
   assert.ok(!/justes de suite, seul\./.test(PAGE));
 });

@@ -75,7 +75,8 @@ async function taper(page, nombre) {
 async function entrainement(navigateur, base, taille, cle) {
   const [id, n] = cle.split("-");
   const o = await ouvrir(navigateur, base, taille, `&prof=1&module=${id}&niveau=${n}`);
-  await o.page.getByText("Je m’entraîne").first().click();
+  // (Lot K1 : l'adresse ouvre la carte sur le panneau de l'étoile.)
+  await o.page.locator("#panneau-corps button", {hasText: "Je m’entraîne encore"}).first().click();
   await o.page.waitForTimeout(600);
   return o;
 }

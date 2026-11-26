@@ -1,7 +1,9 @@
 // Défi calcul, lot F1 « rythme » (07/11/2026) : le réglage de la classe dans
 // la VRAIE page, au navigateur (relecture de Codex, points 4 et 6). Lot 1 « la
 // séance » (12/11/2026) : le réglage est désormais la DURÉE (10 ou 15
-// minutes), rangée dans le plan de la séance (seance.p[5]).
+// minutes), rangée dans le plan de la séance (seance.p[5]). Lot K1 (25/11/2026) :
+// « Commencer » ouvre la séance, la durée est en seance.p[1], l'accueil
+// l'écrit en bas (« 15 minutes · La carte · Comment ça marche ? »).
 //
 // Hors CI : ni « npm run verifier » ni « node --test » ne lancent ce fichier.
 //   npm install --no-save playwright
@@ -89,7 +91,7 @@ async function ouvrir(nav, base, {minutes, delai = 0, muet = () => false, stocka
   return {page, ctx, erreurs, etat};
 }
 
-const prevues = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[5]);
+const prevues = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[1]);
 const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0]);
 
 (async () => {
@@ -103,8 +105,8 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
 
   await cas("lent : la séance attend la première lecture du réglage (15), pas le 10 de l'onglet", async () => {
     const s = await ouvrir(nav, base, {minutes: 15, delai: 1200});
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
-    await s.page.click("#acc-carte");
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
     assert.equal(await prevues(s.page), 15);
     assert.deepEqual(s.erreurs, []);
@@ -113,10 +115,10 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
 
   await cas("change : le professeur passe de 10 à 15 minutes, la séance suivante a 15", async () => {
     const s = await ouvrir(nav, base, {minutes: 10});
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
     await s.page.waitForTimeout(400);
     s.etat.minutes = 15;
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
     assert.equal(await prevues(s.page), 15);
     assert.deepEqual(s.erreurs, []);
@@ -126,11 +128,11 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
   await cas("muet : sans réponse, la séance s'ouvre en 2 s au plus avec le dernier réglage reçu (15)", async () => {
     let coupe = false;
     const s = await ouvrir(nav, base, {minutes: 15, rangeDansOnglet: 10, muet: () => coupe});
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
     await s.page.waitForTimeout(600);
     coupe = true;
     const debut = Date.now();
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 6000});
     assert.ok(Date.now() - debut < 4000, `ouverte en ${Date.now() - debut} ms`);
     assert.equal(await prevues(s.page), 15, "le dernier réglage reçu, pas un défaut");
@@ -140,11 +142,11 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
 
   await cas("stockage : l'onglet refuse d'écrire, le réglage reçu (15) vaut quand même", async () => {
     const s = await ouvrir(nav, base, {minutes: 15, stockageCasse: true});
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
     await s.page.waitForTimeout(400);
-    const texte = await s.page.evaluate(() => document.getElementById("acc-carte").innerText);
+    const texte = await s.page.evaluate(() => document.getElementById("acc-minutes").innerText);
     assert.match(texte, /15\s?minutes/, texte);
-    await s.page.click("#acc-carte");
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
     assert.equal(await prevues(s.page), 15);
     await s.ctx.close();
@@ -152,8 +154,8 @@ const ouverte = page => page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.
 
   await cas("ancienne : un envoi refusé (400) ne casse rien, le travail reste dans l'appareil", async () => {
     const s = await ouvrir(nav, base, {minutes: 15, refuserEnvoi: true});
-    await s.page.waitForSelector("#acc-carte", {state: "visible"});
-    await s.page.click("#acc-carte");
+    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
+    await s.page.click("#acc-commencer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.parcours().seance.p[0] === 1, null, {timeout: 5000});
     await s.page.waitForTimeout(1500);
     assert.ok(s.etat.refus >= 1, "l'envoi est parti et a été refusé");

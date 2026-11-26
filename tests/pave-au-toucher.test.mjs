@@ -184,8 +184,10 @@ const APPLIS = {
   },
   "Défi calcul": {
     async ouvrir(page) {
+      // (Lot K1 : l'adresse ouvre la carte sur le panneau de l'étoile ; le
+      // professeur y a « Je m'entraîne encore ».)
       await page.goto(`${base}/outils/calcul_mental/defi_calcul_modules.html?test&prof=1&module=A4&niveau=4`);
-      await page.getByText("Je m’entraîne").first().click();
+      await page.locator("#panneau-corps button", {hasText: "Je m’entraîne encore"}).first().click();
       await page.waitForFunction(() => document.getElementById("inline-answer"), null, {timeout: 10000});
     },
     lire: page => page.evaluate(() => document.getElementById("inline-answer").textContent.trim()),

@@ -298,62 +298,11 @@ function avantM12() {
   return p;
 }
 
-test("6. rater les doubles n° 1, les apprendre, puis arriver aux doubles n° 2 : « Tu connais déjà ? »", () => {
-  const p = avantM12();
-  assert.equal(p.modules.M1.f[0] > 0 && p.modules.M1.b[0] > 0, true, "doubles n° 1 : raté au test, puis appris");
-  assert.deepEqual(P.competenceCourante(p, CARTE, 4), {module: "M1", niveau: 2});
-  assert.equal(P.testDeReprise(p, CARTE, {module: "M1", niveau: 2}), true, "avant le lot 7e-2 : J'apprends d'office");
-  assert.deepEqual(prochaine(p), {type: "test", module: "M1", niveau: 2});
-  // Le test va de ce niveau à la fin du palier en cours (les doubles n° 2 et n° 3, aux bases).
-  // (Lot C2 : M1 a six niveaux, tous aux bases.)
-  assert.deepEqual(P.marchesDuTest(p, CARTE, "M1", 4), {de: 2, jusqua: 6});
-  const file = P.fileSeance(P.ouvrirSeance(p, CARTE, {aujourdhui: J}), CARTE, {aujourdhui: J});
-  assert.deepEqual(file.etapes.filter(e => e.type !== "jour" && e.type !== "avance")[0], {type: "test", module: "M1"});
-  // Réussi : validé sans J'apprends (le n° 2 dessous, en boîte 4 ; le n° 3 en boîte 3).
-  const reussi = tester(p, "M1", [{niveau: 2, justes: 3, total: 3}, {niveau: 3, justes: 3, total: 3}]);
-  assert.equal(reussi.marche, 3);
-  assert.deepEqual(reussi.parcours.modules.M1.b.slice(1, 3), [P.SEUILS.revision.dessous, P.SEUILS.revision.test]);
-  assert.notDeepEqual(prochaine(reussi.parcours), {type: "apprends", module: "M1", niveau: 2});
-  // Raté : il l'apprend, comme avant.
-  const rate = tester(p, "M1", [{niveau: 2, justes: 1, total: 3}]);
-  assert.equal(rate.parcours.modules.M1.f[1], 1);
-  assert.deepEqual(prochaine(rate.parcours), {type: "apprends", module: "M1", niveau: 2});
-  assert.equal(P.testDeReprise(rate.parcours, CARTE, {module: "M1", niveau: 2}), false, "commencée : elle s'apprend");
-  // Le n° 3, une fois le n° 2 appris : son test à lui.
-  const appris = apprendre(rate.parcours, "M1", 2);
-  assert.equal(P.testDeReprise(appris, CARTE, {module: "M1", niveau: 3}), true);
-  assert.deepEqual(P.marchesDuTest(appris, CARTE, "M1", 4), {de: 3, jusqua: 6});
-});
-
-test("6. jamais de test pour un module intact ou un niveau déjà commencé ; le n° 1 garde le test d'entrée", () => {
-  const p = sansTestDePalier(P.creerParcours());
-  assert.equal(P.testDeReprise(p, CARTE, {module: "A2", niveau: 1}), false);
-  assert.equal(P.testDeReprise(p, CARTE, {module: "A2", niveau: 2}), false, "module intact : c'est le test d'entrée");
-  const q = tester(p, "A2", [{niveau: 1, justes: 1, total: 3}]).parcours;
-  assert.equal(P.testDeReprise(q, CARTE, {module: "A2", niveau: 2}), false, "le n° 1 n'est pas encore appris");
-  // La copie de la page prof est le même moteur.
-});
-
-test("6. le moteur et sa copie pour la page prof : identiques ; le parcours s'écrit toujours dans le même ordre", async () => {
-  const a = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  const b = await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js");
-  assert.equal(a, b);
-  const c = await lire("../outils/calcul_mental/defi_calcul_core.js");
-  const d = await lire("../_serveur/public/prof/defi_calcul_core.js");
-  assert.equal(c, d);
-  // Un module qui entre prend sa place (comme à la relecture) : même JSON.
-  let p = sansTestDePalier(P.creerParcours());
-  p = tester(p, "F8", [{niveau: 1, justes: 1, total: 3}]).parcours;
-  p = tester(p, "A2", [{niveau: 1, justes: 1, total: 3}]).parcours;
-  assert.deepEqual(Object.keys(p.modules), Object.keys(P.normaliserParcours(JSON.parse(JSON.stringify(p))).modules));
-  assert.equal(JSON.stringify(P.normaliserParcours(JSON.parse(JSON.stringify(p)))), JSON.stringify(p));
-});
-
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-3/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261122-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261125-7/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est

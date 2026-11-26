@@ -362,7 +362,7 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
@@ -373,10 +373,7 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   const aides = await readFile(new URL("../outils/calcul_mental/defi_calcul_aides.js", import.meta.url), "utf8");
   assert.match(aides, /if \(haut\) consigne\.style\.minHeight = `\$\{haut\}px`;/);
   assert.match(aides, /if \(bas\) trace\.style\.minHeight = `\$\{Math\.max\(bas, trace\.offsetHeight\)\}px`;/);
-  // Mon parcours : la liste qui défile commence sur une ligne entière, aussi quand le cadre change d'échelle.
-  assert.match(page, /function calerListe\(liste\) \{/);
-  assert.match(page, /new ResizeObserver\(\(\) => calerListe\(\$\("parcours-modules"\)\)\)\.observe\(\$\("parcours-modules"\)\);/);
-  assert.match(page, /--echelle", plus\.toFixed\(3\)\);\n(?:\s*\/\/[^\n]*\n)*\s*montrerModuleEnCours\(id\);/);
+  // (Lot K1 : la liste de Mon parcours, qui se calait sur une ligne entière, est partie avec lui.)
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

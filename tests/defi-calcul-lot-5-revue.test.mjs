@@ -25,28 +25,14 @@ const lire = chemin => readFileSync(new URL(chemin, import.meta.url), "utf8");
 const PAGE = lire("../outils/calcul_mental/defi_calcul_modules.html");
 const CSS = lire("../outils/calcul_mental/defi_calcul.css");
 
-test("Mon parcours : la ligne de suivi se range sous « ← Mon parcours », comme sous « ← Comment ça marche ? »", () => {
+test("la carte : la ligne de suivi se range sous « ← Accueil · La carte », comme sous « ← Comment ça marche ? »", () => {
   const liste = PAGE.match(/const TETES_ECRAN = \[([^\]]*)\];/);
   assert.ok(liste, "TETES_ECRAN");
   assert.match(liste[1], /"#notice > \.settings-toolbar"/);
-  assert.match(liste[1], /"#ecran-parcours > \.settings-toolbar"/);
-  // Le titre de Mon parcours est bien dans une barre « settings-toolbar » enfant directe de l'écran.
-  assert.match(PAGE, /<div id="ecran-parcours" class="parcours-screen" hidden>\s*<div class="settings-toolbar">/);
-});
-
-test("le titre d'un palier : la parenthèse seulement quand elle apprend quelque chose (choix de Gwenaël, 14/11)", () => {
-  const precision = PAGE.match(/const PRECISION_PALIER = Object\.freeze\((\{[^}]*\})\);/);
-  assert.ok(precision, "PRECISION_PALIER");
-  const table = Function(`return ${precision[1]};`)();
-  assert.deepEqual(table, {1: "CP · CE1 · CE2"});
-  const titre = n => {
-    const palier = CORE.PALIERS.find(p => p.n === n);
-    return `Palier ${palier.n} · ${palier.nom}${table[n] ? ` (${table[n]})` : ""}`;
-  };
-  assert.deepEqual([1, 2, 3, 4].map(titre),
-    ["Palier 1 · Les bases (CP · CE1 · CE2)", "Palier 2 · Le CM1", "Palier 3 · Le CM2", "Palier 4 · Vers la 6e"]);
-  assert.match(PAGE, /\$\("parcours-titre"\)\.textContent = soude\(`Palier \$\{palier\.n\} · \$\{palier\.nom\}\$\{precision \? ` \(\$\{precision\}\)` : ""\}`\);/);
-  assert.doesNotMatch(PAGE, /\(\$\{palier\.classes\}\)`\);/, "plus de « (CM1) » répété");
+  // (Lot K1 : la carte remplace Mon parcours.)
+  assert.match(liste[1], /"#ecran-carte > \.settings-toolbar"/);
+  // Le titre de la carte est bien dans une barre « settings-toolbar » enfant directe de l'écran.
+  assert.match(PAGE, /<div id="ecran-carte" class="ck-ecran" hidden>\s*<div class="settings-toolbar">/);
 });
 
 test("« Comment ça marche ? » : à l'ordinateur, le cadre prend la hauteur de l'écran (plus 650 px fixes)", () => {
@@ -69,5 +55,5 @@ test("le bilan de Mes calculs du jour au téléphone : le nom sur sa ligne, ce q
 });
 
 test("la feuille a changé : son adresse aussi (cache)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
 });

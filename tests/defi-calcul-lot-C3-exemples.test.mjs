@@ -138,40 +138,43 @@ test("le calcul de l'exemple : la même écriture, un cran plus facile que « À
   assert.ok(memeMotif / essais > 0.25, `le même dessin : ${memeMotif} sur ${essais}`);
 });
 
-test("Mes calculs du jour : l'exemple au premier retour d'une compétence entrée par un test, jamais après J'apprends", () => {
+test("Mes calculs du jour : l'exemple au premier retour d'une étoile gagnée sans leçon (« Je tente », test de ceinture), jamais après J'apprends", () => {
+  // Lot K1 « la carte chez l'élève » : plus de test en escalier ni de test de
+  // palier. Une étoile gagnée par « Je tente » ou placée par « Tente toute
+  // la ceinture » n'a pas eu sa leçon : son premier retour montre l'exemple.
+  // Le moteur le sait par `a` (1 : leçon faite, ou déjà revenue une fois).
   const aujourdhui = "2026-11-23";
   const avant = n => P.ajouterJours(aujourdhui, -n);
-  const retour = (p, juste, jour) => P.appliquerRetour(p, {module: "C3", niveau: 1, juste, ms: 3000, type: "P", cause: 0}, {aujourdhui: jour}).parcours;
-  // Le test : la marche la plus haute (boîte 3), revient 3 jours après.
-  let p = P.appliquerTest(P.creerParcours(), {module: "C3", marche: 1, niveaux: [{niveau: 1, justes: 3, total: 3}]}, {aujourdhui: avant(3)}).parcours;
-  assert.equal(P.premierRetourSansLecon(p, "C3", 1), true);
-  // Revenu une fois (juste ou faux) : plus d'exemple.
-  assert.equal(P.premierRetourSansLecon(retour(p, true, aujourdhui), "C3", 1), false);
-  assert.equal(P.premierRetourSansLecon(retour(p, false, aujourdhui), "C3", 1), false);
-  // Les marches en dessous (boîte 4, sues le jour même) : 7 jours après.
-  p = P.appliquerTest(P.creerParcours(), {module: "C3", marche: 2, niveaux: [{niveau: 1, justes: 3, total: 3}, {niveau: 2, justes: 3, total: 3}]}, {aujourdhui: avant(7)}).parcours;
-  // (La marche la plus haute, revenue en retard, n'est pas encore revenue non plus.)
-  assert.deepEqual([P.premierRetourSansLecon(p, "C3", 1), P.premierRetourSansLecon(p, "C3", 2)], [true, true]);
-  // J'apprends : boîte 2 ; puis boîte 3 après un retour — jamais.
-  const reponses = Array.from({length: 9}, () => ({juste: true, outil: "aucun"}));
-  let q = P.appliquerSerie(P.creerParcours(), {module: "C3", niveau: 1, genre: "apprends", reponses, causes: {}}, {aujourdhui: avant(4)}).parcours;
-  assert.equal(P.premierRetourSansLecon(q, "C3", 1), false);
-  q = retour(q, true, avant(3));
-  assert.deepEqual([q.modules.C3.b[0], P.premierRetourSansLecon(q, "C3", 1)], [3, false]);
-  // Rien d'entré, une progression vide ou abîmée : non.
-  assert.equal(P.premierRetourSansLecon(P.creerParcours(), "C3", 1), false);
-  assert.equal(P.premierRetourSansLecon(null, "C3", 1), false);
-  assert.equal(P.premierRetourSansLecon(p, "ZZ", 1), false);
-  // Le test de palier : sues le jour même, revenues 7 à 13 jours après.
   const carte = CORE.carte();
-  const palier = P.appliquerTestPalier(P.creerParcours(), {palier: 1, total: 12, justes: 12}, {aujourdhui: avant(10), carte, palier: 4});
-  const entrees = Object.entries(palier.parcours.modules).flatMap(([id, l]) => l.b.map((b, i) => ({id, n: i + 1, b, e: l.e[i]})).filter(x => x.b));
-  if (entrees.length) {
-    const dues = entrees.filter(x => x.e === aujourdhui);
-    dues.forEach(x => assert.equal(P.premierRetourSansLecon(palier.parcours, x.id, x.n), true, `${x.id}-${x.n}`));
-  }
-  // Aucune donnée nouvelle : la progression garde sa version et ses clés.
-  assert.equal(P.VERSION, 11);
+  const retour = (p, juste, jour) => P.appliquerRetour(p, {module: "A1", niveau: 1, juste, ms: 3000, type: "P", cause: 0}, {aujourdhui: jour}).parcours;
+  const six = Array.from({length: 6}, () => ({juste: true, ms: 1500}));
+  // « Je tente » : gagnée hier, elle revient aujourd'hui.
+  let p = P.appliquerTentative(P.creerParcours(), {module: "A1", niveau: 1, reponses: six}, {aujourdhui: avant(1), carte}).parcours;
+  assert.equal(P.premierRetourSansLecon(p, "A1", 1), true);
+  assert.equal(P.tirerCalculsDuJour(p, carte, {aujourdhui})[0].premierRetour, true, "le paquet du jour le dit à la page");
+  // Revenue une fois (juste, ou les deux calculs faux) : plus d'exemple.
+  assert.equal(P.premierRetourSansLecon(retour(p, true, aujourdhui), "A1", 1), false);
+  // Un premier calcul faux : son 2e calcul attend, c'est toujours son premier retour.
+  assert.equal(P.premierRetourSansLecon(retour(p, false, aujourdhui), "A1", 1), true);
+  const perdue = retour(retour(p, false, aujourdhui), false, aujourdhui);
+  const regagnee = P.appliquerTentative(perdue, {module: "A1", niveau: 1, reponses: six}, {aujourdhui, carte}).parcours;
+  assert.equal(P.premierRetourSansLecon(regagnee, "A1", 1), false, "perdue puis regagnée : elle est déjà revenue");
+  // J'apprends : sa leçon est faite — jamais.
+  const reponses = Array.from({length: 9}, () => ({juste: true, outil: "aucun"}));
+  let q = P.appliquerSerie(P.creerParcours(), {module: "A1", niveau: 1, genre: "apprends", reponses, causes: {}}, {aujourdhui: avant(4), carte}).parcours;
+  assert.equal(P.premierRetourSansLecon(q, "A1", 1), false);
+  q = retour(q, true, avant(3));
+  assert.deepEqual([q.modules.A1.b[0], P.premierRetourSansLecon(q, "A1", 1)], [3, false]);
+  // Rien de gagné, une progression vide ou abîmée : non.
+  assert.equal(P.premierRetourSansLecon(P.creerParcours(), "A1", 1), false);
+  assert.equal(P.premierRetourSansLecon(null, "A1", 1), false);
+  assert.equal(P.premierRetourSansLecon(p, "ZZ", 1), false);
+  // « Tente toute la ceinture » : toutes les étoiles placées attendent leur exemple.
+  const test = P.calculsDuTestDeCeinture(carte, 1).map(c => Object.assign({juste: true}, c));
+  const place = P.appliquerTestCeinture(P.creerParcours(), {etage: 1, reponses: test}, {aujourdhui: avant(10), carte}).parcours;
+  const dues = P.tirerCalculsDuJour(place, carte, {aujourdhui, maximum: 999});
+  assert.ok(dues.length > 0);
+  dues.forEach(c => assert.equal(P.premierRetourSansLecon(place, c.module, c.niveau), true, `${c.module}-${c.niveau}`));
 });
 
 test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamais au test ; « À toi » garde sa taille", () => {
@@ -222,12 +225,12 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // L'annonce : « Nouveau : … » sur l'exemple, « À toi : … » ensuite.
   assert.match(pose, /question\.annonceAToi = String\(annonce\)\.replace\(\/\^Nouveau\/, "À toi"\);/);
   // Les adresses de cache, les copies pour la page prof, le manifeste.
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-3/);
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {

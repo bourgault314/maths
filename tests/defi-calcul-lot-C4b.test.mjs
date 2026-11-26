@@ -234,7 +234,8 @@ test("les fractions : le Je représente de la leçon est une addition (F8-1, F9-
 
 test("les données ne changent pas : progression en version 11, clés des calculs, copie serveur, cache", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.match(parcours, /VERSION\s*=\s*11\b/, "la progression reste en version 11");
+  // (Lot K1 « la carte chez l'élève » : la progression passe en version 12.)
+  assert.match(parcours, /VERSION\s*=\s*12\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1)");
   // Les clés des calculs (les boîtes de Mes calculs du jour) : inchangées.
   // (Relevées sur le main ea9ab921 : les séries tirées, 40 graines, sont
   // aussi les mêmes, calcul pour calcul.)
@@ -244,7 +245,7 @@ test("les données ne changent pas : progression en version 11, clés des calcul
   Object.entries(CLES).forEach(([cle, cles]) => assert.deepEqual(CORE.niveauDe(cle).niveau.imposes.map(x => x.cle), cles, cle));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261125-3/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261125-7/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/, "le fichier des dessins (lot C4c : les blocs, le tableau des rangs lu)");
   assert.match(await lire("../_serveur/public/VERSION"), /^lot \S+$/m);
 });

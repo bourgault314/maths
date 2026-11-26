@@ -298,27 +298,24 @@ function seancesT(paires) {
   return T.normaliserParcours(p);
 }
 const CARTE_CALCUL = {modules: carte.modules.map(f => Object.assign({}, f, {construit: f.paliers.some(Boolean)})), ordre: carte.ordre};
+// (Lot K1 « la carte chez l'élève » : une séance de la carte — Mes calculs du
+// jour, tout juste, puis l'étoile que « Continuer » propose, apprise.)
+let tirageD = 0;
 function seanceD(p, jour) {
-  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour, nouveautes: 1});
-  const avant = p.seance.n;
-  for (let tour = 0; tour < 30 && p.seance.n === avant; tour += 1) {
-    const etape = D.fileSeance(p, CARTE_CALCUL, {aujourdhui: jour}).etapes[0];
-    if (!etape) break;
+  tirageD += 1;
+  p = D.ouvrirSeance(p, CARTE_CALCUL, {aujourdhui: jour, alea: (tirageD * 0.0137) % 1});
+  D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour, maximum: 999}).forEach(c => {
+    p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: true, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
+  });
+  p = D.noterTemps(p, 300);
+  p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
+  const suite = D.continuer(p, CARTE_CALCUL, {aujourdhui: jour});
+  if (suite.type === "etoile" && D.seanceOuverte(p, jour)) {
+    const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
     p = D.noterTemps(p, 300);
-    if (etape.type === "jour") {
-      D.tirerCalculsDuJour(p, CARTE_CALCUL, {aujourdhui: jour}).forEach(c => {
-        p = D.appliquerRetour(p, {module: c.module, niveau: c.niveau, juste: true, ms: 2000, type: "P"}, {aujourdhui: jour}).parcours;
-      });
-      p = D.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE_CALCUL}).parcours;
-    } else if (etape.type === "test") {
-      p = D.appliquerTest(p, {module: etape.module, marche: 0, niveaux: [{niveau: 1, justes: 0, total: 2}]}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    } else {
-      // Défi calcul, lot 2 : J'apprends en une étape reçoit les réponses.
-      const reponses = [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
-      p = D.appliquerSerie(p, {module: etape.module, niveau: etape.niveau, genre: etape.type, reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
-    }
+    p = D.appliquerSerie(p, {module: suite.module, niveau: suite.niveau, genre: "apprends", reponses}, {aujourdhui: jour, carte: CARTE_CALCUL, seance: true}).parcours;
   }
-  return p;
+  return D.seanceOuverte(p, jour) ? D.fermerSeance(p, CARTE_CALCUL, {aujourdhui: jour, force: true}).parcours : p;
 }
 const JEUDI = "2026-11-12";
 

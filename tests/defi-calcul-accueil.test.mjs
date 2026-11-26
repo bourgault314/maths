@@ -1,5 +1,10 @@
 // Défi calcul, lot « accueil » (07/11/2026, choix de Gwenaël par questions à
 // choix) : l'accueil de l'élève en une colonne, comme Défi tables.
+// Lot K1 « la carte » (25/11/2026) : Mon module, la pastille des soirs et
+// Mon parcours sont partis ; l'accueil dit la ceinture de l'étage, le but du
+// jour et « Commencer » ; « La carte » ouvre l'écran de la carte. Ce qui ne
+// valait que pour l'ancien accueil est retiré (liste dans la notice du lot
+// K1) ; la carte est testée dans defi-calcul-lot-K1-page.test.mjs.
 //   - Mon module et Ma séance du jour ; la pastille « N soirs cette semaine »
 //     dans la tête de Mon module (rien sans soir, rien en mode professeur) ;
 //   - la porte « Mon parcours » (le compte et « +N cette semaine ») ouvre un
@@ -32,72 +37,28 @@ function corps(source, nom) {
 }
 
 test("une seule colonne : plus de deux cartes côte à côte ni de liste sur l'accueil", () => {
-  const intro = PAGE.slice(PAGE.indexOf('<div id="intro"'), PAGE.indexOf('<div id="ecran-parcours"'));
+  const intro = PAGE.slice(PAGE.indexOf('<div id="intro"'), PAGE.indexOf('<div id="ecran-carte"'));
   assert.match(intro, /<div id="intro" class="intro">\s*<div class="acc">/);
   assert.ok(!/dc-a\b|dc-large|class="gauche"|acc-semaine|acc-effacer-zone/.test(PAGE), "les restes de l'accueil à deux colonnes sont partis");
   assert.ok(!/\.acc\.dc-a|\.dc-large|\.acc-effacer-zone/.test(CSS));
   assert.ok(!intro.includes('id="acc-parcours"'), "la liste n'est plus sur l'accueil");
-  // L'ordre : Mon module, la porte, puis la ligne des liens.
+  // L'ordre (lot K1, planche K0-1) : la ceinture, son compte, le but du
+  // jour, « Commencer », puis la ligne des liens.
   const i = id => intro.indexOf(`id="${id}"`);
-  assert.ok(i("acc-module-titre") < i("acc-seance") && i("acc-seance") < i("acc-porte") && i("acc-porte") < i("acc-bas"));
+  const ordre = ["acc-ceinture", "acc-compte", "acc-but", "acc-commencer", "acc-bas"].map(i);
+  assert.ok(ordre.every(x => x > 0), "les cinq morceaux sont là");
+  assert.deepEqual(ordre, ordre.slice().sort((a, b) => a - b));
+  ["acc-module-titre", "acc-seance", "acc-soirs"].forEach(id => assert.ok(!PAGE.includes(`id="${id}"`), `${id} est parti`));
 });
 
-test("la pastille des soirs : dans la tête de Mon module, sur une ligne de hauteur fixe ; rien sans soir ni en mode professeur", () => {
-  assert.match(PAGE, /<div class="acc-tete"><p class="eyebrow">Mon module<\/p><span id="acc-soirs" class="acc-soirs" hidden>/);
-  assert.match(CSS, /\.acc-tete \{ display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 26px;/);
-  // Relecture 2 (08/11/2026) : « jours », pas « soirs » (les élèves ne
-  // travaillent pas forcément le soir).
-  assert.match(PAGE, /return soirs \? `\$\{soirs\}\\u00a0jour\$\{soirs > 1 \? "s" : ""\} cette semaine` : "";/);
-  const rendu = corps(PAGE, "renderSemaine");
-  assert.match(rendu, /const soirs = MODE_PROF \? "" : texteSoirs\(s\.soirs\);/);
-  assert.match(rendu, /\$\("acc-soirs"\)\.hidden = !soirs;/);
-  assert.match(PAGE, /const semaine = \(\) => PARCOURS\.semaineEleve\(parcours, CARTE, jourCourant\(\)\);/);
-});
-
-test("la porte de Mon parcours : le palier (lot 1) et les gains de la semaine en vert ; elle ouvre un écran à part", () => {
-  const rendu = corps(PAGE, "renderSemaine");
-  // Lot 1 « la séance » (planche 1) : plus de « N compétences sues sur 125 ».
-  // Lot 4 « les ceintures » : la ceinture portée devant le palier, et son
-  // dessin à la place de la petite carte.
-  assert.match(rendu, /note\.replaceChildren\(document\.createTextNode\(soude\(`\$\{nomCeinture\(ceintures\.porte\)\} · `\) \+ textePalier\(\)\)\);/);
-  assert.match(rendu, /\$\("acc-ceinture"\)\.replaceChildren\(CORE\.elementCeinture\(document, ceintures\.porte, \{barrettes: ceintures\.barrettes, taille: 46\}\)\);/);
-  assert.doesNotMatch(PAGE, /sues? sur \$\{compte\.total\}/);
-  assert.match(rendu, /const gains = texteGains\(s\.sues\);/);
-  assert.match(PAGE, /const texteGains = sues => sues \? `\+\$\{sues\} cette semaine` : "";/);
-  assert.match(CSS, /\.acc-porte small b \{ color: var\(--green\); font-weight: 950; white-space: nowrap; \}/);
-  assert.match(PAGE, /\$\("acc-porte"\)\.addEventListener\("click", ouvrirParcours\);/);
-  assert.match(corps(PAGE, "ouvrirParcours"), /state\.palier = null;\s*\n\s*show\("ecran-parcours"\);/);
-  assert.match(PAGE, /const ECRANS = Object\.freeze\(\["intro", "ecran-parcours", "module", "play", "result", "notice"\]\);/);
-  assert.match(PAGE, /\$\("parcours-back"\)\.addEventListener\("click", versAccueil\);/);
-});
-
-test("l'écran Mon parcours : gains, « ↑ cette semaine », deux colonnes, même taille de cadre d'un palier à l'autre", () => {
-  const paliers = corps(PAGE, "renderParcoursPaliers");
-  assert.match(paliers, /\$\("parcours-gains"\)\.textContent = texteGains\(s\.sues\);/);
-  assert.match(paliers, /ligneModule\(fiche, palier\.n, s\.avancees\)/);
-  const ligne = corps(PAGE, "ligneModule");
-  assert.match(ligne, /avancees\.some\(a => a\.module === fiche\.id && niveaux\.some\(niveau => niveau\.n === a\.niveau\)\)/);
-  assert.match(ligne, /monte\.textContent = "↑ cette semaine";/);
-  assert.match(CSS, /\.parcours-screen \.dc-mods \{ grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\); column-gap: 8px; \}/);
-  // La taille : la plus petite des échelles des quatre paliers.
-  const ajuster = corps(PAGE, "ajusterEchelle");
-  assert.match(ajuster, /CORE\.PALIERS\.forEach\(palier => \{/);
-  assert.match(ajuster, /plus = Math\.min\(plus, echelleCourante\(\)\);/);
-  // Le palier trop long pour l'écran : la liste défile dans sa carte, le cadre garde la hauteur de l'écran.
-  assert.match(CSS, /body\.sur-parcours:not\(\.mesure-cadre\) #parcours-modules \{ flex: 1 1 auto; min-height: 0; overflow-y: auto; grid-auto-rows: max-content;/);
-});
-
-test("l'étape du test : « Tu connais déjà ce module ? » quand c'est le module affiché", () => {
-  const carte = corps(PAGE, "carteDeSeance");
-  assert.match(carte, /const affiche = \(competenceCourante\(\) \|\| \{\}\)\.module;/);
-  assert.match(carte, /etape\.type === "test" && etape\.module === affiche \? "Tu connais déjà ce module\\u00a0\?" : soude\(nomEtape\(etape\)\)/);
-});
-
-test("le mode professeur : la même page, ses liens ; « Changer de module » ouvre Mon parcours, où chaque ligne ouvre son module", () => {
-  assert.match(PAGE, /\$\("acc-changer"\)\.addEventListener\("click", ouvrirParcours\);/);
-  assert.match(PAGE, /\$\("module-changer"\)\.addEventListener\("click", \(\) => show\("ecran-parcours"\)\);/);
-  assert.match(corps(PAGE, "majPilule"), /name === "intro" \|\| name === "ecran-parcours" \|\| name === "module"/);
-  assert.match(corps(PAGE, "ligneModule"), /const ouvrable = MODE_PROF && etat\.etat !== "bientot";/);
+test("« La carte » ouvre un écran à part (lot K1 : il remplace Mon parcours)", () => {
+  assert.match(PAGE, /<button id="acc-porte" type="button">La carte<\/button>/);
+  assert.match(PAGE, /\$\("acc-porte"\)\.addEventListener\("click", \(\) => ouvrirCarte\(\)\);/);
+  assert.match(corps(PAGE, "ouvrirCarte"), /state\.etage = etage;\s*\n\s*show\("ecran-carte"\);/);
+  assert.match(PAGE, /const ECRANS = Object\.freeze\(\["intro", "ecran-carte", "play", "result", "notice"\]\);/);
+  assert.match(PAGE, /\$\("carte-back"\)\.addEventListener\("click", versAccueil\);/);
+  ["ecran-parcours", "renderSemaine", "renderParcoursPaliers", "ouvrirParcours", "carteDeSeance", "acc-changer", "module-changer"]
+    .forEach(mot => assert.ok(!PAGE.includes(mot), `${mot} est parti`));
 });
 
 test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché tant que le serveur n'a pas répondu", () => {
@@ -105,15 +66,15 @@ test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché 
   assert.match(CSS, /body:not\(\.ecran-interne\):not\(\.challenge-playing\):not\(\.fullscreen-active\) \.shell,\n  body\.sur-parcours:not\(\.fullscreen-active\) \.shell, body\.sur-notice:not\(\.fullscreen-active\) \.shell \{ box-sizing: border-box; min-height: calc\(100svh \/ var\(--echelle, 1\)\); \}/);
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261122-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261125-7/);
 });
 
-test("la question « Effacer » s'ouvre dans la même case que la porte et les liens", () => {
+test("la question « Effacer » s'ouvre dans la même case que « La carte » et les liens", () => {
   assert.match(PAGE, /<div id="acc-pied" class="acc-pied">\s*<div class="acc-pied-normal">/);
   assert.match(CSS, /\.acc-pied > \* \{ grid-area: 1 \/ 1; min-width: 0; \}/);
   assert.match(CSS, /\.acc-pied\.avec-effacer > \.acc-confirm\[hidden\] \{ display: block !important; visibility: hidden; \}/);
-  // Relecture 2 : la fin de séance dit le même nombre de jours que l'accueil.
-  assert.match(corps(PAGE, "texteSemaine"), /return texteSoirs\(semaine\(\)\.soirs\);/);
+  // Lot K1 : la ligne dit « 10 minutes · La carte · Comment ça marche ? ».
+  assert.match(PAGE, /<span id="acc-minutes" class="ck-minutes">10&nbsp;minutes<\/span>\s*<button id="acc-porte" type="button">La carte<\/button>\s*<button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;\?<\/button>/);
 });
 
 test("« Mode professeur » : pour le visiteur sans code seulement, sur la ligne du bas", () => {

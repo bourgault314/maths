@@ -220,47 +220,10 @@ test("les cinq exemples guidés, sous « À retenir » ; le niveau « ajouter 9 
   assert.ok(tous("A5-1").some(c => c.donnees.n % 10 === 0), "60 + 9");
 });
 
-test("la progression : version 9 (10 depuis le lot F4) ; une progression de version 8 se relit (F6 et F9 décalés, plan recalculé) ; le serveur refuse une page de version 8", () => {
-  assert.equal(P.VERSION, 11);
-  const v8 = {version: 8, epoque: 0, prenom: "", modules: {
-    F9: {vu: "2026-11-10", ok: "2026-11-12", b: [4, 3], e: ["2026-11-20", "2026-11-21"], a: [1, 1], f: [2, 3], x: [0, 1], t: [0, 0], l: [0, 0], d: ["2026-11-01", "2026-11-02"], s: ["2026-11-05", null], c: {2: 1}},
-    F6: {vu: "2026-11-10", ok: null, b: [4, 0, 5], e: ["2026-11-20", null, "2026-11-22"], a: [1, 0, 1], f: [2, 0, 3], x: [0, 0, 0], t: [0, 0, 0], l: [0, 0, 0], d: ["2026-11-01", null, "2026-11-03"], s: [null, null, null], c: {}},
-    A2: {vu: "2026-11-10", ok: null, b: [4, 0, 0, 0, 0], e: ["2026-11-20", null, null, null, null], a: [1, 0, 0, 0, 0], f: [1, 0, 0, 0, 0], x: [0, 0, 0, 0, 0], t: [0, 0, 0, 0, 0], l: [0, 0, 0, 0, 0], d: ["2026-11-01", null, null, null, null], s: [null, null, null, null, null], c: {}}
-  }, seance: {jour: "2026-11-19", etape: 1, n: 3, p: [1, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0]}, seances: [], journal: {}, jours: [], ceintures: [null, null, null, null]};
-  // Les rangs de la version 8 : F6 avait 3 niveaux, F9 2 (et M1, D8 3 jusqu'au lot C2).
-  const ancien = (id, n) => {
-    let r = 0;
-    const AVANT = {F6: 3, F9: 2, M1: 3, D8: 3};
-    for (const code of P.CODES) { if (code === id) return r + n - 1; r += AVANT[code] || P.NIVEAUX[code]; }
-    return -1;
-  };
-  v8.seance.p[2] = ancien("F11", 1) + 1;
-  v8.seance.p[7] = ancien("F6", 3) + 1;
-  v8.seance.p[8] = 4;
-  const p = P.normaliserParcours(JSON.parse(JSON.stringify(v8)));
-  assert.equal(p.version, 11);
-  assert.deepEqual(p.modules.F9.b, [0, 4, 3], "F9 : la case neuve devant");
-  assert.deepEqual(p.modules.F9.d, [null, "2026-11-01", "2026-11-02"]);
-  assert.deepEqual(p.modules.F9.x, [0, 0, 1]);
-  assert.equal(p.modules.F9.ok, null, "le module n'est plus coché su");
-  assert.deepEqual(p.modules.F9.c, {2: 1}, "les causes restent");
-  assert.deepEqual(p.modules.F6.b, [4, 0, 0, 5], "F6 : la case neuve au niveau 2");
-  assert.deepEqual(p.modules.F6.e, ["2026-11-20", null, null, "2026-11-22"]);
-  assert.deepEqual(p.modules.A2.b, [4, 0, 0, 0, 0], "les autres modules ne bougent pas");
-  assert.deepEqual(P.competenceDeRang(p.seance.p[2] - 1), {module: "F11", niveau: 1}, "le rang de la rouge recalculé");
-  assert.deepEqual(P.competenceDeRang(p.seance.p[7] - 1), {module: "F6", niveau: 4}, "le 2e calcul : l'ancien F6-3 est F6-4");
-  // Relue une seconde fois (version 10 depuis le lot F4), rien ne bouge.
-  assert.deepEqual(P.normaliserParcours(JSON.parse(JSON.stringify(p))), p);
-  // Le serveur : version_min 9 (10 depuis le lot F4).
-  const applis = lire("../_serveur/public/lib/applis.php");
-  const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 11,/);
-});
-
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261125-3/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261122-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261125-7/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
 });
