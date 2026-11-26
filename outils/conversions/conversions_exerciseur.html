@@ -147,6 +147,23 @@
     .family-col { display: flex; flex-direction: column; gap: 6px; }
     .cursor { position: absolute; left: 0; box-sizing: border-box; background: color-mix(in srgb, var(--accent) 15%, transparent); border: 3px solid color-mix(in srgb, var(--accent-dark) 60%, transparent); border-radius: 8px; pointer-events: none; transition: transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out; z-index: 3; }
     .cursor::after { content: ","; position: absolute; bottom: 32px; right: -11px; font-family: 'Nunito', Arial, sans-serif; font-size: 3.5rem; font-weight: 800; color: var(--accent-dark); line-height: 0; text-shadow: 2px 2px 0 var(--panel), -2px -2px 0 var(--panel), 2px -2px 0 var(--panel), -2px 2px 0 var(--panel); z-index: 10; }
+    /* lot 5b : quand le nom de l'unité est une étiquette (plus large que sa colonne), la fenêtre fait le tour du nom en entier, puis
+       descend sur la colonne : elle ne coupe plus « cm³ » en deux. Son trait passe exactement sur le contour du nom et sur celui de
+       la case du chiffre des unités. Le cadre du nom est ouvert en bas, sur la colonne. */
+    /* lot 5c : le cadre du nom ne surgit plus au départ quand la fenêtre passe d'une case seule (cL) à une étiquette (cm³), ou l'inverse :
+       il est toujours là, invisible, et apparaît ou disparaît en fondu pendant le glissement (1 s, comme le reste de la fenêtre).
+       Le contour rose du nom et de la case reste dessiné sous la fenêtre : on voit le haut de la case et le bas du nom. */
+    .cursor.nom { border-color: var(--accent-dark); border-top-width: 0; border-radius: 0 0 8px 8px; }
+    .cursor::before { content: ""; position: absolute; box-sizing: border-box; left: 50%; bottom: calc(100% - 3px); width: var(--nom-l); height: var(--nom-h); transform: translateX(-50%); pointer-events: none; transition: inherit; opacity: 0;
+      background: inherit; border: 3px solid var(--accent-dark); --epaule: calc((var(--nom-l) - var(--col-l)) / 2); border-radius: 8px 8px min(8px, var(--epaule)) min(8px, var(--epaule));
+      -webkit-mask: linear-gradient(#000, #000) top / 100% calc(100% - 3px) no-repeat, linear-gradient(#000, #000) left bottom / var(--epaule) 3px no-repeat, linear-gradient(#000, #000) right bottom / var(--epaule) 3px no-repeat;
+      mask: linear-gradient(#000, #000) top / 100% calc(100% - 3px) no-repeat, linear-gradient(#000, #000) left bottom / var(--epaule) 3px no-repeat, linear-gradient(#000, #000) right bottom / var(--epaule) 3px no-repeat; }
+    .cursor.nom::before { opacity: 1; }
+    /* lot 5c : hL, daL, dL et cL n'ont pas d'étiquette au-dessus (jusqu'à 1 121 px, leur nom est sous la case) : la fenêtre encadre
+       la case seule, avec le même trait foncé de 3 px, posé exactement sur le contour de la case */
+    .cursor.case-seule { border-color: var(--accent-dark); }
+    /* la virgule reste à sa place (la fenêtre est plus étroite de 2 px de chaque côté et en bas) */
+    .cursor.nom::after, .cursor.case-seule::after { right: -13px; bottom: 30px; }
     .handle { position: absolute; left: 0; width: 140px; height: 75px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: 2px solid #fff; border-radius: 12px; z-index: 11; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-align: center; user-select: none; box-shadow: 0 8px 20px rgba(0,0,0,0.2); padding: 6px; transition: transform 1s ease-in-out, top 1s ease-in-out; }
     .h-text { font-size: 1.1rem; font-weight: 900; line-height: 1.15; text-transform: uppercase; }
     .handle-top::after { content: ""; position: absolute; bottom: -14px; left: calc(50% + var(--decal, 0px)); transform: translateX(-50%); border-left: 14px solid transparent; border-right: 14px solid transparent; border-top: 14px solid var(--accent-dark); }
@@ -165,19 +182,39 @@
     .sub-lab-wrapper { display: flex; justify-content: center; align-items: flex-end; }
     .sub-lab { white-space: nowrap; font-weight: 900; color: color-mix(in srgb, var(--accent-dark) 90%, black); line-height: 1; }
 
-    /* lot 5, au téléphone seulement : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus d'UNE seule
+    /* lot 5, étendu au lot 5b : dans le tableau des aires et des volumes, le nom de l'unité reste au-dessus d'UNE seule
        colonne, celle de ses unités (« dm³ » n'est pas le nom des trois colonnes : la 2e compte les dizaines de dm³).
        « mm³ » est plus large que sa case : avant, la case grossissait et toute la ligne des unités se décalait (16 px).
        Maintenant les colonnes gardent leur largeur, et le nom est une étiquette centrée sur sa colonne, qui peut la dépasser
-       des deux côtés ; les cases vides de la ligne des unités ne sont plus dessinées. Toutes les unités ont la même taille. */
+       des deux côtés ; les cases vides de la ligne des unités ne sont plus dessinées. Toutes les unités ont la même taille.
+       Lot 5b : l'étiquette vaut tant que le tableau est plus étroit que celui de l'ordinateur (1 000 px), donc jusqu'à
+       1 121 px de large, tablette comprise ; à partir de 1 122 px, c'est le tableau de l'ordinateur, inchangé. */
+    @media screen and (max-width: 1121px) {
+      .board.multi .board-columns { grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr)); }
+      .board.multi .head-group, .board.multi .subhead-group, .board.multi .slots { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+      .head-group.multi > .unitBtn.empty-unit { visibility: hidden; }
+      .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; }
+      .head-group.multi > .unitBtn span { font-size: inherit !important; letter-spacing: normal !important; }
+      /* lot 5c : la ligne des petits noms (kL, hL… mL ; ha, a) passe sous les cases, noms alignés en haut : aucun trait vertical
+         de la fenêtre ne la traverse plus. Le litre demandé (L, mL ; hL, daL, dL, cL aux niveaux 2 et 3) est plus vif et plus grand. */
+      .board.multi .family-col > .cell { order: 2; }
+      .board.multi .family-col > .subhead-group { order: 3; }
+      .board.multi .sub-lab-wrapper { align-items: flex-start; }
+      .board.multi .sub-lab.unit-highlight-text { color: var(--accent) !important; font-size: 1.15em; }
+    }
+    /* au téléphone : tous les tableaux gardent des colonnes égales (lot 5). Lot 5b : la dernière étiquette (« mm³ », « dam³ »…)
+       est centrée comme les autres. Pour qu'elle reste dans le cadre blanc, le tableau des aires et des volumes laisse la même
+       marge à gauche et à droite (12 px de chaque côté, le tableau reste au milieu), et ses noms ont la même taille dans les
+       deux modes : à 20 px, deux noms voisins se touchaient dans « Je projette ». Les cases perdent 2 px : les petits noms
+       de la 2e ligne (kL, hL, daL…) rapetissent d'autant, pour que « hL » et « daL » gardent leur écart. */
     @media screen and (max-width: 700px) {
       .board-columns { grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr)); }
       .head-group, .subhead-group, .slots { grid-template-columns: none !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
-      .head-group.multi > .unitBtn.empty-unit { visibility: hidden; }
-      .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: center; width: max-content; min-width: 100%; box-sizing: border-box; padding: 0 3px; }
-      /* la dernière colonne : l'étiquette s'arrête au bord du tableau au lieu d'en sortir */
-      .family-col:last-child .head-group.multi > .unitBtn:not(.empty-unit) { justify-self: end; }
-      .head-group.multi > .unitBtn span { font-size: inherit !important; letter-spacing: normal !important; }
+      .board.multi { width: calc(100% - 24px); }
+      .head-group.multi > .unitBtn:not(.empty-unit) { font-size: min(1.05rem, 4.7vw); }
+      .board.multi .sub-lab { font-size: min(0.9rem, 4vw); }
+      /* lot 5c : le petit nom demandé reste 1,15 fois plus grand que ses voisins (pas 1,15 fois le texte de la page : « hL » toucherait « daL ») */
+      .board.multi .sub-lab.unit-highlight-text { font-size: calc(1.15 * min(0.9rem, 4vw)); }
     }
     /* lot 5, au téléphone, « Je m'entraîne » : « Convertis : » sur sa ligne, et une case de largeur fixe (environ 10 chiffres),
        qui ne grandit plus pendant la frappe : au-delà, ce sont les chiffres qui rapetissent (majChamp) */
@@ -1915,6 +1952,8 @@
       const columnsContainer = document.getElementById('diapoBoardColumns');
       columnsContainer.style.setProperty('--cols', schema.units.length);
       columnsContainer.style.setProperty('--n', schema.units.length * schema.slots);
+      // lot 5b : le tableau à 2 ou 3 cases par unité (aires, volumes, « L ↔ m³ ») porte « multi » : la mise en page de l'étiquette s'y accroche
+      document.getElementById('mainBoard').classList.toggle('multi', schema.slots > 1);
       columnsContainer.innerHTML = buildHTMLColumns(schema, false, null, 'diapo');
     }
 
@@ -1975,7 +2014,8 @@
       const labEl = labels[si] && labels[si].querySelector('.sub-lab');
       const texteUnite = (labEl && labEl.textContent === unite) ? labEl : headBtn;
 
-      const trans = animate ? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out' : 'none';
+      // lot 5c : le cadre du nom (::before, qui suit la fenêtre) apparaît et disparaît en fondu, et le bord du haut s'ouvre en douceur
+      const trans = animate ? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out, opacity 1s ease-in-out, border-top-width 1s ease-in-out, border-radius 1s ease-in-out' : 'none';
       const handleTrans = animate ? 'transform 1s ease-in-out, top 1s ease-in-out' : 'none';
       cursor.style.transition = trans;
       handles.forEach(h => h.style.transition = handleTrans);
@@ -1988,16 +2028,42 @@
       let w = cellRect.width;
       let cx = x + w / 2;
       let gap = 4;
-      cursor.style.width = `${w + gap}px`;
-      cursor.style.transform = `translateX(${x - gap/2}px)`;
+      // lot 5b : le nom est une étiquette (tableau à 2 ou 3 cases par unité, jusqu'à 1 121 px de large) : la fenêtre fait le tour
+      // du nom, puis descend sur la colonne, et son trait passe exactement sur leur contour (plus de marge autour).
+      // Ailleurs (ordinateur, autres tableaux, petit nom « hL »), le rectangle d'avant, 2 px autour du nom et de la case.
+      const etiquette = !headBtn.classList.contains('empty-unit') && getComputedStyle(headBtn).justifySelf === 'center';
+      // lot 5c : jusqu'à 1 121 px, les petits noms sont sous les cases (reconnu à la mise en page, pas à une largeur d'écran).
+      // hL, daL, dL, cL (pas d'étiquette au-dessus) : la fenêtre encadre la case seule, son trait exactement sur le contour de la case.
+      const sousNoms = colDiv.querySelector('.subhead-group');
+      const nomsDessous = !!sousNoms && sousNoms.getBoundingClientRect().top >= cellRect.bottom;
+      const caseSeule = !etiquette && nomsDessous && texteUnite === labEl;
+      const autour = (etiquette || caseSeule) ? 0 : gap/2;
+      cursor.classList.toggle('nom', etiquette);
+      cursor.classList.toggle('case-seule', caseSeule);
+      cursor.style.width = `${w + 2 * autour}px`;
+      cursor.style.transform = `translateX(${x - autour}px)`;
 
       let topPx = headRect.top - innerRect.top;
       let bottomPx = cellRect.bottom - innerRect.top;
-      cursor.style.top = `${topPx - gap/2}px`;
-      cursor.style.height = `${(bottomPx - topPx) + gap}px`;
+      if (etiquette) {
+        const basNom = headRect.bottom - innerRect.top;
+        cursor.style.setProperty('--nom-l', `${Math.max(headRect.width, w)}px`);
+        cursor.style.setProperty('--nom-h', `${headRect.height}px`);
+        cursor.style.setProperty('--col-l', `${w}px`);
+        cursor.style.top = `${basNom - 3}px`;
+        cursor.style.height = `${bottomPx - (basNom - 3)}px`;
+      } else if (caseSeule) {
+        cursor.style.top = `${cellRect.top - innerRect.top}px`;
+        cursor.style.height = `${cellRect.height}px`;
+      } else {
+        cursor.style.top = `${topPx - gap/2}px`;
+        cursor.style.height = `${(bottomPx - topPx) + gap}px`;
+      }
 
       handles[0].style.top = `${topPx - (handles[0].offsetHeight || 75) - 14}px`;
-      handles[1].style.top = `${bottomPx + 14}px`;
+      // lot 5c : la flèche du bas descend sous la ligne des petits noms (de sa hauteur + 6 px) : elle ne touche aucun nom
+      const basFleche = nomsDessous ? sousNoms.getBoundingClientRect().bottom - innerRect.top : bottomPx;
+      handles[1].style.top = `${basFleche + 14}px`;
       // une étiquette près du bord reste dans le cadre ; sa pointe, elle, reste sur la colonne
       const boxRect = document.getElementById('tBox').getBoundingClientRect();
       const demi = handles[0].offsetWidth / 2;
