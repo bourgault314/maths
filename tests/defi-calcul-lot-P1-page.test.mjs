@@ -184,9 +184,10 @@ test("7. « Séance terminée » en lignes : ✓ Mes calculs du jour (« 9 retro
   assert.ok(ordre.every(i => i > 0));
   // La page compte ce que la séance a retrouvé (un retour réglé, pas raté) et ses ceintures.
   const noter = corps("noterRetour");
-  assert.ok(/if \(m\.regle && !m\.perime && state\.seance\) \{[\s\S]*?r\.total \+= 1;\s*if \(!m\.rate\) r\.justes \+= 1;/.test(noter));
+  assert.ok(/if \(m\.regle && !m\.perime && state\.seance\) \{[\s\S]*?r\.total \+= 1;\s*if \(!m\.rate\) r\.justes \+= 1;\s*garderRetrouves\(r\);/.test(noter));
   assert.ok(corps("finish").includes("noterCeintures(gagnees);"));
-  assert.ok(corps("nouvelleSeance").includes("retrouves: {justes: 0, total: 0}, ceintures: []"));
+  // (Correctif P1 : le compte repris dans l'onglet après un rechargement.)
+  assert.ok(corps("nouvelleSeance").includes("retrouves: retrouvesGardes(), ceintures: []"));
   assert.match(CSS, /\.ck-fin-ligne \{ display: flex;/);
 });
 

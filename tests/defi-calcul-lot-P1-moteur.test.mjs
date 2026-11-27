@@ -113,6 +113,23 @@ test("« Continuer » descend tout seul après un « Je tente » raté : l'étoi
   assert.ok(r.plusFacile, "« Plus facile » est proposée");
   assert.ok(r.plusFacile.etage < 4);
   assert.deepEqual(r.plusFacile, P.plusFacile(r.parcours, CARTE, de(cle).module, de(cle).niveau, {aujourdhui: J}));
+  // (Correctif P1 : « Continuer » lui-même descend — une leçon arrêtée deux fois sur la
+  // première étoile du CE2, et « Continuer » propose plus facile. Avant, seul un test
+  // sans rapport attrapait un « Continuer » qui ne descendait plus.)
+  let q = P.creerParcours();
+  const haut = P.carteEleve(q, CARTE, {aujourdhui: J}).etages.find(e => e.etage === 3).lignes[0].etoiles[0];
+  for (const d of [-2, -1]) q = exiger(P.appliquerSerie(q, {module: haut.module, niveau: haut.niveau, genre: "apprends", reponses: Array.from({length: 4}, () => ({juste: true, outil: "aucun"})), causes: {}, tempsFini: true}, o(P.ajouterJours(J, d))), "leçon arrêtée");
+  const c = P.continuer(q, CARTE, {aujourdhui: J, sansPaquet: true});
+  assert.equal(c.raison, "plusFacile", "« Continuer » descend");
+  assert.ok(c.etage < 3, "plus bas que le CE2");
+});
+
+test("(correctif P1) une étoile déjà perdue, même sans autre trace : « Je tente » réussi n'est pas « du premier coup »", () => {
+  const p = P.creerParcours();
+  p.modules.A1 = {pe: [1]};
+  const r = P.appliquerTentative(p, Object.assign(de("A1-1"), {reponses: justes()}), o(J));
+  assert.equal(r.reussi, true);
+  assert.deepEqual([r.evenements.find(e => e.type === "gagnee").duPremierCoup, etoile(r.parcours, "A1-1").b], [false, 2]);
 });
 
 // ------------------------------------------------------------------ la règle neuve
@@ -214,10 +231,17 @@ test("le journal : `tests` compte les premiers retours À 7 JOURS (étoiles gagn
   p = exiger(P.appliquerTentative(p, Object.assign(de("A1-1"), {reponses: justes()}), o(J)), "A1-1");
   p = exiger(P.appliquerTentative(p, Object.assign(de("A10-1"), {reponses: justes()}), o(J)), "A10-1");
   p = apprendre(p, "A2-1", J);
+  // (Correctif P1 : une étoile en boîte 2 SANS leçon — « Je tente » raté, puis
+  // réussi le lendemain : son premier retour ne compte pas non plus. Avant, un
+  // sabotage qui comptait tous les premiers retours sans leçon passait.)
+  p = rater(p, "A1-2", J);
+  p = exiger(P.appliquerTentative(p, Object.assign(de("A1-2"), {reponses: justes()}), o(plus(1))), "A1-2");
+  assert.deepEqual([etoile(p, "A1-2").b, etoile(p, "A1-2").a], [2, 0]);
   const jour = plus(7);
   p = P.ouvrirSeance(p, CARTE, {aujourdhui: jour, alea: .5});
   // A2-1 (boîte 2, appris) est due depuis le 2 juin : son retour ne compte pas.
   p = retour(p, "A2-1", jour, true).parcours;
+  p = retour(p, "A1-2", jour, true).parcours;
   p = retour(p, "A1-1", jour, true).parcours;
   let r = retour(p, "A10-1", jour, false);
   r = retour(r.parcours, "A10-1", jour, false, {deuxieme: true});

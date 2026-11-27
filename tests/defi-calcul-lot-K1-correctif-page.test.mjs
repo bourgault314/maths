@@ -34,7 +34,8 @@ const avant = (texte, premier, second, quoi) => {
 test("Codex 10 — la page dit au moteur à quel calcul l'élève répond, et repose un AUTRE calcul après un rechargement", () => {
   const noter = corps("noterRetour");
   assert.match(noter, /deuxieme: Boolean\(deuxieme\)/, "le calcul auquel l'élève répond part avec la réponse");
-  assert.match(corps("repondreSerie"), /noterRetour\(serie, question\.calcul, juste, ms, cause, question\.deuxieme\)/);
+  // (Correctif P1 : avec le jour du premier calcul raté, `premierLe`.)
+  assert.match(corps("repondreSerie"), /noterRetour\(serie, question\.calcul, juste, ms, cause, question\.deuxieme, question\.premierLe\)/);
   assert.match(corps("repondreSerie"), /if \(juste && question\.deuxieme && !mouvement\.perime\)/, "pas de « Tu le savais » sur une réponse périmée");
   const jour = corps("lancerCalculsDuJour");
   // (Lot P1 : de la même sorte que le premier, avec d'autres nombres.)

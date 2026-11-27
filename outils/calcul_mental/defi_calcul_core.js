@@ -13650,8 +13650,7 @@
       const voulue = numeroDeSorte(autreQue);
       const pareil = calcul => calcul.texte !== autreQue.texte && (voulue ? numeroDeSorte(calcul) === voulue : calcul.forme === autreQue.forme);
       const brute = sorteDe(autreQue);
-      return chercherDansLaGraine(cleNiveau, graine, serie, pareil)
-        || serie.find(calcul => sorteDe(calcul) === brute && calcul.texte !== autreQue.texte)
+      return chercherDansLaGraine(cleNiveau, graine, serie, pareil, calcul => sorteDe(calcul) === brute && calcul.texte !== autreQue.texte)
         || serie.find(calcul => calcul.texte !== autreQue.texte) || serie[0];
     }
     if (autreQue) {
@@ -13662,7 +13661,8 @@
     }
     const paire = Number.isInteger(sorte) && sorte > 0 ? sortesNumerotees(cleNiveau)[sorte - 1] : null;
     if (paire) {
-      const trouve = chercherDansLaGraine(cleNiveau, graine, serie, calcul => sorteDe(calcul) === paire.sorte && calcul.forme === paire.forme);
+      const trouve = chercherDansLaGraine(cleNiveau, graine, serie, calcul => sorteDe(calcul) === paire.sorte && calcul.forme === paire.forme,
+        calcul => sorteDe(calcul) === paire.sorte);
       if (trouve) return trouve;
     }
     if (!Number.isInteger(tour)) return serie[0];
@@ -13675,16 +13675,25 @@
     return liste.find(calcul => calcul.forme === forme) || liste[0];
   }
 
-  // Lot P1 : le premier calcul de `serie` qui convient, sinon d'une des six
-  // séries suivantes tirées de la même graine (toujours les mêmes).
-  function chercherDansLaGraine(cleNiveau, graine, serie, convient) {
-    const ici = serie.find(convient);
-    if (ici) return ici;
-    for (let essai = 1; essai <= 6; essai += 1) {
-      const autre = genererSerie(cleNiveau, {graine: (graine + essai * 104729) >>> 0, genre: "entraine", total: TOTAUX.P, ordonne: false}).find(convient);
-      if (autre) return autre;
+  // Lot P1 : le premier calcul de `serie` qui convient, sinon d'une des
+  // séries suivantes tirées de la même graine (toujours les mêmes) ; s'il n'y
+  // en a nulle part, le premier qui convient `aDefaut` (la même sorte
+  // déclarée : la même méthode) dans ces mêmes séries.
+  // Correctif P1 (relecture de Codex du 27/11) : 39 séries de plus, au lieu
+  // de 6 — certaines sortes sont rares dans une série (au 2e niveau de
+  // « Multiplier par 10, 100… », la sorte « 20 × 3 » manquait aux sept
+  // séries une fois sur cinq ; le 2e calcul changeait alors de méthode). Au
+  // pire niveau, les 40 séries se tirent en moins de 70 ms.
+  const SERIES_CHERCHEES = 40;
+  function chercherDansLaGraine(cleNiveau, graine, serie, convient, aDefaut = null) {
+    let secours = null;
+    for (let essai = 0; essai < SERIES_CHERCHEES; essai += 1) {
+      const liste = essai ? genererSerie(cleNiveau, {graine: (graine + essai * 104729) >>> 0, genre: "entraine", total: TOTAUX.P, ordonne: false}) : serie;
+      const trouve = liste.find(convient);
+      if (trouve) return trouve;
+      if (!secours && aDefaut) secours = liste.find(aDefaut) || null;
     }
-    return null;
+    return secours;
   }
 
   // Lot P1 : les SORTES d'un niveau, numérotées pour le moteur (qui garde,

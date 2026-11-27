@@ -3047,8 +3047,29 @@
       // (Lot P1, planche P1-5 A : la page garde aussi ce que la séance a
       // retrouvé dans Mes calculs du jour — les étoiles revenues, et celles
       // qui ne sont pas ratées — et les ceintures gagnées.)
+      // Correctif P1 (relecture de Codex du 27/11) : le compte des retrouvés
+      // est gardé dans l'onglet (sessionStorage), avec la séance du moteur
+      // qu'il compte (son jour, son numéro) : la page rechargée au milieu de
+      // Mes calculs du jour le reprend. Avant, il repartait de zéro, et
+      // « Séance terminée » oubliait les retours joués avant.
+      const CLE_RETROUVES = "mathsgo-defi-calcul-retrouves";
+      function retrouvesGardes() {
+        try {
+          const lu = JSON.parse(stockageSession().getItem(CLE_RETROUVES) || "null");
+          const s = parcours.seance || {};
+          if (!lu || lu.code !== codeSuivi || !s.i || lu.jour !== s.jour || lu.i !== s.i) return {justes: 0, total: 0};
+          const total = Math.max(0, Math.floor(Number(lu.total)) || 0);
+          return {justes: Math.min(total, Math.max(0, Math.floor(Number(lu.justes)) || 0)), total};
+        } catch (_) { return {justes: 0, total: 0}; }
+      }
+      function garderRetrouves(r) {
+        try {
+          const s = parcours.seance || {};
+          if (!MODE_PROF && s.i) stockageSession().setItem(CLE_RETROUVES, JSON.stringify({code: codeSuivi, jour: s.jour, i: s.i, justes: r.justes, total: r.total}));
+        } catch (_) {}
+      }
       function nouvelleSeance() {
-        state.seance = {gagnees: [], but: null, etape: null, retrouves: {justes: 0, total: 0}, ceintures: []};
+        state.seance = {gagnees: [], but: null, etape: null, retrouves: retrouvesGardes(), ceintures: []};
       }
       function marquerEtape(type, id = null, n = null, plus = {}) {
         if (!state.seance) nouvelleSeance();
@@ -3246,6 +3267,15 @@
           state.origine = origine;
           commencerPratique({module: id, niveau: n, base: apprends}, {depart});
           return;
+        }
+        // Correctif P1 (relecture de Codex du 27/11) : la leçon ouverte compte
+        // (« du premier coup » ne vaut plus pour cette étoile), même quittée
+        // aussitôt — le moteur la note, l'appareil la garde.
+        if (!MODE_PROF && !revoir && !toute) {
+          const avant = parcours;
+          parcours = PARCOURS.noterLeconCommencee(parcours, {module: id, niveau: n}, {aujourdhui: jourCourant()});
+          const ligneAvant = avant.modules && avant.modules[id];
+          if (!(ligneAvant && ligneAvant.a && ligneAvant.a[n - 1]) && parcours.modules[id] && parcours.modules[id].a[n - 1]) sauverParcours();
         }
         state.serie = toute
           ? {genre: "apprends", module: id, niveau: n, apprends, base: apprends, temps: tempsDe(id, n), index: 0, revoir: true}
@@ -3956,7 +3986,7 @@
           const calcul = tire.second
             ? CORE.genererUn(cleDe(tire.module, tire.niveau), nouvelleGraine(), {autreQue: premierCalcul(tire, tire.premierLe || aujourdhui), memeSorte: true})
             : premierCalcul(tire, aujourdhui);
-          return calcul ? Object.assign({calcul, retour: false}, tire.second ? {deuxieme: true} : {}) : null;
+          return calcul ? Object.assign({calcul, retour: false}, tire.second ? {deuxieme: true, premierLe: tire.premierLe || aujourdhui} : {}) : null;
         }).filter(Boolean);
         if (!questions.length) {
           // (Correctif K1 : le temps d'abord, puis l'étape — rangés ensemble.)
@@ -4631,10 +4661,14 @@
       // il est faux, pour que le 2e calcul et le retour suivant soient du
       // même genre. Un retour réglé compte pour « Séance terminée »
       // (« 9 retrouvés sur 10 » : pas raté).
-      function noterRetour(serie, calcul, juste, ms, cause, deuxieme = false) {
+      // Correctif P1 (relecture de Codex du 27/11) : avec un 2e calcul, le
+      // jour où le premier a été raté (`premierLe`) — le moteur refuse un 2e
+      // calcul resté à l'écran d'un retour déjà réglé sur un autre appareil.
+      function noterRetour(serie, calcul, juste, ms, cause, deuxieme = false, premierLe = null) {
         verserTempsActif();
         const suivi = PARCOURS.appliquerRetour(parcours, {
           module: calcul.module, niveau: calcul.niveau, juste, ms, deuxieme: Boolean(deuxieme),
+          premierLe: deuxieme && premierLe ? premierLe : undefined,
           type: PARCOURS.typeDe(CARTE, calcul.module, calcul.niveau), cause: cause ? cause.c : 0,
           sorte: CORE.numeroDeSorte(calcul)
         }, {aujourdhui: jourCourant(), carte: CARTE, source: SOURCE});
@@ -4645,6 +4679,7 @@
           const r = state.seance.retrouves || (state.seance.retrouves = {justes: 0, total: 0});
           r.total += 1;
           if (!m.rate) r.justes += 1;
+          garderRetrouves(r);
         }
         if (m.perdue && !serie.perdues.some(e => e.module === m.module && e.niveau === m.niveau)) serie.perdues.push({module: m.module, niveau: m.niveau});
         return m;
@@ -4682,7 +4717,7 @@
             !passe && saisieFraction() ? {ecrit: state.answer} : {},
             question.rappel ? {rappel: true} : {}, question.deuxieme ? {deuxieme: true} : {}));
           if (serie.genre === "jour") {
-            const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, question.deuxieme);
+            const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, question.deuxieme, question.premierLe);
             // Lot 1 (planche 4, choix de Gwenaël) : un faux appelle un 2e
             // calcul du même niveau, tout de suite après la correction. Le
             // calcul raté ne revient plus en fin de série : le 2e calcul le
@@ -4690,7 +4725,7 @@
             // d'autres nombres (avant : d'une autre sorte).
             if (mouvement.secondAVenir) {
               const autre = CORE.genererUn(`${question.calcul.module}-${question.calcul.niveau}`, nouvelleGraine(), {autreQue: question.calcul, memeSorte: true});
-              if (autre) serie.questions.splice(serie.index + 1, 0, {calcul: autre, retour: false, deuxieme: true});
+              if (autre) serie.questions.splice(serie.index + 1, 0, {calcul: autre, retour: false, deuxieme: true, premierLe: mouvement.premierLe || jourCourant()});
             }
             if (juste && question.deuxieme && !mouvement.perime) texteJuste = "Bravo ! Tu le savais.";
           }

@@ -679,6 +679,8 @@
     return SEUILS.revision.delais[entier(boite, 1, SEUILS.revision.boites, 1) - 1];
   }
 
+  const DELAI_MAX = Math.max(...SEUILS.revision.delais);
+
   function echeanceDeBoite(boite, jour) {
     return ajouterJours(jour, delaiDeBoite(boite));
   }
@@ -1024,7 +1026,12 @@
   // fabriquaient deux échéances).
   // `niveaux` : combien de niveaux a la ligne lue (le format d'aujourd'hui ;
   // moins pour une ligne de version 12 d'un module coupé au lot K1b).
-  function normaliserModule(id, brut, aujourdhui = jourLocal(), niveaux = NIVEAUX[id]) {
+  // Correctif P1 (relecture de Codex du 27/11) : `xMax`, la plus grande
+  // valeur de `x` que la version lue pouvait écrire — 3 avant la version 14
+  // (une copie de version 13 abîmée à 241 était lue 0 par la page de
+  // version 13 : elle l'est encore, au lieu de devenir « sorte 60, un
+  // retour raté »).
+  function normaliserModule(id, brut, aujourdhui = jourLocal(), niveaux = NIVEAUX[id], xMax = X_MAX) {
     const k = niveaux;
     const ligne = moduleVide(id, k);
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return ligne;
@@ -1032,7 +1039,7 @@
     ligne.vu = dateOuNull(brut.vu);
     ligne.b = normaliserListe(brut.b, k, SEUILS.revision.boites);
     ligne.a = normaliserListe(brut.a, k, 1);
-    ligne.x = normaliserListe(brut.x, k, X_MAX);
+    ligne.x = normaliserListe(brut.x, k, xMax);
     ligne.r = normaliserListe(brut.r, k, SEUILS.tente.essais);
     ligne.pe = normaliserListe(brut.pe, k, SEUILS.retour.perdues);
     ligne.ar = normaliserListe(brut.ar, k, ARRETS_MAX * 3 + REPRISE.seul);
@@ -1057,7 +1064,14 @@
         // tenté. `q` : le jour de son premier calcul faux tant que le 2e
         // attend (pour que le 2e calcul soit un AUTRE calcul, même la page
         // rechargée entre les deux).
+        // Correctif P1 (relecture de Codex du 27/11) : une échéance plus
+        // d'un an après le plus long délai d'une boîte (une date abîmée, le
+        // 31/12/9999) ne peut venir d'aucun geste : l'étoile revient tout de
+        // suite, au lieu de ne plus jamais revenir. (Un an de marge : une
+        // horloge d'appareil en avance, des tests qui jouent des mois
+        // d'avance, ne la font pas revenir plus tôt.)
         ligne.e[i] = dateOuNull(echeances[i]) || jour;
+        if (ligne.e[i] > ajouterJours(jour, DELAI_MAX + 365)) ligne.e[i] = jour;
         ligne.ar[i] = 0; ligne.r[i] = 0;
         ligne.q[i] = ligne.x[i] & X_SECOND ? rates[i] : null;
       } else {
@@ -1233,12 +1247,13 @@
     if (!versionDe(brut)) return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     const jour = dateOuNull(aujourdhui) || jourLocal();
+    const xMax = versionDe(brut) === VERSION ? X_MAX : X_RATE + X_SECOND;
     if (versionDe(brut) === VERSION_REPRISE) brut = reprendreVersion12(brut, jour);
     else if (versionDe(brut) !== VERSION && versionDe(brut) !== VERSION_13) return parcours;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
-        parcours.modules[id] = normaliserModule(id, brut.modules[id], jour);
+        parcours.modules[id] = normaliserModule(id, brut.modules[id], jour, NIVEAUX[id], xMax);
       });
     }
     const seance = brut.seance && typeof brut.seance === "object" && !Array.isArray(brut.seance) ? brut.seance : {};
@@ -2509,6 +2524,24 @@
     return {parcours: copie, verdict, evenements, finie, ceintures};
   }
 
+  // Correctif P1 (relecture de Codex du 27/11) : une leçon OUVERTE (« On te
+  // montre » à l'écran) sur une étoile pas tenue — même quittée aussitôt,
+  // sans réponse. `a` (« leçon faite ou déjà revenue ») passe à 1 : gagnée
+  // ensuite à « Je tente », elle n'est plus « du premier coup » (elle
+  // revient le lendemain, pas dans 7 jours). Rien d'autre ne change (ni
+  // arrêt, ni compteur) ; une étoile tenue, ou déjà marquée, est rendue
+  // telle quelle.
+  function noterLeconCommencee(parcours, {module, niveau} = {}, {aujourdhui = jourLocal()} = {}) {
+    const copie = normaliserParcours(parcours, {aujourdhui});
+    if (!Object.prototype.hasOwnProperty.call(NIVEAUX, module)) return copie;
+    const index = entier(niveau, 1, NIVEAUX[module], 1) - 1;
+    const avant = ligneDe(copie, module);
+    if (avant.b[index] || avant.a[index]) return copie;
+    const ligne = ligneAChanger(copie, module, aujourdhui);
+    ligne.a[index] = 1;
+    return copie;
+  }
+
   // ------------------------------------------------------------------ « Je tente »
 
   // « Je tente » joué. `tentative` : {module, niveau, reponses: [{juste, ms}],
@@ -2558,7 +2591,11 @@
       // tente » (`r`), jamais perdue (`pe`), aucune leçon commencée ou
       // arrêtée dessus (`ar`) — elle revient au bout de 7 jours. Sinon, le
       // lendemain. L'appli regarde ce que l'élève a montré sur l'étoile.
-      const duPremierCoup = !ligne.r[n - 1] && !ligne.pe[n - 1] && !ligne.ar[n - 1];
+      // Correctif P1 (relecture de Codex du 27/11) : une leçon OUVERTE puis
+      // quittée sans réponse compte aussi (`a`, posé par
+      // noterLeconCommencee) — avant, seul un arrêt avec des réponses
+      // comptait.
+      const duPremierCoup = !ligne.r[n - 1] && !ligne.pe[n - 1] && !ligne.ar[n - 1] && !ligne.a[n - 1];
       gagner(id, ligne, n - 1, aujourdhui, {duPremierCoup});
       evenements.push({type: "gagnee", module: id, niveau: n, par: "tente", duPremierCoup, retour: ligne.e[n - 1]});
       if (seance) compterEnCours(copie, EN_COURS.prouvees, 1, source);
@@ -2662,10 +2699,19 @@
     // périmée : rien ne change. `secondAVenir` dit alors si un 2e calcul
     // attend (la page le pose). Avant, une réponse fausse au PREMIER calcul,
     // donnée sur chaque appareil, comptait pour deux faux : l'étoile partait.
+    // Correctif P1 (relecture de Codex du 27/11) : avec le 2e calcul, la
+    // page dit aussi le jour où le PREMIER a été raté (`premierLe`, celui
+    // qu'elle avait quand elle l'a posé). Un 2e calcul resté à l'écran
+    // d'un retour déjà réglé ailleurs — et l'étoile ratée à nouveau, au
+    // premier calcul du retour suivant — n'est plus pris pour le 2e calcul
+    // de ce retour-là : il est périmé. Avant, un faux à ce vieux calcul
+    // faisait partir l'étoile.
     const attendu = Boolean(avant.x[index] & X_SECOND);
-    if (typeof retour.deuxieme === "boolean" && retour.deuxieme !== attendu) {
+    const autreRetour = retour.deuxieme === true && attendu && typeof retour.premierLe === "string" && retour.premierLe !== avant.q[index];
+    if ((typeof retour.deuxieme === "boolean" && retour.deuxieme !== attendu) || autreRetour) {
       return {parcours: copie, evenements, refuse: "perime",
         mouvement: {module: id, niveau: index + 1, avant: boite, apres: boite, regle: false, perime: true, secondAVenir: attendu, deuxieme: attendu,
+          premierLe: attendu ? avant.q[index] : null,
           accident: false, rate: false, perdue: false, lent: false, monte: false, sens: "reste", aVoir: false, jours: 0}};
     }
     const ligne = ligneAChanger(copie, id, aujourdhui);
@@ -2690,7 +2736,7 @@
       if (sorte) poserSorte(ligne, index, sorte);
       marquer(id, ligne, index);
       if (retour.cause) ajouterCauses(ligne, {[retour.cause]: 1});
-      Object.assign(mouvement, {regle: false, secondAVenir: true, jours: ecartJours(aujourdhui, ligne.e[index])});
+      Object.assign(mouvement, {regle: false, secondAVenir: true, premierLe: aujourdhui, jours: ecartJours(aujourdhui, ligne.e[index])});
       marquerSeanceOuverte(copie);
       return {parcours: copie, mouvement, evenements};
     }
@@ -2705,13 +2751,21 @@
     if (duTest) compterEnCours(copie, EN_COURS.tests, 1, source);
     ligne.x[index] &= ~X_SECOND;
     ligne.q[index] = null;
+    // Correctif P1 (relecture de Codex du 27/11) : un retour RETROUVÉ — juste
+    // au 2e calcul, ou juste mais lent — n'est pas raté : le raté d'avant
+    // (règle B) ne compte plus, « deux fois de suite » repart de zéro. La
+    // sorte ratée reste (le retour suivant commence par elle). Avant, le
+    // raté d'avant restait : deux faux au retour suivant, et l'étoile
+    // partait après raté, retrouvé, raté.
     if (juste && deuxieme) {
       ligne.e[index] = ajouterJours(aujourdhui, 1);
+      ligne.x[index] &= ~X_RATE;
       mouvement.accident = true;
     } else if (juste) {
       const lent = type === "F" && Number(retour.ms) > SEUILS.jour.lentMs;
       if (lent) {
         ligne.e[index] = ajouterJours(aujourdhui, 1);
+        ligne.x[index] &= ~X_RATE;
         mouvement.lent = true;
       } else {
         ligne.b[index] = Math.min(SEUILS.revision.boites, boite + 1);
@@ -3381,6 +3435,11 @@
     if (jamaisTenue(a, i) !== jamaisTenue(b, i)) return jamaisTenue(a, i) ? b : a;
     if (a.g[i] !== b.g[i]) return a.g[i] > b.g[i] ? a : b;
     if (a.b[i] !== b.b[i]) return a.b[i] < b.b[i] ? a : b;
+    // Correctif P1 (relecture de Codex du 27/11) : deux blocs pareils sauf la
+    // sorte rangée dans `x` (une page de version 13 ne la connaît pas, ou
+    // l'a perdue) : celui qui la connaît.
+    const sansSorte = ligne => blocDe(ligne, i).map((valeur, rang) => BLOC[rang] === "x" ? valeur % X_SORTE : valeur);
+    if (a.x[i] !== b.x[i] && JSON.stringify(sansSorte(a)) === JSON.stringify(sansSorte(b))) return a.x[i] > b.x[i] ? a : b;
     return JSON.stringify(blocDe(a, i)) <= JSON.stringify(blocDe(b, i)) ? a : b;
   }
 
@@ -3838,6 +3897,7 @@
     appliquerSerie,
     // « Je tente », « Tente toute la ceinture ».
     appliquerTentative,
+    noterLeconCommencee,
     plusFacile,
     // Lot P1 : l'ordre de « Continuer » (du bas vers le haut).
     ordreDesEtages,
