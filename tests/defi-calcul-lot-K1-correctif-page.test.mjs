@@ -37,7 +37,8 @@ test("Codex 10 — la page dit au moteur à quel calcul l'élève répond, et re
   assert.match(corps("repondreSerie"), /noterRetour\(serie, question\.calcul, juste, ms, cause, question\.deuxieme\)/);
   assert.match(corps("repondreSerie"), /if \(juste && question\.deuxieme && !mouvement\.perime\)/, "pas de « Tu le savais » sur une réponse périmée");
   const jour = corps("lancerCalculsDuJour");
-  assert.match(jour, /\{autreQue: premierCalcul\(tire, tire\.premierLe \|\| aujourdhui\)\}/, "le 2e calcul reposé exclut le premier, retrouvé par son jour");
+  // (Lot P1 : de la même sorte que le premier, avec d'autres nombres.)
+  assert.match(jour, /\{autreQue: premierCalcul\(tire, tire\.premierLe \|\| aujourdhui\), memeSorte: true\}/, "le 2e calcul reposé exclut le premier, retrouvé par son jour");
   assert.match(jour, /CORE\.graineDe\(`\$\{jour\}:\$\{codeSuivi\}`\) \+ rang \* 977/, "le premier calcul d'une étoile se retrouve : le jour, le code, le rang");
 });
 
@@ -153,13 +154,14 @@ test("Codex 15 — Mon espace, joué : la lecture de Défi calcul annonce la ver
     return {ok: true, json: async () => ({ok: true, existe: true, parcours: {version: P.VERSION}})};
   };
   const lireParcours = new Function("window", "fetch", `${jaugesEspace()}\n${fonctionEspace("lireParcours")}\nreturn lireParcours;`)({MATHSGO_DEFI_CALCUL_CORE: CORE}, fetchFaux);
-  // (Lot K1b : le moteur est en version 13 — la page annonce toujours celle de SON moteur.)
-  assert.equal(P.VERSION, 13);
-  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 13});
+  // (Lot K1b : le moteur est en version 13 — la page annonce toujours celle de SON moteur.
+  // Lot P1 : en version 14.)
+  assert.equal(P.VERSION, 14);
+  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 14});
   await lireParcours("7K3M9P", "defi-tables");
   await lireParcours("7K3M9P", "splat");
   assert.deepEqual(envois, [
-    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 13}],
+    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 14}],
     ["api/parcours.php", {code: "7K3M9P", appli: "defi-tables", lire: true}],
     ["api/parcours.php", {code: "7K3M9P", appli: "splat", lire: true}]
   ]);
@@ -180,7 +182,13 @@ test("Codex 16, 17 — Mon espace, joué : pas de « +1 étoile » sur un jour d
   const SIX = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
   let p = P.appliquerTentative(P.creerParcours(), {module: "A1", niveau: 1, reponses: SIX}, {aujourdhui: "2026-11-26", carte}).parcours;
   assert.equal(gainDe("defi-calcul", P, p, null, JOUR), "↑ +1 étoile cette semaine");
-  for (let i = 0; i < 2; i += 1) p = P.appliquerRetour(p, {module: "A1", niveau: 1, juste: false, ms: 1500, type: "P"}, {aujourdhui: JOUR, carte}).parcours;
+  // (Lot P1 : une étoile gagnée du premier coup revient au bout de 7 jours, et
+  // un retour raté ne la fait plus partir tout de suite — la règle B : ratée
+  // deux jours de suite. Elle est donc gagnée lundi après un « Je tente » raté
+  // dimanche, ratée mardi, puis mercredi.)
+  p = P.appliquerTentative(P.creerParcours(), {module: "A1", niveau: 1, reponses: [{juste: false, ms: 1500}, {juste: false, ms: 1500}]}, {aujourdhui: "2026-11-22", carte}).parcours;
+  p = P.appliquerTentative(p, {module: "A1", niveau: 1, reponses: SIX}, {aujourdhui: "2026-11-23", carte}).parcours;
+  for (const jour of ["2026-11-24", "2026-11-25"]) for (let i = 0; i < 2; i += 1) p = P.appliquerRetour(p, {module: "A1", niveau: 1, juste: false, ms: 1500, type: "P"}, {aujourdhui: jour, carte}).parcours;
   assert.equal(p.modules.A1.b[0], 0);
   assert.equal(gainDe("defi-calcul", P, p, null, JOUR), "↑ +1 étoile cette semaine");
   // 17 : la ceinture jaune acquise, et plus aucune étoile tenue (toutes perdues) — la tuile garde la ceinture.

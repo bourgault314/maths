@@ -1,7 +1,7 @@
 // La progression de référence de Défi calcul : une progression COMPLÈTE telle
 // que defi_calcul_mon_parcours.js la produit, dans son format (version 13
 // depuis le lot K1b « les bases en trois classes », 26/11/2026 : six étages,
-// neuf étoiles de plus) — les 74 modules,
+// neuf étoiles de plus ; version 14 depuis le lot P1, 27/11 : la sorte ratée dans `x`) — les 74 modules,
 // toutes les étoiles dans une boîte (1 à 7), toutes les causes, la séance et
 // son plan, les dates. Elle sert de garde-fou entre l'appli et le serveur
 // (lot 2b) : le serveur ne garde que ce qu'il connaît (lib/progression.php),
@@ -30,6 +30,8 @@ const PARCOURS = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
 // visiteur sans code reste sur l'appareil, le paquet envoyé ne le porte pas
 // et le serveur ne le garderait pas ; `parts` (ce que chaque onglet a fait
 // dans la séance ouverte) s'ajoute.
+// Lot P1 (27/11/2026), version 14 : aucune clé de plus — la sorte d'un calcul
+// raté à un retour (0 à 60) est rangée dans `x`, × 4 (0 à 243).
 export const CLES_DECLAREES = Object.freeze(["version", "epoque", "modules", "vu", "b", "e", "a", "x", "r", "q", "pe", "d", "s", "ar", "g", "c",
   "seance", "jour", "etape", "n", "i", "p", "j", "parts", "seances", "journal", "calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero",
   "seuls", "seulsJustes", "tests", "testsRates", "jours", "ceintures", "paliers", "quarts"]);
@@ -71,8 +73,9 @@ export function parcoursComplet({causes = 8, entier = false, pire = false} = {})
       b: boites,
       e: boites.map(boite => PARCOURS.echeanceDeBoite(boite, jour)),
       a: Array.from({length: k}, (_, i) => (index + i) % 2),
-      // Le 2e calcul qui attend (2), un retour raté (1), les deux (3).
-      x: Array.from({length: k}, (_, i) => (index + i) % 4),
+      // Le 2e calcul qui attend (2), un retour raté (1), les deux (3) ; lot
+      // P1 : la sorte ratée au-dessus, × 4 (60 au plus : la plus grande).
+      x: Array.from({length: k}, (_, i) => (index + i) % 4 + ((index + i) % 3 ? 0 : 4 * (PARCOURS.SEUILS.sortes - ((index + i) % 50)))),
       // Rien de tenté ni d'arrêté sur une étoile tenue.
       r: Array.from({length: k}, () => 0),
       q: Array.from({length: k}, () => null),

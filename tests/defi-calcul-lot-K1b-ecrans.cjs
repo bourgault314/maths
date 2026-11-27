@@ -12,15 +12,16 @@
 //              onglet, à 320, 360, 390 px de large et à l'ordinateur (fenêtre
 //              et plein écran) ;
 //   carte      élève neuf : « Ceinture blanche-jaune · 0 étoile sur 14 », les
-//              quatre lignes du CP, « Tente toute la ceinture » ;
+//              quatre lignes du CP (lot P1 : le compte sous chaque ceinture,
+//              plus de « Tente toute la ceinture ») ;
 //   version 12 les neuf progressions jouées par le moteur d'avant
 //              (tests/defi-calcul-lot-K1b-version-12.json) : la page les
 //              relit, sans erreur, avec la ceinture et l'étage attendus, et
-//              les écrit en version 13 ;
+//              les écrit en version 14 (lot P1) ;
 //   réglage    l'élève arrêté par le professeur à chaque étage (1 à 6) : les
-//              étages au-delà sont fermés ; « Tout est gagné » quand l'étage
-//              du réglage est fini ;
-//   ceintures  « Tente toute la ceinture » réussi aux six étages, l'un après
+//              étages au-delà ne sont pas montrés (lot P1 : plus d'étage
+//              « fermé ») ; « Tout est gagné » quand l'étage du réglage est fini ;
+//   ceintures  (retiré au lot P1) « Tente toute la ceinture » réussi aux six étages, l'un après
 //              l'autre : « Tu as gagné les N étoiles. La ceinture … s'ouvre. »
 //              (14, 20, 19, 33, 43, 12) ;
 //   professeur « Ceinture blanche-jaune · CP », toutes les étoiles ouvertes ;
@@ -170,19 +171,20 @@ async function cas(nom, f) {
         assert.equal(x.lignes, 1, `onglet ${i + 1} : « ${x.mot} » sur une ligne`);
         assert.ok(x.mg >= x.g + 1 && x.md <= x.d - 1, `onglet ${i + 1} : « ${x.mot} » dans son onglet (${Math.round(x.mg)}-${Math.round(x.md)} dans ${Math.round(x.g)}-${Math.round(x.d)})`);
       });
-      assert.deepEqual(o.map(x => x.mot), ["en cours", "fermée", "fermée", "fermée", "fermée", "fermée"]);
+      // (Lot P1, planche P1-1 A : le compte sous chaque ceinture ; tout est ouvert.)
+      assert.deepEqual(o.map(x => x.mot), ["0/14", "0/20", "0/19", "0/33", "0/43", "0/12"]);
       assert.match(await texte(s.page, "#carte-porteur"), /^Ceinture blanche-jaune 0 étoile sur 14$/);
       const lignes = await s.page.evaluate(() => [...document.querySelectorAll("#carte-lignes .ck-ligne")].length);
       assert.equal(lignes, P.carteEleve(P.creerParcours(), CARTE, {aujourdhui: JOUR}).etages[0].lignes.length, "les lignes du CP");
       assert.equal(lignes, 4, "quatre lignes au CP (planche K1b-1)");
-      assert.ok(await s.page.isVisible("#carte-tente"), "« Tente toute la ceinture »");
+      assert.equal(await s.page.$("#carte-tente"), null, "plus de « Tente toute la ceinture » (lot P1)");
       await tient(s.page, largeur, hauteur, "carte");
       await photo(s.page, `${f}-carte-neuf`);
-      // Un étage fermé : son onglet, puis sa carte (pointillé de couleur).
+      // Un autre étage : son onglet, puis sa carte (lot P1 : ouvert, comme tous).
       await s.page.click("#carte-etages .ck-onglet:nth-child(3)");
       await pause(s.page, 300);
       assert.match(await texte(s.page, "#carte-porteur"), /^Ceinture jaune-orange/);
-      await tient(s.page, largeur, hauteur, "carte du CE2, fermée");
+      await tient(s.page, largeur, hauteur, "carte du CE2");
       await photo(s.page, `${f}-carte-ce2-fermee`);
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();
@@ -192,7 +194,7 @@ async function cas(nom, f) {
   // ------------------------------------------------ les progressions de version 12
   for (const [nom, t] of Object.entries(V12.temoins)) {
     for (const [largeur, hauteur] of [[390, 844], [1366, 768]]) {
-      await cas(`${largeur}x${hauteur} : version 12 « ${nom} » — relue, la bonne ceinture, écrite en 13`, async () => {
+      await cas(`${largeur}x${hauteur} : version 12 « ${nom} » — relue, la bonne ceinture, écrite en 14 (lot P1)`, async () => {
         const jour = t.vu.jour || JOUR;
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: t.parcours, jour});
         const attendu = P.carteEleve(P.normaliserParcours(t.parcours, {aujourdhui: jour}), CARTE, {aujourdhui: jour});
@@ -207,7 +209,7 @@ async function cas(nom, f) {
         assert.ok(porteur.includes(`sur ${ETOILES[attendu.courant - 1]}`), `${porteur} : l'étage ${attendu.courant}`);
         assert.ok(n, "l'étage existe");
         const p = await T(s.page, "parcours");
-        assert.equal(p.version, 13, "la page relit et garde la version 13");
+        assert.equal(p.version, 14, "la page relit et garde la version 14 (lot P1)");
         await tient(s.page, largeur, hauteur, "carte reprise");
         await photo(s.page, `${largeur}x${hauteur}-v12-${nom}`);
         assert.deepEqual(s.erreurs, []);
@@ -218,7 +220,7 @@ async function cas(nom, f) {
 
   // ------------------------------------------------ le réglage du professeur, étage par étage
   for (let etage = 1; etage <= 6; etage += 1) {
-    await cas(`390x844 : réglage « jusqu'à l'étage ${etage} » — au-delà, fermé ; l'étage du réglage fini : « Tout est gagné »`, async () => {
+    await cas(`390x844 : réglage « jusqu'à l'étage ${etage} » — au-delà, pas montré ; l'étage du réglage fini : « Tout est gagné »`, async () => {
       // L'élève a gagné tous les étages jusqu'à celui du réglage (aujourd'hui).
       let p = P.creerParcours();
       const six = Array.from({length: 6}, () => ({juste: true, ms: 2000}));
@@ -236,7 +238,9 @@ async function cas(nom, f) {
       await s.page.click("#acc-porte");
       await pause(s.page, 300);
       const o = await onglets(s.page);
-      o.forEach((x, i) => { if (i >= etage) assert.equal(x.mot, "fermée", `étage ${i + 1} fermé`); else assert.equal(x.mot, "gagnée", `étage ${i + 1} gagné`); });
+      // (Lot P1 : plus d'onglet « fermée » ; les étages au-delà du réglage ne sont pas montrés.)
+      assert.equal(o.length, etage, `${etage} onglet(s), pas un de plus`);
+      o.forEach((x, i) => assert.equal(x.mot, "gagnée", `étage ${i + 1} gagné`));
       await tient(s.page, 390, 844, "carte arrêtée");
       await photo(s.page, `390x844-reglage-${etage}`);
       assert.deepEqual(s.erreurs, []);
@@ -245,31 +249,8 @@ async function cas(nom, f) {
   }
 
   // ------------------------------------------------ les six ceintures, l'une après l'autre
-  for (const [largeur, hauteur] of [[390, 844], [1366, 768]]) {
-    await cas(`${largeur}x${hauteur} : « Tente toute la ceinture » réussi aux six étages — « Tu as gagné les N étoiles. La ceinture … s'ouvre. »`, async () => {
-      const s = await ouvrir(nav, base, {largeur, hauteur});
-      await s.page.click("#acc-porte");
-      await pause(s.page, 300);
-      for (let etage = 1; etage <= 6; etage += 1) {
-        assert.equal((await T(s.page, "carte")).courant, etage, `étage ${etage}`);
-        await s.page.click("#carte-tente-bouton");
-        await pause(s.page, 800);
-        assert.equal(await T(s.page, "genre"), "ceinture");
-        for (let k = 0; k < 13 && await enJeu(s.page); k += 1) await repondre(s.page, true);
-        await pause(s.page, 600);
-        const suite = etage < 6 ? `La ceinture ${NOMS[etage]} s’ouvre\\.` : "";
-        assert.match(await texte(s.page, "#result-ceinture"), new RegExp(`Ceinture ${NOMS[etage - 1]} ! Tu as gagné les ${ETOILES[etage - 1]} étoiles\\. ?${suite}`, "i"));
-        await tient(s.page, largeur, hauteur, `la ceinture ${NOMS[etage - 1]}`);
-        await photo(s.page, `${largeur}x${hauteur}-ceinture-${etage}`);
-        if (etage === 6) break;
-        await s.page.click("#ceinture-boutons >> text=Ceinture suivante");
-        await pause(s.page, 400);
-        await tient(s.page, largeur, hauteur, `la carte de l'étage ${etage + 1}`);
-      }
-      assert.deepEqual(s.erreurs, []);
-      await s.ctx.close();
-    });
-  }
+  // (Lot P1, 27/11/2026 : « Tente toute la ceinture » n'existe plus — ce cas est retiré, nommé dans la note
+  // « tests retirés » du lot. L'écran « Ceinture … ! » est joué par tests/defi-calcul-lot-P1-ecrans.cjs.)
 
   // ------------------------------------------------ le professeur, la notice
   for (const [largeur, hauteur] of [[390, 844], [1366, 768]]) {
@@ -302,7 +283,7 @@ async function cas(nom, f) {
       const s = await ouvrir(nav, base, {largeur, hauteur});
       await s.page.click("#acc-notice-bouton");
       await pause(s.page, 300);
-      assert.match(await texte(s.page, "#notice"), /la suivante s’ouvre\. Six ceintures, de la blanche-jaune à la bleue\./);
+      assert.match(await texte(s.page, "#notice"), /Tout est ouvert\. .*Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux\./); // (lot P1 : tout est ouvert, plus de « la suivante s’ouvre »)
       await tient(s.page, largeur, hauteur, "Comment ça marche ?");
       await photo(s.page, `${largeur}x${hauteur}-notice`);
       assert.deepEqual(s.erreurs, []);

@@ -1,10 +1,10 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot defi-calcul-lot-K1b
-genere_le 2026-11-26
+lot defi-calcul-lot-P1
+genere_le 2026-11-27
 fichiers 75
-manifeste 6bb5a64210e67dc98ad2acedcb395d5c0e1cfc4edc0cf3c3dac32652735861fa
+manifeste 825a25f6b76870527ff178cd20542681d4ac94d529d6552a7fd27a962b364f14
 672e650f12f5ea1ff6ca5598de902761850fdc4adb890ffec08367259c993d6c  .htaccess
 9f6ac52e0b4210cb45a2c06b67751a9a7d1c75e3e0ca0356311109818f854fd0  api/cours.php
 9cd1a23b41de0af1865daf73448575f12217f0af5dfbcfac39f9b97db6b7e0d2  api/direct.php
@@ -24,7 +24,7 @@ d0147baa9f2b3d0e18b2b9b9422ac19363cece0971bba7f4c958200a0b0e8169  icone-masquabl
 edfad20436938638312ad70d94cc1c253e787db005c81bced2e1c17b39b82fd3  index.php
 8735a6e6f36def32bcf0b114bce2563b7a1bc23059dab95f6a1561f5cda17706  infos.php
 fa28d421a28ed9b6f4b997d5119c2b8adbacff6e2dd119a179b71230f9664934  lib/.htaccess
-e7c339d807b4db3f8f5d4c0b1e3897c2dc3c78099f6110318bebd788d82c81eb  lib/applis.php
+5b9ba44df33e98b24efeaf656e290f12f1812262776fac2074a624511f327af4  lib/applis.php
 d2a844ae1135dbd061349b260d16538db361721465847798811df09cc30a98ad  lib/archives.php
 f1d04c188791df975a1ce49bb5cf50d3e01e1f583d93cff9e29facf3215828bf  lib/auth.php
 63af0436d78384818d517fc057412bb0c50813f44c3a198bbcef5f54b7fe0815  lib/bd.php
@@ -47,8 +47,8 @@ b476cc832c9b7497eed6194afecee863a686469e9162ad1832bd7e7732ccc304  mathsgo-logo-p
 2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960  polices/nunito-latin-ext-wght-normal.woff2
 ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793  polices/nunito-latin-wght-normal.woff2
 95248821578c48f890d325ad0cee74eabffdad8c5459ea1e1e4b47a3d0935fd6  prof/coffres-parcours.js
-30eb1f31d968faee0459e7235cc94a03a5f1b80b56dbf9692d8c2b4fdba21917  prof/defi_calcul_core.js
-478fc7269c9c62d95af9800e7be77fc636e1197c8751435d855ec7e352e669fc  prof/defi_calcul_mon_parcours.js
+7dba14797c1933b669b3f70e33de399fdaf8a7697f9ace2be8463ae8dea11a9e  prof/defi_calcul_core.js
+e3bb2debe984455a4314d54017a6463eaa71623414f5a4b05b45f332ea653ae8  prof/defi_calcul_mon_parcours.js
 a01b704a8c970d9258b06b49494893ff366738acdaa3256121bbe2b9f053dbf1  prof/defi_tables_core.js
 7ab1799a069a2eda6967cb2fcd9a543d7474a7a13723530af6ca2141959ba5c6  prof/defi_tables_mon_parcours.js
 99f574761497a6a413747acf1a7d7214e62bb92f40809955c69e71fc65454caa  prof/direct.php

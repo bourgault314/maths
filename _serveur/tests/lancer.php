@@ -233,8 +233,8 @@ function lire(string $code, ?string $appli = null, array $options = []): array
     // Lot K1 de Défi calcul (B1) : la page dit sa version en lisant ; ces
     // tests lisent comme la page d'aujourd'hui (la lecture d'une page qui ne
     // dit rien a son propre test, « defi-calcul lot K1 »).
-    // Lot K1b : la page d'aujourd'hui est en version 13.
-    if ($appli === 'defi-calcul') $corps['version'] = 13;
+    // Lot K1b : la page d'aujourd'hui est en version 13 ; lot P1 : 14.
+    if ($appli === 'defi-calcul') $corps['version'] = 14;
     return appel('/api/parcours.php', $corps, $options);
 }
 
@@ -7376,11 +7376,13 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     $obtenu = json_encode(filtrer_progression('defi-calcul', json_decode($texte, false)), JSON_UNESCAPED_UNICODE);
     egal($attendu, $obtenu, "le filtre du serveur jette un champ que le moteur Défi calcul produit : compléter 'cles'/'motifs' de « defi-calcul » dans lib/applis.php");
     $reference = json_decode($texte, false);
-    egal(13, $reference->version, 'version 13 (lot K1b « les bases en trois classes » : six étages, neuf étoiles de plus ; 12 au lot K1 « la carte chez l’élève » : des étoiles, leur compteur `g`, `r`, `q`, `pe` ; plus de `ok`, `f`, `t`, `l`)');
+    egal(14, $reference->version, 'version 14 (lot P1 « tout ouvert » : la sorte d’un calcul raté à un retour, dans `x` ; 13 au lot K1b « les bases en trois classes » : six étages, neuf étoiles de plus ; 12 au lot K1 « la carte chez l’élève » : des étoiles, leur compteur `g`, `r`, `q`, `pe` ; plus de `ok`, `f`, `t`, `l`)');
     egal(74, count(get_object_vars($reference->modules)), 'les 74 modules de la carte');
     egal(6, count($reference->modules->A2->x), 'x par niveau (le retour en cours, 0 à 3) — A2 a 6 niveaux depuis le lot K1b (5 depuis le lot « couverture »)');
-    vrai(max($reference->modules->A2->x) <= 3, 'x borné à 3 par le moteur (un retour raté 1, le 2e calcul qui attend 2)');
+    vrai(max($reference->modules->A2->x) <= 243, 'x borné à 243 par le moteur (un retour raté 1, le 2e calcul qui attend 2, la sorte ratée × 4 — lot P1)');
     foreach (['b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g'] as $champ) egal(6, count($reference->modules->A2->{$champ}), "A2 : une case par étoile dans `$champ`");
+    // Lot P1 : la sorte d'un calcul raté à un retour est rangée dans `x`, × 4 (243 au plus).
+    vrai(max(array_merge(...array_map(fn ($m) => $m->x, array_values(get_object_vars($reference->modules))))) > 3, 'des sortes ratées dans `x`');
     // Lot K1b : les six modules coupés ont leurs étoiles neuves à la fin.
     foreach (['A10' => 5, 'A11' => 4, 'A2' => 6, 'A3' => 5, 'A5' => 5, 'M1' => 9] as $module => $etoiles) egal($etoiles, count($reference->modules->{$module}->b), "$module : $etoiles étoiles");
     egal([6, 6], [count($reference->ceintures), count($reference->paliers)], 'six étages : six ceintures, six tests');
@@ -7404,7 +7406,8 @@ verifier("defi-calcul — le parcours de référence ressort identique du filtre
     // serveur le garde — sans le prénom : 1 657 clés, 30 686 octets. Toutes les étoiles tenues et 12 causes : 1 954 clés,
     // 33 599 octets. Le pire cas (aucune tenue, quatre dates par étoile, 12 causes) : 1 954 clés, 35 972 octets.
     // tests/defi-calcul-lot-K1b-correctif.test.mjs les mesure tous avec le moteur.
-    egal(30686, strlen($attendu), 'la référence versionnée, sans le prénom : 30 686 octets');
+    // Lot P1 : la sorte ratée rangée dans `x` (aucune clé de plus) : 30 818 octets.
+    egal(30818, strlen($attendu), 'la référence versionnée, sans le prénom : 30 818 octets');
     $cles = 0;
     $compter = function ($valeur) use (&$compter, &$cles) {
         if (is_object($valeur)) { foreach (get_object_vars($valeur) as $element) { $cles++; $compter($element); } }
@@ -8305,9 +8308,10 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
     // compteur ; plus de `ok`, `f`, `t`, `l`).
     // Puis le lot K1b « les bases en trois classes » : 13 (six étages, neuf
     // étoiles de plus à la fin de six modules).
-    egal(13, $reference['version'], 'le parcours de référence est en version 13');
-    egal(13, CATALOGUE_APPLIS['defi-calcul']['version_min']);
-    foreach ([[12, 'version 12'], [11, 'version 11'], [10, 'version 10'], [9, 'version 9'], [8, 'version 8'], [7, 'version 7'], [6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['13', '« 13 » en texte'], [12.5, 'version 12,5'], [null, 'sans version']] as [$version, $quoi]) {
+    // Puis le lot P1 « tout ouvert » : 14 (la sorte d'un calcul raté, dans `x`).
+    egal(14, $reference['version'], 'le parcours de référence est en version 14');
+    egal(14, CATALOGUE_APPLIS['defi-calcul']['version_min']);
+    foreach ([[13, 'version 13'], [12, 'version 12'], [11, 'version 11'], [10, 'version 10'], [9, 'version 9'], [8, 'version 8'], [7, 'version 7'], [6, 'version 6'], [5, 'version 5'], [4, 'version 4'], [3, 'version 3'], [0, 'version 0'], ['14', '« 14 » en texte'], [13.5, 'version 13,5'], [null, 'sans version']] as [$version, $quoi]) {
         $ancien = $reference;
         if ($version === null) unset($ancien['version']); else $ancien['version'] = $version;
         $w = ecrire($code, $ancien, 0, 'defi-calcul');
@@ -8316,16 +8320,16 @@ verifier("defi-calcul F1 et G1 — une page d'avant G1 (version 4, 3…) ne ré�
         egal(false, lire($code, 'defi-calcul')['json']['existe'], "$quoi : rien d'écrit");
     }
     $w = ecrire($code, $reference, 0, 'defi-calcul');
-    egal(200, $w['code'], 'version 13 : accepté');
+    egal(200, $w['code'], 'version 14 : accepté');
     $ancien = $reference;
-    $ancien['version'] = 12;
+    $ancien['version'] = 13;
     $w = ecrire($code, $ancien, 1, 'defi-calcul');
-    egal(400, $w['code'], 'une version 12 par-dessus une version 13 : refusé, même avec la bonne révision');
+    egal(400, $w['code'], 'une version 13 par-dessus une version 14 : refusé, même avec la bonne révision');
     $w = ecrire($code, $ancien, 0, 'defi-calcul');
     egal(400, $w['code'], 'avec une révision fausse : refusé aussi (pas de 409 qui ferait fusionner la vieille page)');
     $r = lire($code, 'defi-calcul');
     egal(1, $r['json']['revision'], 'toujours la révision 1');
-    egal(13, $r['json']['parcours']['version'], 'la version 13 est restée');
+    egal(14, $r['json']['parcours']['version'], 'la version 14 est restée');
     // Lot 4 : les ceintures reviennent telles quelles (des dates et des null, à leur place).
     egal($reference['ceintures'], $r['json']['parcours']['ceintures'], 'les ceintures sont gardées telles quelles');
     // Lot F4 : les tests de palier (des dates et des null) et `ar` (des entiers) aussi ; l'échéance
@@ -8406,36 +8410,36 @@ verifier("defi-calcul lot K1 — une page qui ne saurait pas lire la progression
     $lireEn = fn ($version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true] + ($version === null ? [] : ['version' => $version]));
     // Rien d'enregistré : la page d'aujourd'hui lit « rien ». (Correctif K1b : une page d'une version que le
     // serveur n'accepte plus à l'écriture n'est plus servie, même quand il n'y a rien — avant, elle lisait « rien ».)
-    egal([200, false], [$lireEn(13)['code'], $lireEn(13)['json']['existe']], 'rien encore : la page de version 13 lit « rien »');
+    egal([200, false], [$lireEn(14)['code'], $lireEn(14)['json']['existe']], 'rien encore : la page de version 14 lit « rien »');
     egal([400, 'Page ancienne : recharge la page.'], [$lireEn(null)['code'], $lireEn(null)['json']['erreur'] ?? null], 'rien encore : la vieille page n’est déjà plus servie');
-    egal(200, ecrire($code, $reference, 0, 'defi-calcul')['code'], 'la version 13 s’enregistre');
+    egal(200, ecrire($code, $reference, 0, 'defi-calcul')['code'], 'la version 14 s’enregistre');
     // La page d'avant (elle ne dit rien) : refusée, sans rien apprendre de plus.
     $r = $lireEn(null);
-    egal(400, $r['code'], 'sans version : la progression de version 13 n’est pas servie');
+    egal(400, $r['code'], 'sans version : la progression de version 14 n’est pas servie');
     egal('Page ancienne : recharge la page.', $r['json']['erreur'] ?? null, 'le même message que pour une écriture trop ancienne');
     vrai(!array_key_exists('parcours', $r['json']) && !array_key_exists('revision', $r['json']), 'ni le parcours ni la révision ne sont rendus');
-    foreach ([12, 11, 10, 0, -1, '13', 13.5, [13], true] as $version) {
+    foreach ([13, 12, 11, 10, 0, -1, '14', 14.5, [14], true] as $version) {
         egal(400, $lireEn($version)['code'], 'lecteur ' . json_encode($version) . ' : refusé (une version illisible vaut « rien dit »)');
     }
     // La page de ce lot, et une page plus récente : servies.
-    foreach ([13, 14, 999] as $version) {
+    foreach ([14, 15, 999] as $version) {
         $r = $lireEn($version);
-        egal([200, true, 13, 1], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version'], $r['json']['revision']], "lecteur $version : servi");
+        egal([200, true, 14, 1], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version'], $r['json']['revision']], "lecteur $version : servi");
     }
-    // Une progression de version 14 (une page plus récente a écrit) : la page de version 13 ne la reçoit plus.
+    // Une progression de version 15 (une page plus récente a écrit) : la page de version 14 ne la reçoit plus.
     $futur = $reference;
-    $futur['version'] = 14;
-    egal(200, ecrire($code, $futur, 1, 'defi-calcul')['code'], 'une page plus récente écrit en version 14');
-    egal(400, $lireEn(13)['code'], 'lecteur 13, progression 14 : pas servie');
-    egal(200, $lireEn(14)['code'], 'lecteur 14 : servie');
-    // Et par le conflit : elle écrit avec une révision périmée — pas de 409 qui lui rendrait la version 14.
+    $futur['version'] = 15;
+    egal(200, ecrire($code, $futur, 1, 'defi-calcul')['code'], 'une page plus récente écrit en version 15');
+    egal(400, $lireEn(14)['code'], 'lecteur 14, progression 15 : pas servie');
+    egal(200, $lireEn(15)['code'], 'lecteur 15 : servie');
+    // Et par le conflit : elle écrit avec une révision périmée — pas de 409 qui lui rendrait la version 15.
     $w = ecrire($code, $reference, 1, 'defi-calcul');
-    egal(400, $w['code'], 'une écriture de version 13 en conflit avec une version 14 : 400, pas 409');
-    vrai(!array_key_exists('parcours', $w['json']), 'la version 14 n’est pas rendue avec le refus');
-    egal(14, $lireEn(14)['json']['parcours']['version'], 'et rien n’a été écrit par-dessus');
+    egal(400, $w['code'], 'une écriture de version 14 en conflit avec une version 15 : 400, pas 409');
+    vrai(!array_key_exists('parcours', $w['json']), 'la version 15 n’est pas rendue avec le refus');
+    egal(15, $lireEn(15)['json']['parcours']['version'], 'et rien n’a été écrit par-dessus');
     $w = ecrire($code, $futur, 1, 'defi-calcul');
     egal(409, $w['code'], 'à version égale, le conflit rend l’état, comme avant');
-    egal(14, $w['json']['parcours']['version'] ?? null);
+    egal(15, $w['json']['parcours']['version'] ?? null);
     // Les autres applis ne déclarent rien : leur lecture ne change pas.
     foreach (CATALOGUE_APPLIS as $cle => $fiche) {
         if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_sans_declaration', $fiche), "$cle : la lecture n’est pas touchée");
@@ -8451,6 +8455,8 @@ verifier("defi-calcul lot K1 — une page qui ne saurait pas lire la progression
     $abime['modules']['A1']['g'] = [1, [2], 10000];
     $abime['modules']['A1']['pe'] = [true, 4, 1];
     $abime['modules']['A1']['x'] = [3, -1, 2.5];
+    // Lot P1 : `x` porte aussi la sorte ratée, × 4 — 243 au plus.
+    $abime['modules']['A2']['x'] = [243, 244, 'x', 7, 0, 1];
     $abime['seance']['p'] = [1, '15', 1, 10, 3];
     $abime['seance']['j'] = [1, 'x', 3, 4, 5401, 6, 7, 8, 9, 10];
     $abime['ceintures'] = ['?', '2026-10-20', null, 7];
@@ -8459,13 +8465,15 @@ verifier("defi-calcul lot K1 — une page qui ne saurait pas lire la progression
     $abime['journal']['calculs'][2] = 'cinq';
     $abime['journal']['numero'][3] = 1000000;
     egal(200, ecrire($autre, $abime, 0, 'defi-calcul')['code'], 'accepté (les valeurs hors format sont remplacées)');
-    $r = appel('/api/parcours.php', ['code' => $autre, 'appli' => 'defi-calcul', 'lire' => true, 'version' => 13])['json']['parcours'];
+    $r = appel('/api/parcours.php', ['code' => $autre, 'appli' => 'defi-calcul', 'lire' => true, 'version' => 14])['json']['parcours'];
     egal([4, 0, 3], $r['modules']['A1']['b'], '`b` : le texte devient 0, la boîte 3 reste au niveau 3');
     egal(['2026-11-20', null, '2026-11-22'], $r['modules']['A1']['e'], '`e` : un texte devient null, à sa place');
     egal([null, '2026-11-21', null], $r['modules']['A1']['d'], '`d` : un entier et une date impossible deviennent null');
     egal([1, 0, 0], $r['modules']['A1']['g'], '`g` : une liste et 10 000 deviennent 0');
     egal([0, 0, 1], $r['modules']['A1']['pe'], '`pe` : un booléen et 4 deviennent 0');
     egal([3, 0, 0], $r['modules']['A1']['x'], '`x`');
+    egal([243, 0, 0, 7, 0, 1], $r['modules']['A2']['x'], '`x` (lot P1) : 243 reste, 244 et un texte deviennent 0, à leur place');
+
     egal([1, 0, 1, 10, 3], $r['seance']['p'], 'le plan : « 15 » en texte devient 0 (le moteur lit 10 minutes), rien ne glisse');
     egal([1, 0, 3, 4, 0, 6, 7, 8, 9, 10], $r['seance']['j'], 'ce que la séance a fait');
     egal([null, '2026-10-20', null, null], $r['ceintures'], 'les ceintures');
@@ -9974,39 +9982,39 @@ verifier("defi-calcul lot K1, correctif (Codex 8) — chaque champ à sa place e
     vider_compteurs();
 });
 
-verifier("defi-calcul lot K1, correctif (Codex 9) — la version est comparée sous le verrou : une page de version 13 n'écrit pas par-dessus une ligne de version 14, même avec la bonne révision", function () use (&$jetonS1) {
+verifier("defi-calcul lot K1, correctif (Codex 9) — la version est comparée sous le verrou : une page de version 14 n'écrit pas par-dessus une ligne de version 15, même avec la bonne révision", function () use (&$jetonS1) {
     vider_compteurs();
     $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c9', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0]['code'];
-    $v13 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
-    $v14 = $v13;
-    $v14['version'] = 14;
+    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $v15 = $v14;
+    $v15['version'] = 15;
     $lireEn = fn (int $version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true, 'version' => $version]);
-    egal([200, 1], [($w = ecrire($code, $v13, 0, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 13 s’enregistre');
-    egal([200, 2], [($w = ecrire($code, $v14, 1, 'defi-calcul'))['code'], $w['json']['revision']], 'une page plus récente écrit en version 14');
-    // La page de version 13 présente la révision EXACTE de la ligne : refusée quand même.
-    $w = ecrire($code, $v13, 2, 'defi-calcul');
-    egal(400, $w['code'], 'version 13, révision exacte, ligne en version 14 : refusé');
+    egal([200, 1], [($w = ecrire($code, $v14, 0, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 14 s’enregistre');
+    egal([200, 2], [($w = ecrire($code, $v15, 1, 'defi-calcul'))['code'], $w['json']['revision']], 'une page plus récente écrit en version 15');
+    // La page de version 14 présente la révision EXACTE de la ligne : refusée quand même.
+    $w = ecrire($code, $v14, 2, 'defi-calcul');
+    egal(400, $w['code'], 'version 14, révision exacte, ligne en version 15 : refusé');
     egal('Page ancienne : recharge la page.', $w['json']['erreur'] ?? null, 'le même message');
     vrai(!array_key_exists('parcours', $w['json']) && !array_key_exists('revision', $w['json']), 'rien n’est rendu avec le refus');
-    $r = $lireEn(14);
-    egal([14, 2], [$r['json']['parcours']['version'], $r['json']['revision']], 'la ligne n’a pas bougé : version 14, révision 2');
+    $r = $lireEn(15);
+    egal([15, 2], [$r['json']['parcours']['version'], $r['json']['revision']], 'la ligne n’a pas bougé : version 15, révision 2');
     $avant = bd_test()->prepare("SELECT p.donnees_avant FROM progressions p JOIN eleves e ON e.id = p.eleve_id WHERE e.code = ? AND p.appli = 'defi-calcul'");
     $avant->execute([$code]);
     $donneesAvant = (string)$avant->fetchColumn();
     // (Le curseur est refermé tout de suite : laissé ouvert, il garde un verrou de lecture sur SQLite.)
     $avant->closeCursor();
-    egal(13, json_decode($donneesAvant, true)['version'], '« Revenir à… » garde toujours la version 13 d’avant : rien n’a été écrit');
-    // Une révision périmée, ou 0 (« je n'ai rien lu ») : refusé pareil, jamais un 409 qui rendrait la version 14.
-    foreach ([1, 0, 7] as $base) egal(400, ecrire($code, $v13, $base, 'defi-calcul')['code'], "version 13, révision $base : refusé");
-    egal(2, $lireEn(14)['json']['revision'], 'toujours la révision 2');
+    egal(14, json_decode($donneesAvant, true)['version'], '« Revenir à… » garde toujours la version 14 d’avant : rien n’a été écrit');
+    // Une révision périmée, ou 0 (« je n'ai rien lu ») : refusé pareil, jamais un 409 qui rendrait la version 15.
+    foreach ([1, 0, 7] as $base) egal(400, ecrire($code, $v14, $base, 'defi-calcul')['code'], "version 14, révision $base : refusé");
+    egal(2, $lireEn(15)['json']['revision'], 'toujours la révision 2');
     // À version égale ou plus haute, tout marche comme avant.
-    egal([200, 3], [($w = ecrire($code, $v14, 2, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 14 continue d’écrire');
-    egal(409, ecrire($code, $v14, 2, 'defi-calcul')['code'], 'à version égale, une révision périmée rend le conflit');
-    $v15 = $v13;
-    $v15['version'] = 15;
-    egal(200, ecrire($code, $v15, 3, 'defi-calcul')['code'], 'une version plus haute écrit par-dessus');
-    egal(400, ecrire($code, $v14, 4, 'defi-calcul')['code'], 'et la version 14 est refusée à son tour');
+    egal([200, 3], [($w = ecrire($code, $v15, 2, 'defi-calcul'))['code'], $w['json']['revision']], 'la version 15 continue d’écrire');
+    egal(409, ecrire($code, $v15, 2, 'defi-calcul')['code'], 'à version égale, une révision périmée rend le conflit');
+    $v16 = $v14;
+    $v16['version'] = 16;
+    egal(200, ecrire($code, $v16, 3, 'defi-calcul')['code'], 'une version plus haute écrit par-dessus');
+    egal(400, ecrire($code, $v15, 4, 'defi-calcul')['code'], 'et la version 15 est refusée à son tour');
     // Défi tables ne protège pas sa lecture par version : rien ne change pour lui.
     $tables = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference.json'), true);
     egal(200, ecrire($code, $tables, 0, 'defi-tables')['code'], 'Défi tables écrit');
@@ -10020,24 +10028,24 @@ verifier("defi-calcul lot K1, correctif (Codex 9) — la version est comparée s
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });
-verifier("defi-calcul lot K1, correctif (Codex 15) — Mon espace annonce le format que lit son moteur : une progression de version 13 lui est servie", function () use (&$jetonS1) {
+verifier("defi-calcul lot K1, correctif (Codex 16) — Mon espace annonce le format que lit son moteur : une progression de version 14 lui est servie", function () use (&$jetonS1) {
     vider_compteurs();
     $moteur = (string)file_get_contents(dirname(__DIR__) . '/public/prof/defi_calcul_mon_parcours.js');
     vrai(preg_match('/^\s*const VERSION = (\d{1,3});/m', $moteur, $m) === 1, 'le moteur dit sa version sur une ligne « const VERSION = N; »');
     $format = (int)$m[1];
-    egal(13, $format, 'le moteur servi d’ici lit la version 13');
+    egal(14, $format, 'le moteur servi d’ici lit la version 14');
     $accueil = page('/');
     egal(200, $accueil['code'], 'Mon espace répond');
     vrai(str_contains($accueil['texte'], "      version: Number(\"$format\") || null,\n"), 'la page porte ce format, pour Défi calcul');
     egal(1, substr_count($accueil['texte'], '      version: '), 'et pour lui seul : les autres activités ne disent rien, comme avant');
     vrai(str_contains($accueil['texte'], 'JSON.stringify(Object.assign({code, appli: cle, lire: true}, format))'), 'la lecture du parcours l’envoie');
-    // Le trajet du serveur : avec ce que la page envoie, la progression de version 13 est servie ; sans, refusée.
-    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c15', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    // Le trajet du serveur : avec ce que la page envoie, la progression de version 14 est servie ; sans, refusée.
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1c16', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
     $code = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0]['code'];
     $reference = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
     egal(200, ecrire($code, $reference, 0, 'defi-calcul')['code']);
     $r = appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true, 'version' => $format]);
-    egal([200, true, 13], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version']], 'ce que Mon espace envoie maintenant : servi');
+    egal([200, true, 14], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version']], 'ce que Mon espace envoie maintenant : servi');
     egal(400, appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true])['code'], 'ce qu’il envoyait avant (rien) : refusé — la tuile restait vide');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
@@ -10147,10 +10155,14 @@ verifier("defi-calcul lot K1b — l'ancien réglage « palier » resté en base 
 // telles quelles (son moteur les relit — tests/defi-calcul-lot-K1b-donnees),
 // puis écrit en version 13. Une page de version 12 restée ouverte ne peut
 // plus rien écrire, ni lire ce que la nouvelle a écrit.
+// (Lot P1, 27/11/2026 : la page d'aujourd'hui est en version 14 ; les
+// numéros des deux tests qui suivent ont suivi, une page de version 13 est
+// refusée comme une de version 12. Le test « defi-calcul lot P1 » plus bas
+// sert une ligne de version 13.)
 // tests/parcours-version-12-defi-calcul.json : une progression produite par
 // le VRAI moteur de la version 12 (main du 26/11/2026, trois semaines de
 // séances) — la même que le témoin « trois-semaines » des tests du dépôt.
-verifier("defi-calcul lot K1b — une progression de version 12 restée en base est servie telle quelle à la page de version 13, qui écrit en 13 ; la page de version 12 n'écrit plus et ne lit plus la suite ; « Revenir à… » garde la version 12", function () use (&$jetonS1) {
+verifier("defi-calcul lot K1b — une progression de version 12 restée en base est servie telle quelle à la page de version 14, qui écrit en 14 ; la page de version 12 n'écrit plus et ne lit plus la suite ; « Revenir à… » garde la version 12", function () use (&$jetonS1) {
     vider_compteurs();
     $chemin = __DIR__ . '/parcours-version-12-defi-calcul.json';
     vrai(is_file($chemin), 'tests/parcours-version-12-defi-calcul.json manque');
@@ -10158,19 +10170,19 @@ verifier("defi-calcul lot K1b — une progression de version 12 restée en base 
     $v12 = json_decode($v12Texte, true);
     egal(12, $v12['version'] ?? null, 'le témoin est en version 12');
     egal([4, 3, 5], [count($v12['ceintures']), count($v12['modules']['A10']['b']), count($v12['modules']['A2']['b'])], 'quatre étages, A10 à 3 étoiles, A2 à 5 : le format d’avant');
-    $v13 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
     $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1b-v', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $eleve['code'];
     $lireEn = fn ($version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true] + ($version === null ? [] : ['version' => $version]));
     // La ligne d'avant le lot : posée en base comme elle y est aujourd'hui (le serveur n'accepte plus qu'on l'écrive).
     egal(400, ecrire($code, $v12, 0, 'defi-calcul')['code'], 'la version 12 ne s’écrit plus par l’API');
-    egal(200, ecrire($code, $v13, 0, 'defi-calcul')['code'], 'une ligne est créée');
+    egal(200, ecrire($code, $v14, 0, 'defi-calcul')['code'], 'une ligne est créée');
     $compact = json_encode(json_decode($v12Texte, false), JSON_UNESCAPED_UNICODE);
     bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([$compact, (int)$eleve['id']]);
     // La page de ce lot la reçoit telle quelle : rien n'est retiré, rien n'est ajouté.
-    $r = $lireEn(13);
-    egal([200, true, 1], [$r['code'], $r['json']['existe'], $r['json']['revision']], 'lecteur 13 : servie');
+    $r = $lireEn(14);
+    egal([200, true, 1], [$r['code'], $r['json']['existe'], $r['json']['revision']], 'lecteur 14 : servie');
     egal($v12, $r['json']['parcours'], 'la progression de version 12 revient entière (c’est le moteur qui la relit)');
     egal(400, $lireEn(null)['code'], 'une page qui ne dit rien (version 11 au plus) : pas servie');
     // Correctif K1b (relecture de Codex du 26/11) : une page de version 12 restée ouverte ne la lit plus — elle
@@ -10179,20 +10191,20 @@ verifier("defi-calcul lot K1b — une progression de version 12 restée en base 
     egal([400, 'Page ancienne : recharge la page.'], [$r12['code'], $r12['json']['erreur'] ?? null], 'une page de version 12 restée ouverte ne la lit plus…');
     $w = ecrire($code, $v12, 1, 'defi-calcul');
     egal([400, 'Page ancienne : recharge la page.'], [$w['code'], $w['json']['erreur'] ?? null], '… et ne l’écrit plus : elle se recharge');
-    egal($v12, $lireEn(13)['json']['parcours'], 'rien n’a bougé');
-    // La page de ce lot écrit en version 13, avec la révision qu'elle a lue.
-    $w = ecrire($code, $v13, 1, 'defi-calcul');
-    egal([200, 2], [$w['code'], $w['json']['revision']], 'la version 13 s’écrit par-dessus la version 12');
+    egal($v12, $lireEn(14)['json']['parcours'], 'rien n’a bougé');
+    // La page de ce lot écrit en version 14, avec la révision qu'elle a lue.
+    $w = ecrire($code, $v14, 1, 'defi-calcul');
+    egal([200, 2], [$w['code'], $w['json']['revision']], 'la version 14 s’écrit par-dessus la version 12');
     $avant = bd_test()->prepare("SELECT donnees_avant FROM progressions WHERE eleve_id = ? AND appli = 'defi-calcul'");
     $avant->execute([(int)$eleve['id']]);
     $donneesAvant = (string)$avant->fetchColumn();
     $avant->closeCursor();
     egal($v12, json_decode($donneesAvant, true), '« Revenir à… » garde la version 12 d’avant, entière');
     egal(400, $lireEn(12)['code'], 'la page de version 12 ne lit plus la suite');
-    egal(13, $lireEn(13)['json']['parcours']['version'], 'la page de version 13, si');
-    // Deux appareils : l'un a déjà écrit en 13, l'autre présente une révision périmée — le conflit lui rend la version 13.
-    $w = ecrire($code, $v13, 1, 'defi-calcul');
-    egal([409, 13], [$w['code'], $w['json']['parcours']['version'] ?? null], 'à version égale, le conflit rend l’état');
+    egal(14, $lireEn(14)['json']['parcours']['version'], 'la page de version 14, si');
+    // Deux appareils : l'un a déjà écrit en 14, l'autre présente une révision périmée — le conflit lui rend la version 14.
+    $w = ecrire($code, $v14, 1, 'defi-calcul');
+    egal([409, 14], [$w['code'], $w['json']['parcours']['version'] ?? null], 'à version égale, le conflit rend l’état');
     egal(400, ecrire($code, $v12, 2, 'defi-calcul')['code'], 'et la version 12 reste refusée, même avec la bonne révision');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
@@ -10212,12 +10224,12 @@ verifier("defi-calcul lot K1b — une progression de version 12 restée en base 
 //    PHP et lu 2 par le navigateur. Un nombre entier, quelle que soit son
 //    écriture, vaut cet entier.
 // (La part « moteur » du correctif : tests/defi-calcul-lot-K1b-correctif.test.mjs.)
-verifier("defi-calcul lot K1b, correctif — une page de version 12 n'est plus servie dès que le serveur est à jour (ligne de version 12, de version 13, ou rien) ; la page de version 13 lit tout ; les autres applis ne changent pas", function () use (&$jetonS1) {
+verifier("defi-calcul lot K1b, correctif — une page de version 12 n'est plus servie dès que le serveur est à jour (ligne de version 12, de version 14, ou rien) ; la page de version 14 lit tout ; les autres applis ne changent pas", function () use (&$jetonS1) {
     vider_compteurs();
-    egal([13, 11], [CATALOGUE_APPLIS['defi-calcul']['version_min'], CATALOGUE_APPLIS['defi-calcul']['version_sans_declaration']], 'le catalogue');
+    egal([14, 11], [CATALOGUE_APPLIS['defi-calcul']['version_min'], CATALOGUE_APPLIS['defi-calcul']['version_sans_declaration']], 'le catalogue');
     $v12Texte = (string)file_get_contents(__DIR__ . '/parcours-version-12-defi-calcul.json');
     $v12 = json_decode($v12Texte, true);
-    $v13 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
     $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K1b-c1', 'applis' => ['defi-calcul', 'defi-tables']], ['jeton' => $jetonS1])['json']['id'];
     $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
     $code = $eleve['code'];
@@ -10226,43 +10238,43 @@ verifier("defi-calcul lot K1b, correctif — une page de version 12 n'est plus s
         egal([400, false, 'Page ancienne : recharge la page.'], [$r['code'], $r['json']['ok'] ?? null, $r['json']['erreur'] ?? null], $quoi);
         vrai(!array_key_exists('parcours', $r['json']) && !array_key_exists('revision', $r['json']) && !array_key_exists('existe', $r['json']), "$quoi : rien d’autre n’est rendu");
     };
-    // Une version qui n'est pas un entier ne passe pas pour une version 13 (elle vaut « rien dit » : 11).
+    // Une version qui n'est pas un entier ne passe pas pour une version 14 (elle vaut « rien dit » : 11).
     $versionsFausses = function (string $quand) use ($code, $refuse) {
-        foreach (['"13"', '13.0', '[13]', 'true', 'null'] as $texte) {
+        foreach (['"14"', '14.0', '[14]', 'true', 'null'] as $texte) {
             $refuse(appel('/api/parcours.php', '{"code":' . json_encode($code) . ',"appli":"defi-calcul","lire":true,"version":' . $texte . '}'), "$quand, une version $texte");
         }
     };
     // 1. Rien d'enregistré.
-    foreach ([null, 1, 11, 12] as $version) $refuse($lireEn($version), 'rien en base, lecteur ' . json_encode($version));
+    foreach ([null, 1, 11, 12, 13] as $version) $refuse($lireEn($version), 'rien en base, lecteur ' . json_encode($version));
     $versionsFausses('rien en base');
-    $r = $lireEn(13);
-    egal([200, true, false, 0], [$r['code'], $r['json']['ok'], $r['json']['existe'], $r['json']['revision']], 'rien en base, lecteur 13 : « rien »');
+    $r = $lireEn(14);
+    egal([200, true, false, 0], [$r['code'], $r['json']['ok'], $r['json']['existe'], $r['json']['revision']], 'rien en base, lecteur 14 : « rien »');
     // 2. Une ligne de version 12 (posée en base comme elle y est aujourd'hui).
-    egal(200, ecrire($code, $v13, 0, 'defi-calcul')['code'], 'une ligne est créée');
+    egal(200, ecrire($code, $v14, 0, 'defi-calcul')['code'], 'une ligne est créée');
     bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")
         ->execute([json_encode(json_decode($v12Texte, false), JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
-    foreach ([null, 11, 12] as $version) $refuse($lireEn($version), 'ligne de version 12, lecteur ' . json_encode($version));
-    $r = $lireEn(13);
-    egal([200, true, 12, 1], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version'], $r['json']['revision']], 'ligne de version 12, lecteur 13 : servie telle quelle, avec sa révision');
+    foreach ([null, 11, 12, 13] as $version) $refuse($lireEn($version), 'ligne de version 12, lecteur ' . json_encode($version));
+    $r = $lireEn(14);
+    egal([200, true, 12, 1], [$r['code'], $r['json']['existe'], $r['json']['parcours']['version'], $r['json']['revision']], 'ligne de version 12, lecteur 14 : servie telle quelle, avec sa révision');
     $versionsFausses('ligne de version 12');
-    // La page de version 13 la récrit en version 13, avec la révision lue (le moteur l'envoie une fois, même sans
+    // La page de version 14 la récrit en version 14, avec la révision lue (le moteur l'envoie une fois, même sans
     // étoile de plus : tests/defi-calcul-lot-K1b-correctif.test.mjs).
-    $w = ecrire($code, $v13, 1, 'defi-calcul');
-    egal([200, 2], [$w['code'], $w['json']['revision']], 'récrite en version 13 avec la révision lue');
-    // 3. Une ligne de version 13.
-    foreach ([null, 11, 12] as $version) $refuse($lireEn($version), 'ligne de version 13, lecteur ' . json_encode($version));
-    $versionsFausses('ligne de version 13');
-    egal([200, 13], [$lireEn(13)['code'], $lireEn(13)['json']['parcours']['version']], 'ligne de version 13, lecteur 13');
-    // Une page plus récente que le serveur (version 14) lit aussi : c'est elle qui sait.
-    egal(200, $lireEn(14)['code'], 'lecteur 14 : servi');
-    // Le contrôle du lot K1 tient toujours, à côté du nouveau : une ligne PLUS RÉCENTE que la page (une version 14,
-    // posée en base : un jour, une page d'un lot suivant l'aura écrite) n'est pas servie à la page de version 13.
-    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), false);
-    $v14->version = 14;
-    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([json_encode($v14, JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
-    $refuse($lireEn(13), 'ligne de version 14, lecteur 13');
-    $refuse($lireEn(12), 'ligne de version 14, lecteur 12');
-    egal([200, 14], [$lireEn(14)['code'], $lireEn(14)['json']['parcours']['version']], 'ligne de version 14, lecteur 14 : servie');
+    $w = ecrire($code, $v14, 1, 'defi-calcul');
+    egal([200, 2], [$w['code'], $w['json']['revision']], 'récrite en version 14 avec la révision lue');
+    // 3. Une ligne de version 14.
+    foreach ([null, 11, 12, 13] as $version) $refuse($lireEn($version), 'ligne de version 14, lecteur ' . json_encode($version));
+    $versionsFausses('ligne de version 14');
+    egal([200, 14], [$lireEn(14)['code'], $lireEn(14)['json']['parcours']['version']], 'ligne de version 14, lecteur 14');
+    // Une page plus récente que le serveur (version 15) lit aussi : c'est elle qui sait.
+    egal(200, $lireEn(15)['code'], 'lecteur 15 : servi');
+    // Le contrôle du lot K1 tient toujours, à côté du nouveau : une ligne PLUS RÉCENTE que la page (une version 15,
+    // posée en base : un jour, une page d'un lot suivant l'aura écrite) n'est pas servie à la page de version 14.
+    $v15 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), false);
+    $v15->version = 15;
+    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([json_encode($v15, JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
+    $refuse($lireEn(14), 'ligne de version 15, lecteur 14');
+    $refuse($lireEn(12), 'ligne de version 15, lecteur 12');
+    egal([200, 15], [$lireEn(15)['code'], $lireEn(15)['json']['parcours']['version']], 'ligne de version 15, lecteur 15 : servie');
     // 4. Une appli dont la lecture n'est pas protégée ne change pas : Défi tables lit sans dire sa version, et en la disant.
     foreach ([[], ['version' => 1], ['version' => 99]] as $enPlus) {
         $r = appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-tables', 'lire' => true] + $enPlus);
@@ -10271,6 +10283,61 @@ verifier("defi-calcul lot K1b, correctif — une page de version 12 n'est plus s
     foreach (CATALOGUE_APPLIS as $cle => $fiche) {
         if ($cle !== 'defi-calcul') vrai(!array_key_exists('version_sans_declaration', $fiche), "$cle : lecture pas protégée, rien ne change");
     }
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------- Défi calcul, lot P1 « tout ouvert » (27/11/2026)
+//
+// Version 14 : la sorte du calcul raté à un retour, rangée dans `x` (× 4 :
+// 0 à 243), sans clé de plus.
+// Une progression de version 13 restée en base (le compte de test de
+// Gwenaël) est servie telle quelle à la page de version 14 — son moteur la
+// relit sans rien perdre (tests/defi-calcul-lot-P1-donnees.test.mjs) — qui
+// écrit en version 14 ; une page de version 13 restée ouverte n'écrit plus et
+// ne lit plus rien. tests/parcours-version-13-defi-calcul.json : produite par
+// le VRAI moteur de la version 13 (main da8c3b1, trois semaines de séances),
+// la même que le témoin « trois-semaines » des tests du dépôt.
+verifier("defi-calcul lot P1 — une progression de version 13 restée en base est servie telle quelle à la page de version 14, qui écrit en 14 ; la page de version 13 n'écrit plus et ne lit plus ; la sorte ratée (dans `x`) est gardée, à sa place", function () use (&$jetonS1) {
+    vider_compteurs();
+    egal([14, 11], [CATALOGUE_APPLIS['defi-calcul']['version_min'], CATALOGUE_APPLIS['defi-calcul']['version_sans_declaration']], 'le catalogue');
+    vrai(!in_array('o', CATALOGUE_APPLIS['defi-calcul']['cles'], true), 'aucune clé de plus : la sorte ratée est rangée dans `x`');
+    egal(['liste', ['entier', 0, 243]], CATALOGUE_APPLIS['defi-calcul']['emplacements']['modules.*.x'], '`x` va de 0 à 243');
+    vrai(!in_array('classe', CATALOGUE_APPLIS['defi-calcul']['cles'], true), 'pas de classe de l’élève dans la progression');
+    egal(['minutes', 'etage'], array_keys(CATALOGUE_APPLIS['defi-calcul']['reglages']), 'aucun réglage neuf');
+    $v13Texte = (string)file_get_contents(__DIR__ . '/parcours-version-13-defi-calcul.json');
+    $v13 = json_decode($v13Texte, true);
+    egal(13, $v13['version'] ?? null, 'le témoin est en version 13');
+    vrai(max(array_merge(...array_map(fn ($m) => $m['x'], array_values($v13['modules'])))) <= 3, 'le format d’avant : `x` à 3 au plus');
+    $v14 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    vrai(max(array_merge(...array_map(fn ($m) => $m['x'], array_values($v14['modules'])))) > 3, 'la référence porte des sortes ratées');
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'P1', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    $eleve = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 1], ['jeton' => $jetonS1])['json']['eleves'][0];
+    $code = $eleve['code'];
+    $lireEn = fn ($version) => appel('/api/parcours.php', ['code' => $code, 'appli' => 'defi-calcul', 'lire' => true] + ($version === null ? [] : ['version' => $version]));
+    egal(400, ecrire($code, $v13, 0, 'defi-calcul')['code'], 'la version 13 ne s’écrit plus par l’API');
+    egal(200, ecrire($code, $v14, 0, 'defi-calcul')['code'], 'une ligne est créée');
+    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")
+        ->execute([json_encode(json_decode($v13Texte, false), JSON_UNESCAPED_UNICODE), (int)$eleve['id']]);
+    $r = $lireEn(14);
+    egal([200, true, 1], [$r['code'], $r['json']['existe'], $r['json']['revision']], 'lecteur 14 : servie');
+    egal($v13, $r['json']['parcours'], 'la progression de version 13 revient entière (c’est le moteur qui la relit)');
+    foreach ([null, 12, 13] as $version) {
+        egal([400, 'Page ancienne : recharge la page.'], [$lireEn($version)['code'], $lireEn($version)['json']['erreur'] ?? null], 'lecteur ' . json_encode($version) . ' : pas servie');
+    }
+    $w = ecrire($code, $v13, 1, 'defi-calcul');
+    egal([400, 'Page ancienne : recharge la page.'], [$w['code'], $w['json']['erreur'] ?? null], 'la page de version 13 restée ouverte n’écrit plus : elle se recharge');
+    egal($v13, $lireEn(14)['json']['parcours'], 'rien n’a bougé');
+    $w = ecrire($code, $v14, 1, 'defi-calcul');
+    egal([200, 2], [$w['code'], $w['json']['revision']], 'la version 14 s’écrit par-dessus la version 13, avec la révision lue');
+    $avant = bd_test()->prepare("SELECT donnees_avant FROM progressions WHERE eleve_id = ? AND appli = 'defi-calcul'");
+    $avant->execute([(int)$eleve['id']]);
+    $donneesAvant = (string)$avant->fetchColumn();
+    $avant->closeCursor();
+    egal($v13, json_decode($donneesAvant, true), '« Revenir à… » garde la version 13 d’avant, entière');
+    $lu = $lireEn(14)['json']['parcours'];
+    egal($v14['modules']['A2']['x'], $lu['modules']['A2']['x'], '`x` et ses sortes ratées reviennent tels quels, à leur place');
+    egal(400, $lireEn(13)['code'], 'la page de version 13 ne lit plus la suite');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
     vider_compteurs();
 });

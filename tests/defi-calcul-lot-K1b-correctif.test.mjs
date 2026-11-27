@@ -53,12 +53,21 @@ function retour(p, cle, jour, juste, deuxieme) {
 }
 const reussir = (p, cle, jour) => retour(p, cle, jour, true).parcours;
 // Les deux calculs faux : l'étoile est perdue.
-function perdre(p, cle, jour) {
+// (Lot P1, la règle B : un retour raté, l'étoile reste et revient le
+// lendemain ; c'est le retour raté du lendemain qui la fait partir. `perdre`
+// rate donc le retour du jour `jour`, puis celui du lendemain : quatre gestes,
+// l'étoile perdue le lendemain.)
+function rater(p, cle, jour) {
   const premier = retour(p, cle, jour, false);
   assert.equal(premier.mouvement.secondAVenir, true, `${cle} : le 2e calcul est attendu`);
-  const second = retour(premier.parcours, cle, jour, false, true);
-  assert.equal(second.mouvement.perdue, true, `${cle} : perdue`);
-  return second.parcours;
+  return retour(premier.parcours, cle, jour, false, true);
+}
+function perdre(p, cle, jour) {
+  const un = rater(p, cle, jour);
+  assert.equal(un.mouvement.perdue, false, `${cle} : la règle B, elle revient demain`);
+  const deux = rater(un.parcours, cle, P.ajouterJours(jour, 1));
+  assert.equal(deux.mouvement.perdue, true, `${cle} : perdue`);
+  return deux.parcours;
 }
 const justes = () => Array.from({length: 6}, () => ({juste: true, ms: 1500}));
 const rates = () => [{juste: false, ms: 1500}, {juste: false, ms: 1500}];
@@ -141,7 +150,7 @@ test("BLOQUANT — et dans l'autre sens : une moitié du haut PERDUE en version 
     const perdu = perdre(P.normaliserParcours(HL.commune, {aujourdhui: J23}), haut, J23);
     assert.deepEqual([etat(perdu, haut).b, etat(perdu, haut).pe], [0, 1]);
     const fusion = fusionDansLesDeuxSens(perdu, HL.reussit, J24, haut);
-    assert.deepEqual([etat(fusion, haut).b, etat(fusion, haut).pe], [0, 1], `${haut} : perdue le 23/11 en version 13, elle le reste`);
+    assert.deepEqual([etat(fusion, haut).b, etat(fusion, haut).pe], [0, 1], `${haut} : perdue le 24/11 en version 13 (lot P1 : ratée le 23 et le 24), elle le reste`);
     assert.deepEqual([etat(fusion, bas).b, etat(fusion, bas).e], [4, "2026-11-28"], `${bas} : le retour réussi le 21/11 sur l'appareil hors ligne`);
   });
 });
@@ -182,10 +191,10 @@ test("deux appareils en version 13, hors ligne le même jour, sur la même moiti
   PAIRES.forEach(([, haut]) => {
     const repris = P.normaliserParcours(HL.commune, {aujourdhui: J23});
     const reussi = reussir(repris, haut, J23);   // un geste : 5 001
-    const perdu = perdre(repris, haut, J23);   // deux gestes : 5 002
+    const perdu = perdre(repris, haut, J23);   // quatre gestes (lot P1 : ratée le 23 et le 24) : 5 004
     const unFaux = retour(repris, haut, J23, false).parcours;   // un geste : 5 001, le 2e calcul attend
-    assert.deepEqual([etat(reussi, haut).g, etat(perdu, haut).g, etat(unFaux, haut).g], [JOUE + 1, JOUE + 2, JOUE + 1]);
-    assert.equal(etat(fusionDansLesDeuxSens(reussi, perdu, J24, haut), haut).b, 0, `${haut} : deux gestes contre un`);
+    assert.deepEqual([etat(reussi, haut).g, etat(perdu, haut).g, etat(unFaux, haut).g], [JOUE + 1, JOUE + 4, JOUE + 1]);
+    assert.equal(etat(fusionDansLesDeuxSens(reussi, perdu, J24, haut), haut).b, 0, `${haut} : quatre gestes contre un`);
     const egal = fusionDansLesDeuxSens(reussi, unFaux, J24, haut);
     assert.deepEqual([etat(egal, haut).b, etat(egal, haut).x], [3, 2], `${haut} : un geste chacun, la boîte la plus basse`);
   });
@@ -193,7 +202,7 @@ test("deux appareils en version 13, hors ligne le même jour, sur la même moiti
 
 // ------------------------------------------- le compteur d'une moitié du haut
 
-test("le compteur d'une moitié du haut : reporté d'avant, 4 999 au plus ; au premier geste de la version 13, il repart à 5 001 — pour CHAQUE geste (retour, « Je tente », J'apprends, test de ceinture)", () => {
+test("le compteur d'une moitié du haut : reporté d'avant, 4 999 au plus ; au premier geste de la version 13, il repart à 5 001 — pour CHAQUE geste (retour, « Je tente », J'apprends)", () => {
   assert.deepEqual(P.COMPTEURS_K1B, {heriteMax: HERITE_MAX, joue: JOUE});
   assert.ok(JOUE + 1000 < P.SEUILS.compteur, "de la place au-dessus de 5 000");
   // Reporté d'avant : le compteur de la moitié du bas, borné à 4 999 (une copie trafiquée).
@@ -209,10 +218,10 @@ test("le compteur d'une moitié du haut : reporté d'avant, 4 999 au plus ; au p
   assert.equal(P.normaliserParcours(essais, {aujourdhui: J23}).modules.A10.g[4], HERITE_MAX);
 
   PAIRES.forEach(([bas, haut]) => {
-    // Le retour : un premier calcul faux (5 001), le second faux — perdue (5 002).
+    // Le retour : un premier calcul faux (5 001), le second faux — raté (5 002 ; lot P1 : la règle B, elle revient demain).
     const premier = retour(repris, haut, J23, false).parcours;
     assert.equal(etat(premier, haut).g, JOUE + 1, `${haut} : le premier calcul faux`);
-    assert.equal(etat(retour(premier, haut, J23, false, true).parcours, haut).g, JOUE + 2, `${haut} : perdue`);
+    assert.equal(etat(retour(premier, haut, J23, false, true).parcours, haut).g, JOUE + 2, `${haut} : raté`);
     // Le 2e calcul juste (un accident), et le retour réussi.
     assert.equal(etat(retour(premier, haut, J23, true, true).parcours, haut).g, JOUE + 2, `${haut} : le 2e calcul juste`);
     const monte = reussir(repris, haut, J23);
@@ -221,15 +230,16 @@ test("le compteur d'une moitié du haut : reporté d'avant, 4 999 au plus ; au p
     assert.equal(etat(reussir(monte, haut, "2026-11-30"), haut).g, JOUE + 2, `${haut} : le retour suivant`);
     // La moitié du bas et les autres étoiles : leur compteur d'un seul tenant.
     assert.equal(etat(reussir(repris, bas, J23), bas).g, 3, `${bas} : la moitié du bas monte d'un cran`);
-    assert.equal(etat(perdre(repris, bas, J23), bas).g, 4, `${bas} : perdue, deux crans`);
+    assert.equal(etat(perdre(repris, bas, J23), bas).g, 6, `${bas} : perdue, quatre crans (lot P1 : deux retours ratés)`);
   });
   assert.equal(etat(reussir(repris, "A1-1", J23), "A1-1").g, 3, "une étoile pas coupée");
 
   // Une copie où le 2e calcul d'une moitié du haut attend avec un compteur encore « reporté » (une
   // copie écrite à la main, ou par la première version de ce lot) : la perte, premier geste d'ici,
-  // repart elle aussi à 5 001.
+  // repart elle aussi à 5 001. (Lot P1 : l'étoile avait déjà raté un retour — `x` 3 — sinon la
+  // règle B la garde.)
   const enAttente = copie(repris);
-  Object.assign(enAttente.modules.A10, {x: [0, 0, 0, 0, 2], q: [null, null, null, null, J23]});
+  Object.assign(enAttente.modules.A10, {x: [0, 0, 0, 0, 3], q: [null, null, null, null, J23]});
   const perdue = retour(enAttente, "A10-5", J23, false, true);
   assert.deepEqual([perdue.mouvement.perdue, etat(perdue.parcours, "A10-5").b, etat(perdue.parcours, "A10-5").g], [true, 0, JOUE + 1]);
 
@@ -258,17 +268,11 @@ test("le compteur d'une moitié du haut : reporté d'avant, 4 999 au plus ; au p
   const arretee = P.appliquerSerie(neuf, Object.assign(de(hauteOuverte), {genre: "apprends", reponses: Array.from({length: 25}, (_, i) => ({juste: i % 3 !== 0, outil: "aucun"}))}), Object.assign(o(J20), {seance: false}));
   assert.equal(arretee.refuse, undefined);
   assert.deepEqual([etat(arretee.parcours, hauteOuverte).b, etat(arretee.parcours, hauteOuverte).g], [0, JOUE + 1], `${hauteOuverte} : J'apprends arrêté`);
-  // « Tente toute la ceinture » du CE1 et du CE2 : les neuf moitiés du haut entrent.
-  let ceintures = neuf;
-  [2, 3].forEach(etage => {
-    const liste = P.calculsDuTestDeCeinture(CARTE, etage).map(c => Object.assign({juste: true}, c));
-    const r = P.appliquerTestCeinture(ceintures, {etage, reponses: liste}, Object.assign(o(J21), {seance: false}));
-    assert.equal(r.refuse, undefined, `test de ceinture de l'étage ${etage} : ${r.refuse}`);
-    ceintures = r.parcours;
-  });
-  HAUTES.forEach(cle => assert.deepEqual([etat(ceintures, cle).b > 0, etat(ceintures, cle).g], [true, JOUE + 1], `${cle} : entrée par le test de ceinture`));
-  // (Et une étoile pas coupée entrée par le même test : 1.)
-  assert.equal(etat(ceintures, "A4-3").g, 1);
+  // (Lot P1 : « Tente toute la ceinture » n'existe plus — son geste est retiré de ce test ; note
+  // « tests retirés » du lot.)
+  // « Je tente » réussi : 5 001 aussi.
+  const tentee = P.appliquerTentative(neuf, Object.assign(de(hauteOuverte), {reponses: justes()}), Object.assign(o(J20), {seance: false}));
+  assert.deepEqual([etat(tentee.parcours, hauteOuverte).b > 0, etat(tentee.parcours, hauteOuverte).g], [true, JOUE + 1], `${hauteOuverte} : gagnée par « Je tente »`);
 });
 
 // --------------------------------------------- la check-list du modèle commun
@@ -385,7 +389,7 @@ test("GÊNANT — une progression LUE en version 12 est récrite une fois en ver
     // Un appareil neuf (rien dans l'appareil).
     const neuf = P.recevoir(P.creerParcours(), ligne12, options);
     assert.deepEqual([neuf.lectureSeule, neuf.apporte], [false, true], `ligne ${n} : appareil neuf — la reprise part au serveur`);
-    assert.equal(neuf.parcours.version, 13);
+    assert.equal(neuf.parcours.version, 14); // (lot P1 : relue en version 14)
     // Un appareil qui a déjà la même progression (reprise).
     const meme = P.recevoir(P.normaliserParcours(ligne12, {aujourdhui: J24}), ligne12, options);
     assert.deepEqual([meme.lectureSeule, meme.apporte], [false, true], `ligne ${n} : la même progression dans l'appareil`);
@@ -397,7 +401,8 @@ test("GÊNANT — une progression LUE en version 12 est récrite une fois en ver
   });
   // Rien d'autre ne change : une version plus récente reste en lecture seule ; une version d'avant la 12
   // (elle repart de zéro, personne n'y avait joué) ne déclenche pas d'envoi à elle seule.
-  assert.deepEqual([P.recevoir(P.creerParcours(), {version: 14, modules: {}}, options).lectureSeule, P.recevoir(P.creerParcours(), {version: 14, modules: {}}, options).apporte], [true, false]);
+  // (Lot P1 : le moteur est en version 14 — la plus récente est la 15.)
+  assert.deepEqual([P.recevoir(P.creerParcours(), {version: 15, modules: {}}, options).lectureSeule, P.recevoir(P.creerParcours(), {version: 15, modules: {}}, options).apporte], [true, false]);
   assert.equal(P.recevoir(P.creerParcours(), {version: 11, epoque: 0, modules: {}}, options).apporte, false);
   assert.equal(P.recevoir(P.creerParcours(), {version: "12", modules: {}}, options).apporte, false, "une version en texte n'est pas une version 12");
 });
@@ -425,18 +430,19 @@ test("DÉTAIL — l'ancien `palier` écrit `2.0` dans le texte JSON vaut 2 pour 
 
 // ----------------------------------------------------- 5. les tailles mesurées
 
-test("DÉTAIL — les tailles, mesurées : la référence versionnée (1 657 clés, 30 686 octets sans le prénom) ; toutes les étoiles tenues et 12 causes (1 954, 33 599) ; le pire cas (1 954, 35 972) — sous les bornes du serveur", async () => {
+test("DÉTAIL — les tailles, mesurées : la référence versionnée (1 657 clés, 30 818 octets sans le prénom) ; toutes les étoiles tenues et 12 causes (1 954, 33 733) ; le pire cas (1 954, 35 972) — sous les bornes du serveur", async () => {
+  // (Lot P1 : la sorte d'un calcul raté rangée dans `x` — aucune clé de plus, quelques octets.)
   const reference = JSON.parse(await readFile(new URL("../_serveur/tests/parcours-reference-defi-calcul.json", import.meta.url), "utf8"));
   // Avec la clé `prenom` (vide), comme le moteur la garde : une clé et 12 octets de plus.
-  assert.deepEqual(P.mesurer(reference), {cles: 1658, octets: 30698});
+  assert.deepEqual(P.mesurer(reference), {cles: 1658, octets: 30830});
   // Ce que le serveur garde (il ne connaît pas `prenom`) — les chiffres de la relecture de Codex.
   const {prenom, ...envoyee} = reference;
   assert.equal(prenom, "");
-  assert.deepEqual(P.mesurer(envoyee), {cles: 1657, octets: 30686});
+  assert.deepEqual(P.mesurer(envoyee), {cles: 1657, octets: 30818});
   const {parcoursComplet} = await import("../scripts/generer-parcours-reference-defi-calcul.mjs");
-  assert.deepEqual(P.mesurer(parcoursComplet()), {cles: 1658, octets: 30698}, "le fichier versionné est ce que rend le générateur");
+  assert.deepEqual(P.mesurer(parcoursComplet()), {cles: 1658, octets: 30830}, "le fichier versionné est ce que rend le générateur");
   // Les chiffres de la notice du lot : toutes les étoiles tenues, 12 causes par module…
-  assert.deepEqual(P.mesurer(parcoursComplet({entier: true, causes: P.SEUILS.causes})), {cles: 1954, octets: 33599});
+  assert.deepEqual(P.mesurer(parcoursComplet({entier: true, causes: P.SEUILS.causes})), {cles: 1954, octets: 33733});
   // … et le pire cas pour la taille (aucune tenue, quatre dates par étoile, 12 causes).
   const pire = P.mesurer(parcoursComplet({pire: true, causes: P.SEUILS.causes}));
   assert.deepEqual(pire, {cles: 1954, octets: 35972});

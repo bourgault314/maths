@@ -232,8 +232,8 @@ test("les cinq exemples guidés, sous « À retenir » ; le niveau « ajouter 9 
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261126-2/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261126-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-1/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
 });

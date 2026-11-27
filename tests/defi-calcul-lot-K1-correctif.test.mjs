@@ -69,7 +69,9 @@ const minutes = p => p.journal.minutes.reduce((somme, m) => somme + Math.max(0, 
 // ---- bloquant : une copie abîmée peut effacer du travail valide
 
 test("Codex 1 — une boîte abîmée (99, un texte, une case qui manque) n'est pas une étoile perdue : l'étoile valide de l'autre copie reste", () => {
-  const sain = tenter(P.creerParcours(), "A1-1");
+  // (Lot P1 : gagnée après un « Je tente » raté la veille — boîte 2, comme avant ; du premier coup,
+  // elle entrerait en boîte 4.)
+  const sain = tenter(tenter(P.creerParcours(), "A1-1", fausses(), plus(-1)), "A1-1");
   assert.equal(sain.modules.A1.b[0], 2);
   [99, "2", null, -1, 2.5, [2], true].forEach(valeur => {
     const abime = copie(sain);
@@ -91,16 +93,20 @@ test("Codex 1 — une boîte abîmée (99, un texte, une case qui manque) n'est 
   remplacee.modules.A1.e[0] = null;
   assert.equal(fusionSure(sain, remplacee).modules.A1.b[0], 2, "une boîte remise à 0 sans perte (pe = 0) n'est pas une étoile perdue");
   // Une étoile déjà perdue une fois, puis regagnée : la même copie avec la boîte abîmée ne la fait pas repartir.
+  // (Lot P1, la règle B : raté le lendemain, elle revient encore ; ratée le surlendemain, elle part.)
   let regagnee = retour(retour(sain, "A1-1", false, plus(1)).parcours, "A1-1", false, plus(1)).parcours;
-  regagnee = tenter(regagnee, "A1-1", justes(), plus(1));
+  regagnee = retour(retour(regagnee, "A1-1", false, plus(2)).parcours, "A1-1", false, plus(2)).parcours;
+  regagnee = tenter(regagnee, "A1-1", justes(), plus(2));
   assert.deepEqual([regagnee.modules.A1.b[0], regagnee.modules.A1.pe[0]], [2, 1]);
   const regagneeAbimee = copie(regagnee);
   regagneeAbimee.modules.A1.b[0] = 99;
   assert.equal(P.normaliserParcours(regagneeAbimee, {aujourdhui: J}).modules.A1.g[0], 0, "cette copie ne sait plus rien de l'étoile : son compteur vaut 0");
   assert.equal(fusionSure(regagnee, regagneeAbimee).modules.A1.b[0], 2, "une boîte abîmée sur une étoile déjà perdue un jour : l'étoile regagnée reste");
   // Une VRAIE perte (deux calculs faux au retour : `pe` monte, le compteur aussi) gagne toujours contre la copie d'avant.
+  // (Lot P1, la règle B : ratée le lendemain, puis le surlendemain.)
   let perdue = retour(sain, "A1-1", false, plus(1)).parcours;
   perdue = retour(perdue, "A1-1", false, plus(1)).parcours;
+  perdue = retour(retour(perdue, "A1-1", false, plus(2)).parcours, "A1-1", false, plus(2)).parcours;
   assert.deepEqual([perdue.modules.A1.b[0], perdue.modules.A1.pe[0]], [0, 1]);
   const f = fusionSure(sain, perdue);
   assert.deepEqual([f.modules.A1.b[0], f.modules.A1.pe[0], f.modules.A1.d[0]], [0, 1, J], "une étoile réellement perdue reste perdue, avec son jour d'entrée");
@@ -362,21 +368,24 @@ test("Codex 10 — deux appareils répondent faux au MÊME premier calcul : la 2
   assert.equal(b.parcours.modules.A1.b[0], 3, "l'étoile est toujours là");
   // Une réponse JUSTE périmée ne compte pas non plus (elle ferait monter la boîte sans le 2e calcul).
   assert.equal(retour(recu, "A1-1", true, J, {deuxieme: false}).refuse, "perime");
-  // Le 2e calcul, annoncé comme tel : faux, l'étoile part ; juste, c'était un accident.
-  assert.equal(retour(recu, "A1-1", false, J, {deuxieme: true}).mouvement.perdue, true);
+  // Le 2e calcul, annoncé comme tel : faux, le retour est raté (lot P1, la règle B : elle reste et revient
+  // demain) ; juste, c'était un accident.
+  assert.deepEqual([retour(recu, "A1-1", false, J, {deuxieme: true}).mouvement.rate, retour(recu, "A1-1", false, J, {deuxieme: true}).mouvement.perdue], [true, false]);
   assert.equal(retour(recu, "A1-1", true, J, {deuxieme: true}).mouvement.accident, true);
   // Une réponse annoncée « 2e calcul » alors que rien n'attend : périmée, elle aussi.
   assert.equal(retour(depart, "A1-1", false, J, {deuxieme: true}).refuse, "perime");
   // Sans annonce (un appelant d'avant), le moteur fait comme avant.
-  assert.equal(retour(recu, "A1-1", false, J).mouvement.perdue, true);
+  assert.equal(retour(recu, "A1-1", false, J).mouvement.rate, true);
   // Le 2e calcul qui attend dit le jour où le premier a été posé : la page retrouve ce premier calcul et en pose un autre.
   const tire = P.tirerCalculsDuJour(a.parcours, CARTE, {aujourdhui: plus(1)});
-  assert.deepEqual(tire, [{module: "A1", niveau: 1, du: true, second: true, premierLe: J, premierRetour: false}]);
+  // (Lot P1 : `sorte`, celle du premier calcul — 0 ici, l'appelant ne l'a pas donnée.)
+  assert.deepEqual(tire, [{module: "A1", niveau: 1, du: true, second: true, premierLe: J, premierRetour: false, sorte: 0}]);
   // Ce jour suit l'étoile d'un appareil à l'autre, et s'efface quand le retour est réglé.
   assert.equal(recu.modules.A1.q[0], J);
   assert.equal(retour(recu, "A1-1", true, J, {deuxieme: true}).parcours.modules.A1.q[0], null);
   // Pour chacune des 132 étoiles : le premier calcul du jour (celui que la page pose, d'après le jour et le code), puis
   // 60 tirages du 2e calcul — jamais le même. (Sans l'exclusion, il revenait jusqu'à 18 fois sur 400 selon l'étoile.)
+  // (Lot P1 : la page tire le 2e calcul DE LA MÊME SORTE — `memeSorte` ; jamais le même calcul non plus.)
   const jour = "2026-11-25";
   const tour = Math.round(Date.parse(`${jour}T12:00:00Z`) / 86400000);
   let sansExclusion = 0;
@@ -386,7 +395,7 @@ test("Codex 10 — deux appareils répondent faux au MÊME premier calcul : la 2
     assert.ok(premier, k);
     for (let graine = 1; graine <= 60; graine += 1) {
       const g = Math.imul(graine, 2654435761) >>> 0;
-      assert.notEqual(CORE.genererUn(k, g, {autreQue: premier}).texte, premier.texte, `${k} : le 2e calcul n'est jamais le premier`);
+      assert.notEqual(CORE.genererUn(k, g, {autreQue: premier, memeSorte: true}).texte, premier.texte, `${k} : le 2e calcul n'est jamais le premier`);
       if (CORE.genererUn(k, g).texte === premier.texte) sansExclusion += 1;
     }
   });
@@ -400,16 +409,19 @@ test("Codex 16 — un jour d'entrée sans étoile jamais tenue est écarté : pa
   const liste = v => Array.from({length: P.NIVEAUX.A1}, () => v);
   const brut = {version: 12, modules: {A1: {vu: jeudi, b: liste(0), e: liste(null), a: liste(0), x: liste(0), r: liste(0), q: liste(null), pe: liste(0),
     d: [jeudi, null, null], s: [jeudi, null, null], ar: liste(0), g: liste(0), c: {}}}};
-  const entrees = p => P.resumeProf(p, CARTE, plus(4)).modules.find(m => m.id === "A1").entrees;
+  const entrees = (p, jour = plus(4)) => P.resumeProf(p, CARTE, jour).modules.find(m => m.id === "A1").entrees;
   assert.deepEqual(entrees(brut), [null, null, null], "aucune étoile tenue, aucune perte : ce jour d'entrée ne compte pas");
   assert.equal(P.carteEleve(brut, CARTE, {aujourdhui: plus(4)}).etoiles, 0);
   assert.equal(P.etatEtoile(brut, CARTE, "A1", 1, {aujourdhui: plus(4)}).aRegagner, false, "ni « Tu l'avais gagnée »");
   // Une étoile réellement gagnée puis perdue garde son jour d'entrée (et « Regagne ton étoile »).
-  let p = tenter(P.creerParcours(), "A1-1", justes(), jeudi);
+  // (Lot P1 : gagnée après un « Je tente » raté la veille — elle revient le lendemain ; la règle B : ratée
+  // deux jours de suite, elle part.)
+  let p = tenter(tenter(P.creerParcours(), "A1-1", fausses(), plus(2)), "A1-1", justes(), jeudi);
   p = retour(retour(p, "A1-1", false, plus(4)).parcours, "A1-1", false, plus(4)).parcours;
+  p = retour(retour(p, "A1-1", false, plus(5)).parcours, "A1-1", false, plus(5)).parcours;
   assert.deepEqual([p.modules.A1.b[0], p.modules.A1.pe[0]], [0, 1]);
-  assert.deepEqual(entrees(p), [jeudi, null, null]);
-  assert.equal(P.etatEtoile(p, CARTE, "A1", 1, {aujourdhui: plus(4)}).aRegagner, true);
+  assert.deepEqual(entrees(p, plus(5)), [jeudi, null, null]);
+  assert.equal(P.etatEtoile(p, CARTE, "A1", 1, {aujourdhui: plus(5)}).aRegagner, true);
   // Une étoile tenue aussi, bien sûr.
   assert.deepEqual(entrees(tenter(P.creerParcours(), "A1-1", justes(), jeudi)), [jeudi, null, null]);
 });

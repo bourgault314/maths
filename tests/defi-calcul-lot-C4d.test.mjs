@@ -326,7 +326,7 @@ test("Sommes jusqu'à 20 : 10 + 10 en deux barres ; Regrouper 4 et 25 : le nombr
 // ---------------------------------------------------------------- les données
 test("les données ne changent pas : version 11 (12 au lot K1 « la carte »), clés des calculs, copie serveur, cache", async () => {
   const parcours = await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.match(parcours, /VERSION\s*=\s*13\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1, 13 depuis le lot K1b)");
+  assert.match(parcours, /VERSION\s*=\s*14\b/, "ce lot n'a pas changé la version (11 alors, 12 depuis le lot K1, 13 depuis le lot K1b, 14 depuis le lot P1)");
   // Les clés des calculs imposés (relevées sur le main f97a3a9a) : les mêmes.
   const CLES = {
     "D7-3": ["D7-3-648d2-46d1", "D7-3-5-235d2", "D7-3-502d2-3d1"],
@@ -338,7 +338,7 @@ test("les données ne changent pas : version 11 (12 au lot K1 « la carte »), c
   TIRAGES["D7-3"].forEach(c => assert.match(c.cle, /^D7-3-\d+(d\d)?-\d+(d\d)?$/, c.cle));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261126-2/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261127-1/);
   assert.match(html, /defi_calcul_aides\.js\?v=20261125-2/);
   assert.match(await lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot \S+$/m);
 });

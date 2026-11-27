@@ -62,7 +62,8 @@ test("1. six onglets sur une rangée : six colonnes, les mots jamais coupés ; �
 });
 
 test("2. les textes du 26/11 : six ceintures dans « Comment ça marche ? » ; plus de 69 dans « Ajouter 9 »", () => {
-  assert.ok(plat(PAGE).includes("Toutes les étoiles d’une ceinture gagnées : la ceinture est à moi, et la suivante s’ouvre. Six ceintures, de la blanche-jaune à la bleue."));
+  // (Lot P1, planche P1-9 A : tout est ouvert ; toujours six ceintures.)
+  assert.ok(plat(PAGE).includes("Une ceinture est à moi quand j’ai toutes ses étoiles. Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux."));
   assert.ok(!/jaune, orange, verte, puis bleue/.test(PAGE), "l'ancienne liste de quatre ceintures est partie");
   const autre = CORE.niveauDe("A5-1").niveau.apprends.autre;
   assert.equal(plat(autre.calcul), "40 + 9 = 49 ; 41 + 9 = 50");
@@ -72,9 +73,9 @@ test("2. les textes du 26/11 : six ceintures dans « Comment ça marche ? » ; p
 });
 
 test("3. la page charge le noyau, le moteur et la feuille du lot (numéros de cache neufs)", () => {
-  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261126-2">/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261126-2"><\/script>/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261126-2"><\/script>/);
+  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-1">/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261127-1"><\/script>/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-1"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261125-7", "defi_calcul_mon_parcours.js?v=20261126-1", "defi_calcul.css?v=20261125-7"]) {
     assert.ok(!PAGE.includes(vieux), `${vieux} : l'ancienne adresse est partie`);
   }

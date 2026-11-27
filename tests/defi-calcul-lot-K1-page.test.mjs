@@ -82,8 +82,9 @@ test("1. plus rien de l'ancien moteur ni des écrans partis (Mon module, Mon par
 test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mot", () => {
   [
     // L'accueil, la carte (§ 12.3)
-    "Aujourd’hui : l’étoile ", "Avant : tes ", " calculs du jour.", "Tout est gagné.", "S’entraîner ne fait perdre aucune étoile.",
-    "Tu sais déjà tout ça ?", "Tente toute la ceinture : 12 calculs.", "Continuer", "Ensuite : ", "D’abord : ",
+    // (Lot P1 : « Aujourd'hui : la ligne … » ; plus de « Tente toute la ceinture ».)
+    "Aujourd’hui : la ligne ", "Avant : tes ", " calculs du jour.", "Tout est gagné.", "S’entraîner ne fait perdre aucune étoile.",
+    "Continuer", "Ensuite : ", "D’abord : ",
     // Le panneau d'une étoile (planches K0-2, K1-2, K1-4)
     "6 calculs. 5 justes : l’étoile est à toi.", "On te montre, puis tu t’entraînes.", "Fermée.", " D’abord : ",
     "Tu as déjà tenté aujourd’hui. ", "Tu pourras retenter demain.", "Ce calcul, on l’apprend ensemble.",
@@ -91,7 +92,7 @@ test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mo
     "Tu l’avais gagnée.", "Regagne ton étoile.", "On reprend là où tu en étais.",
     // « Je tente », les bilans
     "justes pour l’étoile", "Étoile gagnée", "Étoile suivante", "La carte", "Elle reviendra demain dans tes calculs du jour.",
-    "Ceinture suivante", "Toutes les étoiles sont gagnées", "Les autres t’attendent sur la carte.",
+    "Ceinture suivante", "Toutes les étoiles sont gagnées",
     // L'étoile qui part (§ 12.8)
     "Deux calculs faux : l’étoile est partie. Tu peux la regagner quand tu veux.", "Tes calculs du jour sont faits.",
     // La séance
@@ -102,11 +103,12 @@ test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mo
   const notice = plat(PAGE.slice(PAGE.indexOf('<div class="notice">'), PAGE.indexOf("</div>", PAGE.indexOf('<div class="notice">'))))
     .replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
   assert.equal(notice, [
-    "Ma séance. 10 minutes : d’abord mes calculs du jour, puis je gagne des étoiles sur la carte. « Continuer » me dit quoi faire. Je peux refaire une séance si je veux.",
-    "Mes calculs du jour. Mes étoiles reviennent pour voir si elles tiennent : demain, puis dans 3 jours, 7 jours… Un calcul faux ? Un autre, pour vérifier. Deux faux : l’étoile part, je peux la regagner quand je veux.",
-    "Je tente. 6 calculs sans aide. 5 justes : l’étoile est à moi.",
+    // (Lot P1, planche P1-9 A, choix de Gwenaël du 27/11.)
+    "Ma séance. 10 minutes : d’abord mes calculs du jour, puis je gagne des étoiles sur la carte. « Continuer » me dit quoi faire ; si c’est trop dur, il me propose plus facile. Je peux refaire une séance si je veux.",
+    "Mes calculs du jour. Mes étoiles reviennent pour voir si elles tiennent. Gagnée du premier coup : dans une semaine. Apprise : demain, puis dans 3 jours, 7 jours… Un calcul faux ? Un autre du même genre. Deux faux : l’étoile revient demain ; encore deux faux, elle part, et je peux la regagner quand je veux.",
+    "Je tente. 6 calculs sans aide. 5 justes : l’étoile est à moi. Raté ? Je peux essayer plus facile, ou apprendre.",
     "J’apprends. On me montre, puis je fais avec l’aide ; c’est réussi à 5 justes sur les 6 derniers, sans aide. Ici, se tromper ne compte pas.",
-    "Mes ceintures. Toutes les étoiles d’une ceinture gagnées : la ceinture est à moi, et la suivante s’ouvre. Six ceintures, de la blanche-jaune à la bleue. Je sais déjà tout ? « Tente toute la ceinture » : 12 calculs."
+    "Mes ceintures. Tout est ouvert. Une ceinture est à moi quand j’ai toutes ses étoiles. Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux."
   ].join(" "));
   // Un nombre et son unité ne se séparent jamais : les textes de la page passent par soude.
   assert.match(SCRIPT, /\$\("acc-minutes"\)\.textContent = soude\(`\$\{s\.minutes\}\u00a0minutes`\);/);
@@ -139,7 +141,8 @@ test("4. le temps est versé avant chaque étape appliquée ; le professeur n'en
   const fin = corps("finish");
   const verse = fin.indexOf("verserTempsActif();");
   assert.ok(verse > 0);
-  ["PARCOURS.terminerCalculsDuJour", "PARCOURS.appliquerTentative", "PARCOURS.appliquerTestCeinture", "PARCOURS.appliquerSerie"]
+  // (Lot P1 : « Tente toute la ceinture », appliquerTestCeinture, n'existe plus.)
+  ["PARCOURS.terminerCalculsDuJour", "PARCOURS.appliquerTentative", "PARCOURS.appliquerSerie"]
     .forEach(appel => assert.ok(fin.indexOf(appel) > verse, `${appel} après le temps`));
   assert.match(fin, /seance: enSeance\(\) && !MODE_PROF, palier: palierRegle\(\)/);
   assert.equal(SCRIPT.split("PARCOURS.noterTemps(").length - 1, 1, "un seul endroit verse le temps");
@@ -187,8 +190,9 @@ test("5. la ceinture du noyau : le nœud dessiné après les pans ; rempli quart
   const vide = dessin(4, {vide: true});
   assert.match(vide, new RegExp(`fill="none" stroke="${CORE.CEINTURES[4].couleur}" stroke-width="2"[^>]*stroke-dasharray="3 2\\.4"`));
   assert.ok(!vide.includes(`fill="${CORE.CEINTURES[4].couleur}"`) && !vide.includes("#143451") && !vide.includes("#9fb4c4"));
-  // La page : l'étage gagné plein, en cours rempli, fermé vide.
+  // La page : l'étage gagné plein, en cours rempli. (Lot P1 : tout est
+  // ouvert — plus de ceinture vide d'un étage fermé.)
   const etage = corps("ceintureDeLEtage");
-  assert.match(etage, /\{vide: true, taille\}/);
+  assert.doesNotMatch(etage, /\{vide: true, taille\}/);
   assert.match(etage, /\{rempli: etage\.quarts \/ PARCOURS\.SEUILS\.ceintures\.quarts, taille\}/);
 });

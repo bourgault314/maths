@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261126-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261127-1">
 <script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
 </head>
 <body>
@@ -175,11 +175,13 @@
       </div>
 
       <!-- La carte (lot K1) : les étages (une ceinture chacun), la ceinture
-           de l'étage et son compte, « Tente toute la ceinture » sur un étage
-           neuf, les lignes d'étoiles ; en bas, Mes calculs du jour
-           (« encore 14 ») et « Continuer ». Une étoile touchée ouvre son
-           panneau par-dessus. À l'ordinateur, tout tient dans le cadre ; au
-           téléphone, la carte défile et « Continuer » reste en bas. -->
+           de l'étage et son compte, les lignes d'étoiles ; en bas, Mes
+           calculs du jour (« encore 14 ») et « Continuer ». Une étoile
+           touchée ouvre son panneau par-dessus. À l'ordinateur, tout tient
+           dans le cadre, de la même taille sur tous les onglets (lot P1) ;
+           au téléphone, la carte défile et « Continuer » reste en bas.
+           (Lot P1 : tout est ouvert, « Tente toute la ceinture » n'existe
+           plus.) -->
       <div id="ecran-carte" class="ck-ecran" hidden>
         <div class="settings-toolbar">
           <button id="carte-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
@@ -188,7 +190,6 @@
         <div class="ck-haut">
           <div id="carte-etages" class="ck-etages" role="group" aria-label="Les ceintures"></div>
           <div id="carte-porteur" class="ck-porteur"></div>
-          <div id="carte-tente" class="ck-tente" hidden><span>Tu sais déjà tout ça&nbsp;?<small>Tente toute la ceinture&nbsp;: 12&nbsp;calculs.</small></span><button id="carte-tente-bouton" type="button">Je tente</button></div>
         </div>
         <div id="carte-lignes" class="ck-lignes"></div>
         <div class="ck-bas">
@@ -286,20 +287,23 @@
           <h1 id="notice-title" class="settings-heading" tabindex="-1">Comment ça marche&nbsp;?</h1>
         </div>
         <div class="notice">
-          <!-- Lot K1 (texte validé par Gwenaël le 25/11/2026). -->
-          <p><b>Ma séance.</b> <span id="notice-minutes">10&nbsp;minutes</span>&nbsp;: d’abord mes calculs du jour, puis je gagne des étoiles sur la carte. «&nbsp;Continuer&nbsp;» me dit quoi faire. Je peux refaire une séance si je veux.</p>
-          <p><b>Mes calculs du jour.</b> Mes étoiles reviennent pour voir si elles tiennent&nbsp;: demain, puis dans 3&nbsp;jours, 7&nbsp;jours… Un calcul faux&nbsp;? Un autre, pour vérifier. Deux faux&nbsp;: l’étoile part, je peux la regagner quand je veux.</p>
-          <p><b>Je tente.</b> 6&nbsp;calculs sans aide. 5&nbsp;justes&nbsp;: l’étoile est à moi.</p>
+          <!-- Lot K1 (texte validé par Gwenaël le 25/11/2026) ; lot P1
+               (planche P1-9 A, choix de Gwenaël des 26 et 27/11) : tout est
+               ouvert, « Plus facile », la règle B, la règle neuve des
+               retours. -->
+          <p><b>Ma séance.</b> <span id="notice-minutes">10&nbsp;minutes</span>&nbsp;: d’abord mes calculs du jour, puis je gagne des étoiles sur la carte. «&nbsp;Continuer&nbsp;» me dit quoi faire&nbsp;; si c’est trop dur, il me propose plus facile. Je peux refaire une séance si je veux.</p>
+          <p><b>Mes calculs du jour.</b> Mes étoiles reviennent pour voir si elles tiennent. Gagnée du premier coup&nbsp;: dans une semaine. Apprise&nbsp;: demain, puis dans 3&nbsp;jours, 7&nbsp;jours… Un calcul faux&nbsp;? Un autre du même genre. Deux faux&nbsp;: l’étoile revient demain&nbsp;; encore deux faux, elle part, et je peux la regagner quand je veux.</p>
+          <p><b>Je tente.</b> 6&nbsp;calculs sans aide. 5&nbsp;justes&nbsp;: l’étoile est à moi. Raté&nbsp;? Je peux essayer plus facile, ou apprendre.</p>
           <p><b>J’apprends.</b> On me montre, puis je fais avec l’aide&nbsp;; c’est réussi à 5&nbsp;justes sur les 6&nbsp;derniers, sans aide. Ici, se tromper ne compte pas.</p>
-          <p><b>Mes ceintures.</b> Toutes les étoiles d’une ceinture gagnées&nbsp;: la ceinture est à moi, et la suivante s’ouvre. Six ceintures, de la blanche-jaune à la bleue. Je sais déjà tout&nbsp;? «&nbsp;Tente toute la ceinture&nbsp;»&nbsp;: 12&nbsp;calculs.</p>
+          <p><b>Mes ceintures.</b> Tout est ouvert. Une ceinture est à moi quand j’ai toutes ses étoiles. Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux.</p>
         </div>
       </div>
     </section>
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261126-2"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261126-2"></script>
+  <script src="./defi_calcul_core.js?v=20261127-1"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261127-1"></script>
   <script src="./defi_calcul_aides.js?v=20261125-2"></script>
   <script>
     (() => {
@@ -1580,6 +1584,11 @@
       // une taille fixe par étage, une seule mesure suffit.)
       function ajusterEchelle() {
         ajusterEchelleSeule();
+        // Lot P1 : la carte mesure ses étages à l'échelle où elle est
+        // dessinée (au pixel près, le texte ne prend pas la même hauteur à
+        // toutes les échelles) ; à la nouvelle échelle, elle les remesure, et
+        // le cadre se recalcule une fois si la hauteur a changé.
+        if (remesurerCarte()) ajusterEchelleSeule();
       }
       function ajusterEchelleSeule() {
         const racine = document.documentElement;
@@ -2018,7 +2027,6 @@
       function show(name) {
         ECRANS.forEach(id => { $(id).hidden = id !== name; });
         if (name === "intro") renderAccueil();
-        if (name === "ecran-carte") renderCarte();
         if (name !== "ecran-carte") fermerPanneau(false);
         document.body.classList.toggle("challenge-playing", name === "play");
         // Hors de l'accueil, le lien du site « ← Calcul mental » s'efface :
@@ -2027,6 +2035,9 @@
         if (name !== "intro") document.body.classList.remove("accueil-en-attente");
         // La carte (lot K1) : sa classe sur le corps de la page.
         document.body.classList.toggle("sur-carte", name === "ecran-carte");
+        // (Lot P1 : la carte se dessine une fois sa page en place — elle
+        // mesure la hauteur de ses étages, voir poserLignes.)
+        if (name === "ecran-carte") renderCarte();
         // Lot 5 « revue » : « Comment ça marche ? » aussi prend la hauteur de
         // l'écran à l'ordinateur (avant : 650 px fixes, le cadre dépassait de
         // 3 px pour l'élève, de 63 px pour le visiteur, en 1366 × 657).
@@ -2161,12 +2172,12 @@
         svg.append(etoile);
         return svg;
       }
-      // La ceinture d'un étage : gagnée (pleine), en cours (remplie quart par
-      // quart, sans jamais reculer : G9), ou pas encore ouverte (vide).
+      // La ceinture d'un étage : gagnée (pleine), ou en cours (remplie quart
+      // par quart, sans jamais reculer : G9). (Lot P1 : tout est ouvert, plus
+      // de ceinture vide d'un étage fermé.)
       function ceintureDeLEtage(etage, taille) {
         if (!etage) return CORE.elementCeinture(document, 0, {taille});
         if (etage.ceinture) return CORE.elementCeinture(document, etage.etage, {taille, titre: nomCeinture(etage.etage)});
-        if (!etage.ouvert) return CORE.elementCeinture(document, etage.etage, {vide: true, taille});
         return CORE.elementCeinture(document, etage.etage, {rempli: etage.quarts / PARCOURS.SEUILS.ceintures.quarts, taille});
       }
       const motEtoiles = n => (n > 1 ? "étoiles" : "étoile");
@@ -2178,11 +2189,18 @@
         return carte.etages.find(e => e.etage === carte.courant) || carte.etages[0] || null;
       }
 
-      // Le but du jour : l'étoile de « Continuer », sans le paquet (planche
-      // K0-1 ; « Aujourd'hui : l'étoile … »). Il est fixé au début de la
-      // séance, pour être coché à la fin s'il est fait.
+      // Le but du jour : la LIGNE de l'étoile de « Continuer », sans le
+      // paquet (lot P1, planche P1-2 A : « Aujourd'hui : la ligne Décimaux :
+      // + et − »). Il est fixé au début de la séance, pour être coché à la
+      // fin s'il est fait. Les mots de deux caractères au plus restent avec
+      // celui d'avant (« − » ne reste jamais seul sur la 2e ligne au
+      // téléphone).
+      // « Avant : tes 6 calculs du jour. » — le vrai nombre (lot P1 : souvent
+      // moins de 10) ; un seul : « Avant : ton calcul du jour. »
+      const texteAvant = n => soude(n > 1 ? `Avant : tes ${n} calculs du jour.` : "Avant : ton calcul du jour.");
+      const soudeCourts = texte => String(texte).replace(/ (?=\S{1,2}(?: |$))/g, "\u00a0");
       function texteBut(but) {
-        return but && but.type === "etoile" ? soude(`Aujourd’hui : l’étoile ${nomCompetence(but.module, but.niveau)}`) : "";
+        return but && but.type === "etoile" && but.ligne ? soude(`Aujourd’hui : la ligne ${soudeCourts(but.ligne)}`) : "";
       }
 
       // Une séance ouverte qui n'a plus rien à jouer se ferme et compte, à
@@ -2209,7 +2227,7 @@
         const toutGagne = s.continuer.type === "rien" && s.continuer.toutGagne && !s.paquet;
         $("acc-but").hidden = toutGagne || !texteBut(s.but);
         $("acc-but-texte").textContent = texteBut(s.but);
-        $("acc-but-avant").textContent = s.obligatoire ? soude(`Avant : tes ${s.obligatoire} calculs du jour.`) : "";
+        $("acc-but-avant").textContent = s.obligatoire ? texteAvant(s.obligatoire) : "";
         $("acc-but-avant").hidden = !s.obligatoire;
         $("acc-tout").hidden = !toutGagne;
         if (toutGagne) $("acc-tout-quand").textContent = texteRetour(s.continuer.prochainRetour);
@@ -2271,17 +2289,18 @@
         const s = etatDuJour();
         const suite = s.continuer;
         const vise = suite.type === "etoile" ? cleDe(suite.module, suite.niveau) : "";
-        // Les étages : la ceinture de chacun et son état.
+        // Les étages : la ceinture de chacun et son compte (lot P1, planche
+        // P1-1 A : « gagnée », sinon « 17/33 » ; tout est ouvert).
         $("carte-etages").replaceChildren(...carte.etages.map(e => {
           const bouton = document.createElement("button");
           bouton.type = "button";
           const ici = e.etage === etage.etage;
           bouton.className = `ck-onglet${ici ? " ici" : ""}`;
           const mot = document.createElement("span");
-          mot.textContent = e.ceinture ? "gagnée" : e.ouvert ? "en cours" : "fermée";
+          mot.textContent = e.ceinture ? "gagnée" : `${e.etoiles}/${e.total}`;
           bouton.append(ceintureDeLEtage(e, 34), mot);
           bouton.setAttribute("aria-pressed", String(ici));
-          bouton.setAttribute("aria-label", `${nomCeinture(e.etage)} : ${mot.textContent}, ${e.etoiles} ${motEtoiles(e.etoiles)} sur ${e.total}`);
+          bouton.setAttribute("aria-label", `${nomCeinture(e.etage)} : ${e.ceinture ? "gagnée" : `${e.etoiles} ${motEtoiles(e.etoiles)} sur ${e.total}`}`);
           bouton.addEventListener("click", () => {
             state.etage = e.etage;
             renderCarte();
@@ -2300,12 +2319,11 @@
         compte.textContent = texteCompte(etage);
         texte.append(nom, compte);
         porteur.replaceChildren(ceintureDeLEtage(etage, 76), texte);
-        // « Tu sais déjà tout ça ? Tente toute la ceinture : 12 calculs. »
-        const tente = $("carte-tente");
-        tente.hidden = !etage.test.propose;
-        if (etage.test.propose) $("carte-tente-bouton").onclick = () => lancerTestCeinture(etage.etage);
         // Les lignes : une étoile par compétence, dans l'ordre de la carte.
-        $("carte-lignes").replaceChildren(...etage.lignes.map(ligne => {
+        // Lot P1 (DECISIONS § 8) : hors téléphone, la place des lignes est
+        // celle de l'étage le plus haut — le cadre a la même taille sur tous
+        // les onglets, et « Continuer » la même place.
+        const lignesDe = e => e.lignes.map(ligne => {
           const bloc = document.createElement("div");
           bloc.className = "ck-ligne";
           const titre = document.createElement("h3");
@@ -2329,7 +2347,8 @@
           });
           bloc.append(titre, cases);
           return bloc;
-        }));
+        });
+        poserLignes(carte, etage, lignesDe);
         // Le bas : Mes calculs du jour (« encore 14 »), puis « Continuer ».
         const encore = s.encore + (s.obligatoire ? 0 : s.paquet);
         const jour = $("carte-jour");
@@ -2344,10 +2363,40 @@
         $("carte-tout").hidden = !fin || !suite.toutGagne;
         $("carte-tout").textContent = fin && suite.toutGagne ? soude(`Tout est gagné. ${texteRetour(suite.prochainRetour)}`) : "";
         if (!fin) {
-          if (suite.type === "paquet") petit.textContent = soude(s.obligatoire ? `Avant : tes ${s.obligatoire} calculs du jour.` : "Mes calculs du jour");
+          if (suite.type === "paquet") petit.textContent = s.obligatoire ? texteAvant(s.obligatoire) : "Mes calculs du jour";
           else if (suite.type === "etoile") petit.textContent = soude(`${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
           bouton.replaceChildren(document.createTextNode("Continuer"), ...(petit.textContent ? [petit] : []));
         }
+      }
+
+      // Lot P1 (DECISIONS § 8, rapport de Codex sur les écrans d'ordinateur :
+      // à 1366 × 657, le cadre allait de 706 à 808 px d'un onglet à l'autre,
+      // et « Continuer » sautait de 154 px). Hors téléphone, la hauteur des
+      // lignes est celle de l'étage qui en a le plus : chaque étage est posé
+      // une fois pour être mesuré (la colonne a toujours 850 px de large ;
+      // l'échelle du cadre ne change pas la mesure), puis l'étage affiché
+      // garde cette hauteur. Le cadre se met alors à la même échelle sur
+      // tous les onglets.
+      let lignesPosees = null;
+      function remesurerCarte() {
+        if (!lignesPosees || $("ecran-carte").hidden || !$("carte-panneau").hidden) return false;
+        const avant = $("carte-lignes").style.minHeight;
+        poserLignes(lignesPosees.carte, lignesPosees.etage, lignesPosees.lignesDe);
+        return $("carte-lignes").style.minHeight !== avant;
+      }
+      function poserLignes(carte, etage, lignesDe) {
+        lignesPosees = {carte, etage, lignesDe};
+        const zone = $("carte-lignes");
+        zone.style.minHeight = "";
+        if (window.innerWidth > ECHELLE.telephone && carte.etages.length > 1) {
+          let haute = 0;
+          carte.etages.forEach(e => {
+            zone.replaceChildren(...lignesDe(e));
+            haute = Math.max(haute, zone.offsetHeight);
+          });
+          if (haute > 0) zone.style.minHeight = `${haute}px`;
+        }
+        zone.replaceChildren(...lignesDe(etage));
       }
 
       // ---- le panneau d'une étoile (par-dessus la carte)
@@ -2416,7 +2465,7 @@
           corps.push(choixPanneau([["Je m’entraîne encore", BOUTON_ENCORE, "secondary", encore]]));
         } else if (s.obligatoire && !e.attend) {
           // Le premier paquet de Mes calculs du jour d'abord (planche K0-1).
-          corps.push(phrasePanneau(`Avant : tes ${s.obligatoire} calculs du jour.`));
+          corps.push(phrasePanneau(texteAvant(s.obligatoire)));
           corps.push(choixPanneau([["Commencer", "", "primary", () => { fermerPanneau(false); lancerSeance(); }]]));
         } else if (e.attend || (e.aVoir && !e.actions.tente && !e.actions.apprends)) {
           const fort = document.createElement("b");
@@ -2429,10 +2478,15 @@
             fort.textContent = soude("Regagne ton étoile.");
             corps.push(phrasePanneau("Tu l’avais gagnée. ", fort));
           }
+          // Lot P1 (planche P1-3 A) : après un « Je tente » raté aujourd'hui,
+          // « Plus facile » à côté de « J'apprends », avec le nom de
+          // l'étoile ; il ouvre son panneau.
+          let facile = null;
           if (e.tente === "aujourdhui") {
             const fort = document.createElement("b");
             fort.textContent = soude("Tu pourras retenter demain.");
             corps.push(phrasePanneau("Tu as déjà tenté aujourd’hui. ", fort));
+            facile = PARCOURS.plusFacile(parcours, CARTE, id, n, optionsSeance());
           } else if (e.tente === "ferme") {
             const fort = document.createElement("b");
             fort.textContent = soude("Ce calcul, on l’apprend ensemble.");
@@ -2441,6 +2495,7 @@
           const boutons = [];
           if (e.actions.tente) boutons.push(["Je tente", BOUTON_TENTE, "primary", tente]);
           if (e.actions.apprends) boutons.push(["J’apprends", BOUTON_APPRENDS, e.actions.tente ? "secondary" : "primary", apprends]);
+          if (facile && boutons.length < 2) boutons.push(["Plus facile", nomCompetence(facile.module, facile.niveau), "secondary", () => ouvrirPlusFacile(facile)]);
           if (boutons.length) corps.push(choixPanneau(boutons));
         }
         $("panneau-corps").replaceChildren(...corps);
@@ -2449,6 +2504,14 @@
         $("carte-panneau").hidden = false;
         document.body.classList.add("panneau-ouvert");
         $("panneau-fermer").focus?.({preventScroll: true});
+      }
+      // « Plus facile » : le panneau de l'étoile plus facile, sur son étage.
+      function ouvrirPlusFacile(cible) {
+        fermerPanneau(false);
+        const etage = cible.etage || (carteDuJour().etages.find(e => e.lignes.some(l => l.etoiles.some(x => x.module === cible.module && x.niveau === cible.niveau))) || {}).etage;
+        if (etage && etage !== state.etage) { state.etage = etage; renderCarte(); ajusterEchelle(); }
+        const bouton = document.querySelector(`#carte-lignes [data-cle="${cleDe(cible.module, cible.niveau)}"]`);
+        ouvrirPanneau(cible.module, cible.niveau, bouton);
       }
       function fermerPanneau(rendreLeFocus = true) {
         if ($("carte-panneau").hidden) return;
@@ -2495,18 +2558,22 @@
       // ------------------------------------------------- les ceintures
       //
       // Lot K1 : une ceinture par étage, gagnée quand toutes ses étoiles le
-      // sont (« Ceinture jaune ! Tu as gagné les 44 étoiles. La ceinture
-      // orange s'ouvre. », planches K0-4 et K1-2). Elle se remet à la fin de
-      // l'étape qui la fait gagner ; deux le même jour, la seconde après la
-      // première. `ensuite` : ce qui suit la dernière (la fin de la séance,
-      // quand elle s'est finie avec cette étape) ; sinon « Ceinture
-      // suivante » ouvre la carte sur l'étage qui s'ouvre, « La carte » sur
-      // le même.
+      // sont (planches K0-4 et K1-2). Lot P1 (planche P1-6) : tout est
+      // ouvert, les ceintures se gagnent dans n'importe quel ordre — « Tu as
+      // gagné les 33 étoiles. », sans « … s'ouvre » ; « Tu as fini Défi
+      // calcul ! » quand TOUTES les ceintures du réglage sont gagnées. Elle
+      // se remet à la fin de l'étape qui la fait gagner ; deux le même jour,
+      // la seconde après la première. `ensuite` : ce qui suit la dernière
+      // (la fin de la séance, quand elle s'est finie avec cette étape) ;
+      // sinon « Ceinture suivante » ouvre la carte sur la prochaine ceinture
+      // pas encore gagnée (au-dessus, sinon en dessous), « La carte » sur la
+      // même.
       function montrerCeintures(liste, ensuite = null) {
         const n = liste[0];
         const carte = carteDuJour();
         const etage = carte.etages.find(e => e.etage === n);
-        const suivante = carte.etages.find(e => e.etage === n + 1);
+        const pasGagnees = carte.etages.filter(e => !e.ceinture && e.etage !== n);
+        const suivante = pasGagnees.find(e => e.etage > n) || pasGagnees[0] || null;
         const result = $("result");
         result.classList.remove("is-fete", "is-rate", "is-neutre");
         ["result-verdict", "result-retenir", "retenir-reussi"].forEach(id => { $(id).hidden = true; });
@@ -2516,10 +2583,10 @@
         $("ceinture-dessin").replaceChildren(CORE.elementCeinture(document, n, {taille: 220, titre: nomCeinture(n)}));
         $("ceinture-titre").textContent = soude(`${nomCeinture(n)} !`);
         const total = etage ? etage.total : 0;
-        $("ceinture-phrase").textContent = soude(`Tu as gagné les ${total} étoiles.${suivante ? ` La ${nomCeinture(n + 1).toLowerCase()} s’ouvre.` : ""}`);
-        // La dernière ceinture que l'appli peut donner (le réglage du
-        // professeur, ou la bleue).
-        const derniere = liste.length === 1 && !suivante;
+        $("ceinture-phrase").textContent = soude(`Tu as gagné les ${total} étoiles.`);
+        // Toutes les ceintures que l'appli peut donner (le réglage du
+        // professeur, ou jusqu'à la bleue) sont gagnées.
+        const derniere = liste.length === 1 && !suivante && carte.etages.every(e => e.ceinture || e.etage === n);
         $("ceinture-fin").hidden = !derniere;
         $("ceinture-fin").textContent = derniere
           ? soude(palierRegle() >= PARCOURS.SEUILS.seance.paliers ? "Tu as fini Défi calcul !" : "Tu as fini tout ce que ton professeur a ouvert.")
@@ -2529,7 +2596,7 @@
         if (liste.length > 1) boutons.push(["Continuer", "primary", () => montrerCeintures(liste.slice(1), ensuite)]);
         else if (ensuite) boutons.push(["Continuer", "primary", () => { quitter(); ensuite(); }]);
         else {
-          if (suivante) boutons.push(["Ceinture suivante", "primary", () => { quitter(); ouvrirCarte(n + 1); }]);
+          if (suivante) boutons.push(["Ceinture suivante", "primary", () => { quitter(); ouvrirCarte(suivante.etage); }]);
           boutons.push(["La carte", suivante ? "secondary" : "primary", () => { quitter(); ouvrirCarte(n); }]);
         }
         $("ceinture-boutons").replaceChildren(paire(boutonsDeSuite(...boutons)));
@@ -2977,12 +3044,22 @@
       // gagner, ou rien) et si l'étape tient dans le temps (peutCommencer).
       // La page garde, pour la fin de la séance, le but du jour (fixé à
       // l'ouverture) et les étoiles gagnées.
+      // (Lot P1, planche P1-5 A : la page garde aussi ce que la séance a
+      // retrouvé dans Mes calculs du jour — les étoiles revenues, et celles
+      // qui ne sont pas ratées — et les ceintures gagnées.)
       function nouvelleSeance() {
-        state.seance = {gagnees: [], but: null, etape: null};
+        state.seance = {gagnees: [], but: null, etape: null, retrouves: {justes: 0, total: 0}, ceintures: []};
       }
       function marquerEtape(type, id = null, n = null, plus = {}) {
         if (!state.seance) nouvelleSeance();
         state.seance.etape = Object.assign({type, module: id, niveau: n}, plus);
+      }
+      // Les ceintures gagnées pendant la séance (lot P1, pour « Séance
+      // terminée »).
+      function noterCeintures(liste) {
+        if (!state.seance || !liste || !liste.length) return;
+        if (!Array.isArray(state.seance.ceintures)) state.seance.ceintures = [];
+        liste.forEach(n => { if (!state.seance.ceintures.includes(n)) state.seance.ceintures.push(n); });
       }
       // Une étoile gagnée pendant la séance (pour « Séance terminée »).
       function noterGagnees(evenements) {
@@ -3065,11 +3142,10 @@
 
       // Le nom de l'étape qui se joue, en tête de l'écran : « Mes calculs du
       // jour », « Je tente : … », « J'apprends : … », « Je m'entraîne
-      // encore : … », « Toute la ceinture ».
+      // encore : … ».
       function nomEtape(etape) {
         if (!etape) return "";
         if (etape.type === "jour") return "Mes calculs du jour";
-        if (etape.type === "ceinture") return "Toute la ceinture";
         const nom = etape.module ? nomCompetence(etape.module, etape.niveau) : "";
         if (etape.type === "tente") return `Je tente : ${nom}`;
         if (etape.type === "apprends") return `J’apprends : ${nom}`;
@@ -3781,9 +3857,9 @@
       //              erreur ; ne fait perdre aucune étoile ;
       //   tente      « Je tente » : 6 calculs sans aide, ✓ ou ✗ tout de suite ;
       //              arrêt au 2e faux ou dès 5 justes ;
-      //   ceinture   « Tente toute la ceinture » : 12 calculs, tous joués ;
       //   jour       Mes calculs du jour : par paquets de 10, le seul moment
       //              qui fait monter une étoile de boîte (ou la fait partir).
+      // (Lot P1 : « Tente toute la ceinture » n'existe plus.)
 
       function nouvelleGraine() {
         return (Date.now() ^ Math.floor(Math.random() * 4294967296)) >>> 0;
@@ -3840,21 +3916,6 @@
           questions: calculs.map(calcul => ({calcul, retour: false}))}, "seance");
       }
 
-      // « Tente toute la ceinture » (lot K1, § 4.6) : 12 calculs, un des
-      // compétences les plus avancées de l'étage ; tous joués, ✓ ou ✗.
-      function lancerTestCeinture(etage) {
-        const liste = PARCOURS.calculsDuTestDeCeinture(CARTE, etage);
-        const graine = nouvelleGraine();
-        const questions = liste.map((c, i) => {
-          const calcul = CORE.genererUn(cleDe(c.module, c.niveau), (graine + i * 977) >>> 0);
-          return calcul ? {calcul, retour: false, cle: c} : null;
-        }).filter(Boolean);
-        if (!questions.length) return;
-        assurerSeance();
-        marquerEtape("ceinture", null, null, {etage});
-        demarrerSerie({genre: "ceinture", etage, total: questions.length, questions}, "seance");
-      }
-
       // Mes calculs du jour (lot K1) : un paquet de 10 étoiles dues au plus,
       // les plus anciennes d'abord (le moteur les tire) ; la graine vient du
       // jour et du code, pour que deux appareils tirent la même série. Une
@@ -3878,19 +3939,22 @@
           [ordre[i], ordre[j]] = [ordre[j], ordre[i]];
         }
         // Le premier calcul d'une étoile, le jour `jour` : toujours le même
-        // (le jour, le code), ici comme sur un autre appareil.
+        // (le jour, le code), ici comme sur un autre appareil. Lot P1 : de la
+        // sorte que le moteur rend (`sorte` : celle ratée la fois d'avant, ou
+        // celle du premier calcul quand un 2e attend), sinon à tour de rôle.
         const premierCalcul = (tire, jour) => {
           const rang = PARCOURS.rangDe(tire.module, tire.niveau);
           const tour = Math.round(Date.parse(`${jour}T12:00:00Z`) / 86400000);
-          return CORE.genererUn(cleDe(tire.module, tire.niveau), (CORE.graineDe(`${jour}:${codeSuivi}`) + rang * 977) >>> 0, {tour: tour + rang});
+          return CORE.genererUn(cleDe(tire.module, tire.niveau), (CORE.graineDe(`${jour}:${codeSuivi}`) + rang * 977) >>> 0, {tour: tour + rang, sorte: tire.sorte || 0});
         };
         const questions = [...seconds, ...ordre].map(tire => {
           // (Correctif K1, relecture de Codex du 26/11 : le 2e calcul qui
           // attendait — la page fermée entre les deux — est un AUTRE calcul
           // que le premier, retrouvé par le jour où il a été posé ; avant, il
-          // était tiré au hasard et pouvait être le même.)
+          // était tiré au hasard et pouvait être le même. Lot P1 : de la
+          // même sorte, avec d'autres nombres.)
           const calcul = tire.second
-            ? CORE.genererUn(cleDe(tire.module, tire.niveau), nouvelleGraine(), {autreQue: premierCalcul(tire, tire.premierLe || aujourdhui)})
+            ? CORE.genererUn(cleDe(tire.module, tire.niveau), nouvelleGraine(), {autreQue: premierCalcul(tire, tire.premierLe || aujourdhui), memeSorte: true})
             : premierCalcul(tire, aujourdhui);
           return calcul ? Object.assign({calcul, retour: false}, tire.second ? {deuxieme: true} : {}) : null;
         }).filter(Boolean);
@@ -3927,7 +3991,6 @@
 
       // « Je tente » (planche K0-3) : un rond par calcul, ✓ ou ✗ quand il est
       // joué, celui qui se joue encadré ; à côté, « 5 justes pour l'étoile ».
-      // « Toute la ceinture » : les mêmes ronds, sans phrase.
       function renderPoints() {
         const serie = state.serie;
         const zone = $("escalier");
@@ -4116,10 +4179,10 @@
             $("question-card").classList.add("a-toi-garde");
           }
         }
-        if (serie.genre === "tente" || serie.genre === "ceinture") {
-          // Lot K1 : « Je tente », « Toute la ceinture » — sans aide.
+        if (serie.genre === "tente") {
+          // Lot K1 : « Je tente » — sans aide.
           renderPoints();
-          majBarre({compte: `Calcul ${serie.index + 1} sur ${serie.total}`, pastille: serie.genre === "tente" ? "Je tente" : "Toute la ceinture", avance: serie.index / serie.total * 100});
+          majBarre({compte: `Calcul ${serie.index + 1} sur ${serie.total}`, pastille: "Je tente", avance: serie.index / serie.total * 100});
         } else if (serie.genre === "apprends") {
           // Lot 2 : le nom du moment et la barre de J'apprends sont posés
           // une fois l'outil choisi (montrerOutil), plus bas.
@@ -4241,9 +4304,12 @@
         const ecriture = `${cle}|${calcul.forme}`;
         serie.exemplesVus = serie.exemplesVus || [];
         if (serie.exemplesVus.includes(ecriture)) return false;
-        if (jour) {
-          if (MODE_PROF || !PARCOURS.premierRetourSansLecon(parcours, calcul.module, calcul.niveau)) return false;
-        } else if (serie.questions.slice(0, serie.index).some(q => !q.exemple && q.calcul.forme === calcul.forme)) return false;
+        // Lot P1 (choix de Gwenaël du 26/11) : plus d'exemple résolu au
+        // premier retour d'une étoile dans Mes calculs du jour — l'élève se
+        // souvient, il ne recopie pas ; l'exemple ne vient qu'après un faux,
+        // avec la correction (l'image et la bonne réponse).
+        if (jour) return false;
+        if (serie.questions.slice(0, serie.index).some(q => !q.exemple && q.calcul.forme === calcul.forme)) return false;
         const precedente = serie.questions[serie.index - 1];
         if (precedente && precedente.exemple) return false;
         // L'exemple est pris dans la réserve tirée avec la série, ou parmi ses
@@ -4363,12 +4429,11 @@
           renderQuestion();
           return;
         }
-        // Lot K1 : « Je tente » s'arrête au 2e faux, ou dès 5 justes ; « Toute
-        // la ceinture » va au bout des 12.
-        if (serie.genre === "tente" || serie.genre === "ceinture") {
+        // Lot K1 : « Je tente » s'arrête au 2e faux, ou dès 5 justes.
+        if (serie.genre === "tente") {
           const faux = serie.reponses.filter(reponse => !reponse.juste).length;
           const justes = serie.reponses.length - faux;
-          const fini = serie.genre === "tente" && (faux > PARCOURS.SEUILS.tente.fauxPermis || justes >= PARCOURS.SEUILS.tente.justes);
+          const fini = faux > PARCOURS.SEUILS.tente.fauxPermis || justes >= PARCOURS.SEUILS.tente.justes;
           if (fini || serie.index + 1 >= serie.questions.length) { finish(); return; }
           serie.index += 1;
           renderQuestion();
@@ -4505,7 +4570,7 @@
       // savais. » après le 2e calcul, la phrase du 2e « lent ».
       function montrerRetour(question, juste, valeur, passe, cause, texteJuste = "") {
         const serie = state.serie;
-        const auTest = serie.genre === "tente" || serie.genre === "ceinture";
+        const auTest = serie.genre === "tente";
         state.waitingForContinue = true;
         state.correctionAfficheeA = juste || auTest ? 0 : Date.now();
         const feedback = $("answer-feedback");
@@ -4561,15 +4626,26 @@
       // bilan) ; la page dit au moteur à quel calcul l'élève répond
       // (`deuxieme`) — une réponse à un premier calcul auquel un autre
       // appareil a déjà répondu est périmée, elle ne compte pas.
+      // Lot P1 : la page dit au moteur la SORTE du calcul posé
+      // (CORE.numeroDeSorte : la sorte et l'écriture, 1 à 60) — gardée quand
+      // il est faux, pour que le 2e calcul et le retour suivant soient du
+      // même genre. Un retour réglé compte pour « Séance terminée »
+      // (« 9 retrouvés sur 10 » : pas raté).
       function noterRetour(serie, calcul, juste, ms, cause, deuxieme = false) {
         verserTempsActif();
         const suivi = PARCOURS.appliquerRetour(parcours, {
           module: calcul.module, niveau: calcul.niveau, juste, ms, deuxieme: Boolean(deuxieme),
-          type: PARCOURS.typeDe(CARTE, calcul.module, calcul.niveau), cause: cause ? cause.c : 0
+          type: PARCOURS.typeDe(CARTE, calcul.module, calcul.niveau), cause: cause ? cause.c : 0,
+          sorte: CORE.numeroDeSorte(calcul)
         }, {aujourdhui: jourCourant(), carte: CARTE, source: SOURCE});
         parcours = suivi.parcours;
         sauverParcours();
         const m = suivi.mouvement || {};
+        if (m.regle && !m.perime && state.seance) {
+          const r = state.seance.retrouves || (state.seance.retrouves = {justes: 0, total: 0});
+          r.total += 1;
+          if (!m.rate) r.justes += 1;
+        }
         if (m.perdue && !serie.perdues.some(e => e.module === m.module && e.niveau === m.niveau)) serie.perdues.push({module: m.module, niveau: m.niveau});
         return m;
       }
@@ -4608,20 +4684,21 @@
           if (serie.genre === "jour") {
             const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, question.deuxieme);
             // Lot 1 (planche 4, choix de Gwenaël) : un faux appelle un 2e
-            // calcul du même niveau, d'une autre sorte (ou d'une autre
-            // écriture), tout de suite après la correction. Le calcul raté ne
-            // revient plus en fin de série : le 2e calcul le remplace.
+            // calcul du même niveau, tout de suite après la correction. Le
+            // calcul raté ne revient plus en fin de série : le 2e calcul le
+            // remplace. Lot P1 (choix du 26/11) : DE LA MÊME SORTE, avec
+            // d'autres nombres (avant : d'une autre sorte).
             if (mouvement.secondAVenir) {
-              const autre = CORE.genererUn(`${question.calcul.module}-${question.calcul.niveau}`, nouvelleGraine(), {autreQue: question.calcul});
+              const autre = CORE.genererUn(`${question.calcul.module}-${question.calcul.niveau}`, nouvelleGraine(), {autreQue: question.calcul, memeSorte: true});
               if (autre) serie.questions.splice(serie.index + 1, 0, {calcul: autre, retour: false, deuxieme: true});
             }
             if (juste && question.deuxieme && !mouvement.perime) texteJuste = "Bravo ! Tu le savais.";
           }
-          if (serie.genre === "tente" || serie.genre === "ceinture") renderPoints();
+          if (serie.genre === "tente") renderPoints();
         }
         montrerRetour(question, juste, valeur, passe, cause, texteJuste);
         // Au test, rien à lire après un faux : on avance tout seul aussi.
-        if (juste || serie.genre === "tente" || serie.genre === "ceinture") {
+        if (juste || serie.genre === "tente") {
           $("validate").style.visibility = "hidden";
           // Téléphone : la ligne de retour, repliée tant qu'elle était vide,
           // s'écrit ; le cadre se remesure.
@@ -4701,9 +4778,6 @@
         } else if (serie.genre === "tente") {
           suivi = PARCOURS.appliquerTentative(parcours, {module: serie.module, niveau: serie.niveau,
             reponses: serie.reponses.map(r => ({juste: r.juste, ms: r.ms})), causes: serie.causes}, options);
-        } else if (serie.genre === "ceinture") {
-          suivi = PARCOURS.appliquerTestCeinture(parcours, {etage: serie.etage,
-            reponses: serie.reponses.map((r, i) => ({module: serie.questions[i].cle.module, niveau: serie.questions[i].cle.niveau, juste: r.juste}))}, options);
         } else {
           // Correctif F4 (point 3) : les règles de l'écran (outil à
           // manipuler, formes vues, temps passé) partent avec la série : le
@@ -4724,18 +4798,16 @@
         else if (MODE_PROF) {
           const faux = serie.reponses.length - justes;
           if (serie.genre === "tente") Object.assign(suivi, {justes, total: serie.reponses.length, reussi: justes >= PARCOURS.SEUILS.tente.justes && faux <= PARCOURS.SEUILS.tente.fauxPermis});
-          else if (serie.genre === "ceinture") Object.assign(suivi, {justes, total: serie.reponses.length, reussi: faux <= PARCOURS.SEUILS.ceinture.fauxPermis});
           else if (estEntrainement(serie)) suivi.verdict = PARCOURS.verdictEntrainement(serie.reponses, serie.regles || reglesEntrainement(serie));
         }
         sauverParcours();
         noterGagnees(suivi.evenements);
         const gagnees = MODE_PROF ? [] : (suivi.ceintures || []);
+        noterCeintures(gagnees);
         const fin = enSeance() && suivi.finie ? () => renderFinDeSeance({serie, suivi}) : null;
         const bilan = () => suiteDuBilan(serie, suivi, sur, fin);
         // Une ceinture gagnée a son écran d'abord, puis le bilan de l'étape.
-        // (« Tente toute la ceinture » réussi : l'écran de la ceinture suffit,
-        // avec « Ceinture suivante » et « La carte ».)
-        if (gagnees.length) { montrerCeintures(gagnees, serie.genre === "ceinture" && suivi.reussi ? fin : bilan); return; }
+        if (gagnees.length) { montrerCeintures(gagnees, bilan); return; }
         bilan();
       }
 
@@ -4756,12 +4828,12 @@
         if (arrete) renderArret(serie, suivi, fin);
         else if (serie.genre === "jour") renderBilanDuJour(serie, suivi, sur, fin);
         else if (serie.genre === "tente") renderBilanTente(serie, suivi, fin);
-        else if (serie.genre === "ceinture") renderBilanCeinture(serie, suivi, fin);
         else renderBilanEntrainement(serie, suivi, sur, fin);
         majFilDeBilan();
-        // « Je tente » et la ceinture ne corrigent pas (✓ ou ✗) ; « On
-        // continue demain » ne relit pas les erreurs.
-        if (serie.genre === "tente" || serie.genre === "ceinture" || arrete) $("corrections").replaceChildren();
+        // « On continue demain » ne relit pas les erreurs. Lot P1 (planche
+        // P1-7 C) : « Je tente » ne corrige rien pendant le test (✓ ou ✗),
+        // ses erreurs sont corrigées AU BILAN, comme les autres.
+        if (arrete) $("corrections").replaceChildren();
         else renderCorrections(serie);
         show("result");
       }
@@ -4861,32 +4933,45 @@
       function renderBilanTente(serie, suivi, fin) {
         poserVerdict({titre: ""});
         const nom = nomCompetence(serie.module, serie.niveau);
+        // Lot P1 (choix de Gwenaël du 27/11) : gagnée DU PREMIER COUP (le
+        // moteur le dit dans l'événement `gagnee`), elle revient dans une
+        // semaine ; sinon demain.
+        const gain = (suivi.evenements || []).find(e => e.type === "gagnee" && e.module === serie.module && e.niveau === serie.niveau);
+        const quand = gain && gain.duPremierCoup ? "Elle reviendra dans une semaine dans tes calculs du jour." : "Elle reviendra demain dans tes calculs du jour.";
+        const apprendre = () => lancerDepuisCarte(() => { marquerEtape("apprends", serie.module, serie.niveau); lancerApprends(serie.module, serie.niveau, "seance", {depart: etatEtoile(serie.module, serie.niveau).reprise || 0}); });
         if (suivi.reussi) {
           const suivante = etoileSuivanteDansLaLigne(serie.module, serie.niveau);
           $("result").classList.add("is-fete");
           $("result-suite").replaceChildren(
-            carteResultat({petitTitre: "Étoile gagnée", etat: "gagnee", titre: nom, texte: `${suivi.justes} justes sur ${suivi.total}. Elle reviendra demain dans tes calculs du jour.`}),
+            carteResultat({petitTitre: "Étoile gagnée", etat: "gagnee", titre: nom, texte: `${suivi.justes} justes sur ${suivi.total}. ${quand}`}),
             ...basDeBilan(fin, suivante ? ["Étoile suivante", "primary", () => ouvrirEtoileSurLaCarte(suivante)] : ["Continuer", "primary", continuerSeance],
               ["La carte", "secondary", () => ouvrirCarte()]));
-        } else {
+        } else if (MODE_PROF) {
           $("result").classList.add("is-neutre");
           $("result-suite").replaceChildren(
             carteResultat({etat: "aGagner", titre: "Ce calcul, on l’apprend ensemble.", texte: nom, vide: true}),
-            ...basDeBilan(fin, ["J’apprends", "primary", () => lancerDepuisCarte(() => { marquerEtape("apprends", serie.module, serie.niveau); lancerApprends(serie.module, serie.niveau, "seance", {depart: etatEtoile(serie.module, serie.niveau).reprise || 0}); })],
-              ["La carte", "secondary", () => ouvrirCarte()]));
+            ...basDeBilan(fin, ["J’apprends", "primary", apprendre], ["La carte", "secondary", () => ouvrirCarte()]));
+        } else {
+          // Lot P1 (planche P1-8 A, choix de Gwenaël du 27/11) : « Continuer »
+          // d'abord, « J'apprends » à côté ; dessous, ce que « Continuer »
+          // propose (« Ensuite : … (plus facile) ») ; dans la carte, la phrase
+          // « On cherche par où commencer… » quand il descend.
+          $("result").classList.add("is-neutre");
+          const c = etatDuJour().continuer;
+          const etoile = !fin && c.type === "etoile";
+          const facile = etoile && c.raison === "plusFacile";
+          const carteR = carteResultat({etat: "aGagner", titre: "Ce calcul, on l’apprend ensemble.", texte: nom, vide: true});
+          if (facile) carteR.append(phrase(soude("On cherche par où commencer : «\u00a0Continuer\u00a0» te propose plus facile.")));
+          const morceaux = [carteR, ...basDeBilan(fin, ["Continuer", "primary", continuerSeance], ["J’apprends", "secondary", apprendre])];
+          if (etoile) {
+            const ensuite = document.createElement("p");
+            ensuite.className = "ck-ensuite";
+            ensuite.textContent = soude(`Ensuite : ${nomCompetence(c.module, c.niveau)}${facile ? " (plus\u00a0facile)" : ""}`);
+            morceaux.push(ensuite);
+          }
+          $("result-suite").replaceChildren(...morceaux);
         }
         state.titreResultat = "carte-resultat-titre";
-      }
-
-      // « Tente toute la ceinture » pas réussi en entier (planche K0-4) : les
-      // étoiles gardées, et la carte. Réussi, l'écran de la ceinture est déjà
-      // passé : on revient à la carte.
-      function renderBilanCeinture(serie, suivi, fin) {
-        const etage = carteDuJour().etages.find(e => e.etage === serie.etage);
-        const n = etage ? etage.etoiles : 0;
-        poserVerdict({classe: suivi.reussi ? "is-fete" : "is-neutre", icone: "", titre: `Tu as déjà ${n} ${motEtoiles(n)}.`,
-          score: `${suivi.justes} calculs justes sur ${suivi.total}. ${suivi.reussi ? "" : "Les autres t’attendent sur la carte."}`.trim()});
-        $("result-suite").replaceChildren(...basDeBilan(fin, ["La carte", "primary", () => ouvrirCarte(serie.etage)]));
       }
 
       // Mes calculs du jour (planches K1-3 et K1-4) : le score, puis une
@@ -4997,17 +5082,53 @@
         $("result-suite").replaceChildren(...cheminApprends(serie, suivi), ...renvoiTables(serie), ...basDeBilan(fin));
       }
 
-      // « Séance terminée » (planche K0-4) : les étoiles gagnées pendant la
-      // séance, le but du jour (coché s'il est fait), « Encore une séance »
-      // et « À demain ».
+      // « Séance terminée » (planche K0-4 ; lot P1, planche P1-5 A, en
+      // lignes) : ✓ Mes calculs du jour (« 9 retrouvés sur 10 »), une ligne
+      // par ceinture gagnée, les étoiles gagnées pendant la séance, le but du
+      // jour (coché s'il est fait), « Encore une séance » et « À demain ».
+      // (Plus de 4 étoiles gagnées : à l'ordinateur, la liste passe sur deux
+      // colonnes, et les lignes prennent sa largeur — le cadre tient entier,
+      // 9 étoiles comprises, à 1366 × 657.)
+      const FIN_LARGE = 4;
+      function ligneDeFin(dessin, titre, petit, large = false) {
+        const ligne = document.createElement("div");
+        ligne.className = `ck-fin-ligne${large ? " large" : ""}`;
+        const texte = document.createElement("span");
+        const b = document.createElement("b");
+        b.textContent = soude(titre);
+        const s = document.createElement("small");
+        s.textContent = soude(petit);
+        texte.append(b, s);
+        ligne.append(dessin, texte);
+        return ligne;
+      }
       function renderFinDeSeance() {
         arreterActivite();
         poserVerdict({classe: "is-fete", icone: "", titre: "Séance terminée", score: ""});
         const morceaux = [];
         const gagnees = state.seance && Array.isArray(state.seance.gagnees) ? state.seance.gagnees : [];
+        const large = gagnees.length > FIN_LARGE;
+        const retrouves = state.seance && state.seance.retrouves;
+        if (retrouves && retrouves.total > 0) {
+          const coche = document.createElement("span");
+          coche.className = "ck-coche ok";
+          coche.setAttribute("aria-hidden", "true");
+          coche.textContent = "✓";
+          morceaux.push(ligneDeFin(coche, "Mes calculs du jour", `${retrouves.justes} ${retrouves.justes > 1 ? "retrouvés" : "retrouvé"} sur ${retrouves.total}`, large));
+        }
+        const ceintures = state.seance && Array.isArray(state.seance.ceintures) ? state.seance.ceintures : [];
+        const etages = ceintures.length ? carteDuJour().etages : [];
+        ceintures.forEach(n => {
+          const etage = etages.find(e => e.etage === n);
+          morceaux.push(ligneDeFin(CORE.elementCeinture(document, n, {taille: 56, titre: nomCeinture(n)}), `${nomCeinture(n)} gagnée`, `Les ${etage ? etage.total : ""} étoiles.`, large));
+        });
         if (gagnees.length) {
+          const titre = document.createElement("p");
+          titre.className = "ck-fin-titre";
+          titre.textContent = soude(`${gagnees.length} ${gagnees.length > 1 ? "étoiles gagnées" : "étoile gagnée"}`);
+          morceaux.push(titre);
           const liste = document.createElement("div");
-          liste.className = "ck-liste";
+          liste.className = `ck-liste${large ? " large" : ""}`;
           gagnees.forEach(cle => {
             const ligne = document.createElement("div");
             ligne.append(dessinEtoile("gagnee", 30), document.createTextNode(soude(nomDeCle(cle))));
@@ -5227,8 +5348,10 @@
             // L'entraînement : l'outil affiché pour ce calcul, les justes de suite ; le test : la marche.
             entrainement: () => (state.running && state.serie && estEntrainement(state.serie)
               ? Object.assign({outil: (state.serie.questions[state.serie.index] || {}).outil || null, joues: state.serie.reponses.length}, PARCOURS.suivreEntrainement(state.serie.reponses, reglesEntrainement(state.serie))) : null),
-            // Lot K1 : « Je tente », « Toute la ceinture » — les réponses données.
-            tentative: () => (state.running && state.serie && (state.serie.genre === "tente" || state.serie.genre === "ceinture") ? {genre: state.serie.genre, reponses: state.serie.reponses.map(r => r.juste), total: state.serie.total} : null),
+            // Lot K1 : « Je tente » — les réponses données.
+            tentative: () => (state.running && state.serie && state.serie.genre === "tente" ? {genre: state.serie.genre, reponses: state.serie.reponses.map(r => r.juste), total: state.serie.total} : null),
+            // Lot P1 : ce que la séance a retrouvé et ses ceintures (« Séance terminée »).
+            finDeSeance: () => (state.seance ? {retrouves: Object.assign({}, state.seance.retrouves || {justes: 0, total: 0}), ceintures: (state.seance.ceintures || []).slice()} : null),
             // Lot K1 : la carte, la séance, le panneau ouvert (lecture seule).
             carte: () => carteDuJour(),
             seance: () => etatDuJour(),
@@ -5445,7 +5568,9 @@
               state.seance = {gagnees: [], but: null, etape: {type: "jour"}};
               demarrerSerie({genre: "jour", total: 1, questions: [{calcul: vise, retour: false}], perdues: []}, "seance");
               const q = state.serie.questions[state.serie.index];
-              return {exemple: Boolean(q.exemple), sansLecon: PARCOURS.premierRetourSansLecon(parcours, id, n)};
+              // (Lot P1 : plus d'exemple au premier retour ; `sansLecon` n'est
+              // plus lu par la page.)
+              return {exemple: Boolean(q.exemple)};
             },
             // Lot C3 : l'écran affiché est-il un exemple résolu ? Ce que la
             // série en sait (pour les tests d'écran).

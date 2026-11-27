@@ -14,7 +14,7 @@
 // et son bas (« Continuer ») reste collé en bas de l'écran.
 //   accueil      la ceinture, « Ceinture jaune · 3 étoiles sur 20 » (lot K1b :
 //                six étages ; Léa a fini le CP), le but
-//                du jour, « Avant : tes N calculs du jour. », « Commencer » ;
+//                du jour (lot P1 : « la ligne … »), « Avant : tes N calculs du jour. », « Commencer » ;
 //                « Tout est gagné. » ;
 //   carte        les 6 étages (lot K1b), la ceinture et son compte, les lignes, « Mes
 //                calculs du jour — encore N », « Continuer » ; le CM2 neuf ;
@@ -22,8 +22,9 @@
 //                pose par-dessus : la carte ne bouge pas, et le défilement est
 //                le même avant et après ;
 //   je tente     les ronds « 5 justes pour l'étoile », gagné et raté ;
-//   jour         Mes calculs du jour, deux faux : « l'étoile est partie » ;
-//   ceinture     « Tente toute la ceinture » réussi : l'écran de la ceinture ;
+//   jour         Mes calculs du jour, deux faux une 2e fois de suite (lot P1,
+//                règle B) : « l'étoile est partie » ;
+//   (ceinture    « Tente toute la ceinture » réussi — retiré au lot P1.)
 //   séance       une séance entière jusqu'à « Séance terminée » ;
 //   notice       « Comment ça marche ? » ;
 //   chargement   le cadre attend le serveur, puis ne bouge plus, l'accueil
@@ -64,8 +65,20 @@ const clesDeLEtage = (p, etage) => {
 const ELEVES = {
   // Un élève qui arrive.
   neuf: () => P.creerParcours(),
-  // Léa : 17 étoiles des bases gagnées hier ; elles reviennent aujourd'hui.
-  lea: () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -1)),
+  // Léa : 17 étoiles des bases gagnées il y a une semaine ; elles reviennent aujourd'hui.
+  // (Lot P1 : gagnée du premier coup, une étoile revient dans 7 jours — avant, le lendemain.)
+  lea: () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -7)),
+  // (Lot P1, règle B.) Léa, ratée hier : deux faux à chaque étoile revenue ; elles
+  // reviennent aujourd'hui, et deux faux encore font partir l'étoile.
+  leaRatee: () => {
+    let p = gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -8));
+    const hier = P.ajouterJours(JOUR, -1);
+    for (const k of CARTE.ordre.slice(0, 17)) {
+      const [m, n] = k.split("-");
+      for (let i = 0; i < 2; i += 1) p = P.appliquerRetour(p, {module: m, niveau: Number(n), juste: false, ms: 2000}, {aujourdhui: hier, carte: CARTE}).parcours;
+    }
+    return p;
+  },
   // Les bases et le CM1 gagnés il y a longtemps (et revus) : le CM2 s'ouvre, neuf.
   // (Lot K1b : les bases sont les trois premiers étages, le CM1 le 4e.)
   cm2: () => {
@@ -180,7 +193,7 @@ async function cas(nom, f) {
   const serveur = await servir();
   const base = `http://127.0.0.1:${serveur.address().port}`;
   const nav = await playwright.chromium.launch(process.env.CHROMIUM_EXECUTABLE_PATH ? {executablePath: process.env.CHROMIUM_EXECUTABLE_PATH} : {});
-  const lea = ELEVES.lea(), neuf = ELEVES.neuf(), cm2 = ELEVES.cm2(), toutGagne = ELEVES.toutGagne();
+  const lea = ELEVES.lea(), leaRatee = ELEVES.leaRatee(), neuf = ELEVES.neuf(), cm2 = ELEVES.cm2(), toutGagne = ELEVES.toutGagne();
 
   for (const [largeur, hauteur] of FORMATS) {
     // (Au téléphone, pas de bouton « Plein écran » : la page l'est déjà.)
@@ -191,7 +204,8 @@ async function cas(nom, f) {
       await cas(`${f} : l'accueil (Léa, 17 étoiles ; puis tout gagné)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
         assert.equal(await texte(s.page, "#acc-compte"), "Ceinture jaune · 3 étoiles sur 20");
-        assert.match(await texte(s.page, "#acc-but"), /^Aujourd’hui : l’étoile .+ Avant : tes \d+ calculs du jour\.$/);
+        // (Lot P1, planche P1-4 : « Aujourd’hui : la ligne … ».)
+        assert.match(await texte(s.page, "#acc-but"), /^Aujourd’hui : la ligne .+ Avant : tes \d+ calculs du jour\.$/);
         assert.equal(await texte(s.page, "#acc-commencer"), "Commencer");
         assert.equal(await texte(s.page, "#acc-bas"), "10 minutes La carte Comment ça marche ?");
         assert.ok(await s.page.isVisible("#acc-ceinture svg"), "la ceinture est dessinée");
@@ -201,7 +215,7 @@ async function cas(nom, f) {
         await s.ctx.close();
         const t = await ouvrir(nav, base, Object.assign({parcours: toutGagne, reglages: {"defi-calcul": {etage: 1}}}, o));
         assert.ok(await t.page.isVisible("#acc-tout"), "« Tout est gagné. »");
-        assert.match(await texte(t.page, "#acc-tout"), /^Tout est gagné\. Tes étoiles reviennent demain, pour voir si elles tiennent\. Je m’entraîne encore La carte S’entraîner ne fait perdre aucune étoile\.$/);
+        assert.match(await texte(t.page, "#acc-tout"), /^Tout est gagné\. Tes étoiles reviennent dans 7 jours, pour voir si elles tiennent\. Je m’entraîne encore La carte S’entraîner ne fait perdre aucune étoile\.$/);
         assert.equal(await t.page.isVisible("#acc-commencer"), false);
         await tient(t.page, largeur, hauteur, "accueil, tout gagné");
         await photo(t.page, `${f}-accueil-tout-gagne`);
@@ -261,21 +275,20 @@ async function cas(nom, f) {
         await s.ctx.close();
       });
 
-      await cas(`${f} : la carte du CM2, neuve, avec « Tente toute la ceinture »`, async () => {
+      await cas(`${f} : la carte du CM2, neuve (lot P1 : sans « Tente toute la ceinture »)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: cm2}, o));
         await s.page.click("#acc-porte");
         await pause(s.page, 300);
         const c = await T(s.page, "carte");
         assert.equal(c.courant, 5, "l'étage du CM2");
-        assert.ok(await s.page.isVisible("#carte-tente"), "« Tente toute la ceinture »");
-        assert.match(await texte(s.page, "#carte-tente"), /Tu sais déjà tout ça \? ?Tente toute la ceinture : 12 calculs\. ?Je tente/);
+        assert.equal(await s.page.$("#carte-tente"), null, "plus de « Tente toute la ceinture » (lot P1)");
         await tient(s.page, largeur, hauteur, "carte du CM2");
         await photo(s.page, `${f}-carte-cm2`);
         assert.deepEqual(s.erreurs, []);
         await s.ctx.close();
       });
 
-      await cas(`${f} : « Je tente » (élève neuf) — les ronds, gagné ; raté, puis le panneau « déjà tenté »`, async () => {
+      await cas(`${f} : « Je tente » (élève neuf) — les ronds, gagné ; raté : « Continuer », « J’apprends » (lot P1)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: neuf}, o));
         await s.page.click("#acc-commencer");
         await pause(s.page, 2500);
@@ -295,7 +308,7 @@ async function cas(nom, f) {
         for (let k = 0; k < 6 && await enJeu(s.page); k += 1) await repondre(s.page, true);
         await pause(s.page, 500);
         assert.match(await texte(s.page, "#result"), /Étoile gagnée/i);
-        assert.match(await texte(s.page, "#result"), /5 justes sur 5\. Elle reviendra demain dans tes calculs du jour\./);
+        assert.match(await texte(s.page, "#result"), /5 justes sur 5\. Elle reviendra dans une semaine dans tes calculs du jour\./);
         await tient(s.page, largeur, hauteur, "Étoile gagnée");
         await photo(s.page, `${f}-je-tente-gagnee`);
         assert.deepEqual(s.erreurs, []);
@@ -309,18 +322,15 @@ async function cas(nom, f) {
         assert.match(await texte(r.page, "#result"), /Ce calcul, on l’apprend ensemble\./);
         await tient(r.page, largeur, hauteur, "Je tente raté");
         await photo(r.page, `${f}-je-tente-ratee`);
-        await r.page.click("#result-suite >> text=La carte");
-        await pause(r.page, 300);
-        await r.page.click('#carte-lignes [data-cle="A1-1"]');
-        await pause(r.page, 300);
-        assert.match(await texte(r.page, "#panneau-corps"), /Tu as déjà tenté aujourd’hui\. Tu pourras retenter demain\./);
-        await photo(r.page, `${f}-panneau-deja-tente`);
+        // (Lot P1, planche P1-6 : raté, « Continuer » et « J’apprends » — plus de « La carte » ici. Le
+        // panneau « Tu as déjà tenté aujourd’hui » est joué par tests/defi-calcul-lot-P1-ecrans.cjs.)
+        assert.match(await texte(r.page, "#result-suite"), /Continuer J’apprends( Ensuite : .+)?$/);
         assert.deepEqual(r.erreurs, []);
         await r.ctx.close();
       });
 
-      await cas(`${f} : Mes calculs du jour (Léa) — deux faux, l'étoile part ; le bilan`, async () => {
-        const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
+      await cas(`${f} : Mes calculs du jour (Léa, ratée hier) — deux faux, l'étoile part ; le bilan`, async () => {
+        const s = await ouvrir(nav, base, Object.assign({parcours: leaRatee}, o));
         await s.page.click("#acc-commencer");
         await pause(s.page, 2500);
         assert.equal(await T(s.page, "genre"), "jour");
@@ -338,27 +348,9 @@ async function cas(nom, f) {
         await s.ctx.close();
       });
 
-      await cas(`${f} : « Tente toute la ceinture » réussi — l'écran de la ceinture, puis la carte du CE1`, async () => {
-        const s = await ouvrir(nav, base, Object.assign({parcours: neuf}, o));
-        await s.page.click("#acc-porte");
-        await pause(s.page, 300);
-        await s.page.click("#carte-tente-bouton");
-        await pause(s.page, 800);
-        assert.equal(await T(s.page, "genre"), "ceinture");
-        await tient(s.page, largeur, hauteur, "toute la ceinture");
-        for (let k = 0; k < 13 && await enJeu(s.page); k += 1) await repondre(s.page, true);
-        await pause(s.page, 600);
-        assert.match(await texte(s.page, "#result-ceinture"), /^Toutes les étoiles sont gagnées Ceinture blanche-jaune ! Tu as gagné les 14 étoiles\. La ceinture jaune s’ouvre\./i);
-        await tient(s.page, largeur, hauteur, "l'écran de la ceinture");
-        await photo(s.page, `${f}-ceinture`);
-        await s.page.click("#ceinture-boutons >> text=Ceinture suivante");
-        await pause(s.page, 400);
-        assert.equal((await T(s.page, "carte")).courant, 2);
-        await tient(s.page, largeur, hauteur, "carte du CM1");
-        await photo(s.page, `${f}-carte-cm1`);
-        assert.deepEqual(s.erreurs, []);
-        await s.ctx.close();
-      });
+      // (Lot P1 : « Tente toute la ceinture » réussi — l'écran de la ceinture, puis la carte du CE1 —
+      // est retiré, nommé dans la note « tests retirés » ; l'écran « Ceinture … ! » est joué par
+      // tests/defi-calcul-lot-P1-ecrans.cjs.)
 
       await cas(`${f} : le professeur — « Ceinture blanche-jaune · CP », les trois boutons, rien d'enregistré`, async () => {
         const s = await ouvrir(nav, base, Object.assign({prof: true}, o));

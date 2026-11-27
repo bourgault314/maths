@@ -30,6 +30,12 @@ const o = (jour, seance = true) => ({aujourdhui: jour, carte: CARTE, seance});
 const justes = () => Array.from({length: 6}, () => ({juste: true, ms: 1500}));
 const lecon = () => [{juste: true, outil: "image"}, {juste: true, outil: "image"}, ...Array.from({length: 5}, () => ({juste: true, outil: "aucun"}))];
 const tenter = (p, module, niveau, jour, seance = true) => P.appliquerTentative(p, {module, niveau, reponses: justes()}, o(jour, seance)).parcours;
+// (Lot P1 : une étoile gagnée du premier coup à « Je tente » revient au bout
+// de 7 jours. Ce que ces tests vérifient tient sur des étoiles qui reviennent
+// le lendemain : un « Je tente » raté la veille, hors séance, puis gagné.)
+const rates = () => [{juste: false, ms: 1500}, {juste: false, ms: 1500}];
+const tenterApresRate = (p, module, niveau, jour, seance = true) =>
+  tenter(P.appliquerTentative(p, {module, niveau, reponses: rates()}, o(plus(jour, -1), false)).parcours, module, niveau, jour, seance);
 
 function fauxStockage(initial = {}) {
   const m = new Map(Object.entries(initial));
@@ -55,18 +61,18 @@ function seance(p, jour, {alea = .5, secondes = 120, juste = () => true, etoile 
   });
   p = P.noterTemps(p, secondes);
   p = P.terminerCalculsDuJour(p, {aujourdhui: jour, carte: CARTE}).parcours;
-  if (etoile) p = tenter(p, etoile[0], etoile[1], jour);
+  if (etoile) p = tenterApresRate(p, etoile[0], etoile[1], jour);
   return P.seanceOuverte(p, jour) ? P.fermerSeance(p, CARTE, {aujourdhui: jour, force: true}).parcours : p;
 }
 
 // ------------------------------------------------------------ le format
 
-test("le format : version 13 (lot K1b ; 12 au lot K1), rien d'autre que ce que le moteur décrit", () => {
+test("le format : version 14 (lot P1 ; 13 au lot K1b, 12 au lot K1), rien d'autre que ce que le moteur décrit", () => {
   // Lot K1b : le format est celui du lot K1, avec six étages (`ceintures`, `paliers`, `quarts` à
   // six places) et les listes par étoile de six modules allongées. La reprise d'une progression
   // de version 12 : tests/defi-calcul-lot-K1b-donnees.test.mjs.
   assert.deepEqual(P.creerParcours(), {
-    version: 13, epoque: 0, prenom: "", modules: {},
+    version: 14, epoque: 0, prenom: "", modules: {},
     // (Correctif K1 : `parts`, ce que chaque onglet a fait dans la séance ouverte ; `j` en est la somme.)
     seance: {jour: null, etape: 0, n: 0, i: 0, g: 0, p: [0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], parts: []},
     seances: [],
@@ -77,8 +83,9 @@ test("le format : version 13 (lot K1b ; 12 au lot K1), rien d'autre que ce que l
   assert.deepEqual(P.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero", "seuls", "seulsJustes", "tests", "testsRates"]);
   const p = tenter(P.creerParcours(), "A1", 1, MERCREDI, false);
   assert.deepEqual(Object.keys(p.modules), ["A1"]);
-  assert.deepEqual(p.modules.A1, {vu: MERCREDI, b: [2, 0, 0], e: [plus(MERCREDI, 1), null, null], a: [0, 0, 0], x: [0, 0, 0], r: [0, 0, 0], q: [null, null, null],
-    pe: [0, 0, 0], d: [MERCREDI, null, null], s: [null, null, null], ar: [0, 0, 0], g: [1, 0, 0], c: {}});
+  // (Lot P1 : gagnée du premier coup, boîte 4 — de retour dans 7 jours, solide dès le gain.)
+  assert.deepEqual(p.modules.A1, {vu: MERCREDI, b: [4, 0, 0], e: [plus(MERCREDI, 7), null, null], a: [0, 0, 0], x: [0, 0, 0], r: [0, 0, 0], q: [null, null, null],
+    pe: [0, 0, 0], d: [MERCREDI, null, null], s: [MERCREDI, null, null], ar: [0, 0, 0], g: [1, 0, 0], c: {}});
   // Un module qui entre prend sa place dans l'ordre des codes : le même parcours s'écrit toujours avec le même JSON.
   const q = tenter(tenter(P.creerParcours(), "M1", 1, MERCREDI, false), "A1", 1, MERCREDI, false);
   assert.deepEqual(Object.keys(q.modules), ["A1", "M1"]);
@@ -89,7 +96,7 @@ test("le format : version 13 (lot K1b ; 12 au lot K1), rien d'autre que ce que l
 
 test("normaliserParcours : idempotente, et sourde à ce qu'elle ne connaît pas", () => {
   const complet = parcoursComplet();
-  assert.equal(complet.version, 13);
+  assert.equal(complet.version, 14);
   assert.deepEqual(P.normaliserParcours(complet, {aujourdhui: "2026-11-25"}), complet);
   const bruit = JSON.parse(JSON.stringify(complet));
   Object.assign(bruit, {inconnu: 1, texte: "trop dur", reponses: [73]});
@@ -135,18 +142,20 @@ test("la référence tient dans ce que le serveur accepte, et ne porte que des c
   // (Correctif K1 : une clé de plus, `parts`, et ses 88 nombres au pire — il reste 46 clés et 4 698 octets de marge.)
   // (Lot K1b : neuf étoiles de plus et deux étages de plus — aucune clé de plus (les listes ne comptent
   // pas), 566 octets de plus dans la référence, 670 au pire : il reste 46 clés et 4 028 octets de marge.)
-  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1954, octets: 33599});
+  // (Lot P1 : la sorte d'un calcul raté rangée dans `x` — aucune clé de plus ; 134 octets de plus dans
+  // la référence complète, rien au pire : il reste 46 clés et 4 028 octets de marge.)
+  assert.deepEqual(mesure({entier: true, causes: 12}), {cles: 1954, octets: 33733});
   assert.deepEqual(mesure({pire: true, causes: 12}), {cles: 1954, octets: 35972});
   // Les listes ne comptent pas comme des clés : une case par étoile ne coûte rien.
   assert.equal(P.mesurer({b: [1, 2, 3, 4, 5], e: [null, null]}).cles, 2);
 });
 
-test("le serveur : les clés du moteur, version_min 13 (lot K1b ; 12 au lot K1), la lecture protégée, toutes les listes où la place compte déclarées", async () => {
+test("le serveur : les clés du moteur, version_min 14 (lot P1 ; 13 au lot K1b, 12 au lot K1), la lecture protégée, toutes les listes où la place compte déclarées", async () => {
   const applis = await lire("../_serveur/public/lib/applis.php");
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
   const declarees = [...bloc.match(/'cles' => \[([^\]]+)\]/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
   assert.deepEqual([...declarees].sort(), [...CLES_DECLAREES].sort(), "lib/applis.php et le moteur déclarent les mêmes clés");
-  assert.match(bloc, /'version_min' => 13,/);
+  assert.match(bloc, /'version_min' => 14,/);
   assert.match(bloc, /'version_max' => 999,/);
   assert.match(bloc, /'version_sans_declaration' => 11,/, "une page qui ne dit pas sa version en lisant vaut au plus la version 11 (B1)");
   const listes = bloc.slice(bloc.indexOf("'listes' => ["));
@@ -175,9 +184,9 @@ test("le rangement par code : une case par code, sous une empreinte, sans préno
   assert.equal(P.clesRevelentUnCode(stockage), false, "aucune clé ne laisse lire un code");
   assert.ok(stockage.cles().every(k => k.startsWith("mathsgo-defi-calcul-")), "rien n'est écrit dans les cases de Défi tables");
   assert.equal(JSON.parse(stockage.brut(cle)).prenom, "", "sous un code, jamais de prénom dans la case");
-  assert.equal(JSON.parse(stockage.brut(cle)).version, 13);
+  assert.equal(JSON.parse(stockage.brut(cle)).version, 14);
   assert.equal(P.charger(stockage, "").prenom, "Léa");
-  assert.deepEqual(P.charger(stockage, "7K3M9P").modules.A1.b, [2, 0, 0]);
+  assert.deepEqual(P.charger(stockage, "7K3M9P").modules.A1.b, [4, 0, 0]);
   assert.deepEqual(P.charger(stockage, "ABCDEF"), P.creerParcours(), "un autre code a sa propre case, vide");
   assert.equal(P.empreinteCode("7K3M9P", "sel"), P.empreinteCode("7K3M9P", "sel"));
   assert.notEqual(P.empreinteCode("7K3M9P", "sel"), P.empreinteCode("7K3M9P", "autre"));
@@ -206,9 +215,10 @@ test("le rangement par code : une case par code, sous une empreinte, sans préno
 // ------------------------------------------------------------ le journal
 
 test("le journal d'une séance : onze nombres, le numéro porte son rang et son identité ; -1 pour ce qui n'est pas connu", () => {
-  let p = tenter(tenter(P.creerParcours(), "A1", 1, plus(LUNDI, -1), false), "A10", 1, plus(LUNDI, -1), false);
+  let p = tenterApresRate(tenterApresRate(P.creerParcours(), "A1", 1, plus(LUNDI, -1), false), "A10", 1, plus(LUNDI, -1), false);
   p = seance(p, LUNDI, {alea: .4242, secondes: 185, juste: c => c.module === "A1", etoile: ["M1", 1]});
-  assert.deepEqual(P.JOURNAL.map(champ => p.journal[champ][0]), [3, 1, 0, 1, 1, 3, 10000 + 4242, 0, 0, 0, 0]);
+  // (Lot P1, la règle B : les deux calculs de A10 faux, l'étoile reste et revient demain — plus d'étoile perdue, « rouges » 0.)
+  assert.deepEqual(P.JOURNAL.map(champ => p.journal[champ][0]), [3, 1, 0, 1, 0, 3, 10000 + 4242, 0, 0, 0, 0]);
   assert.deepEqual([p.seances, p.seance.n, p.seance.i, p.seance.p], [[LUNDI], 1, 0, [0, 0, 0, 0, 0]]);
   // Une 2e séance le même jour : le rang 2.
   p = seance(p, LUNDI, {alea: .0007, etoile: ["A2", 1]});
@@ -270,7 +280,7 @@ test("la semaine de l'élève : les jours travaillés cochés (séance finie ou 
 });
 
 test("resumeSuivi : un jour de travail par séance, ses cinq comptes, la séance ouverte dès le premier geste ; pas de minutes", () => {
-  let p = tenter(P.creerParcours(), "A1", 1, plus(LUNDI, -1), false);
+  let p = tenterApresRate(P.creerParcours(), "A1", 1, plus(LUNDI, -1), false);
   p = seance(p, LUNDI, {etoile: ["A10", 1]});
   let s = P.resumeSuivi(p, {aujourdhui: MERCREDI});
   assert.deepEqual(s.jours, [{jour: LUNDI, lignes: [{calculs: 1, justes: 1, nouveautes: 0, prouvees: 1, rouges: 0, modules: ["A10"]}]}]);
@@ -283,7 +293,8 @@ test("resumeSuivi : un jour de travail par séance, ses cinq comptes, la séance
   assert.deepEqual(s.jours.map(j => j.jour), [LUNDI, MERCREDI]);
   assert.deepEqual(s.jours[1].lignes[0], {calculs: 1, justes: 1, nouveautes: 0, prouvees: 0, rouges: 0, modules: []});
   // Une étoile perdue : « rouges » ; une ceinture gagnée cette semaine : à féliciter.
-  const perdu = seance(tenter(P.creerParcours(), "A1", 1, plus(LUNDI, -1), false), LUNDI, {juste: () => false});
+  // (Lot P1, la règle B : un retour raté, l'étoile revient le lendemain ; raté encore, elle part.)
+  const perdu = seance(seance(tenterApresRate(P.creerParcours(), "A1", 1, plus(LUNDI, -2), false), plus(LUNDI, -1), {juste: () => false}), LUNDI, {juste: () => false});
   assert.deepEqual(P.resumeSuivi(perdu, {aujourdhui: MERCREDI}).aider, [{type: "rouges", competences: 1}]);
   const ceinture = Object.assign(P.creerParcours(), {ceintures: [LUNDI, null, null, null]});
   assert.deepEqual(P.resumeSuivi(ceinture, {aujourdhui: MERCREDI}).feliciter, [{type: "ceinture", ceinture: 1}]);

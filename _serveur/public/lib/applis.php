@@ -285,6 +285,11 @@ const CATALOGUE_APPLIS = [
         // par étoile de six modules s'allongent, `ceintures`, `paliers` et
         // `quarts` ont six places (une liste ne compte pas dans les clés : le
         // pire cas reste à 1 954 clés ; 35 972 octets, 670 de plus).
+        // Lot P1 « tout ouvert, et une semaine après un « Je tente » réussi »
+        // (27/11/2026), version 14 : AUCUNE CLÉ DE PLUS — la sorte du calcul
+        // raté à un retour (0 à 60) est rangée dans `x`, × 4 : `x` va de 0 à
+        // 243 (une liste `o` par module aurait mis le pire cas à 2 027 clés,
+        // au-dessus des 2 000). Pas de classe de l'élève, pas de réglage neuf.
         'cles' => ['version', 'epoque', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
             'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'parts', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],
@@ -367,7 +372,11 @@ const CATALOGUE_APPLIS = [
         // `quarts` avec les anciens numéros d'étage. (Le moteur de la version
         // 13 relit une ligne de version 12 sans rien perdre : aucune remise à
         // zéro.)
-        'version_min' => 13,
+        // Lot P1 « tout ouvert » (27/11/2026) : 14. Une page de version 13
+        // couperait `x` à 3 (la sorte d'un calcul raté à un retour y est
+        // rangée, × 4) : relue puis renvoyée, sa progression l'effacerait. (Le moteur de la
+        // version 14 relit une ligne de version 13 sans rien perdre.)
+        'version_min' => 14,
         // Lot K1 (relecture de Codex du 22/11, B1) : la LECTURE aussi est
         // protégée. Une page dit sa version en lisant (« version » dans le
         // corps) ; le serveur ne lui sert pas une progression d'une version
@@ -394,7 +403,7 @@ const CATALOGUE_APPLIS = [
         // et le moteur écarte la séance AVEC sa ligne de journal). Les
         // bornes sont celles du moteur, qui renormalise tout ce qu'il relit.
         'listes' => [
-            'b' => ['entier', 0, 7], 'a' => ['entier', 0, 1], 'x' => ['entier', 0, 3], 'r' => ['entier', 0, 2],
+            'b' => ['entier', 0, 7], 'a' => ['entier', 0, 1], 'x' => ['entier', 0, 243], 'r' => ['entier', 0, 2],
             'pe' => ['entier', 0, 3], 'ar' => ['entier', 0, 29], 'g' => ['entier', 0, 9999],
             'e' => ['date'], 'q' => ['date'], 'd' => ['date'], 's' => ['date'],
             'p' => ['entier', 0, 99], 'j' => ['entier', 0, 5400], 'parts' => ['entier', 0, 9999],
@@ -433,7 +442,7 @@ const CATALOGUE_APPLIS = [
             'modules.*' => ['objet'],
             'modules.*.vu' => ['date'],
             'modules.*.b' => ['liste', ['entier', 0, 7]], 'modules.*.a' => ['liste', ['entier', 0, 1]],
-            'modules.*.x' => ['liste', ['entier', 0, 3]], 'modules.*.r' => ['liste', ['entier', 0, 2]],
+            'modules.*.x' => ['liste', ['entier', 0, 243]], 'modules.*.r' => ['liste', ['entier', 0, 2]],
             'modules.*.pe' => ['liste', ['entier', 0, 3]], 'modules.*.ar' => ['liste', ['entier', 0, 29]],
             'modules.*.g' => ['liste', ['entier', 0, 9999]],
             'modules.*.e' => ['liste', ['date']], 'modules.*.q' => ['liste', ['date']],
