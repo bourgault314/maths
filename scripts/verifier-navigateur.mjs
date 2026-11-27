@@ -111,6 +111,10 @@ export const RECETTES = [
   // Lot K1b de Défi calcul (26/11/2026) : les bases en trois classes — six onglets sur une rangée (320 px à
   // l'ordinateur), les progressions de version 12 relues, le réglage à chaque étage, les six ceintures, le professeur.
   { fichier: "tests/defi-calcul-lot-K1b-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  // Lot P1 de Défi calcul (27/11/2026) : tout est ouvert — la carte (le compte sous chaque ceinture, la même place
+  // pour « Continuer » sur les six onglets à l'ordinateur), « Plus facile », « dans une semaine », le bilan raté,
+  // « Mes N erreurs », la fin de séance, « Ceinture … ! », un 2e calcul de la même sorte ; aux cinq formats.
+  { fichier: "tests/defi-calcul-lot-P1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
@@ -172,7 +176,7 @@ export const ECARTEES = [
       "parti au lot K1. Le chargement (cadre caché puis immobile, centré) est repris par defi-calcul-lot-K1-ecrans.cjs." },
   { fichier: "tests/defi-calcul-lot-4-ceintures-ecrans.cjs",
     raison: "les barrettes, l'écran « Nouvelle ceinture » et Mon parcours : partis au lot K1 (la ceinture se remplit " +
-      "quart par quart). L'écran de la ceinture gagnée est joué par defi-calcul-lot-K1-ecrans.cjs." },
+      "quart par quart). L'écran de la ceinture gagnée est joué par defi-calcul-lot-P1-ecrans.cjs (lot P1 ; avant, K1)." },
   { fichier: "tests/defi-calcul-lot-F4-ecrans.cjs",
     raison: "le test de palier et le test de module : partis au lot K1 (« Je tente », « Tente toute la ceinture »). " +
       "J'apprends arrêté, le 3e arrêt et la reprise sans aide sont joués par defi-calcul-lot-F4-correctif-ecrans.cjs." },

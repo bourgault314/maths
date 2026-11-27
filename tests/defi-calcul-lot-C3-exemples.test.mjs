@@ -143,27 +143,29 @@ test("le calcul de l'exemple : la même écriture, un cran plus facile que « À
   assert.ok(memeMotif / essais > 0.25, `le même dessin : ${memeMotif} sur ${essais}`);
 });
 
-test("Mes calculs du jour : l'exemple au premier retour d'une étoile gagnée sans leçon (« Je tente », test de ceinture), jamais après J'apprends", () => {
-  // Lot K1 « la carte chez l'élève » : plus de test en escalier ni de test de
-  // palier. Une étoile gagnée par « Je tente » ou placée par « Tente toute
-  // la ceinture » n'a pas eu sa leçon : son premier retour montre l'exemple.
-  // Le moteur le sait par `a` (1 : leçon faite, ou déjà revenue une fois).
+test("Mes calculs du jour : le moteur sait encore quel retour est le premier d'une étoile gagnée sans leçon, mais n'annonce plus d'exemple (lot P1)", () => {
+  // Lot K1 « la carte chez l'élève » : une étoile gagnée par « Je tente »
+  // n'a pas eu sa leçon : son premier retour montrait l'exemple. Le moteur le
+  // sait par `a` (1 : leçon faite, ou déjà revenue une fois).
+  // Lot P1 (choix de Gwenaël du 26/11) : plus d'exemple au premier retour —
+  // l'élève se souvient, il ne recopie pas. Le paquet du jour dit
+  // `premierRetour: false` ; la page ne lit plus premierRetourSansLecon.
+  // Une étoile gagnée du premier coup revient au bout de 7 jours ; « Tente
+  // toute la ceinture » n'existe plus.
   const aujourdhui = "2026-11-23";
   const avant = n => P.ajouterJours(aujourdhui, -n);
   const carte = CORE.carte();
   const retour = (p, juste, jour) => P.appliquerRetour(p, {module: "A1", niveau: 1, juste, ms: 3000, type: "P", cause: 0}, {aujourdhui: jour}).parcours;
   const six = Array.from({length: 6}, () => ({juste: true, ms: 1500}));
-  // « Je tente » : gagnée hier, elle revient aujourd'hui.
-  let p = P.appliquerTentative(P.creerParcours(), {module: "A1", niveau: 1, reponses: six}, {aujourdhui: avant(1), carte}).parcours;
+  // « Je tente » : gagnée du premier coup il y a 7 jours, elle revient aujourd'hui.
+  let p = P.appliquerTentative(P.creerParcours(), {module: "A1", niveau: 1, reponses: six}, {aujourdhui: avant(7), carte}).parcours;
   assert.equal(P.premierRetourSansLecon(p, "A1", 1), true);
-  assert.equal(P.tirerCalculsDuJour(p, carte, {aujourdhui})[0].premierRetour, true, "le paquet du jour le dit à la page");
-  // Revenue une fois (juste, ou les deux calculs faux) : plus d'exemple.
+  assert.equal(P.tirerCalculsDuJour(p, carte, {aujourdhui})[0].premierRetour, false, "le paquet du jour n'annonce plus d'exemple");
+  // Revenue une fois (juste, ou les deux calculs faux) : ce n'est plus son premier retour.
   assert.equal(P.premierRetourSansLecon(retour(p, true, aujourdhui), "A1", 1), false);
   // Un premier calcul faux : son 2e calcul attend, c'est toujours son premier retour.
   assert.equal(P.premierRetourSansLecon(retour(p, false, aujourdhui), "A1", 1), true);
-  const perdue = retour(retour(p, false, aujourdhui), false, aujourdhui);
-  const regagnee = P.appliquerTentative(perdue, {module: "A1", niveau: 1, reponses: six}, {aujourdhui, carte}).parcours;
-  assert.equal(P.premierRetourSansLecon(regagnee, "A1", 1), false, "perdue puis regagnée : elle est déjà revenue");
+  assert.equal(P.premierRetourSansLecon(retour(retour(p, false, aujourdhui), false, aujourdhui), "A1", 1), false, "les deux calculs faux : elle est revenue");
   // J'apprends : sa leçon est faite — jamais.
   const reponses = Array.from({length: 9}, () => ({juste: true, outil: "aucun"}));
   let q = P.appliquerSerie(P.creerParcours(), {module: "A1", niveau: 1, genre: "apprends", reponses, causes: {}}, {aujourdhui: avant(4), carte}).parcours;
@@ -174,12 +176,6 @@ test("Mes calculs du jour : l'exemple au premier retour d'une étoile gagnée sa
   assert.equal(P.premierRetourSansLecon(P.creerParcours(), "A1", 1), false);
   assert.equal(P.premierRetourSansLecon(null, "A1", 1), false);
   assert.equal(P.premierRetourSansLecon(p, "ZZ", 1), false);
-  // « Tente toute la ceinture » : toutes les étoiles placées attendent leur exemple.
-  const test = P.calculsDuTestDeCeinture(carte, 1).map(c => Object.assign({juste: true}, c));
-  const place = P.appliquerTestCeinture(P.creerParcours(), {etage: 1, reponses: test}, {aujourdhui: avant(10), carte}).parcours;
-  const dues = P.tirerCalculsDuJour(place, carte, {aujourdhui, maximum: 999});
-  assert.ok(dues.length > 0);
-  dues.forEach(c => assert.equal(P.premierRetourSansLecon(place, c.module, c.niveau), true, `${c.module}-${c.niveau}`));
 });
 
 test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamais au test ; « À toi » garde sa taille", () => {
@@ -196,7 +192,10 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   assert.match(pose, /serie\.exemplesVus\.includes\(ecriture\)/);
   assert.match(pose, /if \(precedente && precedente\.exemple\) return false;/);
   assert.match(pose, /question\.deuxieme/);
-  assert.match(pose, /PARCOURS\.premierRetourSansLecon\(parcours, calcul\.module, calcul\.niveau\)/);
+  // (Lot P1 : jamais dans Mes calculs du jour — l'exemple ne vient qu'après
+  // un faux, avec la correction.)
+  assert.match(pose, /if \(jour\) return false;/);
+  assert.ok(!pose.includes("premierRetourSansLecon"));
   // L'exemple ne note rien : « À toi » passe à la suite sans réponse.
   const avancer = PAGE.slice(PAGE.indexOf("      function avancerSerie() {"), PAGE.indexOf("      function allongerSerie(serie) {"));
   assert.match(avancer, /serie\.questions\[serie\.index\]\.exemple\) \{\s+serie\.index \+= 1;\s+renderQuestion\(\);\s+return;/);
@@ -230,12 +229,12 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // L'annonce : « Nouveau : … » sur l'exemple, « À toi : … » ensuite.
   assert.match(pose, /question\.annonceAToi = String\(annonce\)\.replace\(\/\^Nouveau\/, "À toi"\);/);
   // Les adresses de cache, les copies pour la page prof, le manifeste.
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261126-2/);
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261126-2/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261126-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261127-1/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261127-1/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$|^lot defi-calcul-lot-P1$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {

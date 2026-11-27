@@ -370,15 +370,16 @@ test("Défi tables et Défi calcul, fusion : trois appareils qui jouent chacun d
   }
 });
 
-// (Lot K1b « les bases en trois classes » : la version 13 ; une version 12 se relit, les versions d'avant repartent de zéro.)
-test("Défi calcul, version 13 (lot K1b « les bases en trois classes ») : chaque séance a son numéro ; un journal d'une version d'avant repart de zéro ; une copie sans journal n'efface rien", () => {
-  assert.equal(D.VERSION, 13, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11 ; lot K1 « la carte » : 12 ; lot K1b « les bases en trois classes » : 13");
+// (Lot K1b « les bases en trois classes » : la version 13 ; une version 12 se relit, les versions d'avant repartent de zéro.
+// Lot P1 « tout ouvert » : la version 14 ; une version 13 se relit telle quelle.)
+test("Défi calcul, version 14 (lot P1 ; 13 au lot K1b « les bases en trois classes ») : chaque séance a son numéro ; un journal d'une version d'avant repart de zéro ; une copie sans journal n'efface rien", () => {
+  assert.equal(D.VERSION, 14, "lot 6 « programmes 2 » : 9 ; lot F4 : 10 ; lot C2 : 11 ; lot K1 « la carte » : 12 ; lot K1b « les bases en trois classes » : 13 ; lot P1 « tout ouvert » : 14");
   assert.deepEqual(D.JOURNAL, ["calculs", "justes", "nouveautes", "prouvees", "rouges", "minutes", "numero", "seuls", "seulsJustes", "tests", "testsRates"]);
   // Un journal d'une version d'avant (ici 5, lot G1) : la carte repart de zéro, lui avec.
   const v5 = {version: 5, seances: ["2026-11-02", MERCREDI, MERCREDI],
     journal: {calculs: [-1, 10, 6], justes: [-1, 9, 6], nouveautes: [-1, 1, 0], prouvees: [-1, 0, 2], rouges: [-1, 0, 1], minutes: [-1, 6, 4]}};
   const p = D.normaliserParcours(v5);
-  assert.equal(p.version, 13);
+  assert.equal(p.version, 14);
   assert.deepEqual([p.seances, p.journal.calculs], [[], []], "rien d'une version d'avant n'est relu");
   assert.deepEqual(D.normaliserParcours(v5), p, "le même à chaque relecture, sur chaque appareil");
   // Deux séances jouées le même jour : rang 1, puis rang 2.
@@ -776,7 +777,7 @@ test("serveur : version_min 5 (Défi tables), 6 (Défi calcul), 2 (SPLAT!) et 4 
   assert.doesNotMatch(clesTables, /'chrono'|'secondes'|'minutes'/, "Défi tables ne déclare aucun temps passé");
   assert.match(bloc("coffres", "flash-anzan"), /'version_min' => 4,/, "Coffres : version 4 depuis le lot « le jour vert »");
   const calcul = bloc("defi-calcul", "automatismes");
-  assert.match(calcul, /'version_min' => 13,/, "Défi calcul : une page d'avant les six étages (version 12 ou moins) écrirait avec quatre étages (lot K1b ; lot K1 : 12)");
+  assert.match(calcul, /'version_min' => 14,/, "Défi calcul : une page de version 13 couperait la sorte rangée dans `x` (lot P1 ; lot K1b : 13, lot K1 : 12)");
   ["journal", ...D.JOURNAL].forEach(cle => assert.match(calcul, new RegExp(`'cles' => \\[[\\s\\S]*'${cle}'[\\s\\S]*\\],`), `Défi calcul : ${cle}`));
   assert.match(bloc("splat", "soley"), /'version_min' => 2,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
@@ -800,7 +801,7 @@ test("les moteurs changent d'adresse dans toutes les pages qui les chargent", as
   assert.match(await lire("../outils/calcul_mental/coffres_magiques_solo.html"), /coffres-parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/defi_tables.html"), /defi_tables_mon_parcours\.js\?v=20261111-3"/);
   assert.match(await lire("../outils/calcul_mental/flash_anzan.html"), /flash_anzan_parcours\.js\?v=20261122-1"/);
-  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261126-2"/);
+  assert.match(await lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_mon_parcours\.js\?v=20261127-1"/);
 });
 
 // ============================================================ la page Défi tables

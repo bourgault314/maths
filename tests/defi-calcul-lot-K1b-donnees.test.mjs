@@ -45,9 +45,9 @@ const tenter = (p, cle, jour) => {
 // ------------------------------------------------------------------ le format
 
 test("le format : version 13, six étages, les neuf étoiles de plus à la fin de leur module", () => {
-  assert.equal(P.VERSION, 13);
+  assert.equal(P.VERSION, 14); // (lot P1 : version 14 ; le format de la version 13 ne change pas)
   assert.deepEqual(P.creerParcours(), {
-    version: 13, epoque: 0, prenom: "", modules: {},
+    version: 14, epoque: 0, prenom: "", modules: {},
     seance: {jour: null, etape: 0, n: 0, i: 0, g: 0, p: [0, 0, 0, 0, 0], j: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], parts: []},
     seances: [],
     journal: {calculs: [], justes: [], nouveautes: [], prouvees: [], rouges: [], minutes: [], numero: [], seuls: [], seulsJustes: [], tests: [], testsRates: []},
@@ -62,8 +62,8 @@ test("le format : version 13, six étages, les neuf étoiles de plus à la fin d
     assert.ok(bas <= NIVEAUX_12[id] && haut > NIVEAUX_12[id], `${id}-${haut} est après les niveaux de la version 12`);
   }));
   const p = tenter(P.creerParcours(), "A10-1", "2026-11-26");
-  assert.deepEqual(p.modules.A10.b, [2, 0, 0, 0, 0]);
-  assert.equal(JSON.parse(JSON.stringify(p)).version, 13);
+  assert.deepEqual(p.modules.A10.b, [4, 0, 0, 0, 0]); // (lot P1 : gagnée du premier coup, boîte 4)
+  assert.equal(JSON.parse(JSON.stringify(p)).version, 14);
 });
 
 test("la table de la coupe gardée par le moteur est celle de la carte : les 44 étoiles des bases et leurs 9 moitiés, en trois étages", () => {
@@ -124,7 +124,7 @@ test("une progression de version 12 se relit en version 13 sans rien perdre : ch
     const avant = copie(parcours);
     const lu = P.normaliserParcours(parcours, {aujourdhui: vu.jour});
     assert.deepEqual(parcours, avant, `${nom} : la copie relue n'est pas modifiée`);
-    assert.equal(lu.version, 13, nom);
+    assert.equal(lu.version, 14, nom); // (lot P1 : relue en version 14)
     assert.deepEqual(Object.keys(lu.modules), Object.keys(parcours.modules), `${nom} : les mêmes modules, dans le même ordre`);
     Object.entries(parcours.modules).forEach(([id, ligne]) => {
       const neuve = lu.modules[id];
@@ -189,7 +189,8 @@ test("ce que l'élève voyait est encore là : les étoiles tenues, celles à re
   const c = P.carteEleve(jaune.parcours, CARTE, {aujourdhui: jaune.vu.jour});
   assert.deepEqual(c.etages.map(e => e.ceinture), [jaune.vu.ceintures[0], jaune.vu.ceintures[0], jaune.vu.ceintures[0], null, null, null]);
   assert.deepEqual(c.etages.slice(0, 3).map(e => [e.etoiles, e.total]), [[14, 14], [20, 20], [19, 19]]);
-  assert.deepEqual(c.etages.map(e => e.ouvert), [true, true, true, true, false, false]);
+  // (Lot P1 : tout est ouvert dès le premier jour.)
+  assert.deepEqual(c.etages.map(e => e.ouvert), [true, true, true, true, true, true]);
   assert.equal(P.etatCeintures(jaune.parcours, CARTE).porte, 3, "il porte la ceinture jaune-orange");
   // Les 14 étoiles du CP tenues, sans la ceinture jaune d'avant : la ceinture blanche-jaune est donnée par la relecture.
   const cp = V12.temoins["cp-complet"];
@@ -202,10 +203,11 @@ test("ce que l'élève voyait est encore là : les étoiles tenues, celles à re
   assert.deepEqual([d.etages[0].etoiles, d.etages[0].total, d.etages[0].ceinture], [14, 14, lu.ceintures[0]]);
   assert.equal(d.etages[1].ouvert, true, "le CE1 est ouvert");
   assert.equal(P.etatCeintures(cp.parcours, CARTE).porte, 1);
-  // Le test de ceinture des bases, déjà joué : il n'est reproposé dans aucun des trois étages.
+  // (Lot P1 : « Tente toute la ceinture » n'existe plus — la carte ne dit plus rien d'un test de
+  // ceinture ; le témoin qui l'avait raté se relit sans erreur.)
   const rate = V12.temoins["test-rate"];
   const e = P.carteEleve(rate.parcours, CARTE, {aujourdhui: rate.vu.jour});
-  assert.deepEqual(e.etages.slice(0, 3).map(x => [x.test.propose, x.test.joue]), [[false, rate.vu.tests[0]], [false, rate.vu.tests[0]], [false, rate.vu.tests[0]]]);
+  assert.ok(e.etages.slice(0, 3).every(x => x.test === undefined));
   // Du travail jamais gagné reste sur la moitié du bas : deux « Je tente » ratés, un J'apprends arrêté, « à voir en classe ».
   const jamais = V12.temoins["jamais-gagne"];
   const etat = (id, n) => P.etatEtoile(jamais.parcours, CARTE, id, n, {aujourdhui: jamais.vu.jour});
@@ -216,7 +218,8 @@ test("ce que l'élève voyait est encore là : les étoiles tenues, celles à re
   assert.equal(etat("M1", 1).aVoir, true, "M1-1 : à voir en classe");
   assert.equal(etat("M1", 7).aVoir, false);
   const j = P.carteEleve(jamais.parcours, CARTE, {aujourdhui: jamais.vu.jour});
-  assert.equal(j.etages[2].ouvert, false, "le CE2 ne s'ouvre pas sur un essai raté du CP");
+  // (Lot P1 : tout est ouvert dès le premier jour.)
+  assert.equal(j.etages[2].ouvert, true, "le CE2 est ouvert (lot P1 : tout est ouvert)");
   // Une séance ouverte continue : son paquet, son temps, le 2e calcul qui attend (sur la moitié du bas seulement).
   const ouverte = V12.temoins["seance-ouverte"];
   const s = P.etatSeance(ouverte.parcours, CARTE, {aujourdhui: ouverte.vu.jour});
@@ -266,9 +269,10 @@ test("B1 tient toujours : une version plus récente n'est jamais lue, les versio
   const plein = {epoque: 3, modules: {A1: {b: [5, 5, 5], d: [J, J, J]}}, ceintures: [J, null, null, null]};
   for (let version = 2; version <= 11; version += 1) {
     const lu = P.normaliserParcours(Object.assign({version}, plein), {aujourdhui: J});
-    assert.deepEqual([lu.version, lu.epoque, lu.modules], [13, 3, {}], `version ${version} : zéro, son époque gardée`);
+    assert.deepEqual([lu.version, lu.epoque, lu.modules], [14, 3, {}], `version ${version} : zéro, son époque gardée`);
   }
-  [14, 15, 999, 1500].forEach(version => {
+  // (Lot P1 : le moteur est en version 14 — une progression de version 15 est d'une page plus récente.)
+  [15, 16, 999, 1500].forEach(version => {
     const recente = Object.assign({version}, plein);
     assert.equal(P.tropRecente(recente), true, `version ${version}`);
     assert.deepEqual(P.normaliserParcours(recente, {aujourdhui: J}).modules, {});
@@ -276,12 +280,13 @@ test("B1 tient toujours : une version plus récente n'est jamais lue, les versio
     assert.deepEqual(P.recevoir(local, recente, {aujourdhui: J, carte: CARTE}), {parcours: P.normaliserParcours(local, {aujourdhui: J}), lectureSeule: true, apporte: false});
     assert.deepEqual(P.fusionner(local, recente, {aujourdhui: J}), P.normaliserParcours(local, {aujourdhui: J}));
   });
+  assert.equal(P.tropRecente({version: 14}), false);
   assert.equal(P.tropRecente({version: 13}), false);
   assert.equal(P.tropRecente({version: 12}), false);
   // La case de l'appareil écrite par une page d'après : rien ne s'écrit par-dessus.
   const m = new Map();
   const stockage = {getItem: k => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: k => { m.delete(k); }, key: i => [...m.keys()][i] ?? null, get length() { return m.size; }};
-  stockage.setItem(P.CLE_STOCKAGE, JSON.stringify({version: 14, modules: {A1: {b: [1, 1, 1]}}}));
+  stockage.setItem(P.CLE_STOCKAGE, JSON.stringify({version: 15, modules: {A1: {b: [1, 1, 1]}}})); // (lot P1 : 15, la page d'après)
   assert.equal(P.versionEnAvance(stockage, ""), true);
   assert.equal(P.sauver(stockage, P.creerParcours(), ""), false);
   // Une case de version 12 : lue, reprise, et réécrite en version 13.
@@ -289,10 +294,10 @@ test("B1 tient toujours : une version plus récente n'est jamais lue, les versio
   stockage.setItem(P.CLE_STOCKAGE, JSON.stringify(debut.parcours));
   assert.equal(P.versionEnAvance(stockage, ""), false);
   const charge = P.charger(stockage, "");
-  assert.equal(charge.version, 13);
+  assert.equal(charge.version, 14); // (lot P1)
   assert.equal(charge.modules.A10.b[3] > 0, true);
   assert.equal(P.sauver(stockage, charge, ""), true);
-  assert.equal(JSON.parse(stockage.getItem(P.CLE_STOCKAGE)).version, 13);
+  assert.equal(JSON.parse(stockage.getItem(P.CLE_STOCKAGE)).version, 14);
 });
 
 // ---------------------------------------------------------------- la fusion
@@ -319,7 +324,7 @@ test("la fusion entre une version 12 et une version 13, dans les deux sens : la 
     const ba = P.fusionner(continue13, parcours, options);
     assert.deepEqual(ab, ba, `${nom} : le même résultat dans les deux sens`);
     assert.deepEqual(ab.modules, P.fusionner(continue13, continue13, options).modules, `${nom} : la copie de version 12, plus ancienne, n'apporte rien et ne recouvre rien`);
-    assert.equal(ab.version, 13);
+    assert.equal(ab.version, 14); // (lot P1)
     assert.deepEqual(P.recevoir(continue13, parcours, options).apporte, true, `${nom} : la page renvoie ce qu'elle a de plus`);
     // Deux fois de suite : rien ne bouge plus.
     assert.deepEqual(P.fusionner(ab, parcours, options), ab, `${nom} : absorbante`);
@@ -335,7 +340,7 @@ test("fusionner puis reprendre, ou reprendre puis fusionner : le même résultat
     // son test, G9.)
     const sansQuarts = p => Object.assign({}, p, {quarts: null});
     const attendu = P.fusionner(fusion, fusion, options);
-    assert.equal(attendu.version, 13);
+    assert.equal(attendu.version, 14); // (lot P1)
     assert.deepEqual(sansQuarts(P.fusionner(a, b, options)), sansQuarts(attendu), `${nom} : a puis b`);
     assert.deepEqual(P.fusionner(b, a, options), P.fusionner(a, b, options), `${nom} : b puis a, quarts compris`);
     // Un appareil déjà en version 13, l'autre encore en version 12.
@@ -411,7 +416,7 @@ test("le témoin de version 12 des tests du serveur est le témoin « trois-sema
   assert.equal(serveur.version, 12);
   const jour = V12.temoins["trois-semaines"].vu.jour;
   const lu = P.normaliserParcours(copie(serveur), {aujourdhui: jour});
-  assert.equal(lu.version, 13);
+  assert.equal(lu.version, 14); // (lot P1)
   assert.deepEqual(lu, Object.assign(P.normaliserParcours(copie(V12.temoins["trois-semaines"].parcours), {aujourdhui: jour}), {prenom: ""}));
   // Ce que le serveur recevra ensuite tient dans ses bornes (2 000 clés, 40 000 octets).
   const mesure = P.mesurer(lu);

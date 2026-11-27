@@ -98,10 +98,13 @@ test("la page : l'écran de la ceinture à la fin de l'étape, puis le bilan ; r
   assert.match(PAGE, /<div id="result-ceinture" class="dc-ceinture-gagnee" hidden>\s*<p class="eyebrow">Toutes les étoiles sont gagnées<\/p>/);
   const fin = PAGE.slice(PAGE.indexOf("      function finish() {"), PAGE.indexOf("      function suiteDuBilan("));
   assert.match(fin, /const gagnees = MODE_PROF \? \[\] : \(suivi\.ceintures \|\| \[\]\);/);
-  assert.match(fin, /if \(gagnees\.length\) \{ montrerCeintures\(gagnees, serie\.genre === "ceinture" && suivi\.reussi \? fin : bilan\); return; \}/);
+  // (Lot P1 : « Tente toute la ceinture » n'existe plus — la ceinture est
+  // toujours suivie du bilan de l'étape.)
+  assert.match(fin, /if \(gagnees\.length\) \{ montrerCeintures\(gagnees, bilan\); return; \}/);
   const montrer = PAGE.slice(PAGE.indexOf("      function montrerCeintures("), PAGE.indexOf("\n      }\n", PAGE.indexOf("      function montrerCeintures(")));
   assert.match(montrer, /\$\("ceinture-titre"\)\.textContent = soude\(`\$\{nomCeinture\(n\)\} !`\);/);
-  assert.match(montrer, /soude\(`Tu as gagné les \$\{total\} étoiles\.\$\{suivante \? ` La \$\{nomCeinture\(n \+ 1\)\.toLowerCase\(\)\} s’ouvre\.` : ""\}`\)/);
+  // (Lot P1, planche P1-6 : tout est ouvert — plus de « … s'ouvre ».)
+  assert.match(montrer, /soude\(`Tu as gagné les \$\{total\} étoiles\.`\)/);
   assert.match(montrer, /"Tu as fini Défi calcul !" : "Tu as fini tout ce que ton professeur a ouvert\."/);
   assert.match(montrer, /boutons\.push\(\["Ceinture suivante", "primary"/);
   assert.match(montrer, /boutons\.push\(\["La carte", suivante \? "secondary" : "primary"/);
@@ -112,8 +115,9 @@ test("la page : l'écran de la ceinture à la fin de l'étape, puis le bilan ; r
   // Le dessin passe par des éléments, jamais par innerHTML.
   assert.doesNotMatch(PAGE, /innerHTML = CORE\.dessinCeinture/);
   assert.ok((PAGE.match(/CORE\.elementCeinture\(document, /g) || []).length >= 5);
-  // « Comment ça marche ? » : la phrase validée le 25/11.
-  assert.match(PAGE, /<p><b>Mes ceintures\.<\/b> Toutes les étoiles d’une ceinture gagnées&nbsp;: la ceinture est à moi, et la suivante s’ouvre\. Six ceintures, de la blanche-jaune à la bleue\. Je sais déjà tout&nbsp;\? «&nbsp;Tente toute la ceinture&nbsp;»&nbsp;: 12&nbsp;calculs\.<\/p>/);
+  // « Comment ça marche ? » : la phrase validée le 25/11 ; lot P1 (planche
+  // P1-9 A, choix du 27/11) : tout est ouvert.
+  assert.match(PAGE, /<p><b>Mes ceintures\.<\/b> Tout est ouvert\. Une ceinture est à moi quand j’ai toutes ses étoiles\. Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux\.<\/p>/);
 });
 
 test("compter : un palier se compte sur ce qui est construit", () => {

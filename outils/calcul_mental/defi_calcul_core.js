@@ -13633,14 +13633,37 @@
   // à tour de rôle (31/10 : « 37 + ? = 100 », puis « ? + 37 = 100 »…).
   // `autreQue` (le 2e calcul après un faux) : un calcul d'une autre sorte que
   // celui-là, sinon d'une autre écriture, sinon un autre calcul.
-  function genererUn(cleNiveau, graine, {tour = null, autreQue = null} = {}) {
+  // Lot P1 (choix de Gwenaël du 26/11 : « un calcul faux ? un autre du même
+  // genre ») : avec `memeSorte`, le 2e calcul est de LA MÊME SORTE et de la
+  // même écriture que `autreQue` (son numéro, numeroDeSorte), avec d'autres
+  // nombres ; sinon de la même sorte ; sinon un autre calcul. `sorte` (un
+  // numéro de numeroDeSorte, 1 à 60 ; 0 : aucun) : un calcul de cette sorte
+  // et de cette écriture — le retour d'une étoile commence par la sorte
+  // ratée la fois d'avant. Il prend le premier calcul de la série qui a ce
+  // numéro, comme `tour` quand il tombe dessus : le même jour, le même
+  // calcul. Les deux cherchent dans d'autres séries tirées de la même graine
+  // si la première n'en a pas.
+  function genererUn(cleNiveau, graine, {tour = null, autreQue = null, memeSorte = false, sorte = 0} = {}) {
     const serie = genererSerie(cleNiveau, {graine, genre: "entraine", total: TOTAUX.P, ordonne: false});
     if (!serie.length) return null;
+    if (autreQue && memeSorte) {
+      const voulue = numeroDeSorte(autreQue);
+      const pareil = calcul => calcul.texte !== autreQue.texte && (voulue ? numeroDeSorte(calcul) === voulue : calcul.forme === autreQue.forme);
+      const brute = sorteDe(autreQue);
+      return chercherDansLaGraine(cleNiveau, graine, serie, pareil, calcul => sorteDe(calcul) === brute && calcul.texte !== autreQue.texte)
+        || serie.find(calcul => calcul.texte !== autreQue.texte) || serie[0];
+    }
     if (autreQue) {
       const sorte = sorteDe(autreQue);
       return serie.find(calcul => sorteDe(calcul) !== sorte)
         || serie.find(calcul => calcul.forme !== autreQue.forme)
         || serie.find(calcul => calcul.texte !== autreQue.texte) || serie[0];
+    }
+    const paire = Number.isInteger(sorte) && sorte > 0 ? sortesNumerotees(cleNiveau)[sorte - 1] : null;
+    if (paire) {
+      const trouve = chercherDansLaGraine(cleNiveau, graine, serie, calcul => sorteDe(calcul) === paire.sorte && calcul.forme === paire.forme,
+        calcul => sorteDe(calcul) === paire.sorte);
+      if (trouve) return trouve;
     }
     if (!Number.isInteger(tour)) return serie[0];
     const sortes = sortesDe(cleNiveau).map(sorte => sorte.n);
@@ -13650,6 +13673,62 @@
     const formes = [...new Set(liste.map(calcul => calcul.forme))].sort();
     const forme = formes[((Math.floor(tour / sortes.length) % formes.length) + formes.length) % formes.length];
     return liste.find(calcul => calcul.forme === forme) || liste[0];
+  }
+
+  // Lot P1 : le premier calcul de `serie` qui convient, sinon d'une des
+  // séries suivantes tirées de la même graine (toujours les mêmes) ; s'il n'y
+  // en a nulle part, le premier qui convient `aDefaut` (la même sorte
+  // déclarée : la même méthode) dans ces mêmes séries.
+  // Correctif P1 (relecture de Codex du 27/11) : 39 séries de plus, au lieu
+  // de 6 — certaines sortes sont rares dans une série (au 2e niveau de
+  // « Multiplier par 10, 100… », la sorte « 20 × 3 » manquait aux sept
+  // séries une fois sur cinq ; le 2e calcul changeait alors de méthode). Au
+  // pire niveau, les 40 séries se tirent en moins de 70 ms.
+  const SERIES_CHERCHEES = 40;
+  function chercherDansLaGraine(cleNiveau, graine, serie, convient, aDefaut = null) {
+    let secours = null;
+    for (let essai = 0; essai < SERIES_CHERCHEES; essai += 1) {
+      const liste = essai ? genererSerie(cleNiveau, {graine: (graine + essai * 104729) >>> 0, genre: "entraine", total: TOTAUX.P, ordonne: false}) : serie;
+      const trouve = liste.find(convient);
+      if (trouve) return trouve;
+      if (!secours && aDefaut) secours = liste.find(aDefaut) || null;
+    }
+    return secours;
+  }
+
+  // Lot P1 : les SORTES d'un niveau, numérotées pour le moteur (qui garde,
+  // dans `x`, la sorte d'un calcul raté à un retour). Une sorte, ici, c'est
+  // une sorte déclarée (sortesDe) ET une écriture (`forme`) : le 2e calcul
+  // « du même genre » a la même écriture, avec d'autres nombres. Lues sur
+  // huit séries tirées de graines fixes (toujours les mêmes), rangées comme
+  // genererUn les parcourt : la sorte dans l'ordre de sortesDe, puis
+  // l'écriture dans l'ordre alphabétique. Le numéro va de 1 à 60
+  // (`SORTES_MAX` ; 7 au plus aujourd'hui, A3-4) ; 0 : un calcul dont
+  // l'écriture n'a pas été vue (le moteur ne garde rien).
+  const SORTES_MAX = 60;
+  const SORTES_NUMEROTEES = new Map();
+  function sortesNumerotees(cleNiveau) {
+    if (SORTES_NUMEROTEES.has(cleNiveau)) return SORTES_NUMEROTEES.get(cleNiveau);
+    const vues = new Map();
+    for (let graine = 1; graine <= 8; graine += 1) {
+      genererSerie(cleNiveau, {graine: graine * 7919, genre: "entraine", total: 60, ordonne: false}).forEach(calcul => {
+        const paire = {sorte: sorteDe(calcul), forme: String(calcul.forme === undefined || calcul.forme === null ? "" : calcul.forme)};
+        vues.set(`${paire.sorte}|${paire.forme}`, paire);
+      });
+    }
+    const ordre = sortesDe(cleNiveau).map(sorte => sorte.n);
+    const rang = n => { const i = ordre.indexOf(n); return i < 0 ? ordre.length + n : i; };
+    const liste = Object.freeze([...vues.values()]
+      .sort((a, b) => rang(a.sorte) - rang(b.sorte) || (a.forme < b.forme ? -1 : a.forme > b.forme ? 1 : 0))
+      .slice(0, SORTES_MAX).map(paire => Object.freeze(paire)));
+    SORTES_NUMEROTEES.set(cleNiveau, liste);
+    return liste;
+  }
+  function numeroDeSorte(calcul) {
+    if (!calcul || !calcul.module) return 0;
+    const forme = String(calcul.forme === undefined || calcul.forme === null ? "" : calcul.forme);
+    const sorte = sorteDe(calcul);
+    return sortesNumerotees(`${calcul.module}-${calcul.niveau}`).findIndex(paire => paire.sorte === sorte && paire.forme === forme) + 1;
   }
 
   // Relecture 2b (11/11/2026, remarque 56 de Gwenaël : « tout se décale »
@@ -15306,6 +15385,9 @@
     genererUn,
     sortesDe,
     sorteDe,
+    SORTES_MAX,
+    sortesNumerotees,
+    numeroDeSorte,
     // Lot 3a : la sorte d'un calcul de leçon (niveau 0) dans un niveau donné.
     sorteDansNiveau: sorteBrute,
     // Lot 3b : ce qu'on annonce quand une sorte nouvelle arrive.

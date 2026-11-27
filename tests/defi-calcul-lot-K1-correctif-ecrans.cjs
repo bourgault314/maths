@@ -57,8 +57,20 @@ function gagner(p, cles, jour) {
   }
   return p;
 }
-// Léa : 17 étoiles des bases gagnées hier (mardi) ; elles reviennent aujourd'hui.
-const lea = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -1));
+// Léa : 17 étoiles des bases ; elles reviennent aujourd'hui.
+// (Lot P1 : gagnée du premier coup, une étoile revient dans 7 jours, et deux faux
+// la font partir à la 2e fois de suite seulement — règle B. Léa les a donc
+// gagnées il y a 8 jours, et ratées hier, deux faux chacune : aujourd'hui,
+// deux faux encore, l'étoile part, comme avant le lot.)
+const rateeHier = (p, cles) => {
+  const hier = P.ajouterJours(JOUR, -1);
+  for (const k of cles) {
+    const [m, n] = k.split("-");
+    for (let i = 0; i < 2; i += 1) p = P.appliquerRetour(p, {module: m, niveau: Number(n), juste: false, ms: 2000}, {aujourdhui: hier, carte: CARTE}).parcours;
+  }
+  return p;
+};
+const lea = () => rateeHier(gagner(P.creerParcours(), CARTE.ordre.slice(0, 17), P.ajouterJours(JOUR, -8)), CARTE.ordre.slice(0, 17));
 // (Lot K1b : pour Mon espace, 4 étoiles du CP — la ceinture blanche-jaune remplie d'un quart.)
 const leaCP = () => gagner(P.creerParcours(), CARTE.ordre.slice(0, 4), P.ajouterJours(JOUR, -1));
 
@@ -243,7 +255,8 @@ async function cas(nom, f) {
   await cas("10. la page rechargée entre le premier calcul faux et le 2e : le 2e calcul est un AUTRE calcul", async () => {
     // Sur 6 étoiles de suite : le premier calcul, faux ; la page est rechargée ; le calcul reposé n'est jamais le même.
     for (let essai = 0; essai < 6; essai += 1) {
-      const etat = {parcours: gagner(P.creerParcours(), CARTE.ordre.slice(essai, essai + 1), P.ajouterJours(JOUR, -1)), revision: 1};
+      // (Lot P1 : gagnée il y a 7 jours — du premier coup, elle revient dans une semaine.)
+      const etat = {parcours: gagner(P.creerParcours(), CARTE.ordre.slice(essai, essai + 1), P.ajouterJours(JOUR, -7)), revision: 1};
       const s = await ouvrir(nav, base, {serveur: etat});
       await s.page.click("#acc-commencer");
       await pause(s.page, 2600);
@@ -271,7 +284,7 @@ async function cas(nom, f) {
     await pause(s.page, 200);
     assert.ok(await s.page.isVisible("#acc-confirm-oui"));
     // Pendant que la question est posée, un autre onglet (mis à jour) écrit la version d'après.
-    // (Lot K1b : la page est en version 13 ; « plus récente » se calcule, P.VERSION + 1.)
+    // (Lot K1b : la page est en version 13 — lot P1 : 14 ; « plus récente » se calcule, P.VERSION + 1.)
     const recente = JSON.stringify({version: P.VERSION + 1, epoque: 0, modules: {A1: {b: [7, 7, 7]}}, futur: "ce que cette page ne sait pas lire"});
     await s.page.evaluate(d => localStorage.setItem("mathsgo-defi-calcul-parcours", d), recente);
     await s.page.click("#acc-confirm-oui");
@@ -394,7 +407,13 @@ async function cas(nom, f) {
       await repondre(s.page, false);
       await pause(s.page, 800);
       // La carte, puis « Mes calculs du jour — encore 7 » : une minute par calcul, le temps de la séance passe.
-      await s.page.evaluate(() => [...document.querySelectorAll("#result-suite button")].find(b => /La carte/.test(b.textContent)).click());
+      // (Lot P1, planche P1-8 A : le bilan raté n'a plus « La carte » — « Continuer » et « J’apprends ».
+      // L'élève continue, puis « ← Accueil » et « La carte ».)
+      await s.page.evaluate(() => [...document.querySelectorAll("#result-suite button")].find(b => /^Continuer/.test(b.textContent.trim())).click());
+      await pause(s.page, 2600);
+      await s.page.click("#game-menu");
+      await pause(s.page, 300);
+      await s.page.click("#acc-porte");
       await pause(s.page, 500);
       assert.match(await texte(s.page, "#carte-jour"), /encore 7/);
       await s.page.click("#carte-jour");
@@ -449,17 +468,18 @@ async function cas(nom, f) {
     const p = await T(s.page, "parcours");
     assert.ok(p.seance.j[4] > 420 && p.seance.j[4] <= 600, `la séance en est à ${p.seance.j[4]} secondes : J'apprends (4 minutes) ne tient plus, « Je tente » (1 minute) tient encore`);
     assert.equal(P.seanceOuverte(p, JOUR), true, "la séance reste ouverte");
-    // La carte : « Continuer » dit une AUTRE étoile que celle qui vient d'être ratée.
-    await s.page.evaluate(() => [...document.querySelectorAll("#result-suite button")].find(b => /La carte/.test(b.textContent)).click());
-    await pause(s.page, 500);
+    // Le bilan raté : « Continuer » dit une AUTRE étoile que celle qui vient d'être ratée.
+    // (Lot P1, planche P1-8 A : c'est le bilan raté qui dit « Ensuite : … » et porte « Continuer » ; avant,
+    // l'élève passait par la carte.)
     const suite = (await T(s.page, "seance")).continuer;
     assert.equal(suite.type, "etoile");
     assert.notDeepEqual([suite.module, suite.niveau], [ratee.module, ratee.niveau], "pas l'étoile ratée, dont il ne reste que J'apprends");
     assert.equal(suite.action, "tente");
     const nom = CORE.nomCompetence(suite.module, suite.niveau);
-    assert.equal(espaces(await s.page.evaluate(() => document.querySelector("#carte-continuer small").innerText)), espaces(`Ensuite : ${nom.charAt(0).toUpperCase()}${nom.slice(1)}`));
+    const ensuite = espaces(await texte(s.page, "#result-suite .ck-ensuite"));
+    assert.ok([`Ensuite : ${espaces(nom)}`, `Ensuite : ${espaces(nom)} (plus facile)`].map(x => x.toLowerCase()).includes(ensuite.toLowerCase()), ensuite);
     // Et il la lance : pas de « Séance terminée » alors qu'une étoile pouvait encore se tenter.
-    await s.page.click("#carte-continuer");
+    await s.page.evaluate(() => [...document.querySelectorAll("#result-suite button")].find(b => /^Continuer/.test(b.textContent.trim())).click());
     await pause(s.page, 2600);
     assert.equal(await T(s.page, "genre"), "tente", "« Continuer » lance le « Je tente » annoncé");
     const etape = await T(s.page, "etape");

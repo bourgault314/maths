@@ -50,6 +50,13 @@ function poser(p, k, {b = 2, e = J, d = plus(-10), a = 1, g = 1, plusChamps = {}
   Object.keys(plusChamps).forEach(champ => { ligne[champ][niveau - 1] = plusChamps[champ]; });
   return p;
 }
+// Lot P1 « tout ouvert » (27/11/2026, DECISIONS § 9 à 11) : tout est ouvert
+// dès le premier jour ; « Tente toute la ceinture » n'existe plus (ses tests
+// sont retirés : note « tests retirés » du lot) ; une étoile gagnée du
+// premier coup à « Je tente » entre en boîte 4 (de retour dans 7 jours) ;
+// un retour raté = la règle B (elle reste, descend d'une boîte, revient
+// demain ; ratée encore, elle part) ; la vitesse ne refuse plus une étoile ;
+// la progression est en version 14. Chaque test changé le dit.
 // Lot K1b « les bases en trois classes » (26/11/2026) : la carte a SIX étages
 // (le CP 14 étoiles, le CE1 20, le CE2 19, le CM1 33, le CM2 43, vers la 6e
 // 12) et 141 étoiles ; la progression est en version 13. Les règles de ce
@@ -115,33 +122,33 @@ test("« Je tente » : 6 calculs, au moins un de chaque sorte, du plus simple au
 
 // ------------------------------------------------------------ les états
 
-test("un élève neuf : la première étoile de chaque ligne est à gagner (sauf lien « d'abord »), les autres fermées, l'étage 2 fermé", () => {
+test("un élève neuf : la première étoile de chaque ligne est à gagner (sauf lien « d'abord »), les autres fermées — à tous les étages (lot P1 : tout est ouvert)", () => {
   const carte = P.carteEleve(P.creerParcours(), CARTE, {aujourdhui: J});
-  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total, e.etoiles, e.quarts]), [[1, true, 14, 0, 0], [2, false, 20, 0, 0], [3, false, 19, 0, 0], [4, false, 33, 0, 0], [5, false, 43, 0, 0], [6, false, 12, 0, 0]]);
-  assert.deepEqual(carte.etages.map(e => e.test.propose), [true, false, false, false, false, false], "« Tente toute la ceinture » en haut du premier étage seulement");
+  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total, e.etoiles, e.quarts]), [[1, true, 14, 0, 0], [2, true, 20, 0, 0], [3, true, 19, 0, 0], [4, true, 33, 0, 0], [5, true, 43, 0, 0], [6, true, 12, 0, 0]]);
+  assert.ok(carte.etages.every(e => e.test === undefined), "plus de « Tente toute la ceinture »");
   assert.equal(carte.courant, 1);
-  carte.etages[0].lignes.forEach(l => l.etoiles.forEach((e, i) => {
+  carte.etages.forEach(etage => etage.lignes.forEach(l => l.etoiles.forEach((e, i) => {
     const lien = CARTE.dabord[e.cle];
     assert.equal(e.etat, i === 0 && !lien ? "aGagner" : "fermee", `${e.cle}`);
     if (i) assert.equal(e.dabord, l.etoiles[i - 1].cle, `${e.cle} : fermée par celle d'avant`);
     else if (lien) assert.equal(e.dabord, lien);
     if (e.etat === "aGagner") assert.deepEqual(e.actions, {tente: true, apprends: true, entraine: false});
     else assert.deepEqual(e.actions, {tente: false, apprends: false, entraine: false});
-  }));
-  carte.etages.slice(1).forEach(e => e.lignes.forEach(l => l.etoiles.forEach(x => assert.equal(x.etat, "fermee"))));
+  })));
 });
 
-test("une étoile fermée ne se joue pas : ni « Je tente », ni J'apprends, ni test de ceinture — rien ne change", () => {
+test("une étoile fermée ne se joue pas : ni « Je tente », ni J'apprends — rien ne change", () => {
   const p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, alea: .5});
   const avant = JSON.stringify(p);
-  for (const k of ["A1-2", "A10-2", "A2-4", "D2-4"]) {
+  // (Lot P1 : tout est ouvert — une étoile fermée l'est par celle d'avant dans sa ligne, ou par un
+  // lien « d'abord » : A10-5 et A5-5 (lien) au CE1, A2-5 au CM1, F1-3 vers la 6e. A2-4 et D2-4, les
+  // premières de leur ligne, sont maintenant à gagner.)
+  for (const k of ["A1-2", "A10-2", "A10-5", "A5-5", "A2-5", "F1-3"]) {
     const t = tenter(p, k, justes(), J, true);
     assert.deepEqual([t.refuse, t.reussi, JSON.stringify(t.parcours)], ["fermee", false, avant], `« Je tente » ${k}`);
     const a = apprendre(p, k, lecon(), J, true);
     assert.deepEqual([a.refuse, a.verdict, JSON.stringify(a.parcours)], ["fermee", null, avant], `J'apprends ${k}`);
   }
-  const c = P.appliquerTestCeinture(p, {etage: 2, reponses: P.calculsDuTestDeCeinture(CARTE, 2).map(x => Object.assign({juste: true}, x))}, o());
-  assert.deepEqual([c.refuse, JSON.stringify(c.parcours)], ["ceinture", avant], "l'étage 2 est fermé : pas de test de ceinture");
   assert.equal(tenter(p, "X1-1").refuse, "inconnue");
   assert.equal(retour(p, "A1-1", true).refuse, "pasGagnee", "un retour sur une étoile pas gagnée ne fait rien");
   assert.equal(P.appliquerSerie(p, {module: "A1", niveau: 1, genre: "encore", reponses: lecon()}, o()).refuse, "pasGagnee", "« Je m'entraîne encore » : sur une étoile gagnée seulement");
@@ -149,16 +156,16 @@ test("une étoile fermée ne se joue pas : ni « Je tente », ni J'apprends, ni 
 
 // ------------------------------------------------------------ « Je tente »
 
-test("« Je tente » : 5 justes sur 6, l'étoile est gagnée tout de suite, au début des boîtes, et revient le lendemain ; la suivante s'ouvre", () => {
+test("« Je tente » : 5 justes sur 6, l'étoile est gagnée tout de suite ; du premier coup, en boîte 4, elle revient dans 7 jours (lot P1) ; la suivante s'ouvre", () => {
   assert.deepEqual(P.SEUILS.tente, {calculs: 6, justes: 5, fauxPermis: 1, essais: 2, lentMs: 5000});
   const cinq = [...justes(3), {juste: false}, ...justes(2)];
   const r = tenter(P.creerParcours(), "A1-1", cinq);
   assert.deepEqual([r.reussi, r.justes, r.faux, r.total], [true, 5, 1, 6]);
-  assert.deepEqual(r.evenements, [{type: "gagnee", module: "A1", niveau: 1, par: "tente"}]);
+  assert.deepEqual(r.evenements, [{type: "gagnee", module: "A1", niveau: 1, par: "tente", duPremierCoup: true, retour: plus(7)}]);
   const e = etat(r.parcours, "A1-1");
-  assert.deepEqual([e.etat, e.boite, e.due, e.premierRetour], ["gagnee", 2, false, true]);
+  assert.deepEqual([e.etat, e.boite, e.due, e.premierRetour], ["gagnee", 4, false, true]);
   assert.deepEqual(e.actions, {tente: false, apprends: false, entraine: true});
-  assert.equal(r.parcours.modules.A1.e[0], plus(1), "elle revient le lendemain");
+  assert.equal(r.parcours.modules.A1.e[0], plus(7), "du premier coup : elle revient dans 7 jours (lot P1)");
   assert.equal(r.parcours.modules.A1.d[0], J);
   assert.equal(etat(r.parcours, "A1-2").etat, "aGagner");
   assert.equal(tenter(r.parcours, "A1-1").refuse, "gagnee", "une étoile gagnée ne se retente pas");
@@ -190,14 +197,16 @@ test("« Je tente » raté : fermé sur cette étoile jusqu'au lendemain ; raté
   assert.deepEqual([r.parcours.modules.A1.b[0], r.parcours.modules.A1.r[0], r.parcours.modules.A1.q[0], r.parcours.modules.A1.a[0]], [2, 0, null, 1]);
 });
 
-test("« Je tente » d'un niveau « par cœur » : juste mais lent deux fois de suite compte faux", () => {
+test("« Je tente » d'un niveau « par cœur » : la vitesse ne refuse plus une étoile (lot P1) — les réponses lentes sont comptées à part", () => {
   assert.equal(P.typeDe(CARTE, "A1", 1), "F");
   const lent = {juste: true, ms: 6000};
   const vite = {juste: true, ms: 1500};
   assert.equal(tenter(P.creerParcours(), "A1-1", [lent, vite, lent, vite, lent, vite]).reussi, true, "lent une fois sur deux : rien");
+  // (Lot P1 : avant, juste mais lent deux fois de suite comptait faux — six réponses justes pouvaient rater
+  // le test alors que l'écran dit « 5 justes ».)
   const r = tenter(P.creerParcours(), "A1-1", [lent, lent, vite, vite, vite, vite]);
-  assert.deepEqual([r.reussi, r.justes, r.faux], [true, 5, 1]);
-  assert.equal(tenter(P.creerParcours(), "A1-1", [lent, lent, lent, lent, vite, vite]).reussi, false, "deux fois deux lents de suite : 2 faux");
+  assert.deepEqual([r.reussi, r.justes, r.faux, r.lents], [true, 6, 0, 2]);
+  assert.equal(tenter(P.creerParcours(), "A1-1", [lent, lent, lent, lent, vite, vite]).reussi, true, "quatre lents : toujours 6 justes");
   assert.equal(P.typeDe(CARTE, "A10", 1), "P");
   assert.equal(tenter(P.creerParcours(), "A10-1", [lent, lent, lent, lent, lent, lent]).reussi, true, "une procédure n'a pas de règle de temps");
 });
@@ -216,7 +225,8 @@ test("J'apprends : le finir donne l'étoile ; arrêté, il reprend ; au 3e arrê
   assert.deepEqual(r.evenements.map(e => [e.type, e.arrets, e.aVoir]), [["arrete", 1, false]]);
   p = r.parcours;
   assert.deepEqual([etat(p, "A1-1").enCours, etat(p, "A1-1").reprise, etat(p, "A1-2").etat], [true, P.REPRISE.seul, "fermee"]);
-  assert.deepEqual(P.continuer(p, CARTE, {aujourdhui: plus(1)}), {type: "etoile", module: "A1", niveau: 1, raison: "enCours", action: "apprends", depart: P.REPRISE.seul});
+  assert.deepEqual(P.continuer(p, CARTE, {aujourdhui: plus(1)}), {type: "etoile", module: "A1", niveau: 1, raison: "enCours", action: "apprends", depart: P.REPRISE.seul,
+    etage: 1, ligne: "Jusqu’à 20", resteLigne: 3});
   p = apprendre(p, "A1-1", arretee(), plus(1)).parcours;
   r = apprendre(p, "A1-1", arretee(), plus(2));
   p = r.parcours;
@@ -272,28 +282,35 @@ test("un retour : un calcul ; faux, un 2e ; le 2e juste, c'était un accident �
   assert.equal(P.deuxiemeEnAttente(r.parcours, CARTE, {aujourdhui: J}), null);
 });
 
-test("un retour raté (les deux calculs faux) : l'étoile part tout de suite, sort des boîtes, et se regagne le jour même — rien de ce qui est ouvert ne se referme", () => {
-  assert.deepEqual(P.SEUILS.retour, {ratesDeSuite: 1, perdues: 3}, "choix de Gwenaël du 25/11, 17 h 10");
+test("un retour raté (les deux calculs faux) : la règle B (lot P1) — l'étoile reste, descend d'une boîte et revient demain ; ratée encore, elle part, sort des boîtes, et se regagne le jour même — rien de ce qui est ouvert ne se referme", () => {
+  // (Lot P1 : `ratesDeSuite` 2 — choix de Gwenaël du 26/11, 22 h 34 ; avant, 1 : l'étoile partait au premier retour raté.)
+  assert.deepEqual(P.SEUILS.retour, {ratesDeSuite: 2, perdues: 3}, "la règle B");
   let p = tenir(["A1-1", "A1-2"], {b: 5, e: J});
   p = retour(p, "A1-1", false).parcours;
-  const r = retour(p, "A1-1", false);
+  const b = retour(p, "A1-1", false);
+  assert.deepEqual([b.mouvement.rate, b.mouvement.perdue, b.mouvement.apres, b.mouvement.sens], [true, false, 4, "descend"]);
+  assert.deepEqual(b.evenements, []);
+  assert.deepEqual([b.parcours.modules.A1.b[0], b.parcours.modules.A1.e[0], b.parcours.modules.A1.pe[0]], [4, plus(1), 0], "elle descend d'une boîte et revient demain");
+  const J1 = plus(1);
+  p = retour(b.parcours, "A1-1", false, J1).parcours;
+  const r = retour(p, "A1-1", false, J1);
   assert.deepEqual([r.mouvement.rate, r.mouvement.perdue, r.mouvement.apres, r.mouvement.sens], [true, true, 0, "descend"]);
   assert.deepEqual(r.evenements, [{type: "perdue", module: "A1", niveau: 1, aVoir: false}]);
   p = r.parcours;
   assert.deepEqual([p.modules.A1.b[0], p.modules.A1.e[0], p.modules.A1.pe[0], p.modules.A1.d[0]], [0, null, 1, plus(-10)], "elle sort des boîtes ; le jour où elle a été gagnée reste");
-  const e = etat(p, "A1-1");
+  const e = etat(p, "A1-1", J1);
   assert.deepEqual([e.etat, e.aRegagner, e.tente], ["aGagner", true, ""]);
   assert.deepEqual(e.actions, {tente: true, apprends: true, entraine: false}, "« Je tente » le jour même, ou J'apprends");
-  assert.equal(etat(p, "A1-2").etat, "gagnee");
-  assert.equal(etat(p, "A1-3").etat, "aGagner", "la suivante de la ligne reste ouverte");
-  assert.equal(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}).some(c => cle(c) === "A1-1"), false, "elle ne revient plus dans Mes calculs du jour");
+  assert.equal(etat(p, "A1-2", J1).etat, "gagnee");
+  assert.equal(etat(p, "A1-3", J1).etat, "aGagner", "la suivante de la ligne reste ouverte");
+  assert.equal(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J1}).some(c => cle(c) === "A1-1"), false, "elle ne revient plus dans Mes calculs du jour");
   assert.deepEqual(P.continuer(tenir([], {}), CARTE, {aujourdhui: J}).raison, "suivante");
-  const c = P.continuer(retour(p, "A1-2", true).parcours, CARTE, {aujourdhui: J});
+  const c = P.continuer(retour(p, "A1-2", true, J1).parcours, CARTE, {aujourdhui: J1});
   assert.deepEqual([c.type, cle(c), c.raison, c.action], ["etoile", "A1-1", "aRegagner", "tente"], "« Continuer » la propose d'abord");
-  // Regagnée : elle rentre au début des boîtes et revient le lendemain.
-  const g = tenter(p, "A1-1");
-  assert.deepEqual([g.reussi, g.parcours.modules.A1.b[0], g.parcours.modules.A1.e[0], g.parcours.modules.A1.d[0], g.parcours.modules.A1.pe[0]], [true, 2, plus(1), plus(-10), 1]);
-  assert.equal(etat(g.parcours, "A1-1").premierRetour, false, "déjà revenue : plus d'exemple résolu");
+  // Regagnée : elle rentre au début des boîtes (perdue un jour : pas « du premier coup ») et revient le lendemain.
+  const g = tenter(p, "A1-1", justes(), J1);
+  assert.deepEqual([g.reussi, g.parcours.modules.A1.b[0], g.parcours.modules.A1.e[0], g.parcours.modules.A1.d[0], g.parcours.modules.A1.pe[0]], [true, 2, plus(2), plus(-10), 1]);
+  assert.equal(etat(g.parcours, "A1-1", J1).premierRetour, false, "déjà revenue : plus d'exemple résolu");
 });
 
 test("un niveau « par cœur » : une réponse juste mais lente ne fait jamais perdre l'étoile — elle ne monte pas et revient demain", () => {
@@ -308,19 +325,22 @@ test("un niveau « par cœur » : une réponse juste mais lente ne fait jamais p
 });
 
 test("la même étoile perdue trois fois : « à voir en classe » — signalée, elle se regagne toujours et ne bloque pas la porte", () => {
+  // (Lot P1, la règle B : perdue = deux retours ratés de suite, un jour puis le lendemain.)
   let p = tenir(["A1-1"], {b: 2, e: J});
+  let jour = J;
   for (let n = 1; n <= 3; n += 1) {
-    const jour = plus(n);
-    if (n > 1) p = tenter(p, "A1-1", justes(), plus(n - 1)).parcours;
+    if (n > 1) { p = tenter(p, "A1-1", justes(), jour).parcours; jour = plus(1, jour); }
+    p = retour(retour(p, "A1-1", false, jour).parcours, "A1-1", false, jour).parcours;
+    jour = plus(1, jour);
     p = retour(p, "A1-1", false, jour).parcours;
     const r = retour(p, "A1-1", false, jour);
     assert.deepEqual(r.evenements, [{type: "perdue", module: "A1", niveau: 1, aVoir: n === 3}]);
     p = r.parcours;
   }
-  const e = etat(p, "A1-1", plus(3));
+  const e = etat(p, "A1-1", jour);
   assert.deepEqual([e.etat, e.aVoir, e.aRegagner, e.attend, e.actions.tente], ["aGagner", true, true, null, true]);
   assert.equal(P.etatCompetence(p.modules.A1, 0), "classe");
-  const regagnee = tenter(p, "A1-1", justes(), plus(3)).parcours;
+  const regagnee = tenter(p, "A1-1", justes(), jour).parcours;
   assert.equal(P.etatCompetence(regagnee.modules.A1, 0), "classe", "regagnée, elle reste signalée au professeur tant qu'elle n'est pas solide");
 });
 
@@ -334,7 +354,8 @@ test("G2 — le 2e calcul n'est jamais perdu : la page fermée entre les deux, i
   const etatS = P.etatSeance(p, CARTE, {aujourdhui: J});
   assert.deepEqual([etatS.obligatoire, etatS.continuer], [1, {type: "paquet", calculs: 1, raison: "obligatoire"}], "Mes calculs du jour sont toujours là, pour ce seul calcul");
   // (Correctif K1 : `premierLe`, le jour où le premier calcul a été posé — la page en repose un AUTRE.)
-  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}), [{module: "A10", niveau: 1, du: true, second: true, premierLe: J, premierRetour: false}]);
+  // (Lot P1 : `sorte`, celle du premier calcul — 0 ici, l'appelant ne l'a pas donnée.)
+  assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: J}), [{module: "A10", niveau: 1, du: true, second: true, premierLe: J, premierRetour: false, sorte: 0}]);
   // Le lendemain, sans y être revenu : c'est encore son 2e calcul.
   assert.deepEqual(P.tirerCalculsDuJour(p, CARTE, {aujourdhui: plus(1)}).map(c => c.second), [true]);
   // Sur un autre appareil, qui avait la copie d'avant le faux.
@@ -431,9 +452,9 @@ test("la porte et la ceinture : toutes les étoiles de l'étage ; la ceinture se
     const c = P.etatCeintures(P.normaliserParcours(q, {aujourdhui: J}), CARTE);
     assert.deepEqual([c.porte, c.prochaine, c.etoiles, c.total, c.quarts], [4, 5, n, 43, quarts], `CM2 : ${n} étoiles`);
   }
-  // La 14e : la ceinture blanche-jaune, et l'étage 2 s'ouvre.
+  // La 14e : la ceinture blanche-jaune. (Lot P1 : l'étage 2 était déjà ouvert — tout est ouvert.)
   let p = tenir(bases.slice(0, 13));
-  assert.equal(P.carteEleve(p, CARTE, {aujourdhui: J}).etages[1].ouvert, false);
+  assert.equal(P.carteEleve(p, CARTE, {aujourdhui: J}).etages[1].ouvert, true);
   const derniere = bases[13];
   assert.equal(etat(p, derniere).etat, "aGagner");
   const r = tenter(p, derniere);
@@ -441,7 +462,7 @@ test("la porte et la ceinture : toutes les étoiles de l'étage ; la ceinture se
   p = r.parcours;
   assert.deepEqual(p.ceintures, [J, null, null, null, null, null]);
   const carte = P.carteEleve(p, CARTE, {aujourdhui: J});
-  assert.deepEqual(carte.etages.map(e => [e.ouvert, e.quarts, e.test.propose]), [[true, 4, false], [true, 0, true], [false, 0, false], [false, 0, false], [false, 0, false], [false, 0, false]]);
+  assert.deepEqual(carte.etages.map(e => [e.ouvert, e.quarts]), [[true, 4], [true, 0], [true, 0], [true, 0], [true, 0], [true, 0]]);
   assert.deepEqual([carte.courant, P.etatCeintures(p, CARTE).porte, P.etatCeintures(p, CARTE).prochaine], [2, 1, 2]);
 });
 
@@ -449,10 +470,12 @@ test("une ceinture gagnée ne se reprend jamais, la porte ne se referme pas ; un
   const bases = duEtage(1);
   let p = tenir(bases, {b: 3, e: J});
   p.ceintures[0] = plus(-3);
+  // (Lot P1, la règle B : perdue au 2e retour raté de suite, le lendemain.)
   p = retour(retour(p, bases[5], false).parcours, bases[5], false).parcours;
-  assert.equal(etat(p, bases[5]).aRegagner, true);
+  p = retour(retour(p, bases[5], false, plus(1)).parcours, bases[5], false, plus(1)).parcours;
+  assert.equal(etat(p, bases[5], plus(1)).aRegagner, true);
   assert.deepEqual(p.ceintures, [plus(-3), null, null, null, null, null], "la première ceinture reste");
-  const carte = P.carteEleve(p, CARTE, {aujourdhui: J});
+  const carte = P.carteEleve(p, CARTE, {aujourdhui: plus(1)});
   assert.deepEqual([carte.etages[0].etoiles, carte.etages[0].quarts, carte.etages[1].ouvert], [13, 4, true], "l'étage 2 reste ouvert");
   // Sans la ceinture : la porte était ouverte (toutes gagnées un jour), elle
   // le reste ; la ceinture, elle, attend que tout soit tenu en même temps.
@@ -479,10 +502,11 @@ test("l'étoile « à voir en classe » ne bloque pas la porte mais retient la c
   assert.deepEqual(p.ceintures, [null, null, null, null, null, null], "la ceinture attend la dernière étoile");
   const c = P.continuer(p, CARTE, {aujourdhui: jour});
   assert.deepEqual([c.type, ETAGE[cle(c)]], ["etoile", 2], "« Continuer » l'emmène à l'étage suivant");
-  // Deux arrêts seulement : la porte reste fermée.
+  // Deux arrêts seulement : la ceinture attend. (Lot P1 : l'étage 2 est ouvert de toute façon — tout est ouvert.)
   let q = tenir(bases.slice(0, 13), {b: 3, e: plus(5)});
   for (let n = 0; n < 2; n += 1) q = apprendre(q, derniere, arretee(), plus(n)).parcours;
-  assert.equal(P.carteEleve(q, CARTE, {aujourdhui: jour}).etages[1].ouvert, false);
+  assert.equal(P.carteEleve(q, CARTE, {aujourdhui: jour}).etages[1].ouvert, true);
+  assert.equal(P.carteEleve(q, CARTE, {aujourdhui: jour}).etages[0].ceinture, null);
 });
 
 test("le réglage du professeur : rien au-delà ; une étoile gagnée au-dessus garde son étoile mais ne revient pas (G8)", () => {
@@ -528,101 +552,13 @@ test("G9 — un changement de carte ne fait jamais reculer la ceinture qui se re
 });
 
 // ------------------------------------------------------------ « Tente toute la ceinture »
-
-test("« Tente toute la ceinture » : 12 calculs à chacun des six étages, le dernier niveau de chaque module de l'étage (complétés quand l'étage a moins de 12 modules), dans l'ordre de la carte", () => {
-  assert.deepEqual(P.SEUILS.ceinture, {calculs: 12, fauxPermis: 1, apres: 7, parJour: 8});
-  const rang = new Map(CARTE.ordre.map((k, i) => [k, i]));
-  for (const etage of [1, 2, 3, 4, 5, 6]) {
-    const liste = P.calculsDuTestDeCeinture(CARTE, etage).map(cle);
-    assert.equal(liste.length, 12, `étage ${etage}`);
-    assert.equal(new Set(liste).size, 12);
-    liste.forEach(k => assert.equal(ETAGE[k], etage));
-    assert.deepEqual(liste, [...liste].sort((a, b) => rang.get(a) - rang.get(b)));
-  }
-  // Le dernier niveau de chaque module de l'étage y est toujours (quand l'étage n'a pas plus de
-  // 12 modules) ; au CP (lot K1b : 14 étoiles, 8 modules), les quatre places qui restent vont
-  // aux dernières étoiles de l'étage — seules les deux premières de la carte n'y sont pas.
-  for (const etage of [1, 2, 3, 4, 5, 6]) {
-    const liste = P.calculsDuTestDeCeinture(CARTE, etage).map(cle);
-    const derniers = [...new Set(duEtage(etage).map(k => de(k).module))].map(m => duEtage(etage).filter(x => de(x).module === m).pop());
-    if (derniers.length <= 12) derniers.forEach(k => assert.ok(liste.includes(k), `étage ${etage} : ${k}, le dernier niveau de son module`));
-    else liste.forEach(k => assert.ok(derniers.includes(k), `étage ${etage} : ${k} est le dernier niveau de son module`));
-  }
-  assert.deepEqual(duEtage(1).filter(k => !P.calculsDuTestDeCeinture(CARTE, 1).map(cle).includes(k)), ["A1-1", "A1-2"]);
-});
-
-test("« Tente toute la ceinture » : un faux permis, tout l'étage est gagné ; les retours étalés, 8 par jour au plus à partir du 7e jour", () => {
-  const liste = P.calculsDuTestDeCeinture(CARTE, 1);
-  const p = P.ouvrirSeance(P.creerParcours(), CARTE, {aujourdhui: J, alea: .4});
-  const r = P.appliquerTestCeinture(p, {etage: 1, reponses: liste.map((c, i) => Object.assign({juste: i !== 4}, c))}, o());
-  assert.deepEqual([r.reussi, r.entrees, r.justes, r.total, r.ceintures], [true, 14, 11, 12, [1]]);
-  const q = r.parcours;
-  assert.deepEqual([q.ceintures[0], q.paliers[0]], [J, J]);
-  const parJour = new Map();
-  duEtage(1).forEach(k => {
-    const {module, niveau} = de(k);
-    const ligne = q.modules[module];
-    assert.deepEqual([ligne.b[niveau - 1], ligne.a[niveau - 1], ligne.d[niveau - 1], ligne.s[niveau - 1]], [4, 0, J, J], `${k} : boîte 4, sans leçon`);
-    assert.ok(ligne.e[niveau - 1] >= plus(7), "pas avant le 7e jour");
-    parJour.set(ligne.e[niveau - 1], (parJour.get(ligne.e[niveau - 1]) || 0) + 1);
-  });
-  assert.deepEqual([...parJour.entries()].sort().map(x => x[1]), [8, 6], "14 étoiles : 8 le 7e jour, 6 le lendemain");
-  assert.equal(q.seance.j[2], 14, "14 étoiles gagnées, au journal de la séance");
-  // Un grand étage (le CM2, 43 étoiles) : 8 par jour, cinq jours pleins et un de 3.
-  const grand = P.creerParcours();
-  grand.ceintures = [J, J, J, J, null, null];
-  const g5 = P.appliquerTestCeinture(P.ouvrirSeance(P.normaliserParcours(grand, {aujourdhui: J}), CARTE, {aujourdhui: J, alea: .4}),
-    {etage: 5, reponses: P.calculsDuTestDeCeinture(CARTE, 5).map(c => Object.assign({juste: true}, c))}, o());
-  assert.deepEqual([g5.reussi, g5.entrees, g5.ceintures], [true, 43, [5]]);
-  const jours5 = new Map();
-  duEtage(5).forEach(k => { const e = g5.parcours.modules[de(k).module].e[de(k).niveau - 1]; jours5.set(e, (jours5.get(e) || 0) + 1); });
-  assert.deepEqual([...jours5.entries()].sort().map(x => x[1]), [8, 8, 8, 8, 8, 3]);
-  const carte = P.carteEleve(q, CARTE, {aujourdhui: J});
-  assert.deepEqual([carte.etages[1].ouvert, carte.etages[1].test.propose, carte.courant], [true, true, 2], "« Ceinture suivante » : le test de l'étage 2 est proposé dans la foulée");
-  // Joué une fois : jamais reproposé, jamais rejouable.
-  assert.equal(P.appliquerTestCeinture(q, {etage: 1, reponses: liste.map(c => Object.assign({juste: true}, c))}, o()).refuse, "ceinture");
-});
-
-test("« Tente toute la ceinture » pas réussi en entier : les modules dont le calcul est juste gardent leurs étoiles de l'étage, le reste attend sur la carte", () => {
-  const liste = P.calculsDuTestDeCeinture(CARTE, 1);
-  const faux = new Set([cle(liste[0]), cle(liste[5]), cle(liste[9])]);
-  const r = P.appliquerTestCeinture(P.creerParcours(), {etage: 1, reponses: liste.map(c => Object.assign({juste: !faux.has(cle(c))}, c))}, o(J, false));
-  const modulesJustes = new Set(liste.filter(c => !faux.has(cle(c))).map(c => c.module));
-  const attendues = duEtage(1).filter(k => modulesJustes.has(de(k).module));
-  assert.deepEqual([r.reussi, r.justes, r.total, r.entrees, r.ceintures], [false, 9, 12, attendues.length, []]);
-  duEtage(1).forEach(k => assert.equal(etat(r.parcours, k).etat === "gagnee", attendues.includes(k), k));
-  assert.equal(r.parcours.paliers[0], J, "joué : il ne revient pas");
-  assert.equal(P.carteEleve(r.parcours, CARTE, {aujourdhui: J}).etages[0].test.propose, false);
-  // Les étoiles d'un module raté restent à gagner une à une, rien n'est fermé derrière une étoile gagnée.
-  const restantes = duEtage(1).filter(k => !attendues.includes(k));
-  assert.ok(restantes.length > 0 && restantes.some(k => etat(r.parcours, k).etat === "aGagner"));
-});
-
-test("G1 — le test de ceinture est revérifié à la remise : étage commencé, déjà joué sur un autre appareil, au-dessus du réglage — refusé, rien ne change", () => {
-  const liste = P.calculsDuTestDeCeinture(CARTE, 1).map(c => Object.assign({juste: true}, c));
-  // Commencé pendant le test (une étoile gagnée sur un autre appareil).
-  const commence = tenter(P.creerParcours(), "A1-1").parcours;
-  assert.equal(P.carteEleve(commence, CARTE, {aujourdhui: J}).etages[0].test.propose, false);
-  let r = P.appliquerTestCeinture(commence, {etage: 1, reponses: liste}, o(J, false));
-  assert.deepEqual([r.refuse, r.entrees, JSON.stringify(r.parcours)], ["ceinture", 0, JSON.stringify(commence)], "une étoile déjà gagnée n'est jamais rejouée");
-  // Un « Je tente » raté ou un J'apprends arrêté suffisent : l'étage est commencé.
-  assert.equal(P.appliquerTestCeinture(tenter(P.creerParcours(), "A1-1", [{juste: false}, {juste: false}]).parcours, {etage: 1, reponses: liste}, o(J, false)).refuse, "ceinture");
-  assert.equal(P.appliquerTestCeinture(apprendre(P.creerParcours(), "A1-1", arretee()).parcours, {etage: 1, reponses: liste}, o(J, false)).refuse, "ceinture");
-  // Déjà joué ailleurs.
-  const joue = P.creerParcours();
-  joue.paliers[0] = plus(-1);
-  assert.equal(P.appliquerTestCeinture(joue, {etage: 1, reponses: liste}, o(J, false)).refuse, "ceinture");
-  // Au-dessus du réglage.
-  const jaune = tenir(duEtage(1), {b: 3, e: plus(3)});
-  const deux = P.calculsDuTestDeCeinture(CARTE, 2).map(c => Object.assign({juste: true}, c));
-  assert.equal(P.appliquerTestCeinture(jaune, {etage: 2, reponses: deux}, {aujourdhui: J, carte: CARTE, palier: 1}).refuse, "ceinture");
-  assert.equal(P.appliquerTestCeinture(jaune, {etage: 2, reponses: deux}, {aujourdhui: J, carte: CARTE, palier: 2}).reussi, true);
-});
-
-// ------------------------------------------------------------ « Continuer », la séance
+// (Lot P1 « tout ouvert », 27/11/2026 : « Tente toute la ceinture » n'existe
+// plus — ses quatre tests sont retirés, nommés dans la note « tests retirés »
+// du lot : les 12 calculs de chaque étage ; un faux permis et les retours
+// étalés ; réussi en partie ; G1, revérifié à la remise.)
 
 test("« Continuer » : le J'apprends commencé, puis l'étoile à regagner, puis la première étoile à gagner dans l'ordre de la carte", () => {
-  assert.deepEqual(P.continuer(P.creerParcours(), CARTE, {aujourdhui: J}), {type: "etoile", module: "A1", niveau: 1, raison: "suivante", action: "tente", depart: 0});
+  assert.deepEqual(P.continuer(P.creerParcours(), CARTE, {aujourdhui: J}), {type: "etoile", module: "A1", niveau: 1, raison: "suivante", action: "tente", depart: 0, etage: 1, ligne: "Jusqu’à 20", resteLigne: 3});
   // Une étoile perdue, et un J'apprends arrêté plus loin dans la carte.
   let p = tenir(["A1-1", "A1-2", "A10-1"], {b: 3, e: plus(4)});
   poser(p, "A1-1", {b: 0, e: null, d: plus(-8), plusChamps: {pe: 1}});
@@ -645,7 +581,7 @@ test("G6 — rien de ce que la séance propose n'est lu dans un plan : un plan t
   const relu = P.normaliserParcours(trafique, {aujourdhui: J});
   assert.deepEqual(relu.seance.p, [1, 15, 1, 9, 3], "cinq nombres bornés, rien de plus");
   const s = P.etatSeance(relu, CARTE, {aujourdhui: J});
-  assert.deepEqual([s.obligatoire, s.paquet, s.continuer], [0, 0, {type: "etoile", module: "A1", niveau: 1, raison: "suivante", action: "tente", depart: 0}], "un paquet annoncé sans étoile due ne vaut rien");
+  assert.deepEqual([s.obligatoire, s.paquet, s.continuer], [0, 0, {type: "etoile", module: "A1", niveau: 1, raison: "suivante", action: "tente", depart: 0, etage: 1, ligne: "Jusqu’à 20", resteLigne: 3}], "un paquet annoncé sans étoile due ne vaut rien");
   assert.deepEqual(P.normaliserParcours(relu, {aujourdhui: J}), relu, "stable en une lecture");
 });
 
@@ -676,7 +612,10 @@ test("la séance au temps : la première étape de la carte est toujours permise
 });
 
 test("la séance finie compte au journal, avec ce qu'elle a fait ; quittée au milieu, elle se ferme ; continuée après minuit, elle compte pour le jour où elle finit", () => {
+  // (Lot P1, la règle B : A1-1 a déjà raté son retour d'avant — `x` 1 ; ratée encore aujourd'hui, elle part.)
   let p = tenir(["A1-1", "A1-2"], {b: 2, e: J, a: 0});
+  p.modules.A1.x[0] = 1;
+  p = P.normaliserParcours(p, {aujourdhui: J});
   p = P.ouvrirSeance(p, CARTE, {aujourdhui: J, alea: .1234});
   assert.equal(p.seance.i, 1234);
   p = retour(retour(p, "A1-1", false).parcours, "A1-1", false).parcours;
@@ -756,12 +695,7 @@ function jouer(depart, rng, debut, jours, {fort = .7} = {}) {
     for (let etape = 0; etape < 6 && P.seanceOuverte(p, jour); etape += 1) {
       p = P.noterTemps(p, 30 + Math.floor(rng() * 150));
       const carte = P.carteEleve(p, CARTE, {aujourdhui: jour});
-      const etage = carte.etages.find(e => e.test.propose);
-      if (etage && rng() < .3) {
-        const reponses = P.calculsDuTestDeCeinture(CARTE, etage.etage).map(c => Object.assign({juste: rng() < fort + .2}, c));
-        p = P.appliquerTestCeinture(p, {etage: etage.etage, reponses}, o(jour)).parcours;
-        continue;
-      }
+      // (Lot P1 : plus de « Tente toute la ceinture » dans les séances jouées au hasard.)
       const jouables = carte.etages.flatMap(e => e.lignes.flatMap(l => l.etoiles)).filter(e => e.etat === "aGagner" && !e.attend);
       if (!jouables.length) break;
       const e = jouables[Math.floor(rng() * jouables.length)];
@@ -811,12 +745,13 @@ test("B2 — la décision se prend étoile par étoile : jouer une autre étoile
   for (const f of [P.fusionner(juste, base, {aujourdhui: J}), P.fusionner(base, juste, {aujourdhui: J}), P.fusionner(P.fusionner(juste, base, {aujourdhui: J}), base, {aujourdhui: J})]) {
     assert.deepEqual(f.modules.M1.b, [4 - 1, 4, 3, 0, 0, 0, 0, 0, 0], "la réponse juste n'est jamais annulée");
   }
-  // Deux appareils, le même jour : A joue M1-1, B joue M1-3 (et le rate).
+  // Deux appareils, le même jour : A joue M1-1, B joue M1-3 (et le rate — lot P1, la règle B : elle
+  // descend d'une boîte et revient demain).
   const a = retour(base, "M1-1", true).parcours;
   const b = retour(retour(base, "M1-3", false).parcours, "M1-3", false).parcours;
   const f = P.fusionner(a, b, {aujourdhui: J});
-  assert.deepEqual(f.modules.M1.b, [4, 3, 0, 0, 0, 0, 0, 0, 0], "chaque étoile suit l'appareil qui l'a jouée");
-  assert.deepEqual([f.modules.M1.pe[2], f.modules.M1.d[2]], [1, plus(-10)]);
+  assert.deepEqual(f.modules.M1.b, [4, 3, 2, 0, 0, 0, 0, 0, 0], "chaque étoile suit l'appareil qui l'a jouée");
+  assert.deepEqual([f.modules.M1.pe[2], f.modules.M1.e[2], f.modules.M1.d[2]], [0, plus(1), plus(-10)]);
   assert.deepEqual(P.fusionner(f, a, {aujourdhui: J}), f);
   assert.deepEqual(P.fusionner(b, f, {aujourdhui: J}), f);
   // La même étoile jouée des deux côtés, un geste chacun : le plus prudent, dans les deux sens.
@@ -862,13 +797,14 @@ function fauxStockage(initial = {}) {
 }
 
 test("B1 — une progression d'une version plus récente n'est jamais lue, fusionnée ni recouverte : deux versions dans le même stockage", () => {
-  assert.equal(P.VERSION, 13);
+  // (Lot P1 : le moteur est en version 14 ; la page plus récente, en 15.)
+  assert.equal(P.VERSION, 14);
   const stockage = fauxStockage();
   const mien = tenter(P.creerParcours(), "A1-1").parcours;
   assert.equal(P.sauver(stockage, mien, ""), true);
   // Une page plus récente (version 14 depuis le lot K1b, un format que ce moteur ne connaît
   // pas) écrit dans la même case : des listes plus longues, un champ neuf.
-  const futur = {version: 14, epoque: 0, prenom: "", modules: {A1: {vu: J, b: [5, 4, 3, 2], e: [J, J, J, J], zz: [1, 1, 1, 1]}}, neuf: {x: 1}};
+  const futur = {version: 15, epoque: 0, prenom: "", modules: {A1: {vu: J, b: [5, 4, 3, 2], e: [J, J, J, J], zz: [1, 1, 1, 1]}}, neuf: {x: 1}};
   const cle13 = P.cleStockage("", stockage);
   stockage.setItem(cle13, JSON.stringify(futur));
   const ecrituresAvant = stockage.ecritures();
@@ -889,7 +825,8 @@ test("B1 — une progression d'une version plus récente n'est jamais lue, fusio
   // Une réception ordinaire : la fusion, et `apporte` dit s'il faut renvoyer.
   const distant = tenter(P.creerParcours(), "A10-1").parcours;
   const ordinaire = P.recevoir(mien, distant, {aujourdhui: J});
-  assert.deepEqual([ordinaire.lectureSeule, ordinaire.apporte, ordinaire.parcours.modules.A1.b[0], ordinaire.parcours.modules.A10.b[0]], [false, true, 2, 2]);
+  // (Lot P1 : gagnées du premier coup, boîte 4.)
+  assert.deepEqual([ordinaire.lectureSeule, ordinaire.apporte, ordinaire.parcours.modules.A1.b[0], ordinaire.parcours.modules.A10.b[0]], [false, true, 4, 4]);
   assert.equal(P.recevoir(P.creerParcours(), distant, {aujourdhui: J}).apporte, false, "un appareil vide n'apporte rien : il ne renvoie pas");
   assert.equal(P.recevoir(distant, distant, {aujourdhui: J}).apporte, false);
 });
@@ -905,19 +842,20 @@ test("les progressions d'avant la version 12 repartent de zéro (aucun élève n
   assert.equal(P.tropRecente(v11), false);
   // Elle ne gagne jamais contre le travail d'aujourd'hui à époque égale, et gagne en bloc si son époque est plus haute (une restauration du professeur).
   const mien = Object.assign(tenter(P.creerParcours(), "A1-1").parcours, {epoque: 3});
-  assert.equal(P.fusionner(mien, v11, {aujourdhui: J}).modules.A1.b[0], 2);
+  assert.equal(P.fusionner(mien, v11, {aujourdhui: J}).modules.A1.b[0], 4, "(lot P1 : du premier coup, boîte 4)");
   assert.deepEqual(P.fusionner(mien, Object.assign({}, v11, {epoque: 4}), {aujourdhui: J}).modules, {});
 });
 
 test("G5 — une version illisible n'est jamais prise pour une version ancienne ; des valeurs abîmées ne décalent rien et ne lèvent aucune exception", () => {
   const propre = tenir(["M1-1", "M1-2", "M1-3"], {b: 3, e: J});
-  for (const version of [10.5, 12.5, 13.5, "12", "13", true, null, undefined, [12], [13], {}, -1, 0, NaN]) {
+  for (const version of [10.5, 12.5, 13.5, 14.5, "12", "13", "14", true, null, undefined, [12], [13], [14], {}, -1, 0, NaN]) {
     const lu = P.normaliserParcours(Object.assign({}, JSON.parse(JSON.stringify(propre)), {version}), {aujourdhui: J});
     assert.deepEqual(lu.modules, {}, `version ${JSON.stringify(version)} : illisible, rien n'est repris`);
     assert.equal(P.versionDe({version}), 0);
   }
   assert.equal(P.versionDe({version: 12}), 12);
   assert.equal(P.versionDe({version: 13}), 13);
+  assert.equal(P.versionDe({version: 14}), 14);
   // Un booléen, un texte, une liste d'un nombre, un objet piégé : la valeur neutre, à SA place.
   const piege = {toString: 1, valueOf: 1};
   const abime = JSON.parse(JSON.stringify(propre));
@@ -936,7 +874,8 @@ test("G5 — une version illisible n'est jamais prise pour une version ancienne 
   assert.deepEqual(lu.modules.M1.b, [3, 0, 2, 0, 0, 0, 0, 0, 0], "le booléen ne fait entrer aucune étoile, la liste est coupée à 9");
   assert.deepEqual(lu.modules.M1.e, [J, null, J, null, null, null, null, null, null], "une étoile tenue sans échéance lisible revient le jour de la lecture");
   assert.deepEqual(lu.modules.M1.g, [1, 0, 0, 0, 0, 0, 0, 0, 0]);
-  assert.deepEqual(lu.modules.M1.x, [0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  // (Lot P1 : `x` va de 0 à 243 — 4, la sorte 1 d'un calcul raté, est une valeur valide sur une étoile tenue.)
+  assert.deepEqual(lu.modules.M1.x, [0, 0, 4, 0, 0, 0, 0, 0, 0]);
   assert.deepEqual(lu.modules.M1.c, {5: 6});
   assert.deepEqual([lu.seance.p, lu.seance.n, lu.seance.i, lu.epoque], [[0, 0, 0, 0, 0], 0, 0, 0]);
   assert.deepEqual([lu.ceintures, lu.quarts], [[null, J, null, null, J, null], [0, 2, 0, 0, 3, 0]], "six étages : coupées à 6, chaque valeur à sa place");

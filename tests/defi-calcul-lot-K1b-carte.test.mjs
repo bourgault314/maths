@@ -129,7 +129,8 @@ test("les liens « d'abord » : onze, cinq dans les bases ; un élève neuf a qu
     "M12-1": "M3-2", "F8-3": "F5-1", "F9-2": "F6-2", "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3"});
   // Passer la dizaine demande le complément à la dizaine de la même taille ; ajouter 9, d'ajouter des dizaines.
   const carte = P.carteEleve(P.creerParcours(), CARTE, {aujourdhui: J});
-  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total]), [[1, true, 14], [2, false, 20], [3, false, 19], [4, false, 33], [5, false, 43], [6, false, 12]]);
+  // (Lot P1 : tout est ouvert dès le premier jour.)
+  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total]), [[1, true, 14], [2, true, 20], [3, true, 19], [4, true, 33], [5, true, 43], [6, true, 12]]);
   const aGagner = carte.etages[0].lignes.flatMap(l => l.etoiles).filter(e => e.etat === "aGagner").map(e => e.cle);
   assert.deepEqual(aGagner, ["A1-1", "A10-1", "A2-1", "M1-1"], "la première étoile de chaque ligne");
   // Le réglage du professeur : la carte s'arrête à son étage.

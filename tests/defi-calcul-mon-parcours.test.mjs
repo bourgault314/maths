@@ -187,7 +187,8 @@ test("l'appli : le fil dit « Ma séance », puis l'étape (« Je tente : … »
   // (Lot K1 : plus de test de module, plus de « Tu connais déjà ? » ; plus
   // de pastilles numérotées.)
   assert.match(page, /if \(etape\.type === "tente"\) return `Je tente : \$\{nom\}`;/);
-  assert.match(page, /if \(etape\.type === "ceinture"\) return "Toute la ceinture";/);
+  // (Lot P1 : « Toute la ceinture » n'existe plus.)
+  assert.doesNotMatch(page, /Toute la ceinture/);
   assert.match(page, /titre\.textContent = "Ma séance";/);
   assert.match(page, /quoi\.className = "quoi";/);
   const css = await lire("../outils/calcul_mental/defi_calcul.css");
@@ -241,5 +242,5 @@ test("J'écris : les fractions des étapes se lisent au téléphone", async () =
   assert.match(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 20dvh; \}/);
   assert.doesNotMatch(css, /\.challenge-playing \.question\.ecrit\.aide-image \.dc-aide svg\.dc-fractions \{ max-height: 28dvh; \}/);
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261126-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261127-1/);
 });
