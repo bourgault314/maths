@@ -487,6 +487,14 @@ relectures Codex) ; toute nouvelle appli qui garde une liste le suit.
 - Tout texte d'étape montré à l'élève (fiche, liste, résumé) vient du moteur
   (`reglesEtape`, `texteEtape`, `texteEtapeCourt`, `texteGrade`) ; un nombre
   et son unité y sont insécables.
+- Sur sa ligne de la liste, un grade à plusieurs étapes dit leur nombre
+  (« · 3 étapes ») ; le grade en cours garde « Étape k sur n » (27/11/2026).
+- **La visite du professeur** (`flash_anzan.html?visite=1`, 27/11/2026) :
+  tous les grades et toutes les étapes ouverts, et RIEN d'enregistré — pas de
+  suivi (`SUIVI` nul, aucun billet échangé), l'appareil ni lu ni écrit
+  (`stockageAppareil()` rend une mémoire de la page). Toute lecture ou
+  écriture nouvelle de l'appareil passe par `stockageAppareil()`, jamais par
+  `window.localStorage` directement.
 
 ## Compteur de visites (depuis le 06/11/2026)
 

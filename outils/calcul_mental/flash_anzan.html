@@ -50,7 +50,10 @@
       try {
         var codeOnglet = "";
         try { codeOnglet = window.sessionStorage.getItem("mathsgo-suivi-code") || ""; } catch (e) {}
-        if (entree.billet || codeOnglet) {
+        // La visite du professeur (?visite=1, 27/11/2026) n'est jamais une
+        // séance d'élève : ni en-tête de suivi, ni billet échangé.
+        var visite = /[?&]visite=1(&|$)/.test(String(window.location.search || ""));
+        if (!visite && (entree.billet || codeOnglet)) {
           window.document.documentElement.className += " suivi-eleve";
           // Tant qu'on ne sait pas qui entre ni quels sont ses réglages, les
           // réglages restent cachés (quelques dixièmes de seconde).
@@ -487,7 +490,7 @@
     button.gr-carte { cursor: pointer; }
     .gr-carte.or { aspect-ratio: 640 / 984; }
     .gr-carte img { display: block; width: 100%; height: 100%; border-radius: 3px; }
-    .gr-item.actuel .gr-carte img { filter: grayscale(1); opacity: .5; }
+    .gr-item.actuel .gr-carte img, .gr-item.ouvert .gr-carte img { filter: grayscale(1); opacity: .5; }
     .gr-carte.vide { display: flex; align-items: center; justify-content: center; background: #fbf8f0; border: 1px dashed #cdbf98; box-shadow: none; font-size: .72rem; }
     .gr-sceau { position: absolute; right: -8px; bottom: -6px; width: 21px; height: 21px; display: flex; align-items: center; justify-content: center; border-radius: 50%;
       background: var(--papier); border: 1.5px solid var(--red); box-shadow: inset 0 0 0 1px var(--papier), inset 0 0 0 2px var(--red); color: var(--red);
@@ -1278,7 +1281,27 @@
       //   - « Mon historique » : ses séances, la plus récente en haut.
       // -----------------------------------------------------------------
       const PARCOURS = window.MathsGoFlashAnzanParcours || null;
-      const SUIVI = PARCOURS && window.MathsGoFlashAnzanSuivi
+      // -----------------------------------------------------------------
+      // LA VISITE DU PROFESSEUR (27/11/2026) : flash_anzan.html?visite=1.
+      // Tous les grades et toutes les étapes sont ouverts, pour voir à quoi
+      // ils ressemblent et les essayer. RIEN n'est enregistré : pas de suivi
+      // (aucun billet échangé, rien envoyé au serveur, même avec un code
+      // dans l'onglet), et l'appareil n'est ni lu ni écrit — les réglages,
+      // les séances et les grades gagnés vivent dans une mémoire qui
+      // disparaît quand la page se ferme. Rien de nouveau pour l'élève :
+      // sans ?visite=1, la page est celle d'avant.
+      // -----------------------------------------------------------------
+      const VISITE = /[?&]visite=1(&|$)/.test(String(window.location.search || ""));
+      const MEMOIRE_VISITE = new Map();
+      const TEXTE_VISITE = "👁 Visite : tout est ouvert, rien n’est enregistré. ";
+      const STOCKAGE_VISITE = {
+        getItem: cle => (MEMOIRE_VISITE.has(String(cle)) ? MEMOIRE_VISITE.get(String(cle)) : null),
+        setItem: (cle, valeur) => { MEMOIRE_VISITE.set(String(cle), String(valeur)); },
+        removeItem: cle => { MEMOIRE_VISITE.delete(String(cle)); },
+        key: i => [...MEMOIRE_VISITE.keys()][i] ?? null,
+        get length() { return MEMOIRE_VISITE.size; }
+      };
+      const SUIVI = !VISITE && PARCOURS && window.MathsGoFlashAnzanSuivi
         ? window.MathsGoFlashAnzanSuivi.creer({surRepere: majSuivi, surParcours: surParcoursChange, enJeu: () => corps.classList.contains("en-seance")})
         : null;
       // Lot « code en cases » : ?retour=1 sous un code actif (voir flash_anzan_suivi.js).
@@ -1308,7 +1331,7 @@
           // réglage encore choisi part des valeurs de départ.
           try { brut = SUIVI.client.reglagesDuCompte(); } catch (e) { brut = null; }
         } else if (!modeEleve()) {
-          try { brut = JSON.parse(window.localStorage.getItem(CLE) || "null"); } catch (e) { brut = null; }
+          try { brut = JSON.parse(stockageAppareil().getItem(CLE) || "null"); } catch (e) { brut = null; }
         }
         const b = brut && typeof brut === "object" ? brut : {};
         return {
@@ -1323,7 +1346,7 @@
           return;
         }
         if (modeEleve()) return; // billet en route ou refusé : rien à l'appareil
-        try { window.localStorage.setItem(CLE, JSON.stringify(memoire)); } catch (e) { /* navigation privée : tant pis */ }
+        try { stockageAppareil().setItem(CLE, JSON.stringify(memoire)); } catch (e) { /* navigation privée : tant pis */ }
       }
       const memoire = lireMemoire();
       const reglages = () => memoire[memoire.mode];
@@ -2233,7 +2256,9 @@
       function caseVisiteur() {
         return Boolean(PARCOURS) && !modeEleve();
       }
+      // En visite, la mémoire de la page à la place de l'appareil.
       function stockageAppareil() {
+        if (VISITE) return STOCKAGE_VISITE;
         try { return window.localStorage; } catch (e) { return null; }
       }
       // La case à montrer dans « Mon historique » : celle du compte sous un
@@ -2466,7 +2491,11 @@
       function gradesDeLEleve(colonne = false) {
         if (!PARCOURS) return gradesSansMoteur(colonne);
         const c = caseHistorique();
-        try { return colonne ? PARCOURS.etatGradesColonne(c || PARCOURS.creer()) : PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(colonne); }
+        let etat;
+        try { etat = colonne ? PARCOURS.etatGradesColonne(c || PARCOURS.creer()) : PARCOURS.etatGrades(c || PARCOURS.creer()); } catch (e) { return gradesSansMoteur(colonne); }
+        // La visite du professeur : plus aucun cadenas (rien d'autre ne change).
+        if (VISITE) etat = etat.map(g => Object.assign({}, g, {ouvert: true, etapes: g.etapes.map(e => Object.assign({}, e, {ouverte: true}))}));
+        return etat;
       }
       // L'état du grade n, du Flash ou de la Colonne.
       function etatDuGrade(n) {
@@ -2492,9 +2521,13 @@
       }
       // Ce qu'une ligne de la liste dit de son grade : ce qu'il travaille, ou
       // — pour le grade en cours, s'il a plusieurs étapes — l'étape à tenter.
+      // Un grade à plusieurs étapes le dit sur sa ligne (« · 3 étapes »,
+      // choix du 27/11/2026) : sans ça, la ligne d'un grade fermé ne laissait
+      // pas deviner qu'il se gagne en plusieurs fois.
       function detailDuGrade(g) {
         if (g.actuel && g.etapes.length > 1) return `Étape ${g.etape} sur ${g.etapes.length}\u00a0· ${CORE.texteEtapeCourt(g.etapes[g.etape - 1].numero)}`;
-        return CORE.texteGrade(g.numero);
+        const n = g.etapes.length;
+        return n > 1 ? `${CORE.texteGrade(g.numero)}\u00a0· ${n}\u00a0étapes` : CORE.texteGrade(g.numero);
       }
       // L'estampe d'un grade en Colonne (voir .es) : « reussi » (le sceau 合),
       // « grisee » (le grade à passer) ; `classe` la place (gr-carte,
@@ -2538,7 +2571,7 @@
       function dessinerGrades() {
         if (gradesColonne) { dessinerGradesColonne(); return; }
         $("grades-groupes").hidden = false;
-        $("grades-compte").textContent = `Flash · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.GRADE_REUSSI} sur ${CORE.GRADE_CALCULS}`;
+        $("grades-compte").textContent = `${VISITE ? TEXTE_VISITE : ""}Flash · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.GRADE_REUSSI} sur ${CORE.GRADE_CALCULS}`;
         const etat = gradesDeLEleve();
         const actuel = etat.find(g => g.actuel);
         const k = groupeAffiche >= 0 ? groupeAffiche : groupeDuGrade(actuel ? actuel.numero : CORE.NB_GRADES);
@@ -2563,7 +2596,7 @@
         const fin = CORE.GROUPES_GRADES[k + 1] ? CORE.GROUPES_GRADES[k + 1].debut - 1 : CORE.NB_GRADES;
         etat.slice(debut - 1, fin).forEach(g => {
           const item = document.createElement("li");
-          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : "ferme");
+          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : (g.ouvert ? "ouvert" : "ferme"));
           item.className = `gr-item ${statut}`;
           const ligne = document.createElement(g.ouvert ? "button" : "div");
           ligne.className = "gr-ligne";
@@ -2624,6 +2657,12 @@
             // grade, pas l'épreuve — « Passer » la promettait.
             passer.textContent = "À toi ▶";
             droite.append(passer);
+          } else if (g.ouvert) {
+            // Seulement en visite : un grade ouvert qui n'est pas celui à tenter.
+            const voir = document.createElement("span");
+            voir.className = "gr-passer";
+            voir.textContent = "Voir ▶";
+            droite.append(voir);
           } else {
             const ferme = document.createElement("span");
             ferme.className = "lecteur";
@@ -2645,12 +2684,12 @@
         const etat = gradesDeLEleve(true);
         $("grades-groupes").hidden = true;
         $("grades-indice").hidden = true;
-        $("grades-compte").textContent = `Colonne · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.SEUIL_COLONNE} sur ${CORE.GRADE_CALCULS}`;
+        $("grades-compte").textContent = `${VISITE ? TEXTE_VISITE : ""}Colonne · ${CORE.GRADE_CALCULS} calculs par étape · réussie à ${CORE.SEUIL_COLONNE} sur ${CORE.GRADE_CALCULS}`;
         const liste = $("grades-liste");
         liste.replaceChildren();
         etat.forEach(g => {
           const item = document.createElement("li");
-          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : "ferme");
+          const statut = g.reussi ? "reussi" : (g.actuel ? "actuel" : (g.ouvert ? "ouvert" : "ferme"));
           item.className = `gr-item ${statut}`;
           const ligne = document.createElement(g.ouvert ? "button" : "div");
           ligne.className = "gr-ligne";
@@ -2684,6 +2723,12 @@
             passer.className = "gr-passer";
             passer.textContent = "À toi ▶";
             droite.append(passer);
+          } else if (g.ouvert) {
+            // Seulement en visite : un grade ouvert qui n'est pas celui à tenter.
+            const voir = document.createElement("span");
+            voir.className = "gr-passer";
+            voir.textContent = "Voir ▶";
+            droite.append(voir);
           } else {
             const ferme = document.createElement("span");
             ferme.className = "lecteur";
