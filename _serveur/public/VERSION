@@ -1,7 +1,7 @@
 # Manifeste du serveur de suivi maths&go — produit par outils/generer-version.php.
 # Ne pas modifier à la main : un test du dépôt refait ce calcul à chaque passage.
 # verifier.php relit ce fichier en ligne et compare chaque empreinte.
-lot correctif-grille-alignee
+lot defi-calcul-lot-K2-professeur
 genere_le 2026-11-28
 fichiers 75
 manifeste 5c7ffe1663c9f6582ff1e7daca91e280235bcb07ac5eef1eb1e7ea0d60b26f0a
