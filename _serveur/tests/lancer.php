@@ -3396,7 +3396,7 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
             $existe->execute([(int)$lot11['eleve']['id']]);
             if ((int)$existe->fetchColumn() === 0) {
                 bd_test()->prepare("INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, 'defi-calcul', '{\"version\":15,\"epoque\":0}', ?, 1, NULL)")
-                    ->execute([(int)$lot11['eleve']['id'], gmdate('Y-m-d\\TH:i:s.000000\\Z')]);
+                    ->execute([(int)$lot11['eleve']['id'], gmdate('Y-m-d\\TH:i:s\\Z')]);
             }
             $existe->closeCursor();
             $corps['eleve_id'] = $lot11['eleve']['id'];
