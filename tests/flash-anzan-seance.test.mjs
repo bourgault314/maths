@@ -247,7 +247,7 @@ function fauxServeur(parcoursDistant = null, {billetRetenu = false} = {}) {
 // à zéro jusque-là), comme celle d'un vrai ordinateur (correctif du 30/10/2026).
 // `appareil` : d'autres clés déjà dans le localStorage de l'appareil (la case
 // « sans code » d'un visiteur, par exemple), {clé: valeur}.
-function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = null, moteur = false} = {}) {
+function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = null, moteur = false, search = ""} = {}) {
   const ecran = construireEcran(PAGE);
   const horloge = {t: 0, minuteries: [], images: [], prochain: 1};
   const oscillateurs = [];
@@ -287,7 +287,7 @@ function ouvrir(memoire, {largeur = 390, suivi = null, froid = 0, appareil = nul
       setItem: (k, v) => onglet.set(k, String(v)),
       removeItem: k => onglet.delete(k)
     },
-    location: {hash: "", pathname: "/outils/calcul_mental/flash_anzan.html", search: "", assign() {}, reload() {}},
+    location: {hash: "", pathname: "/outils/calcul_mental/flash_anzan.html", search, assign() {}, reload() {}},
     setTimeout: (fn, ms) => { const id = horloge.prochain++; horloge.minuteries.push({id, a: horloge.t + ms, fn}); return id; },
     clearTimeout: id => { horloge.minuteries = horloge.minuteries.filter(x => x.id !== id); },
     requestAnimationFrame: fn => { const id = horloge.prochain++; horloge.images.push({id, fn}); return id; },
@@ -1296,7 +1296,7 @@ test("cartes : le CSS — la carte garde sa place (2/3), le dos se lit à la tai
   assert.match(style, /\.cv-creature \{[^}]*font-size: 4\.05cqw;/);
   assert.match(style, /\.fiche-carte img \{[^}]*aspect-ratio: 640 \/ 904;/);
   assert.match(style, /\.gr-carte \{[^}]*width: 36px;[^}]*aspect-ratio: 640 \/ 904;/);
-  assert.match(style, /\.gr-item\.actuel \.gr-carte img \{ filter: grayscale\(1\); opacity: \.5; \}/, "la carte à gagner, en gris");
+  assert.match(style, /\.gr-item\.actuel \.gr-carte img, \.gr-item\.ouvert \.gr-carte img \{ filter: grayscale\(1\); opacity: \.5; \}/, "la carte à gagner, en gris (et, en visite, celles des grades ouverts)");
   assert.doesNotMatch(style, /cartes-collection|\.vignette/, "plus de collection");
   assert.match(style, /\.carte-grand \{ position: fixed;/, "la carte en grand passe par-dessus : elle ne pousse rien");
   assert.match(style, /@media \(prefers-reduced-motion: reduce\) \{ \.carte-tour \{ transition: none; \} \}/);
@@ -1331,8 +1331,12 @@ test("étapes : la liste dit ce que chaque grade travaille, et l'étape à tente
   assert.equal(p.$("grades-compte").textContent, "Flash · 10 calculs par étape · réussie à 7 sur 10");
   const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
   assert.equal(texte(lignes[0].querySelector(".gr-det")), "Étape 1 sur 2 · comme 2 + 5", "le grade en cours : son étape à tenter");
-  assert.equal(texte(lignes[1].querySelector(".gr-det")), "2 puis 3 nombres d’un chiffre · avec un complément à 5", "les autres : ce que le grade travaille");
-  lignes.forEach((l, i) => { if (i) assert.equal(l.querySelector(".gr-det").textContent, CORE.texteGrade(i + 1)); });
+  assert.equal(texte(lignes[1].querySelector(".gr-det")), "2 puis 3 nombres d’un chiffre · avec un complément à 5 · 2 étapes", "les autres : ce que le grade travaille, et combien d'étapes (27/11/2026)");
+  lignes.forEach((l, i) => {
+    if (!i) return;
+    const n = CORE.etapesDuGrade(i + 1).length;
+    assert.equal(l.querySelector(".gr-det").textContent, n > 1 ? `${CORE.texteGrade(i + 1)}\u00a0· ${n}\u00a0étapes` : CORE.texteGrade(i + 1));
+  });
   p.$("grades-liste").querySelector('[data-grade="1"]').click();
   assert.equal(p.$("grades-titre").textContent, "20e kyu");
   assert.equal(p.$("fiche-niveau").textContent, "Débutant · grade 1 sur 40");
@@ -1912,4 +1916,57 @@ test("étapes : onglet caché pendant un Flash du 20e kyu, étape 2 → un autre
 test("étapes : la page ne tire plus jamais un calcul libre pendant une séance — la reprise passe par CORE.remplacerCalcul", () => {
   assert.match(PAGE, /seance\.calculs = CORE\.remplacerCalcul\(seance\.reglages, seance\.calculs, seance\.index, rng\);/);
   assert.doesNotMatch(PAGE, /CORE\.tirerCalcul\(/);
+});
+
+// ---------------------------------------------------------------------------
+// La visite du professeur (27/11/2026) : flash_anzan.html?visite=1 — tout
+// ouvert, rien d'enregistré ; et le nombre d'étapes sur la ligne d'un grade.
+// ---------------------------------------------------------------------------
+test("visite : ?visite=1 ouvre tous les grades et toutes les étapes, au Flash et en Colonne", () => {
+  const p = ouvrir(null, {moteur: true, search: "?visite=1"});
+  p.$("vers-grades").click();
+  assert.match(p.$("grades-compte").textContent, /^👁 Visite : tout est ouvert, rien n’est enregistré\. Flash/);
+  p.$("grades-groupes").querySelector('[data-groupe="3"]').click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(lignes.length, 10);
+  lignes.forEach(l => assert.match(l.className, /\bouvert\b/, "aucun cadenas, même au 20e dan"));
+  assert.equal(lignes[9].querySelector(".gr-passer").textContent, "Voir ▶");
+  p.$("grades-liste").querySelector('[data-grade="40"]').click();
+  assert.equal(p.$("grades-titre").textContent, "20e dan");
+  assert.equal(p.$("fiche-passer").disabled, false);
+  const q = ouvrir(null, {moteur: true, search: "?visite=1"});
+  q.$("ecran-reglages").querySelector('[data-mode="colonne"]').click();
+  q.$("vers-grades").click();
+  const colonne = q.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(colonne.length, 10);
+  colonne.forEach((l, i) => assert.match(l.className, i ? /\bouvert\b/ : /\bactuel\b/));
+  q.$("grades-liste").querySelector('[data-grade="50"]').click();
+  onglets(q).forEach(o => assert.equal(o.disabled, false, "toutes les étapes du 1er kyu de Colonne"));
+});
+
+test("visite : rien n'est lu ni écrit sur l'appareil — les grades d'un élève sans code restent intacts", () => {
+  const avant = JSON.stringify({version: 1, etapeFlash: 21});
+  const p = ouvrir(null, {moteur: true, search: "?visite=1", appareil: {"mathsgo-anzan-parcours": avant}});
+  p.$("vers-grades").click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.match(lignes[0].className, /\bactuel\b/, "la visite part de zéro : les grades gagnés sur l'appareil ne sont pas lus");
+  p.$("ecran-reglages").querySelector('[data-mode="colonne"]').click();
+  assert.equal(p.stockage.get("mathsgo-anzan-parcours"), avant, "le parcours de l'appareil n'a pas bougé");
+  assert.equal(p.stockage.has("mathsgo-flash-anzan-v1"), false, "les réglages de la visite ne vont pas sur l'appareil");
+});
+
+test("visite : sans ?visite=1, rien ne change — les cadenas sont là", () => {
+  const p = ouvrirGrades();
+  p.$("grades-groupes").querySelector('[data-groupe="3"]').click();
+  p.$("grades-liste").querySelectorAll(".gr-item").forEach(l => assert.match(l.className, /\bferme\b/));
+  assert.doesNotMatch(p.$("grades-compte").textContent, /Visite/);
+});
+
+test("étapes : le grade en cours garde « Étape k sur n », les autres disent leur nombre d'étapes", () => {
+  const p = ouvrir(null, {moteur: true, appareil: {"mathsgo-anzan-parcours": JSON.stringify({version: 1, etapeFlash: 21})}});
+  p.$("vers-grades").click();
+  const lignes = p.$("grades-liste").querySelectorAll(".gr-item");
+  assert.equal(texte(lignes[0].querySelector(".gr-det")), "Étape 1 sur 3 · comme 64 + 52", "le 10e kyu de Rania");
+  assert.equal(texte(lignes[1].querySelector(".gr-det")), "3 nombres de 2 chiffres · 6 s en tout", "un grade à une étape ne dit rien de plus");
+  assert.equal(texte(lignes[8].querySelector(".gr-det")), "12 nombres de 2 chiffres · en 14 s, puis en 12 s · 2 étapes");
 });

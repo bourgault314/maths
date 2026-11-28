@@ -184,7 +184,7 @@ test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du
   const visiteur = script.slice(script.indexOf("function noterSeanceVisiteur"), script.indexOf("// « ● Envoyé à ton professeur »"));
   assert.doesNotMatch(visiteur, /SUIVI\.|noterUneSeance/, "la séance du visiteur ne passe jamais par le client du suivi");
   assert.match(script, /if \(e\.etat === "ok" && SUIVI\.client\.sync\.dirty\) \{ envoi\.hidden = true; return; \}/, "« Envoyé » attend la confirmation du serveur");
-  assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
+  assert.match(script, /\} else if \(!modeEleve\(\)\) \{\s*try \{ brut = JSON\.parse\(stockageAppareil\(\)\.getItem\(CLE\)/, "l'élève venu de son espace ne lit jamais les réglages de l'appareil, billet en route compris");
   assert.match(script, /if \(modeEleve\(\)\) return; \/\/ billet en route ou refusé : rien à l'appareil/);
   // Ce qui part : le mode, les réglages, les calculs faits, le score — jamais les calculs ni les réponses.
   assert.match(script, /SUIVI\.client\.noterUneSeance\(\{\s*id: seance\.idSuivi,\s*ordre: seance\.ordreSuivi \|\| 0,\s*jour: seance\.jourSuivi \|\| "",\s*mode: seance\.mode,\s*reglages: seance\.reglages,\s*faits: seance\.resultats\.length,\s*score: justes\s*\}\);/);
@@ -192,9 +192,11 @@ test("lot 4a : la page elle-même ne parle jamais au serveur ; seul le moteur du
   assert.doesNotMatch(script, /noterUneSeance\([^)]*(calculs|resultats\[|ecrit|termes)/, "jamais les nombres ni les réponses");
 });
 
-test("la mémoire des réglages passe par un try/catch (navigation privée)", () => {
-  assert.match(PAGE, /try \{ brut = JSON\.parse\(window\.localStorage\.getItem\(CLE\)/);
-  assert.match(PAGE, /try \{ window\.localStorage\.setItem\(CLE/);
+test("la mémoire des réglages passe par un try/catch (navigation privée) ; l'appareil, ou la mémoire de la page en visite", () => {
+  assert.match(PAGE, /function stockageAppareil\(\) \{\s*if \(VISITE\) return STOCKAGE_VISITE;\s*try \{ return window\.localStorage; \}/);
+  assert.match(PAGE, /const SUIVI = !VISITE && PARCOURS && window\.MathsGoFlashAnzanSuivi/, "en visite, pas de suivi : rien ne part au serveur");
+  assert.match(PAGE, /try \{ brut = JSON\.parse\(stockageAppareil\(\)\.getItem\(CLE\)/);
+  assert.match(PAGE, /try \{ stockageAppareil\(\)\.setItem\(CLE/);
 });
 
 test("pas de barre au-dessus du cadre : la flèche et le plein écran sont dans le cadre ; rien en bas", () => {
@@ -394,4 +396,8 @@ test("iPhone (11/11/2026) : au téléphone, le menu s'étire jusqu'au bas de la 
   // Hors téléphone, en séance ou ailleurs que dans les réglages : rien.
   assert.match(PAGE, /const telephone = typeof window\.matchMedia === "function" && window\.matchMedia\("\(max-width: 620px\)"\)\.matches;/);
   assert.match(PAGE, /if \(!telephone \|\| corps\.classList\.contains\("en-seance"\) \|\| \$\("ecran-reglages"\)\.hidden\) return;/);
+});
+
+test("visite (27/11/2026) : le script de tête ne pose pas l'en-tête d'élève quand l'adresse porte ?visite=1", () => {
+  assert.match(PAGE, /var visite = \/\[\?&\]visite=1\(&\|\$\)\/\.test\(String\(window\.location\.search \|\| ""\)\);\s*if \(!visite && \(entree\.billet \|\| codeOnglet\)\) \{/);
 });
