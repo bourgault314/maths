@@ -1174,14 +1174,17 @@
       volM3:  [['m³', 'dm³'], ['dm³', 'cm³']],
       cross:  [['L', 'dm³'], ['mL', 'cm³'], ['L', 'cm³'], ['L', 'cm³'], ['m³', 'L'], ['m³', 'L']]
     };
-    function questionDesBases(type) {
+    // egal : true pour « 5 L = 5 dm³ » seulement, false pour les autres, undefined pour toutes (question tirée seule)
+    function questionDesBases(type, sens, egal) {
       const base = SCHEMAS[type];
-      const [grande, petite] = pick(BASES[type]);
+      let liste = BASES[type];
+      if (egal !== undefined) { const f = liste.filter(([a, b]) => (posUnite(base, a) === posUnite(base, b)) === egal); if (f.length) liste = f; }
+      const [grande, petite] = pick(pairesPeuVues(type, liste));
       const pg = posUnite(base, grande), pp = posUnite(base, petite);
       // des nombres simples : de 1 à 9 une fois sur deux, de 10 à 99 sinon
       const k = String(rand(1, 2) === 1 ? rand(1, 9) : rand(10, 99));
-      // vers la petite unité : 3 km = 3 000 m ; vers la grande : 400 cm = 4 m (le résultat est l'entier tiré)
-      if (rand(1, 2) === 1) return questionDeConversion(base, k, grande, petite, pg, pp);
+      // vers la petite unité : 3 km = 3 000 m ; vers la grande : 400 cm = 4 m (le résultat est l'entier tiré) ; le sens vient de la recette
+      if (sens ? sens === 'petite' : rand(1, 2) === 1) return questionDeConversion(base, k, grande, petite, pg, pp);
       return questionDeConversion(base, decaler(k, pp - pg), petite, grande, pp, pg);
     }
 
@@ -1229,12 +1232,23 @@
     }
     // une question d'une paire de la liste, dans le sens demandé (ou au hasard), qui passe le filtre ; null si aucune en 800 essais
     // Toujours : au moins 1 dans la petite unité (jamais « 0,009 mm ») ; 3 décimales au plus, et seulement à × 1 000 (2,375 kg = 2 375 g)
-    function tirerDans(type, liste, filtre, sens) {
+    // Dans une série, les conversions peu vues d'abord ; si aucune ne permet la sorte demandée (3,05 m = 305 cm demande × 100
+    // au moins), toutes les conversions de la liste.
+    // « zeros » : une fois sur deux, des chiffres avec un zéro au milieu (305, 4 007), pour les pièges 3,05 m = 305 cm ;
+    // « autre » : une seconde liste à essayer (peu vues) avant de reprendre une conversion déjà vue 2 fois
+    function tirerDans(type, liste, filtre, sens, zeros, autre) {
+      const peuVues = pairesPeuVues(type, liste, true), autresPeuVues = autre && autre.length ? pairesPeuVues(type, autre, true) : [];
+      return (peuVues.length ? tirerDansLaListe(type, peuVues, filtre, sens, zeros) : null)
+        || (autresPeuVues.length ? tirerDansLaListe(type, autresPeuVues, filtre, sens, zeros) : null)
+        || tirerDansLaListe(type, pairesPeuVues(type, liste), filtre, sens, zeros)
+        || tirerDansLaListe(type, liste, filtre, sens, zeros);
+    }
+    function tirerDansLaListe(type, liste, filtre, sens, zeros) {
       const base = SCHEMAS[type];
       for (let i = 0; i < 800; i++) {
         const [g, p, pg, pp] = pick(liste);
         const versPetite = sens ? sens === 'petite' : rand(1, 2) === 1;
-        const d = rand(0, 3), n = significatif();
+        const d = rand(0, 3), n = zeros && rand(1, 2) === 1 ? rand(1, 9) * (rand(1, 10) <= 7 ? 100 : 1000) + rand(1, 9) : significatif();
         const brut = d ? depuisEntier(n, d) : String(n * Math.pow(10, rand(0, 2)));
         // le nombre est lu dans l'unité de départ, ou (vers la grande unité, une fois sur deux) dans la grande unité : 0,35 m³ = 350 000 cm³
         const depart = (versPetite || rand(1, 2) === 1) ? brut : decaler(brut, pp - pg);
@@ -1247,7 +1261,8 @@
     }
     // les sortes de questions
     const sansZero = (a, c) => !/,0/.test(a) && !/,0/.test(c) && nbChiffres(a) <= 5 && nbChiffres(c) <= 5;
-    const entiers = (a, c) => !aVirgule(a) && !aVirgule(c) && nbChiffres(a) <= 3 && nbChiffres(c) <= 5;   // 7 hm = 700 m
+    // 7 hm = 700 m, 7 000 cm³ = 7 dm³ : 3 chiffres au plus avec la grande unité, 5 avec la petite
+    const entiers = (a, c) => !aVirgule(a) && !aVirgule(c) && Math.min(nbChiffres(a), nbChiffres(c)) <= 3 && Math.max(nbChiffres(a), nbChiffres(c)) <= 5;
     // les trois façons d'avoir une virgule, à part égale : elle s'en va (3,5 m = 350 cm), elle arrive (45 cm = 0,45 m),
     // elle bouge (2,75 m = 27,5 dm) ; « elle bouge » est impossible à × 100 et à × 1 000 avec nos limites (m² ↔ dm², kg ↔ g) :
     // on prend alors l'une des deux autres, au hasard
@@ -1256,11 +1271,17 @@
       (a, c) => !aVirgule(a) && aVirgule(c),
       (a, c) => aVirgule(a) && aVirgule(c)
     ];
-    function tirerAvecVirgule(type, liste) {
-      const k = rand(0, 2), autre = rand(0, 1);
-      const ordre = k === 2 ? [2, autre, 1 - autre] : [k, 1 - k, 2];
+    // forme : 0 (s'en va, vers la petite unité), 1 (arrive, vers la grande), 2 (bouge, dans le sens demandé) ; sans forme : au hasard
+    // parmi celles qui vont dans le sens demandé. Si « elle bouge » est impossible, on prend celle qui va dans le même sens.
+    function tirerAvecVirgule(type, liste, forme, sens) {
+      let ordre;
+      if (forme === 2) ordre = [2, sens === 'grande' ? 1 : sens === 'petite' ? 0 : rand(0, 1)];
+      else if (forme === 0 || forme === 1) ordre = [forme];
+      else if (sens) ordre = shuffle([sens === 'petite' ? 0 : 1, 2]);
+      else ordre = shuffle([0, 1, 2]);
       for (const j of ordre) {
-        const q = tirerDans(type, liste, (a, c) => sansZero(a, c) && VIRGULES[j](a, c));
+        const leSens = j === 0 ? 'petite' : j === 1 ? 'grande' : (sens || (rand(1, 2) === 1 ? 'petite' : 'grande'));
+        const q = tirerDans(type, liste, (a, c) => sansZero(a, c) && VIRGULES[j](a, c), leSens);
         if (q) return q;
       }
       return null;
@@ -1275,34 +1296,99 @@
     const piegeLisible = (a, c) => nbChiffres(a) <= 6 && nbChiffres(c) <= 6;
     const grandEcart = (a, c) => nbChiffres(a) <= 7 && nbChiffres(c) <= 7;
 
-    // niveau 2 « Tout le tableau » : 1 sur 10 du niveau 1 ; 6 sur 10 unités usuelles avec une virgule ;
-    // 1 sur 10 une autre unité avec des entiers (7 hm = 700 m) ; 2 sur 10 une autre unité avec une virgule (2,16 km = 216 dam)
-    function questionDuTableau(type) {
-      const P = pairesDuTableau(type), r = rand(1, 10), rares = P.rares.length ? P.rares : P.usu;
-      let q = null;
-      if (r === 1) return questionDesBases(type);
-      if (r <= 7) q = tirerAvecVirgule(type, P.usu);
-      else if (r === 8) q = tirerDans(type, rares, entiers);
-      else q = tirerAvecVirgule(type, rares);
-      return q || questionDesBases(type);
+    // ---- la recette d'une série : chaque série a les mêmes sortes de questions, dans le désordre ; autant de questions vers la
+    // petite unité que vers la grande ; une conversion (m ↔ cm…) ne revient pas plus de 2 fois tant que la case en a d'autres.
+    // Les niveaux sont purs : pour mélanger, on coche plusieurs niveaux (la série est alors partagée entre eux).
+    //   niveau 2, pour 10 questions : la virgule s'en va ×3 (3,5 m = 350 cm), arrive ×3 (45 cm = 0,45 m), bouge ×1 (2,75 m = 27,5 dm),
+    //            une autre unité avec une virgule ×2 (2,16 km = 216 dam), avec des entiers ×1 (7 hm = 700 m)
+    //   niveau 3 : 3,05 m = 305 cm ×3 · 3 cm = 0,03 m ×3 · 305 cm = 3,05 m ×2 · 0,05 hm = 50 dm ×2 ;
+    //            aires, volumes, L ↔ m³ : 4 grands écarts (1 m² = 10 000 cm²) et 6 pièges (2, 2, 1, 1)
+    // Les recettes sont rangées pour qu'une série plus courte (5 questions) en prenne le début et reste équilibrée.
+    const RECETTES = {
+      1: ['B'],
+      2: ['V1', 'V2', 'AV', 'V2', 'V1', 'AE', 'V3', 'AV', 'V1', 'V2'],
+      3: ['P2', 'P1', 'P3', 'P4', 'P2', 'P1', 'P3', 'P4', 'P2', 'P1'],
+      grands: ['G', 'P2', 'P1', 'G', 'P3', 'P4', 'G', 'P2', 'P1', 'G']
+    };
+    // le sens qu'impose une sorte (les autres sont libres : la série les répartit)
+    const SENS_DE = { V1: 'petite', V2: 'grande', P1: 'petite', P2: 'grande', P3: 'grande', P4: 'petite', BE: 'egal' };
+    let serieEnCours = null;   // posé par tirerSerie ; null quand une question est tirée seule (on tire alors la sorte au hasard)
+    // L ↔ m³ au niveau 1 : une question sur trois « même nombre » (5 L = 5 dm³), qui ne va vers aucune unité plus petite ou plus grande
+    function recetteDe(type, level) {
+      if (level === 1 && type === 'cross') return ['B', 'B', 'BE'];
+      return level === 3 && pairesDuTableau(type).loin.length ? RECETTES.grands : RECETTES[level];
     }
-    // niveau 3 « Les pièges » : 1 sur 10 du niveau 1, 1 sur 10 du niveau 2 ; le reste, les zéros à placer
-    // (aires, volumes, L ↔ m³ : 4 sur 10 de grands écarts, 1 m² = 10 000 cm²) ; jamais plus de × 1 000 pour les longueurs, masses, capacités
-    function questionPiege(type) {
-      const P = pairesDuTableau(type), r = rand(1, 10);
-      let q = null;
-      if (r === 1) return questionDesBases(type);
-      if (r === 2) q = tirerAvecVirgule(type, P.usu.concat(P.rares));
-      else if (P.loin.length && r >= 7) q = tirerDans(type, P.loin, grandEcart, rand(1, 2) === 1 ? 'petite' : 'grande');
-      else {
-        const [forme, sens] = pick(FORMES_PIEGE);
-        q = tirerDans(type, rand(1, 3) === 1 && P.rares.length ? P.rares : P.usu, (a, c) => forme(a, c) && piegeLisible(a, c), sens);
+    const cleDePaire = (base, a, b) => { const pa = posUnite(base, a), pb = posUnite(base, b); return pa < pb ? a + '|' + b : pa > pb ? b + '|' + a : [a, b].sort().join('|'); };
+    // les paires de la liste les moins vues dans la série : pas plus de 2 fois (4 fois pour une paire écrite deux fois dans
+    // BASES, qui doit sortir deux fois plus souvent), sinon les moins vues
+    function pairesPeuVues(type, liste, strict) {
+      if (!serieEnCours) return liste;
+      const vues = serieEnCours.paires, base = SCHEMAS[type], cle = p => type + ':' + cleDePaire(base, p[0], p[1]), fois = p => vues[cle(p)] || 0;
+      const poids = {}; liste.forEach(p => { poids[cle(p)] = (poids[cle(p)] || 0) + 1; });
+      const ok = liste.filter(p => fois(p) < 2 * poids[cle(p)]);
+      if (ok.length || strict) return ok;
+      const min = Math.min(...liste.map(fois));
+      return liste.filter(p => fois(p) === min);
+    }
+    // la sorte et le sens de la question en cours ; gardés tant que la question n'est pas trouvée (essais contre les doublons).
+    // La pioche d'une case est faite d'un coup : les sortes de la recette, et pour les sortes libres le sens qui équilibre la série.
+    function prendreSorte(type, level) {
+      const R = recetteDe(type, level);
+      if (!serieEnCours) { if (level === 1) return ['B', undefined]; const so = pick(R); return [so, SENS_DE[so]]; }
+      const s = serieEnCours, cle = type + '|' + level;
+      if (s.courante[cle]) return s.courante[cle];
+      const p = s.pioches[cle] || (s.pioches[cle] = []);
+      if (!p.length) {
+        const n = Math.max(s.attendus[cle] || R.length, 1), sortes = [];
+        for (let i = 0; i < n; i++) sortes.push(R[i % R.length]);
+        let petite = sortes.filter(so => SENS_DE[so] === 'petite').length, grande = sortes.filter(so => SENS_DE[so] === 'grande').length;
+        // (« egal » : 5 L = 5 dm³, hors de l'équilibre)
+        const libres = shuffle(sortes.filter(so => !SENS_DE[so]).map(so => [so, null]));
+        for (const l of libres) {
+          l[1] = petite < grande ? 'petite' : grande < petite ? 'grande' : (rand(1, 2) === 1 ? 'petite' : 'grande');
+          if (l[1] === 'petite') petite++; else grande++;
+        }
+        p.push(...shuffle(sortes.filter(so => SENS_DE[so]).map(so => [so, SENS_DE[so]]).concat(libres)));
       }
-      return q || questionDuTableau(type);
+      return s.courante[cle] = p.shift();
+    }
+    // ce que tirerSerie note une fois la question choisie
+    function noterDansLaSerie(q, type, level) {
+      if (!serieEnCours || q.isProblem || q.isEstimation) return;
+      const s = serieEnCours, k = type + ':' + cleDePaire(SCHEMAS[type], q.sourceUnit, q.targetUnit);
+      s.paires[k] = (s.paires[k] || 0) + 1;
+    }
+
+    // niveau 2 « Tout le tableau »
+    function questionDuTableau(type) {
+      const P = pairesDuTableau(type), rares = P.rares.length ? P.rares : P.usu;
+      const [sorte, sens] = prendreSorte(type, 2);
+      let q = null;
+      if (sorte === 'AE') q = tirerDans(type, rares, entiers, sens);
+      else if (sorte === 'AV') q = tirerAvecVirgule(type, rares, null, sens);
+      else q = tirerAvecVirgule(type, P.usu, { V1: 0, V2: 1, V3: 2 }[sorte], sens);
+      return q || tirerAvecVirgule(type, P.usu.concat(P.rares)) || questionDesBases(type);
+    }
+    // niveau 3 « Les pièges » ; jamais plus de × 1 000 pour les longueurs, masses, capacités
+    function questionPiege(type) {
+      const P = pairesDuTableau(type);
+      const [sorte, sens] = prendreSorte(type, 3);
+      let q = null;
+      if (sorte === 'G') q = tirerDans(type, P.loin, grandEcart, sens);
+      else {
+        const [forme, sensForme] = FORMES_PIEGE[Number(sorte.charAt(1)) - 1];
+        // pas de piège avec dam³, hm³, km³ (unités qu'on n'utilise jamais) ; une fois sur trois, une autre unité que les usuelles
+        const [l1, l2] = rand(1, 3) === 1 && P.rares.length ? [P.rares, P.usu] : [P.usu, P.rares];
+        q = tirerDans(type, l1, (a, c) => forme(a, c) && piegeLisible(a, c), sensForme, sorte === 'P1' || sorte === 'P3', l2);
+      }
+      return q || tirerAvecVirgule(type, P.usu) || questionDesBases(type);
     }
 
     function buildQuestionLogic(type, level) {
-      if (level === 1) return questionDesBases(type);
+      if (level === 1) {
+        const [sorte, sens] = prendreSorte(type, 1);
+        return questionDesBases(type, sens === 'egal' ? undefined : sens, serieEnCours && type === 'cross' ? sorte === 'BE' : undefined);
+      }
       if (level === 2) return questionDuTableau(type);
       return questionPiege(type);
     }
@@ -1726,16 +1812,21 @@
         const allowedDims = dimsDesCases(types);
         const lesTypes = repartir(types, count), lesNiveaux = repartir(levels, count);
         const serie = [], vus = new Set();
-        for (let i = 0; i < count; i++) {
+        // la recette de la série (lot 6) : combien de questions chaque case aura à chaque niveau
+        serieEnCours = { pioches: {}, courante: {}, paires: {}, attendus: {} };
+        for (let i = 0; i < count; i++) { const cle = lesTypes[i] + '|' + lesNiveaux[i]; serieEnCours.attendus[cle] = (serieEnCours.attendus[cle] || 0) + 1; }
+        try {
+          for (let i = 0; i < count; i++) {
             const type = lesTypes[i];
+            serieEnCours.courante = {};
             // le niveau prévu d'abord, puis les autres niveaux cochés ; si tout est déjà sorti, la série s'arrête là
             const essais = [lesNiveaux[i], ...shuffle(levels.filter(l => l !== lesNiveaux[i]))];
-            let q = null;
+            let q = null, niveauPris = null;
             const essayer = (tp) => {
                 for (const level of essais) {
                     for (let t = 0; t < 60; t++) {
                         const c = construireQuestion(tp, level, allowedDims);
-                        if (!vus.has(c.textId)) { c.caseCochee = tp; return c; }
+                        if (!vus.has(c.textId)) { c.caseCochee = tp; niveauPris = level; return c; }
                     }
                 }
                 return null;
@@ -1745,9 +1836,11 @@
             // si toutes sont épuisées, la série est plus courte, et le menu le dit (seriePlusCourte)
             if (!q) for (const autre of shuffle(types.filter(x => x !== type))) { q = essayer(autre); if (q) break; }
             if (!q) continue;
+            noterDansLaSerie(q, q.caseCochee, niveauPris);
             vus.add(q.textId);
             serie.push(q);
-        }
+          }
+        } finally { serieEnCours = null; }
         return serie;
     }
 
