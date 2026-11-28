@@ -18,6 +18,9 @@
 // et chaque série suit une recette (mêmes sortes de questions, autant vers la petite unité que vers la grande, une conversion 2 fois au plus).
 // Lot 7b (28/11/2026) : les ordres de grandeur en niveaux purs (objets familiers, moins familiers, dits dans une autre unité),
 // 102 objets, « Quel objet ? » remis au menu, et une recette par série (un objet une fois, vrai/faux 5 contre 5, A, B, C équilibrés).
+// Lot 7c (28/11/2026) : les problèmes en niveaux purs (1 : des entiers, m-cm, kg-g, L-cL · 2 : une virgule, km et t · 3 : les zéros,
+// mm, mL, km, t), une recette par série (4 longueurs, 3 masses, 3 capacités ; la moitié des réponses dans la grande unité),
+// les phrases relues, les fractions ⅓, ⅕, 1/10 et les volumes en litres.
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -30,7 +33,7 @@ const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
   const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, seriePlusCourte, BASES, USUELLES, pairesDuTableau, posUnite };`, ctx);
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, seriePlusCourte, BASES, USUELLES, pairesDuTableau, posUnite, relachesPb };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -111,27 +114,45 @@ test("le tableau s'élargit : 4 567 km en m et 461 hm en dam gardent tous leurs 
   assert.equal(P.chiffresDuTableau(d, true).join(""), "00005");
 });
 
-test("problèmes : réponses exactes, jamais de reste négatif, partages qui tombent juste, aucun point ni « e- »", () => {
+// Lot 7c : la réponse de chaque problème est recalculée ici à partir de l'énoncé seul (ses mesures, son nombre, sa fraction),
+// en entiers (BigInt, le centième de mm, de g, de mL), sans rien prendre au générateur.
+const UNITES_PB = { mm: [1n, "len"], cm: [10n, "len"], m: [1000n, "len"], km: [1000000n, "len"], g: [1n, "mass"], kg: [1000n, "mass"], t: [1000000n, "mass"], mL: [1n, "cap"], cL: [10n, "cap"], L: [1000n, "cap"] };
+const FRACTIONS_TEXTE = { "la moitié": [1n, 2n], "le quart": [1n, 4n], "les trois quarts": [3n, 4n], "le tiers": [1n, 3n], "le cinquième": [1n, 5n], "le dixième": [1n, 10n] };
+const enCentiemes = (v, u) => { const [e, d = ""] = v.split(","); const n = BigInt(e + d) * UNITES_PB[u][0] * 100n, q = 10n ** BigInt(d.length); assert.equal(n % q, 0n, `${v} ${u}`); return n / q; };
+const lg = (n) => n.toString().length - 1;   // n est une puissance de 10
+const mesures7c = (t) => [...t.matchAll(/(\d[\d ]*(?:,\d+)?) (km|mm|cm|m|kg|g|t|mL|cL|L)(?![²³\wÀ-ÿ])/g)].map((m) => ({ v: m[1].replace(/ /g, ""), u: m[2] }));
+function reponseDeLEnonce(q, famille) {
+  const t = sansBalises(q.problemText).replace(/\s+/g, " ");
+  const U = t.match(/en (\S+) \?$/)[1], m = mesures7c(t), X = m.map((x) => enCentiemes(x.v, x.u));
+  const reste = t.replace(/\d[\d ]*(?:,\d+)? (km|mm|cm|m|kg|g|t|mL|cL|L)(?![²³\wÀ-ÿ])/g, "").replace(/\d+ €/g, "");
+  const N = (reste.match(/\d+/) || [])[0];
+  const fr = Object.entries(FRACTIONS_TEXTE).find(([mot]) => t.includes(mot));
+  let total;
+  if (famille === "add") { assert.equal(m.length, 2, t); total = X[0] + X[1]; }
+  else if (famille === "sub") { assert.equal(m.length, 2, t); total = X[0] - X[1]; assert.ok(total > 0n, `reste nul ou négatif : ${t}`); }
+  else if (famille === "mult") { assert.equal(m.length, 1, t); total = X[0] * BigInt(N); }
+  else if (famille === "div") { assert.equal(m.length, 1, t); assert.equal(X[0] % BigInt(N), 0n, `partage qui ne tombe pas juste : ${t}`); total = X[0] / BigInt(N); }
+  else if (famille === "frac") { assert.equal(m.length, 1, t); const [nu, de] = fr[1]; assert.equal((X[0] * nu) % de, 0n, t); total = X[0] * nu / de; }
+  else if (/son aire/.test(t)) {
+    const [a, b] = m.length === 1 ? [X[0], X[0]] : X, den = (UNITES_PB[U.replace("²", "")][0] * 100n) ** 2n;
+    return reference((a * b).toString(), -lg(den));
+  } else if (U === "L") { assert.equal(m.length, 3, t); return reference((X[0] * X[1] * X[2]).toString(), -lg((100n * 100n) ** 3n)); }
+  else { assert.equal(m.length, 2, t); total = 2n * (X[0] + X[1]); }
+  return reference(total.toString(), -lg(UNITES_PB[U][0] * 100n));
+}
+
+test("problèmes : réponses exactes recalculées depuis l'énoncé, jamais de reste nul ou négatif, partages qui tombent juste, aucun point ni « e- »", () => {
   for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
     P.setSeed(`P${f}${lvl}`);
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 1500; i++) {
       const q = P.buildProblemLogic(lvl, f);
       const t = sansBalises(q.problemText), c = sansBalises(q.correctionText);
-      assert.doesNotMatch(t + c, /\d\.\d|e-\d|NaN|undefined/, `${t} || ${c}`);
-      assert.doesNotMatch(c, /= -|−\s*\d+[^=]*= -/, c);
-      assert.equal(q.calcValStr, reference(q.valStr, q.targetPos - q.sourcePos));
-      const nombres = (s) => (s.match(/\d[\d ]*(,\d+)?/g) || []).map((x) => Number(x.replace(/ /g, "").replace(",", ".")));
-      if (f === "add" || f === "sub") {
-        const [a, b, r] = nombres(c.replace(/^Calcul : /, ""));
-        assert.equal(f === "add" ? a + b : a - b, r, c);
-        assert.ok(r > 0, c);
-      }
-      if (f === "div") {
-        const [a, d, r] = nombres(c.replace(/^Calcul après conversion : /, ""));
-        assert.ok(Number.isInteger(r) && r * d === a, c);
-      }
+      assert.doesNotMatch(t + c, /\d\.\d|e-\d|NaN|undefined|\{[A-Z]\}/, `${t} || ${c}`);
+      assert.equal(q.calcValStr, reference(q.valStr, q.targetPos - q.sourcePos), "le tableau convertit juste");
+      assert.equal(P.bonneReponse(q).val, reponseDeLEnonce(q, f), `${t} → ${c}`);
     }
   }
+  assert.equal(P.relachesPb(), 0, "aucune question n'a dû assouplir sa recette");
 });
 
 test("problèmes : le français des énoncés", () => {
@@ -143,6 +164,9 @@ test("problèmes : le français des énoncés", () => {
   for (const t of vus) {
     assert.doesNotMatch(t, /Dans d'|Dans de |pour \d+ identiques|un demi de|une planche[^.]*un autre|une ficelle[^.]*un autre|une corde[^.]*un autre|valise[^.]*un autre|carafe[^.]*un autre/, t);
     assert.doesNotMatch(t, /\s{2,}/, t);
+    // lot 7c : « en tout », je verse / je bois / j'utilise / je coupe, « pèse », « contient », « mesure » (plus « fait 210 g »)
+    assert.doesNotMatch(t, /Quel est le total|j'en retire|je retire|j'enlève|fait [\d ,]+ (g|kg|t|L|cL|mL|cm|mm)\b/, t);
+    assert.match(t, /, en (mm|cm|m|km|g|kg|t|mL|cL|L|m²|cm²) \?$/, t);
   }
 });
 
@@ -150,10 +174,13 @@ test("problèmes : des valeurs vraisemblables pour chaque objet", () => {
   P.setSeed("BORNES");
   const lus = [];
   for (const lvl of [1, 2, 3]) for (let i = 0; i < 3000; i++) lus.push(sansBalises(P.buildProblemLogic(lvl, "mult").problemText), sansBalises(P.buildProblemLogic(lvl, "div").problemText), sansBalises(P.buildProblemLogic(lvl, "geom").problemText));
-  const kg = (s, nom) => { const m = s.match(new RegExp(`${nom} (?:fait|de) ([\\d ,]+) (k?g)`)); return m ? Number(m[1].replace(/ /g, "").replace(",", ".")) * (m[2] === "kg" ? 1000 : 1) : null; };
+  // lot 7c : dictionnaire de 1 kg à 1,5 kg (plus de 1 965 g), plus de bloc de beurre, du sable par tonnes (0,5 t au moins)
+  const kg = (s, re) => { const m = s.match(re); return m ? Number(m[1].replace(/ /g, "").replace(",", ".")) * ({ g: 1, kg: 1000, t: 1000000 })[m[2]] : null; };
+  for (const lvl of [1, 2, 3]) for (let i = 0; i < 2000; i++) lus.push(sansBalises(P.buildProblemLogic(lvl, "frac").problemText), sansBalises(P.buildProblemLogic(lvl, "sub").problemText));
   for (const s of lus) {
-    const d = kg(s, "dictionnaire"); if (d !== null) assert.ok(d >= 800 && d <= 2000, s);
-    const sable = kg(s, "tas de sable"); if (sable !== null) assert.ok(sable >= 20000, s);
+    const d = kg(s, /dictionnaire pèse ([\d ,]+) (k?g)/); if (d !== null) assert.ok(d >= 1000 && d <= 1500, s);
+    for (const re of [/([\d ,]+) (kg|t) de sable/, /tas de ([\d ,]+) (kg|t)/]) { const sable = kg(s, re); if (sable !== null) assert.ok(sable >= 500000, s); }
+    assert.doesNotMatch(s, /bloc de beurre/, s);
     assert.doesNotMatch(s, /tasse de café fait ([2-9]|\d{2,})(,\d+)? L/, s);
     assert.doesNotMatch(s, /mur/, s);
   }
@@ -463,7 +490,7 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
 });
 
-test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 7b)", () => {
+test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 7c)", () => {
   // Lot 6 (28/11/2026) : les niveaux 2 et 3 des conversions tirent autrement, et chaque série suit sa recette (sens équilibrés,
   // une conversion 2 fois au plus) : les 12 séries changent, celles du niveau 1 seul aussi (c'est voulu). Empreintes du lot 5 (main cfddd12) :
   // b1bf5c6cea92df25 abfd8cc5cf7adc44 8ce458a12d6b1106 b1d19b6f4ff14216 041ef6dfb61a4dff 73e4d6de2a9c3668
@@ -478,7 +505,11 @@ test("mêmes séries : pour un code, le diaporama redonne toujours la même sér
   // en contiennent : les 12 changent (c'est voulu). Empreintes du lot 6 (main 19a2821) :
   // fe836e77fa942f5c 89166615b8e04dc0 f914e554e5065207 abe27b29958c9ba4 3e39c7fcbf32731d 2baf4ce7a6ff8746
   // 2cb165181e7ec682 2b7c873073daf350 3dfe115b871f509c 3784d241b9efd6d6 121d61a755dd9749 f249bc241f70243d
-  const MAIN = ["0ce84bde809ef740", "01646b7bb5a674fe", "7783ded91845738a", "197570c9b5581750", "44f4d045ad157d66", "29b0446c1550bd19", "2077a48149706d80", "faa655745aab4736", "094c1e8993494f0e", "c6bd821628aad86c", "a1f1bbc2a6526d6e", "4588ac5be28337ba"];
+  // Lot 7c (28/11/2026) : les problèmes tirent autrement (niveaux purs, recette par série) ; les 12 séries en contiennent : les 12
+  // changent (c'est voulu). Les séries sans problème ne changent pas (400 sur 400 identiques, sans-probleme.mjs). Empreintes du lot 7b (main fd0fcba) :
+  // 0ce84bde809ef740 01646b7bb5a674fe 7783ded91845738a 197570c9b5581750 44f4d045ad157d66 29b0446c1550bd19
+  // 2077a48149706d80 faa655745aab4736 094c1e8993494f0e c6bd821628aad86c a1f1bbc2a6526d6e 4588ac5be28337ba
+  const MAIN = ["a6a49b97e6247553", "180df04f2f76bd3e", "23b12b028226323f", "8b09af340aba561c", "6cb0f0403d6f6a80", "9103e876f879ff74", "ccf319ddbbbb2e00", "8714a028ada79d6c", "e522482bf622bcd2", "2cff48236fa77a87", "58bfdf26fbc0875d", "d02970badf80337a"];
   const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
   const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
   const lot = [];
@@ -726,19 +757,25 @@ test("lot 4 : émojis, rappels, ponts et actions corrigés", () => {
   assert.match(tout, /le même volume qu'une brique de lait de 1 L/);
 });
 
-test("lot 4 : les énoncés des problèmes (verbes, bouillon, bidon d'eau, multiplications, additions en mL)", () => {
+test("lot 4 et 7c : les énoncés des problèmes (verbes, « en tout », multiplications, soustractions)", () => {
+  // Lot 7c : les phrases relues le 28/11 remplacent celles du lot 4 — « Quel est le total en mL » devient « … en tout, en mL »,
+  // « j'en retire » devient je verse, je bois, j'utilise, je coupe (« je verse » est donc permis), les N objets ne sont plus « identiques ».
   const vus = new Set();
   for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
     P.setSeed(`L4${f}${lvl}`);
     for (let i = 0; i < 1500; i++) vus.add({ f, lvl, t: sansBalises(P.buildProblemLogic(lvl, f).problemText) });
   }
-  for (const { f, lvl, t } of vus) {
-    assert.doesNotMatch(t, /je verse|je vide|soupe|lessive|Quel est le total pour/, t);
-    if (f === "mult") assert.match(t, /(Quelle longueur font \d+ .+ identiques mis(es)? bout à bout|Quelle est la masse de \d+ .+ identiques|Combien contiennent \d+ .+ identiques), en (mm|cm|m|g|kg|mL|cL|L) \?$/, t);
-    if (/carreaux de faïence/.test(t)) assert.match(t, / mis bout/, t);
-    if (/(dalles|lattes|règles)/.test(t) && f === "mult") assert.match(t, / mises bout/, t);
-    if (f === "add" && lvl === 3 && / L et un autre/.test(t)) assert.match(t, /\d mL\. Quel est le total en mL \?$/, t);
+  const verses = new Set();
+  for (const { f, t } of vus) {
+    assert.doesNotMatch(t, /je vide|(?<!cuillère à )soupe|lessive|Quel est le total|identiques mis/, t);
+    if (/[Jj]e verse|j'en verse/.test(t)) verses.add(f);
+    if (f === "add") assert.match(t, /(en tout|sa masse chargée), en \S+ \?$/, t);
+    if (f === "sub") assert.match(t, /(reste-t-il|reste-t-il dans [^,]+|me reste-t-il à \S+|peut-il encore charger|peut-elle encore porter|peut-il charger au plus pour passer), en \S+ \?$/, t);
+    if (f === "mult") assert.match(t, /(Quelle longueur font \d+ .+ mis(es)? bout à bout|Quelle distance font \d+ .+|Quelle distance cela fait-il en \d+ trajets|Quelle est la masse de \d+ .+|Combien contiennent \d+ .+), en (mm|cm|m|km|g|kg|t|mL|cL|L) \?$/, t);
+    if (/carreaux de faïence|tuyaux/.test(t)) assert.match(t, / mis bout/, t);
+    if (/(dalles|lattes|règles|planches)/.test(t) && f === "mult") assert.match(t, / mises bout/, t);
   }
+  assert.ok(verses.has("add") && verses.has("sub") && verses.has("frac"), "« je verse » est permis");
 });
 
 test("lot 4 : au niveau 3, 10 m et plus restent en m, 10 L et plus restent en L", () => {
@@ -1400,4 +1437,122 @@ test("lot 7b : séries de 5, plusieurs niveaux cochés, toutes les cases ensembl
     assert.equal(s.length, t === "est_action" && lvl === 3 ? 9 : 10, `${t} niveau ${lvl}`);
     if (t === "est_action") assert.ok(s.every((q) => P.ACTIONS_DB.find((a) => a.q === q.problemText).lvl === lvl));
   }
+});
+
+// ---- lot 7c : les problèmes en niveaux purs, une recette par série. Tout est lu dans l'énoncé et la correction ;
+// « q.pb » (ce que la recette demandait) ne sert qu'à vérifier les séries mélangées.
+const GRANDEUR_DE = (u) => (UNITES_PB[u] || [])[1];
+const nombres7c = (s) => (s.match(/\d[\d ]*(?:,\d+)?/g) || []).map((x) => x.replace(/ /g, "")).filter((x) => x !== "");
+function lu7c(q) {
+  const t = sansBalises(q.problemText).replace(/\s+/g, " "), c = sansBalises(q.correctionText).replace(/\s+/g, " ").replace(/^1\) |\d\) /g, " ");
+  const U = t.match(/en (\S+) \?$/)[1], m = mesures7c(t);
+  const sorte = /son aire/.test(t) ? "aire" : U === "L" && m.length === 3 ? "vol" : /périmètre|clôture|le tour/.test(t) ? "perim" : null;
+  const unites = [...new Set([...m.map((x) => x.u), U])].filter((u) => UNITES_PB[u]);
+  const grand = unites.reduce((a, u) => (UNITES_PB[u][0] > UNITES_PB[a][0] ? u : a), unites[0]);
+  const tous = nombres7c(t.replace(/\d+ €/g, "") + " " + c.replace(/\d\) /g, ""));
+  return { t, c, U, m, sorte, grand, tous, enGrande: sorte !== "aire" && sorte !== "vol" && U === grand && unites.length > 1, g: sorte === "vol" ? "vol" : GRANDEUR_DE(U.replace("²", "")) };
+}
+const FRAC_NIVEAU = { 1: ["la moitié", "le quart", "les trois quarts"], 2: ["la moitié", "le quart", "les trois quarts", "le tiers"], 3: Object.keys(FRACTIONS_TEXTE) };
+
+test("lot 7c : chaque série de 10 suit sa recette (150 séries par famille et par niveau)", () => {
+  for (const f of FAMILLES) for (const lvl of [1, 2, 3]) for (let k = 0; k < 150; k++) {
+    const serie = P.tirerSerie([`prob_${f}`], [lvl], 10, `R7c${k}`);
+    const quoi = `${f} niveau ${lvl} série R7c${k}`;
+    assert.equal(serie.length, 10, quoi);
+    const n = {}, cnt = (x) => (n[x] = (n[x] || 0) + 1), objets = {};
+    for (const q of serie) {
+      const L = lu7c(q), ici = `${quoi} : ${L.t} → ${L.c}`;
+      objets[q.pb.objet] = (objets[q.pb.objet] || 0) + 1;
+      const virgule = L.tous.some((x) => x.includes(",")), zero = L.tous.some((x) => /,0/.test(x));
+      // ce que le niveau permet
+      if (lvl === 1) assert.ok(!virgule, `${ici} : une virgule au niveau 1`);
+      if (lvl > 1 && L.sorte !== "vol") assert.ok(virgule, `${ici} : aucune virgule`);
+      if (lvl === 2) assert.ok(!zero, `${ici} : un zéro après la virgule au niveau 2`);
+      if (zero) cnt("zéro");
+      if (L.m.some((x) => x.u === "km" || x.u === "t") || L.U === "km" || L.U === "t") cnt("km/t");
+      if (L.m.some((x) => x.u === "mm" || x.u === "mL") || L.U === "mm" || L.U === "mL") cnt("mm/mL");
+      if (lvl < 3) assert.ok(!L.m.some((x) => x.u === "mm" || x.u === "mL") && L.U !== "mm" && L.U !== "mL", `${ici} : mm ou mL avant le niveau 3`);
+      if (lvl === 1) assert.ok(!L.m.some((x) => x.u === "km" || x.u === "t") && L.U !== "km" && L.U !== "t", `${ici} : km ou t au niveau 1`);
+      // la réponse : entière dans la petite unité, deux chiffres après la virgule au plus
+      if (!L.enGrande && L.sorte !== "aire" && L.sorte !== "vol") assert.doesNotMatch(q.reponse, /,/, `${ici} : réponse à virgule dans la petite unité`);
+      assert.ok(L.tous.every((x) => (x.split(",")[1] || "").length <= 2), `${ici} : trois chiffres après la virgule`);
+      // des mesures qui se disent : contenances à deux chiffres, au moins 1 m et 1 kg, jamais un nombre rond de la grande unité
+      for (const x of L.m) {
+        if (GRANDEUR_DE(x.u) === "cap") assert.ok(x.v.replace(",", "").replace(/^0+/, "").replace(/0+$/, "").length <= 2, `${ici} : ${x.v} ${x.u}`);
+        if (x.u === "m" || x.u === "kg") assert.ok(Number(x.v.replace(",", ".")) >= 1, `${ici} : ${x.v} ${x.u}`);
+        const G = L.sorte === "vol" ? "m" : L.grand;
+        if (UNITES_PB[x.u][0] < UNITES_PB[G][0] && GRANDEUR_DE(x.u) === GRANDEUR_DE(G)) assert.notEqual(enCentiemes(x.v, x.u) % (UNITES_PB[G][0] * 100n), 0n, `${ici} : ${x.v} ${x.u} se dit en ${G}`);
+      }
+      for (const x of L.m) if (x.u === "mm") assert.notEqual(enCentiemes(x.v, "mm") % 10000n, 0n, `${ici} : ${x.v} mm se dit en cm`);
+      if ((f === "div" || f === "frac") && !L.enGrande) assert.notEqual(enCentiemes(q.reponse, L.U) % (UNITES_PB[L.grand][0] * 100n), 0n, `${ici} : la part se dit en ${L.grand}`);
+      if (f === "frac") { const fr = Object.keys(FRACTIONS_TEXTE).find((mot) => L.t.includes(mot)); assert.ok(FRAC_NIVEAU[lvl].includes(fr), `${ici} : ${fr}`); cnt(fr); }
+      if (f === "geom") cnt(L.sorte); else cnt(L.g);
+      if (L.enGrande) cnt(f === "geom" ? "grande (périmètre)" : "grande");
+    }
+    // la recette
+    if (f === "geom") {
+      assert.deepEqual([n.perim, n.aire, n.vol || 0], lvl === 1 ? [5, 5, 0] : [4, 3, 3], `${quoi} : ${JSON.stringify(n)}`);
+      assert.equal(n["grande (périmètre)"] || 0, 2, `${quoi} : périmètres dans la grande unité`);
+    } else {
+      assert.deepEqual([n.len, n.mass, n.cap], [4, 3, 3], `${quoi} : ${JSON.stringify(n)}`);
+      assert.equal(n.grande || 0, lvl === 1 ? (f === "div" || f === "frac" ? 0 : 4) : 5, `${quoi} : réponses dans la grande unité`);
+    }
+    if (lvl > 1) assert.equal(n["km/t"] || 0, f === "geom" ? (lvl === 2 ? 0 : 2) : (lvl === 2 ? 3 : 2), `${quoi} : km ou t (les champs et les parcs en km au niveau 3)`);
+    if (lvl === 3 && f !== "geom") { assert.equal(n["mm/mL"] || 0, 4, `${quoi} : mm ou mL`); assert.ok((n["zéro"] || 0) >= 6, `${quoi} : ${n["zéro"]} zéros`); }
+    if (lvl === 3 && f === "geom") assert.ok((n["zéro"] || 0) >= 4, `${quoi} : ${n["zéro"]} zéros`);
+    if (f === "frac") {
+      if (lvl === 1) assert.deepEqual([n["la moitié"], n["le quart"], n["les trois quarts"]], [4, 3, 3], quoi);
+      if (lvl === 2) assert.equal(n["le tiers"], 3, quoi);
+      if (lvl === 3) assert.equal((n["le cinquième"] || 0) + (n["le dixième"] || 0), 4, quoi);
+    }
+    assert.ok(Math.max(...Object.values(objets)) <= 2, `${quoi} : un objet ${Math.max(...Object.values(objets))} fois`);
+  }
+  assert.equal(P.relachesPb(), 0, "aucune question n'a dû assouplir sa recette");
+});
+
+test("lot 7c : séries de 5, plusieurs niveaux, toutes les cases de problèmes ensemble", () => {
+  const PB = FAMILLES.map((f) => `prob_${f}`);
+  for (let k = 0; k < 60; k++) {
+    for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
+      const s = P.tirerSerie([`prob_${f}`], [lvl], 5, `C7c${k}`).map(lu7c);
+      assert.equal(s.length, 5);
+      assert.equal(new Set(s.map((x) => (f === "geom" ? x.sorte : x.g))).size, f === "geom" && lvl === 1 ? 2 : 3, `${f} niveau ${lvl} : série de 5 sans ses trois sortes`);
+      const g = s.filter((x) => x.enGrande).length;
+      if (f !== "geom" && lvl > 1) assert.ok(g === 2 || g === 3, `${f} niveau ${lvl} : ${g} sur 5 dans la grande unité`);
+    }
+    for (const [niv, n] of [[[1, 2, 3], 10], [[1, 2, 3], 20], [[2], 5], [[1, 3], 15]]) {
+      const s = P.tirerSerie(PB, niv, n, `X7c${k}`);
+      assert.equal(s.length, n);
+      assert.ok(s.every((q) => niv.includes(q.pb.niveau)), "une question hors des niveaux cochés");
+      const gr = s.map(lu7c).filter((x) => ["len", "mass", "cap"].includes(x.g)), ob = {};
+      if (gr.length >= 3) assert.equal(new Set(gr.map((x) => x.g)).size, 3, `niveaux ${niv} : une grandeur manque`);
+      s.forEach((q) => (ob[q.pb.objet] = (ob[q.pb.objet] || 0) + 1));
+      assert.ok(Math.max(...Object.values(ob)) <= 2, `niveaux ${niv} : un objet plus de 2 fois`);
+    }
+  }
+  // assez d'énoncés pour une série de 20 à chaque niveau
+  for (const f of FAMILLES) for (const lvl of [1, 2, 3]) {
+    const s = P.tirerSerie([`prob_${f}`], [lvl], 20, `V7c${f}${lvl}`);
+    assert.equal(new Set(s.map((q) => q.textId)).size, 20, `${f} niveau ${lvl}`);
+  }
+  assert.equal(P.relachesPb(), 0);
+});
+
+test("lot 7c : la banque des problèmes et le menu (« Fractions (½, ¼, ⅓…) », « Périmètres, aires, volumes »)", () => {
+  for (const [fam, liste] of Object.entries(P.PROBLEMES)) for (const o of liste) {
+    assert.match(o.t, /^[A-ZÀ-Ý][^{}]*(\{[ABCFN]\}[^{}]*)+\.$/, o.t);
+    if (fam !== "aire" && fam !== "aire1") assert.match(o.q, /, en \{U\} \?$/, o.t);
+    assert.doesNotMatch(o.t + " " + (o.q || ""), /fait \{A\}/.test(o.t) && !/tour de piste|longueur de piscine|course|randonnée fait/.test(o.t) ? /fait/ : /^$/, o.t);
+    for (const u of o.u || []) assert.ok(["m-cm", "m-mm", "km-m", "kg-g", "t-kg", "L-cL", "L-mL"].includes(u), `${o.t} : ${u}`);
+  }
+  // les objets qui sont sortis du jeu (valeurs absurdes)
+  const tout = JSON.stringify(P.PROBLEMES);
+  assert.doesNotMatch(tout, /bloc de beurre|tas de sable de|j'en retire/);
+  // la parenthèse reste d'un seul tenant (sinon « ⅓…) » passe seul à la ligne)
+  assert.match(html, /value="prob_frac"> <div><strong>Fractions \(½,&nbsp;¼,&nbsp;⅓…\)<\/strong>/);
+  assert.match(html, /value="prob_geom"> <div><strong>Périmètres, aires, volumes<\/strong>/);
+  assert.match(html, /prob_geom: "Problème de périmètre, d'aire ou de volume"/);
+  // le lien ne change pas : les liens déjà partagés gardent leurs cases
+  assert.equal(P.CASES_LIEN.prob_frac, "fractions");
+  assert.equal(P.CASES_LIEN.prob_geom, "perimetres-aires");
 });
