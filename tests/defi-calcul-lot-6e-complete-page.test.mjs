@@ -18,7 +18,11 @@
 //     dans le dessin (aucun d'avance) ;
 //  6. les adresses de cache neuves ;
 //  7. les erreurs de « Une fraction d'un nombre » ont leurs causes à elles,
-//     celles de « Entier × fraction » et « Fraction et quotient » les leurs.
+//     celles de « Entier × fraction » et « Fraction et quotient » les leurs ;
+//  8. (correctif, relecture de Codex du 28/11) « est proche de » : la bonne
+//     case est aussi la plus proche par l'écart, du produit comme de
+//     l'estimation ; les exemples du professeur ne montrent qu'une des
+//     trois cases.
 // Ces tests ont été sabotés un par un (lot-6e-complete\_travail\outils\
 // sabotages-6e.py) : chaque sabotage en rougit au moins un.
 
@@ -142,5 +146,37 @@ test("7. les causes d'erreur : « Une fraction d'un nombre » a les siennes, les
       const cause = CORE.diagnostiquer(c, v);
       if (cause) assert.ok(cause.c >= 1 && cause.c <= 6, `${c.texte} → ${v} : cause ${cause.c}`);
     }
+  }
+});
+
+test("8. correctif : « est proche de » — la bonne case est la plus proche par l'écart ; l'exemple du professeur est une des trois cases", async () => {
+  const plusProche = (choix, x) => choix.reduce((m, v) => (Math.abs(v - x) < Math.abs(m - x) ? v : m));
+  let vus = 0;
+  for (let graine = 1; graine <= 300; graine += 1) for (const c of CORE.genererTentative("D16-1", {graine})) {
+    if (c.forme !== "proche") continue;
+    vus += 1;
+    const {a, b, e} = c.donnees;
+    assert.ok(CORE.memeNombre(plusProche(c.choix, a * b), c.reponse), `${c.texte} : le produit ${a * b}`);
+    assert.ok(CORE.memeNombre(plusProche(c.choix, e), c.reponse), `${c.texte} : l'estimation ${e}`);
+  }
+  assert.ok(vus > 500);
+  // Les deux calculs trouvés par Codex (graine 77) ne sont plus tirés.
+  const textes = new Set();
+  for (let graine = 1; graine <= 3000; graine += 1) for (const c of CORE.genererTentative("D16-1", {graine})) textes.add(c.texte);
+  ["9,9 × 4,7 est proche de □", "0,52 × 98 est proche de □"].forEach(t => assert.ok(![...textes].some(x => x.replace(/[\u00a0\u202f]/g, " ") === t), t));
+  // Une réponse qui n'est pas une des trois cases n'a pas de cause.
+  const c = CORE.genererUn("D16-1", 1);
+  assert.equal(CORE.diagnostiquer(c, c.reponse * 1000), null);
+  // La page du professeur : l'exemple d'une erreur est une des deux autres cases.
+  const php = (await import("node:fs")).readFileSync(new URL("../_serveur/public/prof/index.php", import.meta.url), "utf8");
+  const debut = php.indexOf("  const exemplesCalcul =");
+  const fin = php.indexOf("  // « ouvrir en classe »", debut);
+  const exempleErreur = Function("CALCUL_CORE", php.slice(debut, fin) + "\nreturn exempleErreur;")(CORE);
+  for (const cause of [1, 2]) {
+    const ex = exempleErreur("D16", 1, cause);
+    assert.ok(ex, `cause ${cause}`);
+    const calcul = [...Array(6)].flatMap((_, g) => [...Array(6)].map((__, tour) => CORE.genererUn("D16-1", g + 1, {tour}))).find(x => x && x.texte === ex.texte);
+    assert.ok(calcul, ex.texte);
+    assert.ok(calcul.choix.some(v => CORE.formaterNombre(v) === ex.reponse), `${ex.texte} → ${ex.reponse} : une des trois cases`);
   }
 });

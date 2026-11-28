@@ -181,3 +181,40 @@ test("le témoin de version 14 des tests du serveur est le témoin « fractions-
   const jour = V14.temoins["fractions-6e"].vu.jour;
   assert.deepEqual(P.normaliserParcours(serveur, {aujourdhui: jour}).modules, P.normaliserParcours(V14.temoins["fractions-6e"].parcours, {aujourdhui: jour}).modules);
 });
+
+// Correctif du lot (relecture de Codex du 28/11, défaut 1) : une copie de
+// version 14 (ou 13) qui porte quelque chose aux places des étoiles neuves
+// — aucune page ancienne n'a pu l'écrire — ne donne pas d'étoile.
+test("correctif : une version 14 abîmée ne donne aucune étoile neuve ; une version 15 garde les siennes", () => {
+  const t = V14.temoins["fractions-6e"];
+  const jour = t.vu.jour;
+  const abimee = copie(t.parcours);
+  const remplir = (ligne, i) => { ligne.b[i] = 3; ligne.d[i] = "2026-10-01"; ligne.e[i] = "2026-11-01"; ligne.g[i] = 4; ligne.s[i] = "2026-10-05"; };
+  const k = id => P.NIVEAUX[id];
+  // F11 : une 3e case au bout de chaque liste, et les causes de F11-3.
+  const f11 = abimee.modules.F11;
+  assert.ok(f11, "le témoin a une ligne F11");
+  PAR_ETOILE.forEach(champ => { if (Array.isArray(f11[champ])) while (f11[champ].length < 3) f11[champ].push(VIDE[champ]); });
+  remplir(f11, 2);
+  f11.c = Object.assign({}, f11.c, {7: 2, 8: 1, 9: 3});
+  // Les modules qui n'avaient rien de jouable, D16 compris, et un niveau encore réservé (D10, 3e case).
+  ["D10", "D11", "D12", "D14", "F10", "P1", "P2", "D16"].forEach(id => {
+    const ligne = {vu: "2026-10-01", c: {1: 2}};
+    PAR_ETOILE.forEach(champ => { ligne[champ] = Array.from({length: k(id)}, () => VIDE[champ]); });
+    for (let i = 0; i < k(id); i += 1) remplir(ligne, i);
+    abimee.modules[id] = ligne;
+  });
+  const lue = P.normaliserParcours(copie(abimee), {aujourdhui: jour});
+  // (Un module absent de la progression est vide.)
+  ["D10", "D11", "D12", "D14", "F10", "P1", "P2", "D16"].forEach(id => assert.equal(lue.modules[id], undefined, id));
+  PAR_ETOILE.forEach(champ => assert.equal(lue.modules.F11[champ][2], VIDE[champ], `F11.${champ}[2]`));
+  ["7", "8", "9"].forEach(c => assert.equal(lue.modules.F11.c[c], undefined, `F11.c.${c}`));
+  // Rien de ce que la page ancienne a vraiment joué n'est touché.
+  const juste = P.normaliserParcours(copie(t.parcours), {aujourdhui: jour});
+  [0, 1].forEach(i => PAR_ETOILE.forEach(champ => assert.deepEqual(lue.modules.F11[champ][i], juste.modules.F11[champ][i], `F11.${champ}[${i}]`)));
+  // La même copie en version 15 garde tout : ce sont ses étoiles.
+  const v15 = P.normaliserParcours(Object.assign(copie(abimee), {version: 15}), {aujourdhui: jour});
+  assert.equal(v15.modules.D16.b[0], 3);
+  assert.equal(v15.modules.F11.b[2], 3);
+  assert.equal(v15.modules.P1.b[0], 3);
+});

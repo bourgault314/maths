@@ -13182,7 +13182,14 @@
   }
   // Un produit est « proche » d'une puissance de 10 quand il en est à moins
   // de 2,2 fois : 12 est proche de 10, 31 n'est proche ni de 10 ni de 100.
-  const procheNet = x => { const p = 10 ** Math.round(Math.log10(x)); return Math.max(x / p, p / x) < 2.2; };
+  // Correctif (relecture de Codex du 28/11) : proche AUSSI par l'écart.
+  // Sous une puissance de 10, l'écart à la puissance d'en dessous est le
+  // plus petit dès 0,55 fois : 46,53 est à 2,15 fois de 100, mais plus près
+  // de 10 (36,5 contre 53,5). En dessous, il faut donc au moins 0,6 fois la
+  // puissance (60 est proche de 100) ; au-dessus, moins de 2,2 fois (22 est
+  // proche de 10). Les deux lectures disent alors la même puissance, pour le
+  // produit comme pour l'estimation (voir d16Vivier).
+  const procheNet = x => { const p = 10 ** Math.round(Math.log10(x)); return x >= p ? x / p < 2.2 : x / p >= 0.6; };
   function d16Vivier() {
     const proches = [];
     const virgules = [];
@@ -13196,14 +13203,14 @@
       const ra = arrondiUnite(a);
       const rb = arrondiUnite(b);
       // (L'arrondi tombe sur le bon ordre de grandeur : 4 × 3 = 12 dit 10.)
-      if (Math.round(Math.log10(ra * rb)) !== Math.round(Math.log10(a * b)) || Math.abs(a - ra) < 0.15 && Math.abs(b - rb) < 0.15) return;
+      if (!procheNet(ra * rb) || Math.round(Math.log10(ra * rb)) !== Math.round(Math.log10(a * b)) || Math.abs(a - ra) < 0.15 && Math.abs(b - rb) < 0.15) return;
       const A = Math.round(a * 10);
       const B = Math.round(b * 10);
       if (((7 * A + 3 * B) % 6 === 0 || exemples.has(`${a}|${b}`)) && sans69(a * b)) proches.push(d16Calcul(1, "proche", a, b, decalageDe(a, b, A + B)));
     }));
     // Des centièmes et des entiers (0,48 × 21 : proche de 10).
     [0.48, 0.52, 0.39, 0.21, 0.19, 0.31].forEach((a, i) => [19, 21, 29, 31, 48, 52, 98, 102, 9.8, 4.9].forEach((b, j) => {
-      if (!procheNet(a * b) || Math.round(Math.log10(arrondiUnite(a) * arrondiUnite(b))) !== Math.round(Math.log10(a * b))) return;
+      if (!procheNet(a * b) || !procheNet(arrondiUnite(a) * arrondiUnite(b)) || Math.round(Math.log10(arrondiUnite(a) * arrondiUnite(b))) !== Math.round(Math.log10(a * b))) return;
       if (sans69(a * b)) proches.push(d16Calcul(1, "proche", a, b, decalageDe(a, b, i + j)));
     }));
     // Le produit des entiers donné : deux nombres à une décimale (3,7 × 2,9),
@@ -13236,7 +13243,7 @@
   const D16_ERREURS = Object.freeze([
     Object.freeze({
       c: 1, nom: "trop petit",
-      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && reponse < calcul.reponse),
+      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && calcul.donnees.choix.some(v => memeNombre(v, reponse)) && reponse < calcul.reponse),
       retour: (calcul, reponse) => {
         const {a, b, ra, rb, e} = calcul.donnees;
         return fr(`${f(reponse)}, c’est trop petit. ${f(a)} est proche de ${f(ra)} et ${f(b)} de ${f(rb)} : ${f(ra)} × ${f(rb)} = ${f(e)}.`);
@@ -13245,7 +13252,7 @@
     }),
     Object.freeze({
       c: 2, nom: "trop grand",
-      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && reponse > calcul.reponse),
+      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && calcul.donnees.choix.some(v => memeNombre(v, reponse)) && reponse > calcul.reponse),
       retour: (calcul, reponse) => {
         const {a, b, ra, rb, e} = calcul.donnees;
         return fr(`${f(reponse)}, c’est trop grand. ${f(a)} est proche de ${f(ra)} et ${f(b)} de ${f(rb)} : ${f(ra)} × ${f(rb)} = ${f(e)}.`);

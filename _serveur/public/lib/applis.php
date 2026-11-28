@@ -293,7 +293,12 @@ const CATALOGUE_APPLIS = [
         // Lot « la 6e complète » (27/11/2026), version 15 : aucune clé de plus
         // — D16 (« Où va la virgule ? ») entre dans le motif des modules, F11
         // a une case de plus par liste. Le pire cas passe à 1 980 clés et
-        // 36 323 octets (une ligne de module de plus : 26 clés).
+        // 36 323 octets (une ligne de module de plus : 26 clés) dans le
+        // générateur de la référence ; la relecture de Codex (28/11) a
+        // trouvé plus long en remplissant toutes les dates et en saturant
+        // tous les compteurs : 1 979 clés et 37 285 octets, au plus 37 514
+        // (chaque champ à sa plus grande largeur). Les plafonds tiennent ;
+        // c'est ce majorant qu'il faut mesurer avant d'ajouter un champ.
         'cles' => ['version', 'epoque', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
             'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'parts', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],

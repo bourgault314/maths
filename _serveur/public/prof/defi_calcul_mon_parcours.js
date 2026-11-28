@@ -1250,6 +1250,27 @@
   //    zéro, gagne toujours en bloc ; le prénom (un visiteur sans code) aussi ;
   //  - plus récente : rendue vide, elle aussi — l'appelant (charger,
   //    recevoir, sauver) ne l'utilise pas et passe en lecture seule.
+  // Correctif du lot « la 6e complète » (relecture de Codex du 28/11) : les
+  // étoiles qu'une page de version 14 (ou plus ancienne) ne pouvait PAS
+  // jouer — les dix étoiles neuves de La 6e. Une copie ancienne qui porte
+  // quelque chose à ces places (une copie abîmée ou trafiquée : aucun geste
+  // n'a pu l'écrire) ne donne pas d'étoile : ces places repartent vides.
+  //  - `modules` : les modules qui n'avaient aucun niveau jouable avant (leur
+  //    ligne entière repart vide, niveaux réservés compris) ;
+  //  - F11 : sa troisième case seulement, et les causes de « Une fraction
+  //    d'un nombre » (7, 8, 9), qu'aucune page ancienne ne pouvait compter.
+  const NEUVES_15 = Object.freeze({modules: Object.freeze(["D10", "D11", "D12", "D14", "F10", "P1", "P2", "D16"]), F11: 2, causesF11: Object.freeze(["7", "8", "9"])});
+  // (Une progression ne porte que les modules touchés : un module absent est
+  // vide.)
+  function viderNeuves15(parcours) {
+    NEUVES_15.modules.forEach(id => { delete parcours.modules[id]; });
+    const ligne = parcours.modules.F11;
+    if (!ligne) return;
+    const vide = moduleVide("F11");
+    Object.keys(vide).forEach(champ => { if (Array.isArray(vide[champ])) ligne[champ][NEUVES_15.F11] = vide[champ][NEUVES_15.F11]; });
+    NEUVES_15.causesF11.forEach(cause => { delete ligne.c[cause]; });
+  }
+
   function normaliserParcours(brut, {aujourdhui = jourLocal()} = {}) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return parcours;
@@ -1263,6 +1284,7 @@
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     const jour = dateOuNull(aujourdhui) || jourLocal();
     const xMax = versionDe(brut) === VERSION || versionDe(brut) === VERSION_14 ? X_MAX : X_RATE + X_SECOND;
+    const ancienne = versionDe(brut) !== VERSION;
     if (versionDe(brut) === VERSION_REPRISE) brut = reprendreVersion12(brut, jour);
     else if (versionDe(brut) !== VERSION && versionDe(brut) !== VERSION_14 && versionDe(brut) !== VERSION_13) return parcours;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
@@ -1271,6 +1293,7 @@
         parcours.modules[id] = normaliserModule(id, brut.modules[id], jour, NIVEAUX[id], xMax);
       });
     }
+    if (ancienne) viderNeuves15(parcours);
     const seance = brut.seance && typeof brut.seance === "object" && !Array.isArray(brut.seance) ? brut.seance : {};
     parcours.seance = {
       jour: dateOuNull(seance.jour),

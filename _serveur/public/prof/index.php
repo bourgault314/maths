@@ -6961,6 +6961,10 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   }
 
   function candidatsErreur(calcul) {
+    // Correctif du lot « la 6e complète » (relecture de Codex du 28/11) : une
+    // réponse à choisir (« Où va la virgule ? ») ne peut être fausse que
+    // d'une des deux autres cases — l'exemple n'en invente pas d'autre.
+    if (Array.isArray(calcul.choix)) return calcul.choix.filter(v => !CALCUL_CORE.memeNombre(v, calcul.reponse));
     const valeurs = [calcul.reponse, ...Object.values(calcul.donnees || {}).filter(v => typeof v === "number")];
     const trouves = new Set();
     // (Lot 6 : une réponse en fraction à deux cases garde sa valeur exacte,
