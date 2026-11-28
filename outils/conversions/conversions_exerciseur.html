@@ -632,8 +632,8 @@
               <label class="cb-row"><input type="checkbox" value="prob_sub"> <div><strong>Soustractions (-)</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="prob_mult"> <div><strong>Multiplications (×)</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="prob_div"> <div><strong>Divisions (÷)</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="prob_frac"> <div><strong>Fractions (¼, ½)</strong></div></label>
-              <label class="cb-row"><input type="checkbox" value="prob_geom"> <div><strong>Périmètres/Aires</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_frac"> <div><strong>Fractions (½,&nbsp;¼,&nbsp;⅓…)</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="prob_geom"> <div><strong>Périmètres, aires, volumes</strong></div></label>
             </div>
           </div>
       </div>
@@ -893,47 +893,169 @@
     /* =========================================
        LES BANQUES
        ========================================= */
-    // Problèmes : chaque objet a des valeurs vraisemblables [min, max], comptées dans la petite unité
-    // (mm, g, mL) ; un objet n'est tiré que si les nombres de la question lui vont.
+    // Problèmes (lot 7c, 28/11/2026) : des niveaux purs, comme les conversions.
+    //   1 : des entiers ; m et cm, kg et g, L et cL ; la réponse dans la petite unité, ou dans la grande quand elle tombe juste
+    //   2 : une virgule (jamais de zéro juste après) ; la moitié des réponses dans la grande unité ; km et t dans 3 questions sur 10
+    //   3 : les zéros (3,05 m ; 0,08 kg), mm, mL, km et t ; la moitié des réponses dans la grande unité
+    // Un objet : son énoncé ({A}, {B} les mesures, {N} un nombre, {F} une fraction), sa question ({U} l'unité de la réponse),
+    // ses conversions (« m-cm »…) et ses valeurs vraisemblables, comptées en mm, g ou mL : a [min, max] pour {A}, b pour {B}
+    // (sinon a), r pour le résultat ; « vals » : les seules valeurs permises pour {A} ; « n » : le nombre {N} [min, max] ;
+    // « petite » : {A} se dit seulement dans la petite unité (une canette de 33 cL, pas de 0,33 L ; un tour de piste de 400 m) ;
+    // « grands » : {A} et {B} peuvent être tous deux dans la grande unité (un pont de 3,5 t, un camion de 2,75 t).
     const PROBLEMES = {
-        add: {
-            length: [ {n:"un ruban", f:false, min:100, max:10000}, {n:"une ficelle", f:true, min:100, max:10000}, {n:"un tuyau", f:false, min:500, max:25000},
-                      {n:"une corde", f:true, min:500, max:20000}, {n:"un câble", f:false, min:200, max:20000}, {n:"un fil de fer", f:false, min:200, max:10000},
-                      {n:"une planche", f:true, min:200, max:4000} ],
-            mass: [ {n:"un sac de pommes", f:false, min:500, max:5000}, {n:"un colis", f:false, min:100, max:20000}, {n:"un sac à dos", f:false, min:500, max:10000},
-                    {n:"un filet de pommes de terre", f:false, min:1000, max:5000}, {n:"une valise", f:true, min:2000, max:25000} ],
-            cap: [ {n:"un seau d'eau", f:false, min:3000, max:15000}, {n:"un bidon de jus", f:false, min:500, max:5000},
-                   {n:"une carafe de sirop", f:true, min:500, max:2000}, {n:"un arrosoir", f:false, min:2000, max:12000} ]
-        },
-        sub: {
-            length: [ {n:"un ruban", min:1000, max:20000, a:["je coupe","je retire","j'enlève"]}, {n:"une ficelle", min:1000, max:10000, a:["je coupe","je retire","j'enlève"]},
-                      {n:"une planche", min:1000, max:4000, a:["je coupe","je retire"]}, {n:"un câble", min:1000, max:20000, a:["je coupe","je retire","j'enlève"]} ],
-            mass: [ {n:"un sac de riz", min:1000, max:25000, a:["j'utilise","je retire","je prends"]}, {n:"un bloc d'argile", min:1000, max:10000, a:["j'utilise","je retire","je prends"]},
-                    {n:"une meule de fromage", min:2000, max:40000, a:["je retire","je prends"]} ],
-            cap: [ {n:"une bouteille", min:250, max:2000, a:["je bois","je prends"]}, {n:"un pichet", min:500, max:2000, a:["je sers","je prends"]},
-                   {n:"un réservoir", min:5000, max:100000, a:["je prends","j'en retire"]}, {n:"un jerrican", min:5000, max:25000, a:["je prends","j'en retire"]} ]
-        },
-        mult: {
-            length: [ {n:"Une dalle de terrasse", p:"dalles de terrasse", f:true, min:300, max:600}, {n:"Une latte de parquet", p:"lattes de parquet", f:true, min:600, max:2000},
-                      {n:"Un carreau de faïence", p:"carreaux de faïence", f:false, min:100, max:300}, {n:"Une règle de classe", p:"règles de classe", f:true, min:200, max:1000} ],
-            mass: [ {n:"Un dictionnaire", p:"dictionnaires", min:800, max:2000}, {n:"Un cahier", p:"cahiers", min:40, max:300}, {n:"Un steak", p:"steaks", min:100, max:200},
-                    {n:"Un pavé de saumon", p:"pavés de saumon", min:120, max:250}, {n:"Un paquet de biscuits", p:"paquets de biscuits", min:100, max:500} ],
-            cap: [ {n:"Un grand verre", p:"grands verres", min:200, max:400}, {n:"Une canette", p:"canettes", min:250, max:500}, {n:"Une gourde", p:"gourdes", min:500, max:1500},
-                   {n:"Un biberon", p:"biberons", min:100, max:330}, {n:"Une tasse de café", p:"tasses de café", min:50, max:250} ]
-        },
-        div: {
-            length: [ {n:"une poutre", min:2000, max:8000}, {n:"une baguette de bois", min:500, max:2000}, {n:"un rouleau de fil", min:5000, max:50000}, {n:"une barre de métal", min:1000, max:4000} ],
-            mass: [ {n:"un gâteau", min:500, max:2000}, {n:"un gros pain", min:500, max:2000}, {n:"un tas de sable", min:20000, max:500000},
-                    {n:"un sac d'engrais", min:5000, max:25000}, {n:"un bloc de beurre", min:250, max:1000} ],
-            cap: [ {n:"un bidon d'eau", min:1000, max:5000}, {n:"une bouteille de jus", min:1000, max:2000}, {n:"une carafe d'eau", min:1000, max:2000}, {n:"un jerrican", min:5000, max:20000} ]
-        },
-        // fractions : le résultat ne dépasse pas « max » (g ou mL)
-        frac: {
-            mass: [ {n:"de beurre", max:500}, {n:"de sucre", max:1000}, {n:"de farine", max:1500}, {n:"de chocolat", max:400}, {n:"de viande", max:2000}, {n:"de gruyère râpé", max:300} ],
-            cap: [ {n:"de lait", max:2000}, {n:"de crème fraîche", max:500}, {n:"d'eau", max:3000}, {n:"d'huile", max:250}, {n:"de bouillon", max:3000}, {n:"de jus de pomme", max:2000} ]
-        },
-        // aire : longueur en m, largeur en cm
-        aire: [ {n:"Une planche", m:[2,4], cm:[20,40]}, {n:"Un tapis de couloir", m:[2,6], cm:[60,90]}, {n:"Une banderole", m:[2,6], cm:[30,90]} ]
+        add: [
+            { t: "Je mets bout à bout un ruban de {A} et un autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm', 'm-mm'], a: [100, 5000] },
+            { t: "Je mets bout à bout une ficelle de {A} et une autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm', 'm-mm'], a: [100, 5000] },
+            { t: "Je mets bout à bout une corde de {A} et une autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm'], a: [500, 20000] },
+            { t: "Je mets bout à bout un câble de {A} et un autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm', 'm-mm'], a: [200, 20000] },
+            { t: "Je mets bout à bout une baguette de bois de {A} et une autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm', 'm-mm'], a: [20, 2000] },
+            { t: "Je colle bout à bout une bande de papier de {A} et une autre de {B}.", q: "Quelle longueur cela fait-il en tout, en {U} ?", u: ['m-cm', 'm-mm'], a: [20, 3000] },
+            { t: "Je marche {A} le matin et {B} l'après-midi.", q: "Quelle distance ai-je parcourue en tout, en {U} ?", u: ['km-m'], a: [500000, 15000000] },
+            { t: "Je fais {A} à vélo puis {B} à pied.", q: "Quelle distance ai-je parcourue en tout, en {U} ?", u: ['km-m'], a: [1000000, 30000000], b: [200000, 3000000] },
+            { t: "Je cours {A}, puis je marche {B}.", q: "Quelle distance ai-je parcourue en tout, en {U} ?", u: ['km-m'], a: [1000000, 10000000], b: [200000, 3000000] },
+            { t: "Je pose sur la balance un sac de pommes de {A} et un autre de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['kg-g'], a: [500, 5000] },
+            { t: "Je pose sur la balance un colis de {A} et un autre de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['kg-g'], a: [200, 20000] },
+            { t: "Je pose sur la balance un filet de pommes de terre de {A} et un autre de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['kg-g'], a: [1000, 5000] },
+            { t: "Je pose sur la balance une valise de {A} et une autre de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['kg-g'], a: [2000, 25000] },
+            { t: "Dans mon cartable, il y a un classeur de {A} et une trousse de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['kg-g'], a: [400, 2000], b: [100, 500] },
+            { t: "Une camionnette pèse {A} à vide. On la charge de {B}.", q: "Quelle est sa masse chargée, en {U} ?", u: ['t-kg'], a: [1500000, 3500000], b: [100000, 1500000] },
+            { t: "Un camion pèse {A} à vide. On le charge de {B} de sable.", q: "Quelle est sa masse chargée, en {U} ?", u: ['t-kg'], a: [3000000, 12000000], b: [500000, 8000000] },
+            { t: "Un tracteur de {A} tire une remorque de {B}.", q: "Quelle masse cela fait-il en tout, en {U} ?", u: ['t-kg'], a: [2000000, 6000000], b: [500000, 4000000] },
+            { t: "Je verse dans une bassine un seau de {A} et une carafe de {B}.", q: "Combien de liquide y a-t-il en tout, en {U} ?", u: ['L-cL'], a: [3000, 12000], b: [250, 2000] },
+            { t: "Je verse dans un arrosoir un bidon de {A} et une bouteille de {B}.", q: "Combien de liquide y a-t-il en tout, en {U} ?", u: ['L-cL'], a: [1000, 5000], b: [250, 2000] },
+            { t: "Je verse dans un saladier une bouteille de jus de {A} et un verre de sirop de {B}.", q: "Combien de liquide y a-t-il en tout, en {U} ?", u: ['L-cL', 'L-mL'], a: [500, 2000], b: [20, 250] },
+            { t: "Je verse {A} de lait et {B} de crème.", q: "Combien de liquide y a-t-il en tout, en {U} ?", u: ['L-cL', 'L-mL'], a: [100, 2000], b: [20, 500] },
+            { t: "Je verse dans une casserole {A} d'eau et {B} de lait.", q: "Combien de liquide y a-t-il en tout, en {U} ?", u: ['L-cL', 'L-mL'], a: [250, 3000] }
+        ],
+        sub: [
+            { t: "Dans un ruban de {A}, je coupe {B}.", q: "Quelle longueur reste-t-il, en {U} ?", u: ['m-cm', 'm-mm'], a: [500, 10000] },
+            { t: "Dans une ficelle de {A}, je coupe {B}.", q: "Quelle longueur reste-t-il, en {U} ?", u: ['m-cm', 'm-mm'], a: [500, 10000] },
+            { t: "Dans une planche de {A}, je scie {B}.", q: "Quelle longueur reste-t-il, en {U} ?", u: ['m-cm', 'm-mm'], a: [1000, 4000] },
+            { t: "Dans un rouleau de tissu de {A}, je coupe {B}.", q: "Quelle longueur reste-t-il, en {U} ?", u: ['m-cm'], a: [1000, 20000] },
+            { t: "Dans une baguette de bois de {A}, je coupe {B}.", q: "Quelle longueur reste-t-il, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 2000] },
+            { t: "Une course fait {A}. J'ai déjà couru {B}.", q: "Combien me reste-t-il à courir, en {U} ?", u: ['km-m'], a: [1000000, 42000000], grands: true },
+            { t: "Une randonnée fait {A}. J'ai déjà marché {B}.", q: "Combien me reste-t-il à marcher, en {U} ?", u: ['km-m'], a: [2000000, 25000000], grands: true },
+            { t: "Pour aller chez ma grand-mère, il y a {A}. J'ai déjà fait {B} à vélo.", q: "Combien me reste-t-il à faire, en {U} ?", u: ['km-m'], a: [1000000, 15000000] },
+            { t: "Dans un sac de riz de {A}, j'utilise {B}.", q: "Combien de riz reste-t-il, en {U} ?", u: ['kg-g'], vals: ['500', '1000', '2000', '5000'], b: [50, 4500] },
+            { t: "Dans un sac de farine de {A}, j'utilise {B}.", q: "Combien de farine reste-t-il, en {U} ?", u: ['kg-g'], vals: ['1000', '1500', '2000', '5000'], b: [50, 4500] },
+            { t: "Dans un sac de terreau de {A}, j'utilise {B}.", q: "Combien de terreau reste-t-il, en {U} ?", u: ['kg-g'], a: [5000, 40000] },
+            { t: "Dans une meule de fromage de {A}, je coupe {B}.", q: "Combien de fromage reste-t-il, en {U} ?", u: ['kg-g'], a: [2000, 40000] },
+            { t: "Dans un paquet de sucre de {A}, j'utilise {B}.", q: "Combien de sucre reste-t-il, en {U} ?", u: ['kg-g'], vals: ['500', '1000'], b: [20, 950] },
+            { t: "Un camion peut porter {A}. Il est déjà chargé de {B}.", q: "Combien peut-il encore charger, en {U} ?", u: ['t-kg'], a: [2000000, 20000000] },
+            { t: "Un pont est interdit aux véhicules de plus de {A}. Un camion vide pèse {B}.", q: "Combien peut-il charger au plus pour passer, en {U} ?", u: ['t-kg'], vals: ['3500000', '7500000', '12000000', '19000000'], b: [1500000, 18000000], grands: true },
+            { t: "Une remorque peut porter {A}. Elle porte déjà {B}.", q: "Combien peut-elle encore porter, en {U} ?", u: ['t-kg'], a: [500000, 3500000] },
+            { t: "Dans une bouteille d'eau de {A}, je bois {B}.", q: "Combien d'eau reste-t-il, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['500', '1000', '1500', '2000'], b: [50, 1500] },
+            { t: "Dans une brique de lait de {A}, je verse {B} dans un bol.", q: "Combien de lait reste-t-il, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['500', '1000'], b: [100, 500] },
+            { t: "Dans un flacon de {A} de sauce soja, j'en verse {B}.", q: "Combien en reste-t-il, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['150', '250', '500', '1000'], b: [5, 400] },
+            { t: "Dans un bidon d'eau de {A}, je remplis un arrosoir de {B}.", q: "Combien d'eau reste-t-il dans le bidon, en {U} ?", u: ['L-cL'], a: [5000, 20000], b: [1000, 10000] },
+            { t: "Dans une carafe de {A}, je sers un verre de {B}.", q: "Combien reste-t-il dans la carafe, en {U} ?", u: ['L-cL', 'L-mL'], a: [500, 2000], b: [100, 330] }
+        ],
+        mult: [
+            { t: "Une latte de parquet mesure {A}.", q: "Quelle longueur font {N} lattes mises bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [500, 2000] },
+            { t: "Un carreau de faïence mesure {A}.", q: "Quelle longueur font {N} carreaux mis bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [100, 300], petite: true },
+            { t: "Une dalle de terrasse mesure {A}.", q: "Quelle longueur font {N} dalles mises bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 600], petite: true },
+            { t: "Une règle mesure {A}.", q: "Quelle longueur font {N} règles mises bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [150, 1000] },
+            { t: "Une planche mesure {A}.", q: "Quelle longueur font {N} planches mises bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [1000, 4000] },
+            { t: "Un tuyau mesure {A}.", q: "Quelle longueur font {N} tuyaux mis bout à bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [1000, 6000] },
+            { t: "Un sac de pommes de terre pèse {A}.", q: "Quelle est la masse de {N} sacs, en {U} ?", u: ['kg-g'], a: [2000, 10000] },
+            { t: "Un tour de piste fait {A}.", q: "Quelle distance font {N} tours, en {U} ?", u: ['km-m'], a: [200000, 400000], petite: true },
+            { t: "Pour aller à l'école, je fais {A}.", q: "Quelle distance cela fait-il en {N} trajets, en {U} ?", u: ['km-m'], a: [300000, 5000000] },
+            { t: "Une longueur de piscine fait {A}.", q: "Quelle distance font {N} longueurs, en {U} ?", u: ['km-m'], vals: ['25000', '50000'], n: [4, 40] },
+            { t: "Un pavé de saumon pèse {A}.", q: "Quelle est la masse de {N} pavés, en {U} ?", u: ['kg-g'], a: [120, 250], petite: true },
+            { t: "Un cahier pèse {A}.", q: "Quelle est la masse de {N} cahiers, en {U} ?", u: ['kg-g'], a: [80, 300], petite: true },
+            { t: "Une pièce de 2 € pèse {A}.", q: "Quelle est la masse de {N} pièces, en {U} ?", u: ['kg-g'], vals: ['8,5'], n: [10, 100] },
+            { t: "Un dictionnaire pèse {A}.", q: "Quelle est la masse de {N} dictionnaires, en {U} ?", u: ['kg-g'], a: [1000, 1500] },
+            { t: "Une boîte de conserve pèse {A}.", q: "Quelle est la masse de {N} boîtes, en {U} ?", u: ['kg-g'], a: [400, 850] },
+            { t: "Un melon pèse {A}.", q: "Quelle est la masse de {N} melons, en {U} ?", u: ['kg-g'], a: [800, 1500] },
+            { t: "Un sac de ciment pèse {A}.", q: "Quelle est la masse de {N} sacs, en {U} ?", u: ['t-kg'], vals: ['25000', '35000'], n: [10, 80] },
+            { t: "Une palette de briques pèse {A}.", q: "Quelle est la masse de {N} palettes, en {U} ?", u: ['t-kg'], a: [500000, 1200000] },
+            { t: "Une voiture pèse {A}.", q: "Quelle est la masse de {N} voitures, en {U} ?", u: ['t-kg'], a: [900000, 1800000] },
+            { t: "Un cheval pèse {A}.", q: "Quelle est la masse de {N} chevaux, en {U} ?", u: ['t-kg'], a: [400000, 900000] },
+            { t: "Une bouteille contient {A}.", q: "Combien contiennent {N} bouteilles, en {U} ?", u: ['L-cL', 'L-mL'], a: [250, 2000] },
+            { t: "Une canette contient {A}.", q: "Combien contiennent {N} canettes, en {U} ?", u: ['L-cL', 'L-mL'], a: [250, 500], petite: true },
+            { t: "Un verre contient {A}.", q: "Combien contiennent {N} verres, en {U} ?", u: ['L-cL', 'L-mL'], a: [100, 300], petite: true },
+            { t: "Une cuillère à soupe contient {A}.", q: "Combien contiennent {N} cuillères, en {U} ?", u: ['L-mL'], vals: ['15'], n: [4, 20] },
+            { t: "Un biberon contient {A}.", q: "Combien contiennent {N} biberons, en {U} ?", u: ['L-cL', 'L-mL'], a: [120, 330], petite: true },
+            { t: "Une gourde contient {A}.", q: "Combien contiennent {N} gourdes, en {U} ?", u: ['L-cL', 'L-mL'], a: [500, 1000] },
+            { t: "Un seau contient {A}.", q: "Combien contiennent {N} seaux, en {U} ?", u: ['L-cL'], a: [5000, 12000] }
+        ],
+        div: [
+            { t: "Je coupe un ruban de {A} en {N} morceaux égaux.", q: "Combien mesure un morceau, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 10000] },
+            { t: "Je coupe une planche de {A} en {N} étagères égales.", q: "Combien mesure une étagère, en {U} ?", u: ['m-cm', 'm-mm'], a: [1000, 4000], n: [2, 5] },
+            { t: "Je coupe une baguette de bois de {A} en {N} morceaux égaux.", q: "Combien mesure un morceau, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 2000] },
+            { t: "Je coupe une ficelle de {A} en {N} bouts égaux.", q: "Combien mesure un bout, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 5000] },
+            { t: "Une randonnée de {A} se fait en {N} étapes égales.", q: "Combien mesure une étape, en {U} ?", u: ['km-m'], a: [5000000, 40000000] },
+            { t: "Une route de {A} est coupée en {N} tronçons égaux.", q: "Combien mesure un tronçon, en {U} ?", u: ['km-m'], a: [500000, 10000000] },
+            { t: "Un relais de {A} est couru par {N} coureurs, chacun la même distance.", q: "Quelle distance court chaque coureur, en {U} ?", u: ['km-m'], a: [400000, 10000000], n: [2, 6] },
+            { t: "Je partage un gâteau de {A} en {N} parts égales.", q: "Combien pèse une part, en {U} ?", u: ['kg-g'], a: [500, 2000] },
+            { t: "Je partage {A} de bonbons en {N} sachets égaux.", q: "Combien pèse un sachet, en {U} ?", u: ['kg-g'], a: [100, 1000] },
+            { t: "Je partage {A} de pâte en {N} boules égales.", q: "Combien pèse une boule, en {U} ?", u: ['kg-g'], a: [300, 2000] },
+            { t: "Je range {A} de pommes dans {N} sacs, autant dans chacun.", q: "Combien pèse un sac, en {U} ?", u: ['kg-g'], a: [2000, 20000] },
+            { t: "On livre {A} de sable en {N} voyages égaux.", q: "Combien pèse un chargement, en {U} ?", u: ['t-kg'], a: [1000000, 20000000] },
+            { t: "Un camion transporte {A} de gravier en {N} voyages égaux.", q: "Combien pèse un chargement, en {U} ?", u: ['t-kg'], a: [2000000, 30000000] },
+            { t: "On partage {A} de foin entre {N} fermes, autant pour chacune.", q: "Combien de foin reçoit chaque ferme, en {U} ?", u: ['t-kg'], a: [1000000, 10000000] },
+            { t: "Je verse {A} de jus dans {N} verres, autant dans chacun.", q: "Combien y a-t-il dans un verre, en {U} ?", u: ['L-cL', 'L-mL'], a: [500, 2000], r: [50, 300] },
+            { t: "Je partage {A} de sirop de grenadine dans {N} verres.", q: "Combien y a-t-il dans un verre, en {U} ?", u: ['L-cL', 'L-mL'], a: [200, 1000], r: [20, 150], petite: true },
+            { t: "Je verse un bidon de {A} dans {N} arrosoirs, autant dans chacun.", q: "Combien y a-t-il dans un arrosoir, en {U} ?", u: ['L-cL'], a: [5000, 20000], r: [1000, 10000] },
+            { t: "Je remplis {N} bouteilles identiques avec {A} d'eau.", q: "Combien contient une bouteille, en {U} ?", u: ['L-cL', 'L-mL'], a: [1000, 10000], r: [250, 2000] }
+        ],
+        frac: [
+            { t: "Je coupe {F} d'un ruban de {A}.", q: "Combien mesure ce morceau, en {U} ?", u: ['m-cm', 'm-mm'], a: [200, 5000] },
+            { t: "Je peins {F} d'une clôture de {A}.", q: "Quelle longueur ai-je peinte, en {U} ?", u: ['m-cm'], a: [2000, 30000] },
+            { t: "Je coupe {F} d'une baguette de bois de {A}.", q: "Combien mesure ce morceau, en {U} ?", u: ['m-cm', 'm-mm'], a: [300, 2000] },
+            { t: "Je découpe {F} d'une bande de papier de {A}.", q: "Combien mesure ce morceau, en {U} ?", u: ['m-cm', 'm-mm'], a: [200, 3000] },
+            { t: "Je déroule {F} d'un tuyau d'arrosage de {A}.", q: "Quelle longueur de tuyau ai-je déroulée, en {U} ?", u: ['m-cm'], a: [5000, 30000] },
+            { t: "J'ai parcouru {F} d'un trajet de {A}.", q: "Quelle distance ai-je parcourue, en {U} ?", u: ['km-m'], a: [400000, 20000000] },
+            { t: "J'ai fait {F} d'une randonnée de {A}.", q: "Quelle distance ai-je parcourue, en {U} ?", u: ['km-m'], a: [2000000, 25000000] },
+            { t: "Pour une recette, j'utilise {F} d'un sac de farine de {A}.", q: "Combien de farine est-ce, en {U} ?", u: ['kg-g'], a: [500, 5000] },
+            { t: "Pour une recette, j'utilise {F} d'un paquet de riz de {A}.", q: "Combien de riz est-ce, en {U} ?", u: ['kg-g'], a: [250, 2000] },
+            { t: "Pour une recette, j'utilise {F} d'une plaquette de beurre de {A}.", q: "Combien de beurre est-ce, en {U} ?", u: ['kg-g'], vals: ['250', '500'], petite: true },
+            { t: "Je mange {F} d'une tablette de chocolat de {A}.", q: "Combien de chocolat ai-je mangé, en {U} ?", u: ['kg-g'], vals: ['100', '200'], petite: true },
+            { t: "Nous mangeons {F} d'un gâteau de {A}.", q: "Combien de gâteau avons-nous mangé, en {U} ?", u: ['kg-g'], a: [500, 3000] },
+            { t: "Je donne {F} d'un sac de pommes de {A} à ma voisine.", q: "Combien de pommes est-ce, en {U} ?", u: ['kg-g'], a: [1000, 6000] },
+            { t: "Un camion décharge {F} d'un tas de {A} de sable.", q: "Combien de sable est-ce, en {U} ?", u: ['t-kg'], a: [500000, 10000000] },
+            { t: "On a déjà livré {F} d'une commande de {A} de bois.", q: "Combien de bois a-t-on livré, en {U} ?", u: ['t-kg'], a: [1000000, 20000000] },
+            { t: "Je bois {F} d'une bouteille de lait de {A}.", q: "Combien de lait est-ce, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['500', '1000', '1500', '2000'] },
+            { t: "Je verse {F} d'une bouteille de {A}.", q: "Combien est-ce, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['250', '330', '500', '750', '1000', '1500', '2000'] },
+            { t: "J'utilise {F} d'un bidon d'eau de {A}.", q: "Combien d'eau est-ce, en {U} ?", u: ['L-cL', 'L-mL'], a: [2000, 20000] },
+            { t: "Je verse {F} d'une brique de jus de {A}.", q: "Combien de jus est-ce, en {U} ?", u: ['L-cL', 'L-mL'], vals: ['200', '250', '1000'] }
+        ],
+        // Périmètres, aires, volumes : {A} la longueur (dans la grande unité), {B} la largeur ; b < a
+        perim: [
+            { t: "Une nappe rectangulaire mesure {A} de long et {B} de large.", q: "Quel est son périmètre, en {U} ?", u: ['m-cm'], a: [1000, 4000], b: [500, 2000] },
+            { t: "Un potager rectangulaire mesure {A} sur {B}.", q: "Quelle longueur de clôture faut-il pour en faire le tour, en {U} ?", u: ['m-cm'], a: [2000, 15000], b: [1000, 8000] },
+            { t: "Une table rectangulaire mesure {A} de long et {B} de large.", q: "Quel est son périmètre, en {U} ?", u: ['m-cm'], a: [1000, 3000], b: [600, 1200] },
+            { t: "Un tapis rectangulaire mesure {A} de long et {B} de large.", q: "Quel est son périmètre, en {U} ?", u: ['m-cm'], a: [1000, 4000], b: [500, 2500] },
+            { t: "Un champ rectangulaire mesure {A} sur {B}.", q: "Quel est son périmètre, en {U} ?", u: ['km-m'], a: [100000, 2000000], b: [50000, 1000000] },
+            { t: "Un parc rectangulaire mesure {A} sur {B}.", q: "Quelle distance fait-on en faisant le tour du parc, en {U} ?", u: ['km-m'], a: [200000, 2000000], b: [100000, 1000000] }
+        ],
+        // l'aire au niveau 1 : {A} en m, {B} en cm (moins de 1 m) ; la réponse en cm², un entier (2 m × 80 cm = 200 cm × 80 cm = 16 000 cm²)
+        aire1: [
+            { t: "Une affiche mesure {A} de long et {B} de large.", a: [1000, 2000], b: [400, 900] },
+            { t: "Un paillasson mesure {A} de long et {B} de large.", a: [1000, 1000], b: [400, 800] },
+            { t: "Une porte mesure {A} de haut et {B} de large.", a: [2000, 2000], b: [700, 950] },
+            { t: "Un drapeau mesure {A} de long et {B} de large.", a: [1000, 3000], b: [500, 990] },
+            { t: "Un tapis de bain mesure {A} de long et {B} de large.", a: [1000, 1000], b: [500, 800] }
+        ],
+        // l'aire aux niveaux 2 et 3 : {A} en m, {B} en cm ; la réponse en m²
+        aire: [
+            { t: "Une banderole mesure {A} de long et {B} de large.", a: [2000, 8000], b: [300, 1000] },
+            { t: "Un tapis rectangulaire mesure {A} de long et {B} de large.", a: [1000, 4000], b: [500, 3000] },
+            { t: "Une planche mesure {A} de long et {B} de large.", a: [1000, 4000], b: [150, 400] },
+            { t: "Un tapis de couloir mesure {A} de long et {B} de large.", a: [2000, 6000], b: [600, 900] },
+            { t: "Un carreau carré mesure {B} de côté.", carre: true, b: [100, 600] }
+        ],
+        // le volume : au niveau 2, les trois mesures en cm ; au niveau 3, deux en m et une en cm ; la réponse en L (r : [min, max] en L)
+        vol: [
+            { t: "Un aquarium mesure {A} × {B} × {C}.", q: "Combien d'eau contient-il, en {U} ?", lvl: 2, a: [200, 1200], r: [10, 400] },
+            { t: "Un bac à fleurs mesure {A} × {B} × {C}.", q: "Combien de terreau faut-il pour le remplir, en {U} ?", lvl: 2, a: [200, 1000], r: [5, 100] },
+            { t: "Une glacière mesure {A} × {B} × {C}.", q: "Quel est son volume, en {U} ?", lvl: 2, a: [200, 700], r: [10, 80] },
+            { t: "Un carton mesure {A} × {B} × {C}.", q: "Quel est son volume, en {U} ?", lvl: 2, a: [100, 800], r: [5, 150] },
+            { t: "Une citerne mesure {A} × {B} × {C}.", q: "Combien d'eau contient-elle, en {U} ?", lvl: 3, a: [500, 3000], r: [500, 10000] },
+            { t: "Un bassin mesure {A} × {B} × {C}.", q: "Combien d'eau contient-il, en {U} ?", lvl: 3, a: [300, 5000], r: [500, 20000] },
+            { t: "Une benne mesure {A} × {B} × {C}.", q: "Quel est son volume, en {U} ?", lvl: 3, a: [500, 4000], r: [2000, 30000] },
+            { t: "Un bac à sable mesure {A} × {B} × {C}.", q: "Combien de sable faut-il pour le remplir, en {U} ?", lvl: 3, a: [200, 2500], r: [100, 3000] }
+        ]
     };
 
     // La frise des repères : un émoji seulement quand il est à la bonne échelle.
@@ -1510,158 +1632,334 @@
       const q = questionDeConversion(base, valStr, sourceUnit, targetUnit, posUnite(base, sourceUnit), posUnite(base, targetUnit));
       return { ...q, isProblem: true, problemText, correctionText, textId: problemText, reponse: normaliser(String(reponse)), uniteReponse };
     }
-    // un tirage qui peut échouer (aucun objet ne va avec les nombres) : on recommence
-    function tirer(f) { for (let i = 0; i < 500; i++) { const r = f(); if (r) return r; } throw new Error("tirage impossible"); }
-
-    // grandeurs des problèmes : 10^FIN = petite unité (mm, g, mL) dans la grande unité (m, kg, L)
-    const GRANDEURS = {
-      length: { s: SCHEMAS.length, grand: 'm', petit: 'cm', fin: 3, pf: 1 },   // 1 cm = 10 mm
-      mass:   { s: SCHEMAS.mass,   grand: 'kg', petit: 'g',  fin: 3, pf: 0 },
-      cap:    { s: SCHEMAS.volL,   grand: 'L',  petit: 'cL', fin: 3, pf: 1 }    // 1 cL = 10 mL
+    // ---- les problèmes (lot 7c, 28/11/2026) : une recette par série, comme les conversions (lot 6) et les ordres de grandeur (lot 7b)
+    // les conversions des problèmes, et le tableau montré pour chacune
+    const PAIRES_PB = {
+      'm-cm': { g: 'len', grand: 'm', petit: 'cm', s: 'length' }, 'm-mm': { g: 'len', grand: 'm', petit: 'mm', s: 'length' },
+      'km-m': { g: 'len', grand: 'km', petit: 'm', s: 'length' }, 'kg-g': { g: 'mass', grand: 'kg', petit: 'g', s: 'mass' },
+      't-kg': { g: 'mass', grand: 't', petit: 'kg', s: 'massT' }, 'L-cL': { g: 'cap', grand: 'L', petit: 'cL', s: 'volL' },
+      'L-mL': { g: 'cap', grand: 'L', petit: 'mL', s: 'volL' }
     };
+    const BASE_PB = { len: 'mm', mass: 'g', cap: 'mL' };
+    // une mesure en nombre entier d'une unité très fine (le centième de mm, de g, de mL) : on additionne, multiplie, partage sans erreur
+    const FIN_PB = { len: 5, mass: 2, cap: 5 };
+    const enFin = (v, u, g) => versEntier(valeurDe(v, u), FIN_PB[g]);
+    const versUnite = (X, u, g) => depuisEntier(X, FIN_PB[g] + PUISSANCE[u]);
+    // en mm, g ou mL (les bornes des objets)
+    const enBase = (v, u, g) => valeur(decaler(valeurDe(v, u), -PUISSANCE[BASE_PB[g]]));
+    const dansBornes = (b, v, u, g) => !b || (enBase(v, u, g) >= b[0] && enBase(v, u, g) <= b[1]);
+    // le produit exact de deux nombres écrits « 1,5 »
+    const produit = (a, b) => depuisEntier(versEntier(a, nbDecimales(a)) * versEntier(b, nbDecimales(b)), nbDecimales(a) + nbDecimales(b));
+    const fort = (s) => `<strong>${s}</strong>`;
+    // une valeur de la banque (comptée en mm, g ou mL) écrite dans l'unité u
+    const depuisLaBase = (v, u, g) => decaler(v, PUISSANCE[BASE_PB[g]] - PUISSANCE[u]);
+    // Une mesure dans la petite unité se dit dans la petite unité : jamais un nombre rond de la grande (« 4 000 g », « 200 cm »),
+    // et, à côté d'une mesure dans la grande unité, moins d'une grande unité (« 2 kg et 450 g », pas « 1,2 L et 260 cL » ;
+    // pour les km, moins de 10 km : « 10 km, dont 6 500 m déjà courus »). « seule » : elle est seule dans l'énoncé (« 75 cm en 3 morceaux »).
+    // une contenance se dit avec deux chiffres au plus (1,5 L ; 75 cL ; 650 mL ; pas « un seau de 8,58 L »)
+    const chiffresUtiles = (s) => s.replace(',', '').replace(/^0+/, '').replace(/0+$/, '').length;
+    const contenanceRonde = (v, g) => g !== 'cap' || chiffresUtiles(v) <= 2;
+    // une mesure dite dans la grande unité : au moins 1 m, au moins 1 kg (pas « une ficelle de 0,3 m et une autre de 20 cm ») ;
+    // les litres, les km et les tonnes peuvent commencer par 0 (0,25 L de lait, 0,8 km, 0,5 t)
+    const bienDitEnGrande = (v, P) => !(P.grand === 'm' || P.grand === 'kg') || valeur(v) >= 1;
+    function bienDitEnPetite(v, P, g, seule, plafond) {
+      const X = enFin(v, P.petit, g), un = enFin('1', P.grand, g);
+      if (X % un === 0) return false;
+      if (P.petit === 'mm' && X % enFin('10', 'cm', g) === 0) return false;      // « 700 mm » se dit 70 cm
 
+      if (seule) return true;
+      return X < (plafond || (P.grand === 'km' ? 10 : 1)) * un;
+    }
+
+    // La recette d'une série de 10, par niveau : la grandeur (4 longueurs, 3 masses, 3 capacités), les deux unités, le sens
+    // (P : la réponse dans la petite unité ; G : dans la grande) et « z » : un zéro à placer (3,05 m ; 0,05 kg).
+    //   1 : m-cm, kg-g, L-cL ; 4 réponses sur 10 dans la grande unité, quand elle tombe juste (4 cahiers de 250 g = 1 kg)
+    //   2 : km et t dans 3 questions ; 5 réponses dans la grande unité (0,9 kg ; 2,4 t)
+    //   3 : mm et mL dans 4 questions, km et t dans 2 ; 5 dans la grande unité ; un zéro dans 6
+    // Périmètres, aires, volumes : 5 périmètres et 5 aires au niveau 1 ; 4 périmètres, 3 aires, 3 volumes (→ litres) ensuite.
+    // Fractions : ½, ¼, ¾ au niveau 1 ; le tiers dans 3 questions au niveau 2 ; le cinquième et le dixième dans 4 au niveau 3
+    // (chaque fraction placée sur une sorte où elle tombe juste : le dixième de 500 g = 0,05 kg, le tiers de 1,5 L = 500 mL).
+    // Les recettes sont rangées pour qu'une série de 5 en prenne une moitié équilibrée.
+    const RECETTES_PB = {
+      1: 'len m-cm P|mass kg-g G|cap L-cL P|len m-cm G|mass kg-g P|cap L-cL G|len m-cm P|mass kg-g P|len m-cm G|cap L-cL P',
+      2: 'len km-m G|mass kg-g P|cap L-cL G|len m-cm P|mass t-kg G|cap L-cL P|len m-cm G|mass kg-g G|len km-m P|cap L-cL P',
+      3: 'len m-mm P|mass kg-g G z|cap L-mL P|len km-m G z|mass t-kg P z|cap L-cL G z|len m-cm P z|mass kg-g P z|len m-mm G|cap L-mL G'
+    };
+    const RECETTES_GEOM = {
+      1: 'perim m-cm P|aire|perim m-cm G|aire|perim m-cm P|aire|perim m-cm G|aire|perim m-cm P|aire',
+      2: 'perim m-cm P|aire|vol|perim m-cm G|aire|vol|perim m-cm P|aire|vol|perim m-cm G',
+      3: 'perim km-m P|aire z|vol|perim m-cm G z|aire z|vol|perim m-cm P z|aire|vol|perim km-m G'
+    };
+    const FRACTIONS_PB = { 1: '1/2 1/4 3/4 1/2 1/4 3/4 1/2 1/4 3/4 1/2', 2: '1/3 1/2 3/4 1/4 1/3 1/2 3/4 1/3 1/4 1/2', 3: '1/5 1/10 1/3 1/2 1/4 1/5 3/4 1/10 3/4 1/2' };
+    const NOMS_FRACTIONS = { '1/2': 'la moitié', '1/4': 'le quart', '3/4': 'les trois quarts', '1/3': 'le tiers', '1/5': 'le cinquième', '1/10': 'le dixième' };
+    function recetteDuProbleme(type, level) {
+      const fr = type === 'prob_frac' ? FRACTIONS_PB[level].split(' ') : [];
+      return (type === 'prob_geom' ? RECETTES_GEOM : RECETTES_PB)[level].split('|').map((txt, i) => {
+        const m = txt.split(' '), s = { g: m[0], paire: m.find(x => PAIRES_PB[x]) || null, sens: m.find(x => x === 'P' || x === 'G') || null, z: m.includes('z') };
+        if (fr.length) s.frac = fr[i];
+        return s;
+      });
+    }
+    // La sorte de la question en cours. La pioche d'une case est faite d'un coup pour la série : toute la recette autant de fois
+    // qu'elle y entre, puis, pour le reste, la grandeur la moins prévue dans la série (toutes les cases de problèmes ensemble),
+    // puis le sens le moins prévu : une série courte ou mélangée garde ses trois grandeurs.
+    function sorteDuProbleme(type, level) {
+      const R = recetteDuProbleme(type, level);
+      if (!serieEnCours) return pick(R);
+      const s = serieEnCours, cle = type + '|' + level + '|pb';
+      if (s.courante[cle]) return s.courante[cle];
+      const p = s.pioches[cle] || (s.pioches[cle] = []);
+      if (!p.length) {
+        const n = Math.max(s.attendus[type + '|' + level] || R.length, 1), plan = s.planPb || (s.planPb = {});
+        const vu = (k) => plan[k] || 0, choisis = [];
+        let reste = [];
+        while (choisis.length < n) {
+          if (!reste.length) reste = R.slice();
+          let c = reste;
+          if (reste.length > n - choisis.length) {
+            const m1 = Math.min(...c.map(x => vu(x.g))); c = c.filter(x => vu(x.g) === m1);
+            const m2 = Math.min(...c.map(x => vu('sens' + x.sens))); c = c.filter(x => vu('sens' + x.sens) === m2);
+          }
+          const x = pick(c);
+          reste.splice(reste.indexOf(x), 1); choisis.push(x);
+          plan[x.g] = vu(x.g) + 1; plan['sens' + x.sens] = vu('sens' + x.sens) + 1;
+        }
+        p.push(...shuffle(choisis));
+      }
+      return s.courante[cle] = p.shift();
+    }
+
+    // un nombre de l'énoncé, dans la grande unité (« 2,5 ») ou dans la petite (« 750 ») ; le niveau trie ensuite
+    const parmi = (formes, poids) => { let t = rand(1, poids.reduce((x, y) => x + y, 0)); for (let i = 0; i < poids.length; i++) { t -= poids[i]; if (t <= 0) return formes[i](); } };
+    function nombrePb(level, grand, k) {
+      let n;
+      if (grand) n = parmi([() => rand(1, 9), () => rand(10, 20), () => `${rand(0, 9)},${rand(1, 9)}`, () => `${rand(0, 9)},${rand(1, 9)}${rand(1, 9)}`, () => `${rand(0, 9)},0${rand(1, 9)}`],
+                           level === 1 ? [1] : level === 2 ? [2, 1, 4, 2] : [1, 1, 3, 2, 4]);
+      else if (k === 2) n = parmi([() => rand(1, 9) * 10, () => rand(10, 39) * 10, () => pick([25, 75]), () => rand(11, 99), () => rand(1, 9)],
+                                  level === 1 ? [3, 2, 1] : level === 2 ? [3, 2, 1, 3] : [2, 2, 1, 3, 1]);
+      else n = parmi([() => rand(1, 19) * 50, () => rand(1, 9) * 100, () => rand(1, 9) * 1000, () => rand(1, 9) * 1000 + 500, () => rand(11, 99) * 10, () => rand(5, 99), () => rand(1, 9) * 1000 + rand(1, 9) * 100],
+                     level === 1 ? [3, 2, 1] : level === 2 ? [3, 2, 1, 2, 1] : [2, 2, 1, 1, 2, 2, 1]);
+      return normaliser(String(n));
+    }
+    // Ce que le niveau permet, vérifié sur tous les nombres (énoncé, conversions, réponse) :
+    //   1 : aucune virgule · 2 : une virgule au moins, jamais de zéro juste après (le volume de l'aquarium peut tomber juste : 60 L)
+    //   3 : une virgule au moins ; un zéro juste après la virgule quand la recette le demande (« z »)
+    // Partout : 2 chiffres après la virgule au plus, rien de nul.
+    function bonPourLeNiveau(level, nombres, sorte, relache, sansVirgule) {
+      if (nombres.some(n => nbDecimales(n) > 2 || valeur(n) <= 0)) return false;
+      const virgule = nombres.some(n => n.indexOf(',') >= 0), zero = nombres.some(n => /,0/.test(n));
+      if (level === 1) return !virgule;
+      if (!virgule && !sansVirgule) return false;
+      if (level === 2) return !zero;
+      return !sorte.z || zero || relache > 0;
+    }
+    // un objet de la case qui va avec les deux unités : d'abord ceux qui sont le moins sortis dans la série ; s'ils ne vont pas avec
+    // les nombres du niveau, ceux qui sont sortis une fois de plus (« ecart »), puis tous
+    function objetPb(liste, filtre, ecart) {
+      const c = liste.filter(filtre), vus = (o) => (serieEnCours && serieEnCours.objets['pb:' + o.t]) || 0;
+      if (!c.length) return null;
+      const min = Math.min(...c.map(vus));
+      return pick(c.filter(o => vus(o) <= min + ecart));
+    }
+    function enonce(o, champs, U) {
+      let t = `${o.t} ${o.q || 'Quelle est son aire, en {U} ?'}`;
+      for (const [k, v] of Object.entries({ ...champs, U })) t = t.split(`{${k}}`).join(fort(v));
+      return t;
+    }
+    // la question finie : la conversion montrée dans le tableau ; « pb » dit ce que la recette demandait (pour les tests et les tirages)
+    function finirPb(o, sorte, level, texte, corr, conv, reponse, U, donnees) {
+      if (reponse.length > 10) return null;
+      const q = problemeAvec(SCHEMAS[conv.s], conv.v, conv.de, conv.vers, texte, corr, reponse, U);
+      q.objetsVus = ['pb:' + o.t];
+      q.pb = { niveau: level, g: sorte.g, paire: sorte.paire, sens: sorte.sens, z: sorte.z, frac: sorte.frac || null, objet: o.t, donnees, unite: U };
+      return q;
+    }
+
+    // Additions et soustractions : deux mesures, l'une dans la grande unité, l'autre dans la petite (« 2,5 km et 800 m ») ;
+    // au niveau 1, pour une réponse dans la grande unité, souvent les deux dans la petite (« 150 cm et 50 cm » : 2 m) ;
+    // aux niveaux 2 et 3, une fois sur trois, les deux dans la grande quand l'objet s'y prête (un pont de 3,5 t, un camion de 2,75 t : 750 kg).
+    // On convertit la mesure qui n'est pas dans l'unité de la réponse, puis on calcule ; si les deux n'y sont pas, on calcule d'abord.
+    function deuxMesures(famille, level, sorte, relache, ecart) {
+      const P = PAIRES_PB[sorte.paire], g = P.g, U = sorte.sens === 'G' ? P.grand : P.petit, k = PUISSANCE[P.grand] - PUISSANCE[P.petit];
+      const o = objetPb(PROBLEMES[famille], x => x.u.includes(sorte.paire), ecart);
+      if (!o) return null;
+      let uA = P.grand, uB = P.petit;
+      if (level === 1 && sorte.sens === 'G') uA = P.petit;
+      else if (level > 1 && o.grands && sorte.sens === 'P' && rand(1, 3) === 1) uB = P.grand;
+      let a = o.vals ? depuisLaBase(pick(o.vals), uA, g) : nombrePb(level, uA === P.grand, k), b = nombrePb(level, uB === P.grand, k);
+      if (uA === P.petit && !o.vals) { const tout = rand(1, 4) * 10 ** k; a = String(famille === 'add' ? tout - Number(b) : tout + Number(b)); }
+      if ((!o.vals && !dansBornes(o.a, a, uA, g)) || !dansBornes(o.b || (famille === 'sub' ? [1, o.a[1]] : o.a), b, uB, g)) return null;
+      // au niveau 1, vers la grande unité : deux mesures dans la petite (« 150 cm et 50 cm » : 2 m), chacune moins de 5 grandes unités
+      if (!contenanceRonde(a, g) || !contenanceRonde(b, g)) return null;
+      if ((uA === P.grand && !bienDitEnGrande(a, P)) || (uB === P.grand && !bienDitEnGrande(b, P))) return null;
+      if (uA === P.petit && !bienDitEnPetite(a, P, g, false, 5)) return null;
+      if (uB === P.petit && !bienDitEnPetite(b, P, g, false, uA === P.petit ? 5 : 0)) return null;
+      const XA = enFin(a, uA, g), XB = enFin(b, uB, g);
+      if (famille === 'sub' && XB >= XA) return null;                       // jamais de reste nul ou négatif
+      if (XA === XB) return null;
+      const X = famille === 'add' ? XA + XB : XA - XB, r = versUnite(X, U, g), op = famille === 'add' ? '+' : '−';
+      let corr, conv, nombres;
+      if (uA !== U && uB !== U) {
+        const r0 = versUnite(X, uA, g);
+        corr = `1) Calcul${NBSP}: ${ecrire(a)} ${op} ${ecrire(b)} = ${mesure(r0, uA)}.<br> 2) Conversion${NBSP}: ${mesure(r0, uA)} = ${fort(mesure(r, U))}.`;
+        conv = { s: P.s, v: r0, de: uA, vers: U }; nombres = [a, b, r0, r];
+      } else {
+        const [v, u] = uA !== U ? [a, uA] : [b, uB], c = versUnite(enFin(v, u, g), U, g), [x, y] = uA !== U ? [c, b] : [a, c];
+        corr = `1) Conversion${NBSP}: ${mesure(v, u)} = ${mesure(c, U)}.<br> 2) Calcul${NBSP}: ${ecrire(x)} ${op} ${ecrire(y)} = ${fort(mesure(r, U))}.`;
+        conv = { s: P.s, v, de: u, vers: U }; nombres = [a, b, c, r];
+      }
+      if (!bonPourLeNiveau(level, nombres, sorte, relache) || (r === a && uA === U) || (r === b && uB === U)) return null;
+      return finirPb(o, sorte, level, enonce(o, { A: mesure(a, uA), B: mesure(b, uB) }, U), corr, conv, r, U, [mesure(a, uA), mesure(b, uB)]);
+    }
+
+    // Multiplications, divisions, fractions : une mesure et un nombre (ou une fraction).
+    // Vers la petite unité (2 kg en g), on convertit d'abord : on calcule ensuite avec des entiers.
+    // Vers la grande unité (75 cm en m), on calcule d'abord dans la petite unité, puis on convertit le résultat.
+    function uneMesure(famille, level, sorte, relache, ecart) {
+      const P = PAIRES_PB[sorte.paire], g = P.g, versPetite = sorte.sens === 'P', k = PUISSANCE[P.grand] - PUISSANCE[P.petit];
+      const U = versPetite ? P.petit : P.grand, uA = versPetite ? P.grand : P.petit;
+      const o = objetPb(PROBLEMES[famille], x => x.u.includes(sorte.paire) && !(x.petite && versPetite), ecart);
+      if (!o) return null;
+      let a = o.vals ? depuisLaBase(pick(o.vals), uA, g) : nombrePb(level, versPetite, k);
+      // multiplication vers la grande unité avec un zéro (« 7 cahiers de 150 g = 1,05 kg ») : une fois sur deux, on part du résultat
+      let nPris = null;
+      if (famille === 'mult' && sorte.z && !versPetite && !o.vals && rand(1, 2) === 1) {
+        const [n0, n1] = o.n || [2, 9], T = rand(1, 9) * 10 ** k + rand(1, 9) * 10 ** (k - 2);
+        nPris = rand(n0, n1);
+        if (T % nPris) return null;
+        a = String(T / nPris);
+      }
+      if (!o.vals && !dansBornes(o.a, a, uA, g)) return null;
+      if (!versPetite && !bienDitEnPetite(a, P, g, true)) return null;
+      if (!o.vals && !contenanceRonde(a, g)) return null;
+      if (versPetite && !bienDitEnGrande(a, P)) return null;
+      const XA = enFin(a, uA, g);
+      let X, n = null, nu = 1, de = 1;
+      if (famille === 'frac') { [nu, de] = sorte.frac.split('/').map(Number); if ((XA * nu) % de) return null; X = XA * nu / de; }
+      else {
+        const [n0, n1] = o.n || [2, 9];
+        n = nPris || rand(n0, n1);
+        if (famille === 'mult') X = XA * n; else { if (XA % n) return null; X = XA / n; }
+      }
+      if (o.r && !dansBornes(o.r, versUnite(X, BASE_PB[g], g), BASE_PB[g], g)) return null;
+      const r = versUnite(X, U, g);
+      // on calcule avec des entiers dans la petite unité (pas « 124,75 cL » ni « 40,1 cm »)
+      if (versUnite(X, P.petit, g).indexOf(',') >= 0) return null;
+      // une part ou une fraction qui tombe sur des mètres ronds se dit en mètres (« 3 m en 3 bouts » : pas « 100 cm »)
+      if (famille !== 'mult' && versPetite && X % enFin('1', P.grand, g) === 0) return null;
+      // le calcul, écrit dans l'unité où on le fait
+      const calcul = (v, u, res) => famille === 'mult' ? `${n} × ${mesure(v, u)} = ${res}`
+        : famille === 'div' ? `${mesure(v, u)} ÷ ${n} = ${res}`
+        : `${NOMS_FRACTIONS[sorte.frac]} de ${mesure(v, u)}${NBSP}: ${ecrire(v)} ÷ ${de}${nu > 1 ? ` × ${nu}` : ''} = ${res}`;
+      let corr, conv, nombres;
+      if (versPetite) {
+        const c = versUnite(XA, U, g);
+        corr = `1) Conversion${NBSP}: ${mesure(a, uA)} = ${mesure(c, U)}.<br> 2) Calcul${NBSP}: ${calcul(c, U, fort(mesure(r, U)))}.`;
+        conv = { s: P.s, v: a, de: uA, vers: U }; nombres = [a, c, r];
+      } else {
+        const r0 = versUnite(X, uA, g);
+        corr = `1) Calcul${NBSP}: ${calcul(a, uA, mesure(r0, uA))}.<br> 2) Conversion${NBSP}: ${mesure(r0, uA)} = ${fort(mesure(r, U))}.`;
+        conv = { s: P.s, v: r0, de: uA, vers: U }; nombres = [a, r0, r];
+      }
+      if (!bonPourLeNiveau(level, nombres, sorte, relache)) return null;
+      const champs = { A: mesure(a, uA) };
+      if (n !== null) champs.N = String(n);
+      if (famille === 'frac') champs.F = NOMS_FRACTIONS[sorte.frac];
+      return finirPb(o, sorte, level, enonce(o, champs, U), corr, conv, r, U, [mesure(a, uA)]);
+    }
+
+    // Périmètres, aires, volumes
+    function figurePb(famille, level, sorte, relache, ecart) {
+      if (sorte.g === 'perim') {
+        const P = PAIRES_PB[sorte.paire], g = 'len', U = sorte.sens === 'G' ? P.grand : P.petit, k = PUISSANCE[P.grand] - PUISSANCE[P.petit];
+        const o = objetPb(PROBLEMES.perim, x => x.u.includes(sorte.paire), ecart);
+        // les deux côtés dans la petite unité (650 m sur 350 m → en km) seulement pour les km
+        const uA = sorte.sens === 'G' && sorte.paire === 'km-m' && rand(1, 2) === 1 ? P.petit : P.grand, uB = P.petit;
+        const a = nombrePb(level, uA === P.grand, k), b = nombrePb(level, false, k);
+        if (!dansBornes(o.a, a, uA, g) || !dansBornes(o.b, b, uB, g) || enBase(b, uB, g) >= enBase(a, uA, g)) return null;
+        if (!bienDitEnPetite(b, P, g, true) || (uA === P.petit && !bienDitEnPetite(a, P, g, true))) return null;
+        const XA = enFin(a, uA, g), XB = enFin(b, uB, g), r = versUnite(2 * (XA + XB), U, g);
+        let corr, conv, nombres;
+        if (uA !== U && uB !== U) {
+          const r0 = versUnite(2 * (XA + XB), uA, g);
+          corr = `1) Calcul${NBSP}: (${ecrire(a)} + ${ecrire(b)}) × 2 = ${mesure(r0, uA)}.<br> 2) Conversion${NBSP}: ${mesure(r0, uA)} = ${fort(mesure(r, U))}.`;
+          conv = { s: P.s, v: r0, de: uA, vers: U }; nombres = [a, b, r0, r];
+        } else if (level === 1 && U === P.grand) {
+          // niveau 1, la réponse en m : on passe tout en cm (des entiers), puis on convertit le résultat (2 m et 50 cm : 500 cm = 5 m)
+          const ac = versUnite(XA, P.petit, g), r0 = versUnite(2 * (XA + XB), P.petit, g);
+          corr = `1) Conversion${NBSP}: ${mesure(a, uA)} = ${mesure(ac, P.petit)}.<br> 2) Calcul${NBSP}: (${ecrire(ac)} + ${ecrire(b)}) × 2 = ${mesure(r0, P.petit)}.<br> 3) Conversion${NBSP}: ${mesure(r0, P.petit)} = ${fort(mesure(r, U))}.`;
+          conv = { s: P.s, v: r0, de: P.petit, vers: U }; nombres = [a, b, ac, r0, r];
+        } else {
+          const [v, u] = uA !== U ? [a, uA] : [b, uB], c = versUnite(enFin(v, u, g), U, g), [x, y] = uA !== U ? [c, b] : [a, c];
+          corr = `1) Conversion${NBSP}: ${mesure(v, u)} = ${mesure(c, U)}.<br> 2) Calcul${NBSP}: (${ecrire(x)} + ${ecrire(y)}) × 2 = ${fort(mesure(r, U))}.`;
+          conv = { s: P.s, v, de: u, vers: U }; nombres = [a, b, c, r];
+        }
+        if (!bonPourLeNiveau(level, nombres, sorte, relache)) return null;
+        return finirPb(o, sorte, level, enonce(o, { A: mesure(a, uA), B: mesure(b, uB) }, U), corr, conv, r, U, [mesure(a, uA), mesure(b, uB)]);
+      }
+      if (sorte.g === 'aire' && level === 1) {
+        // niveau 1 : la longueur en m, la largeur en cm ; on convertit la longueur en cm, la réponse en cm²
+        const o = objetPb(PROBLEMES.aire1, () => true, ecart), P = PAIRES_PB['m-cm'];
+        const a = nombrePb(1, true, 2), b = nombrePb(1, false, 2);
+        if (!dansBornes(o.a, a, 'm', 'len') || !dansBornes(o.b, b, 'cm', 'len') || !bienDitEnPetite(b, P, 'len')) return null;
+        const acm = decaler(a, 2), aire = produit(acm, b);
+        const corr = `1) Conversion${NBSP}: ${mesure(a, 'm')} = ${mesure(acm, 'cm')}.<br> 2) Aire${NBSP}: ${mesure(acm, 'cm')} × ${mesure(b, 'cm')} = ${fort(mesure(aire, 'cm²'))}.`;
+        if (!bonPourLeNiveau(1, [a, b, acm, aire], sorte, relache)) return null;
+        const champs = { A: mesure(a, 'm'), B: mesure(b, 'cm') };
+        return finirPb(o, sorte, level, enonce(o, champs, 'cm²'), corr, { s: 'length', v: a, de: 'm', vers: 'cm' }, aire, 'cm²', Object.values(champs));
+      }
+      if (sorte.g === 'aire') {
+        // la longueur en m, la largeur en cm (moins de 1 m) : on convertit la largeur en m, puis on multiplie
+        const o = objetPb(PROBLEMES.aire, () => true, ecart);
+        const a = o.carre ? null : nombrePb(level, true, 2), b = nombrePb(level, false, 2);
+        if ((a && !dansBornes(o.a, a, 'm', 'len')) || !dansBornes(o.b, b, 'cm', 'len') || !bienDitEnPetite(b, PAIRES_PB['m-cm'], 'len', true) || (a && enBase(b, 'cm', 'len') >= enBase(a, 'm', 'len'))) return null;
+        const bm = decaler(b, -2), cote = a || bm, aire = produit(cote, bm);
+        const corr = `1) Conversion${NBSP}: ${mesure(b, 'cm')} = ${mesure(bm, 'm')}.<br> 2) Aire${NBSP}: ${mesure(cote, 'm')} × ${mesure(bm, 'm')} = ${fort(mesure(aire, 'm²'))}.`;
+        if (!bonPourLeNiveau(level, [a || b, b, bm, aire], sorte, relache)) return null;
+        const champs = o.carre ? { B: mesure(b, 'cm') } : { A: mesure(a, 'm'), B: mesure(b, 'cm') };
+        return finirPb(o, sorte, level, enonce(o, champs, 'm²'), corr, { s: 'length', v: b, de: 'cm', vers: 'm' }, aire, 'm²', Object.values(champs));
+      }
+      // le volume en litres : au niveau 2, trois mesures en cm (cm³ → L) ; au niveau 3, deux en m et une en cm (m³ → L)
+      const o = objetPb(PROBLEMES.vol, x => x.lvl === (level === 3 ? 3 : 2), ecart);
+      if (level !== 3) {
+        const d = [0, 1, 2].map(() => rand(1, 2) === 1 ? rand(2, 12) * 10 : rand(4, 24) * 5);
+        if (d.some(x => !dansBornes(o.a, String(x), 'cm', 'len') || x % 100 === 0) || d[1] > d[0]) return null;
+        const V = d[0] * d[1] * d[2], L = depuisEntier(V, 3), vs = d.map(x => mesure(x, 'cm'));
+        if (valeur(L) < o.r[0] || valeur(L) > o.r[1]) return null;
+        if (!bonPourLeNiveau(level, [L], sorte, relache, true)) return null;
+        const corr = `1) Volume${NBSP}: ${vs.join(' × ')} = ${mesure(V, 'cm³')}.<br> 2) Conversion${NBSP}: ${mesure(V, 'cm³')} = ${fort(mesure(L, 'L'))}, car 1${NBSP}L = 1${NBSP}dm³ = 1${NBSP}000${NBSP}cm³.`;
+        return finirPb(o, sorte, level, enonce(o, { A: vs[0], B: vs[1], C: vs[2] }, 'L'), corr, { s: 'cross', v: String(V), de: 'cm³', vers: 'L' }, L, 'L', vs);
+      }
+      const enM = () => parmi([() => String(rand(1, 6)), () => `${rand(1, 4)},${rand(1, 9)}`, () => `${rand(1, 3)},${pick(['25', '75'])}`, () => `${rand(1, 4)},0${rand(1, 9)}`], [2, 4, 2, 1]);
+      const a = enM(), b = enM(), c = String(rand(2, 19) * 5);
+      if (!dansBornes(o.a, a, 'm', 'len') || !dansBornes(o.a, b, 'm', 'len') || !dansBornes(o.a, c, 'cm', 'len') || valeur(b) > valeur(a) || valeur(b) < 1) return null;
+      if (!bienDitEnPetite(c, PAIRES_PB['m-cm'], 'len')) return null;
+      const cm = decaler(c, -2), m3 = produit(produit(a, b), cm), L = decaler(m3, 3);
+      if (valeur(L) < o.r[0] || valeur(L) > o.r[1]) return null;
+      if (!bonPourLeNiveau(level, [a, b, c, cm, m3, L], sorte, relache)) return null;
+      const vs = [mesure(a, 'm'), mesure(b, 'm'), mesure(c, 'cm')];
+      const corr = `1) Conversion${NBSP}: ${mesure(c, 'cm')} = ${mesure(cm, 'm')}.<br> 2) Volume${NBSP}: ${mesure(a, 'm')} × ${mesure(b, 'm')} × ${mesure(cm, 'm')} = ${mesure(m3, 'm³')}.<br> 3) Conversion${NBSP}: ${mesure(m3, 'm³')} = ${fort(mesure(L, 'L'))}, car 1${NBSP}m³ = 1${NBSP}000${NBSP}L.`;
+      return finirPb(o, sorte, level, enonce(o, { A: vs[0], B: vs[1], C: vs[2] }, 'L'), corr, { s: 'cross', v: m3, de: 'm³', vers: 'L' }, L, 'L', vs);
+    }
+
+    // Une question tirée selon sa sorte ; si aucune ne va en 3 000 essais, on assouplit (sans le zéro, puis dans l'autre sens).
+    // Les tests vérifient que cela n'arrive jamais (relachesPb() reste à 0).
+    let problemesRelaches = 0;
+    function relachesPb() { return problemesRelaches; }
+    const FABRIQUES_PB = { add: deuxMesures, sub: deuxMesures, mult: uneMesure, div: uneMesure, frac: uneMesure, geom: figurePb };
     function buildProblemLogic(level, family) {
-        if (family === 'add') {
-            return tirer(() => {
-                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
-                let petit = G.petit, pf = G.pf;
-                // niveau 3 : les longueurs en mm, et (lot 4) les capacités en mL, comme les longueurs
-                if (level === 3 && g === 'length') { petit = 'mm'; pf = 0; }
-                if (level === 3 && g === 'cap') { petit = 'mL'; pf = 0; }
-                let v1, v2;   // v1 en grande unité (chaîne), v2 en petite unité (entier)
-                if (level === 1) { v1 = String(rand(2, 9)); v2 = rand(2, 9) * (g === 'mass' ? 100 : 10); }
-                else if (level === 2) { v1 = depuisEntier(rand(1, 5) * 10 + 5, 1); v2 = rand(6, 9) * (g === 'mass' ? 100 : 10); }
-                else { v1 = depuisEntier(rand(1, 4) * 100 + pick([25, 75]), 2); v2 = rand(15, 85) * 10; }
-                const f1 = versEntier(v1, G.fin), f2 = v2 * 10 ** pf;      // en mm, g ou mL
-                const objets = PROBLEMES.add[g].filter(o => f1 >= o.min && f1 <= o.max && f2 >= o.min && f2 <= o.max);
-                if (!objets.length) return null;
-                const o = pick(objets);
-                const conv = versEntier(v1, G.fin - pf);
-                const autre = o.f ? 'une autre' : 'un autre';
-                const debut = g === 'length' ? `J'assemble ${o.n} de <strong>${mesure(v1, G.grand)}</strong> avec ${autre}`
-                                             : `Je réunis ${o.n} de <strong>${mesure(v1, G.grand)}</strong> et ${autre}`;
-                const texte = `${debut} de <strong>${mesure(v2, petit)}</strong>. Quel est le total en <strong>${petit}</strong> ?`;
-                const corr = `Calcul : ${ecrire(conv)} + ${ecrire(v2)} = <strong>${mesure(conv + v2, petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, petit, texte, corr, conv + v2, petit);
-            });
+      let sorte = sorteDuProbleme('prob_' + family, level);
+      // au niveau 1, partager 600 cm ou prendre la moitié de 400 cm pour répondre en m : des mesures qu'on ne dit pas ;
+      // les divisions et les fractions répondent dans la petite unité
+      if (level === 1 && (family === 'div' || family === 'frac') && sorte.sens === 'G') sorte = { ...sorte, sens: 'P' };
+      for (let relache = 0; relache < 3; relache++) {
+        const s = relache < 2 ? sorte : { ...sorte, sens: sorte.sens === 'G' ? 'P' : sorte.sens === 'P' ? 'G' : sorte.sens };
+        for (let i = 0; i < 3000; i++) {
+          const q = FABRIQUES_PB[family](family, level, s, relache, i < 300 ? 0 : i < 1500 ? 1 : 99);
+          if (q) { if (relache) problemesRelaches++; return q; }
         }
-        if (family === 'sub') {
-            return tirer(() => {
-                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
-                let v1;
-                if (level === 1) v1 = String(rand(3, 9));
-                else if (level === 2) v1 = depuisEntier(rand(2, 6) * 10 + 5, 1);
-                else v1 = depuisEntier(rand(2, 5) * 100 + pick([15, 45, 85]), 2);
-                const conv = versEntier(v1, G.fin - G.pf);   // en cm, g ou cL
-                let v2;
-                if (level === 1) v2 = rand(2, 9) * 10;
-                else if (level === 2) v2 = rand(6, 9) * 10;
-                else v2 = rand(25, Math.min(95, Math.floor((conv - 1) / 10))) * 10;
-                if (v2 >= conv) return null;                  // jamais de reste négatif
-                const f1 = versEntier(v1, G.fin);
-                const objets = PROBLEMES.sub[g].filter(o => f1 >= o.min && f1 <= o.max);
-                if (!objets.length) return null;
-                const o = pick(objets);
-                const texte = `Dans ${o.n} de <strong>${mesure(v1, G.grand)}</strong>, ${pick(o.a)} <strong>${mesure(v2, G.petit)}</strong>. Combien reste-t-il en <strong>${G.petit}</strong> ?`;
-                const corr = `Calcul : ${ecrire(conv)} − ${ecrire(v2)} = <strong>${mesure(conv - v2, G.petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr, conv - v2, G.petit);
-            });
-        }
-        if (family === 'mult') {
-            return tirer(() => {
-                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
-                const o = pick(PROBLEMES.mult[g]);
-                let v1, qte, src, tgt;
-                if (level === 3) {
-                    // en grande unité, au centième (pas de 0,05) : « Un dictionnaire fait 1,25 kg »
-                    const pas = 10 ** (G.fin - 2) * 5;
-                    const k = entre(o.min / pas, o.max / pas, k => (k * pas) % (10 ** G.fin) !== 0);
-                    if (!k.length) return null;
-                    v1 = depuisEntier(pick(k) * pas, G.fin); qte = rand(4, 8); src = G.grand; tgt = G.petit;
-                } else {
-                    // en petite unité : multiple de 10 au niveau 1, de 5 (et pas de 10) au niveau 2
-                    const u = 10 ** G.pf;
-                    const k = entre(o.min / u, o.max / u, k => level === 1 ? k % 10 === 0 : (k % 5 === 0 && k % 10 !== 0));
-                    if (!k.length) return null;
-                    v1 = String(pick(k)); qte = level === 1 ? rand(2, 5) : rand(6, 9); src = G.petit; tgt = G.grand;
-                }
-                const dS = src === G.grand ? G.fin : G.fin - G.pf;   // la source comptée en 10^-dS
-                const total = depuisEntier(versEntier(v1, dS) * qte, dS);
-                const sP = posUnite(G.s, src), tP = posUnite(G.s, tgt);
-                const conv = decaler(total, tP - sP);
-                // lot 4 : la question dit ce qu'on cherche (« le total » ne disait pas de quoi)
-                const lot = `<strong>${qte} ${o.p} identiques</strong>`;
-                const question = g === 'length' ? `Quelle longueur font ${lot} mis${o.f ? 'es' : ''} bout à bout, en <strong>${tgt}</strong> ?`
-                               : g === 'mass' ? `Quelle est la masse de ${lot}, en <strong>${tgt}</strong> ?`
-                               : `Combien contiennent ${lot}, en <strong>${tgt}</strong> ?`;
-                const texte = `${o.n} fait <strong>${mesure(v1, src)}</strong>. ${question}`;
-                const corr = `1) Calcul : ${qte} × ${mesure(v1, src)} = ${mesure(total, src)}. <br> 2) Conversion : <strong>${mesure(conv, tgt)}</strong>.`;
-                return problemeAvec(G.s, total, src, tgt, texte, corr, conv, tgt);
-            });
-        }
-        if (family === 'div') {
-            return tirer(() => {
-                const g = pick(['length', 'mass', 'cap']), G = GRANDEURS[g];
-                const o = pick(PROBLEMES.div[g]);
-                const div = level === 1 ? pick([2, 4]) : (level === 2 ? pick([3, 6]) : pick([4, 5, 7]));
-                const dixiemes = level !== 1;
-                const pas = 10 ** (G.fin - (dixiemes ? 1 : 0));         // le nombre de départ, en dixièmes ou en unités
-                const versPetit = 10 ** (G.pf);                          // mm → cm, mL → cL
-                const k = entre(o.min / pas, o.max / pas, k => (!dixiemes || k % 10 !== 0) && ((k * pas / versPetit) % div === 0));
-                if (!k.length) return null;
-                const n = pick(k);
-                const v1 = depuisEntier(n * pas, G.fin);
-                const conv = n * pas / versPetit;
-                const texte = `Je partage ${o.n} de <strong>${mesure(v1, G.grand)}</strong> en <strong>${div} parts égales</strong>. Combien fait une part en <strong>${G.petit}</strong> ?`;
-                const corr = `Calcul après conversion : ${ecrire(conv)} ÷ ${div} = <strong>${mesure(conv / div, G.petit)}</strong>.`;
-                return problemeAvec(G.s, v1, G.grand, G.petit, texte, corr, conv / div, G.petit);
-            });
-        }
-        if (family === 'frac') {
-            return tirer(() => {
-                const g = pick(['mass', 'cap']);
-                const s = g === 'mass' ? SCHEMAS.mass : SCHEMAS.volL;
-                const grand = g === 'mass' ? 'kg' : 'L', petit = g === 'mass' ? 'g' : 'mL';
-                const DEMI = { num: 1, den: 2, le: "la moitié" }, QUART = { num: 1, den: 4, le: "le quart" }, TROIS = { num: 3, den: 4, le: "les trois quarts" };
-                let v1, frac;
-                if (level === 1) { v1 = "1"; frac = pick([DEMI, QUART]); }
-                else if (level === 2) { v1 = pick(["2", "3", "4"]); frac = pick([DEMI, TROIS]); }
-                else { v1 = pick(["1,2", "1,5", "2,4"]); frac = pick([QUART, TROIS]); }
-                const conv = versEntier(v1, 3);
-                const rep = conv * frac.num / frac.den;
-                const objets = PROBLEMES.frac[g].filter(o => rep <= o.max);
-                if (!objets.length || !Number.isInteger(rep)) return null;
-                const o = pick(objets);
-                let expr;
-                if (level === 1) {
-                    const mot = g === 'mass' ? 'kilogramme' : 'litre';
-                    expr = frac === DEMI ? `un demi-${mot}` : `un quart de ${mot}`;
-                } else expr = `${frac.le} de ${mesure(v1, grand)}`;
-                const texte = `Dans une recette, il faut <strong>${expr}</strong> ${o.n}. Combien cela fait-il en <strong>${petit}</strong> ?`;
-                const corr = `1) Conversion : ${mesure(v1, grand)} = ${mesure(conv, petit)}.<br> 2) Calcul : ${frac.le} de ${mesure(conv, petit)} = <strong>${mesure(rep, petit)}</strong>.`;
-                return problemeAvec(s, v1, grand, petit, texte, corr, rep, petit);
-            });
-        }
-        // family === 'geom'
-        let mode = (level === 1) ? 'perim' : (level === 2 ? 'area' : pick(['perim', 'area']));
-        if (mode === 'perim') {
-            const m = level === 1 ? String(rand(3, 8)) : depuisEntier(rand(2, 5) * 10 + pick([2, 5]), 1);
-            const cm = rand(2, 8) * 10;
-            const mToCm = versEntier(m, 2), perim = (mToCm + cm) * 2;
-            const texte = `Un rectangle mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quel est son périmètre en <strong>cm</strong> ?`;
-            const corr = `1) Conversion : ${mesure(m, 'm')} = ${mesure(mToCm, 'cm')}.<br> 2) Calcul : (${ecrire(mToCm)} + ${cm}) × 2 = <strong>${mesure(perim, 'cm')}</strong>.`;
-            return problemeAvec(SCHEMAS.length, m, 'm', 'cm', texte, corr, perim, 'cm');
-        }
-        return tirer(() => {
-            const m = rand(2, 6), cm = (level === 2) ? rand(3, 9) * 10 : rand(4, 9) * 10;
-            const objets = PROBLEMES.aire.filter(o => m >= o.m[0] && m <= o.m[1] && cm >= o.cm[0] && cm <= o.cm[1]);
-            if (!objets.length) return null;
-            const o = pick(objets);
-            const cmToM = depuisEntier(cm, 2), aire = depuisEntier(m * cm, 2);
-            const texte = `${o.n} rectangulaire mesure <strong>${mesure(m, 'm')}</strong> de long et <strong>${mesure(cm, 'cm')}</strong> de large. Quelle est son aire en <strong>m²</strong> ?`;
-            const corr = `1) Conversion : ${mesure(cm, 'cm')} = ${mesure(cmToM, 'm')}.<br> 2) Aire : ${mesure(m, 'm')} × ${mesure(cmToM, 'm')} = <strong>${mesure(aire, 'm²')}</strong>.`;
-            return problemeAvec(SCHEMAS.length, String(cm), 'cm', 'm', texte, corr, aire, 'm²');
-        });
+      }
+      throw new Error("tirage impossible");
     }
 
     /* =========================================
@@ -2536,7 +2834,7 @@
     const CLASSES_ETATS = { juste: 'ok', aide: 'aide', revoir: 'ko' };
     const NOMS_CASES = {
       prob_add: "Problème d'addition", prob_sub: 'Problème de soustraction', prob_mult: 'Problème de multiplication',
-      prob_div: 'Problème de division', prob_frac: 'Problème de fraction', prob_geom: "Problème de périmètre ou d'aire",
+      prob_div: 'Problème de division', prob_frac: 'Problème de fraction', prob_geom: "Problème de périmètre, d'aire ou de volume",
       est_grandeur: 'Quelle grandeur ?', est_unit: 'Quelle unité ?', est_val: 'Ordre de valeur', est_tf: 'Vrai ou faux',
       est_pont: 'Ponts et symboles', est_assoc: 'Associer', est_trou: 'Texte à trous', est_tri: 'Classer', est_obj: 'Quel objet ?'
     };
