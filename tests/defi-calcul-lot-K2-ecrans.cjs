@@ -269,6 +269,10 @@ function phpPresent() {
       assert.deepEqual(await apres.locator("details.plus button").allTextContents(), ["Revenir à…", "Recommencer Défi calcul à zéro"]);
       await apres.locator("details.plus button", {hasText: "Revenir à…"}).click();
       await page.waitForTimeout(300);
+      // (Correctif K2 : l'état d'avant est aussi gardé pour sept jours, sous son nom.)
+      const libelles = await page.locator("#boite-version option").allTextContents();
+      assert.match(libelles[0] || "", /^avant la remise à zéro du .+ — \d+\u00a0séances?$/, `« avant la remise à zéro » proposé en premier : ${JSON.stringify(libelles)}`);
+      await capture(page, `${format}-revenir-a`);
       await page.click("#boite-oui");
       await page.waitForTimeout(300);
       await page.click("#boite-oui");

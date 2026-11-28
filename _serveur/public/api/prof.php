@@ -382,7 +382,11 @@ function progression_neuve(string $appli, string $courantJson): string
     $version = is_object($courant) ? ($courant->version ?? null) : null;
     if (is_float($version) && floor($version) === $version) $version = (int)$version;
     $minimum = (int)(CATALOGUE_APPLIS[$appli]['version_min'] ?? 1);
-    if (!is_int($version) || $version < $minimum || $version > PROGRESSION_ENTIER_MAX) $version = $minimum;
+    // (Correctif K2, relecture Codex : la borne haute est celle du catalogue,
+    // « version_max » — au-delà, filtrer_progression retirait la version et
+    // la remise à zéro rangeait un parcours sans version.)
+    $maximum = (int)(CATALOGUE_APPLIS[$appli]['version_max'] ?? $minimum);
+    if (!is_int($version) || $version < $minimum || $version > $maximum) $version = $minimum;
     $neuf = (object)[
         'version' => $version,
         'epoque' => min(epoque_de($courantJson) + 1, PROGRESSION_ENTIER_MAX),
@@ -397,20 +401,28 @@ function progression_neuve(string $appli, string $courantJson): string
 // est verrouillée, l'UPDATE ne passe que si la révision lue est encore celle
 // en base. Ce qui est gardé pour faire marche arrière :
 //  - donnees_avant = l'état d'avant (« avant le dernier enregistrement »),
-//    comme pour un enregistrement ;
-//  - la ligne du jour (table versions) reçoit l'état neuf, comme pour un
-//    enregistrement : c'est la fin de la journée telle qu'elle est ;
-//  - et si l'élève n'a rien enregistré AUJOURD'HUI, l'état d'avant est
-//    exactement celui de la fin d'HIER : il est rangé comme la ligne d'hier
-//    s'il n'y en a pas déjà une. Sans cela, un élève qui n'avait plus écrit
-//    depuis plus de sept jours n'aurait plus rien dans l'historique, et sa
-//    prochaine synchronisation remplacerait donnees_avant : la remise à zéro
-//    serait devenue définitive, contre la promesse de la confirmation.
-// Renvoie ['rien' => true] sans progression, ['conflit' => true] si la ligne
-// a bougé sous le verrou, sinon ['donnees' => …, 'revision' => …].
-function recommencer_progression(PDO $pdo, int $eleveId, string $appli): array
+//    comme pour un enregistrement — jusqu'à la prochaine écriture ;
+//  - et, pour les sept jours promis, l'état d'avant rangé comme la ligne du
+//    jour, ÉPINGLÉE (lib/versions.php, garder_avant_remise) : aucune
+//    synchronisation de l'élève ne la remplace, « Revenir à… » la propose
+//    sous le nom « avant la remise à zéro du … ».
+//    (Correctif du 28/11, relecture Codex, bloquant : avant, la ligne du
+//    jour recevait l'état neuf et l'état d'avant n'était rangé — comme
+//    ligne d'HIER — que si l'élève n'avait rien écrit ce jour-là. Un élève
+//    qui avait joué le matin perdait ce travail à sa synchronisation
+//    suivante ; et la ligne « d'hier » pouvait porter un autre état.)
+// maj_le n'est PAS touché : c'est la dernière activité de l'élève (le
+// tableau l'affiche, le ménage des classes échues s'en sert), et une remise
+// à zéro n'en est pas une.
+// Le droit d'écrire est relu ICI, sous le verrou (droit_ecriture_sous_verrou) :
+// un partage retiré entre le contrôle de l'action et l'écriture l'emporte.
+// Renvoie ['rien' => true] sans progression, ['refus' => true] si le droit
+// a disparu, ['plafond' => true] si l'époque ne peut plus monter,
+// ['conflit' => true] si la ligne a bougé sous le verrou, sinon
+// ['donnees' => …, 'revision' => …].
+function recommencer_progression(PDO $pdo, int $profId, int $eleveId, string $appli): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli): array {
+    return avec_reprise($pdo, function () use ($pdo, $profId, $eleveId, $appli): array {
         transaction_ouvrir($pdo);
         $requete = $pdo->prepare('SELECT id, donnees, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
         $requete->execute([$eleveId, $appli]);
@@ -420,30 +432,62 @@ function recommencer_progression(PDO $pdo, int $eleveId, string $appli): array
             transaction_annuler($pdo);
             return ['rien' => true];
         }
+        if (!droit_ecriture_sous_verrou($pdo, $profId, $eleveId)) {
+            transaction_annuler($pdo);
+            return ['refus' => true];
+        }
         $avant = (string)$ligne['donnees'];
+        // Une époque déjà au plafond ne peut plus monter : le parcours neuf
+        // ne gagnerait pas la fusion contre l'ancien appareil de l'élève.
+        if (epoque_de($avant) >= PROGRESSION_ENTIER_MAX) {
+            transaction_annuler($pdo);
+            return ['plafond' => true];
+        }
         $revision = (int)$ligne['revision'];
         $neuf = progression_neuve($appli, $avant);
-        $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
-        $requete->execute([$neuf, $avant, $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
+        $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ? WHERE id = ? AND revision = ?');
+        $requete->execute([$neuf, $avant, $revision + 1, (int)$ligne['id'], $revision]);
         if ($requete->rowCount() !== 1) {
             transaction_annuler($pdo);
             return ['conflit' => true];
         }
-        $jour = jour_local();
-        $requete = $pdo->prepare('SELECT COUNT(*) FROM versions WHERE eleve_id = ? AND appli = ? AND jour = ?');
-        $requete->execute([$eleveId, $appli, $jour]);
-        $ecritAujourdhui = (int)$requete->fetchColumn() > 0;
-        $requete->closeCursor();
-        if (!$ecritAujourdhui) {
-            $hier = gmdate('Y-m-d', strtotime($jour . ' 12:00:00 UTC') - 86400);
-            $ignorer = pilote($pdo) === 'mysql' ? 'INSERT IGNORE INTO' : 'INSERT OR IGNORE INTO';
-            $pdo->prepare("$ignorer versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, ?, ?, ?, ?)")
-                ->execute([$eleveId, $appli, $hier, $revision, compter_elements_declares($appli, $avant), $avant, maintenant()]);
-        }
-        enregistrer_version($pdo, $eleveId, $appli, $neuf, $revision + 1);
+        garder_avant_remise($pdo, $eleveId, $appli, $avant, $revision);
         transaction_valider($pdo);
         return ['donnees' => $neuf, 'revision' => $revision + 1];
     });
+}
+
+// Lot K2 (correctif du 28/11, relecture Codex) : le droit d'écrire du
+// professeur sur la classe de l'élève, relu DANS la transaction. MySQL :
+// lectures verrouillantes — un retrait de partage en cours attend la fin de
+// l'action, un retrait déjà validé est vu. SQLite : la transaction tient
+// déjà le verrou d'écriture de toute la base (BEGIN IMMEDIATE).
+function droit_ecriture_sous_verrou(PDO $pdo, int $profId, int $eleveId): bool
+{
+    $verrou = pour_mise_a_jour($pdo);
+    $requete = $pdo->prepare('SELECT c.id, c.prof_id FROM eleves e JOIN classes c ON c.id = e.classe_id WHERE e.id = ?' . $verrou);
+    $requete->execute([$eleveId]);
+    $classe = $requete->fetch();
+    $requete->closeCursor();
+    if ($classe === false) return false;
+    if ((int)$classe['prof_id'] === $profId) return true;
+    $requete = $pdo->prepare('SELECT droit FROM partages WHERE classe_id = ? AND prof_id = ?' . $verrou);
+    $requete->execute([(int)$classe['id'], $profId]);
+    $droit = $requete->fetchColumn();
+    $requete->closeCursor();
+    return $droit !== false && in_array($droit, DROITS_PARTAGE, true) && $droit !== 'lecture';
+}
+
+// Lot K2 (correctif du 28/11, relecture Codex) : l'identifiant d'un élève
+// reçu pour « Recommencer » et « Revenir à… » — un entier positif, ou son
+// écriture en chiffres ; rien d'autre (avant, (int) ramenait un tableau, un
+// booléen ou « 12abc » à un identifiant). Sinon : « Introuvable. », comme
+// un élève qui n'existe pas.
+function identifiant_eleve_recu(mixed $brut): int
+{
+    if (is_int($brut) && $brut > 0) return $brut;
+    if (is_string($brut) && preg_match('/^[1-9][0-9]{0,17}$/', $brut) === 1) return (int)$brut;
+    erreur("Introuvable.", 404);
 }
 
 // La restauration écrit dans la même ligne que l'appli de l'élève, avec le
@@ -476,9 +520,9 @@ function recommencer_progression(PDO $pdo, int $eleveId, string $appli): array
 // à époque égale, la fusion du moteur additionne au lieu de trancher. Défaut
 // vu en production le jour de la mise en ligne de la PR A. Voir
 // lib/progression.php, version_avec_epoque_relevee().
-function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null): array
+function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null, ?int $profId = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour): array {
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour, $profId): array {
         transaction_ouvrir($pdo);
         $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
         $requete->execute([$eleveId, $appli]);
@@ -487,6 +531,10 @@ function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $j
         if ($ligne === false) {
             transaction_annuler($pdo);
             return ['rien' => true];
+        }
+        if ($profId !== null && !droit_ecriture_sous_verrou($pdo, $profId, $eleveId)) {
+            transaction_annuler($pdo);
+            return ['refus' => true];
         }
         if ($jour === null) {
             $vers = $ligne['donnees_avant'];
@@ -500,6 +548,13 @@ function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $j
                 transaction_annuler($pdo);
                 return ['inconnu' => true];
             }
+        }
+        // (Correctif K2, relecture Codex : une version qui ne se relit pas
+        // — une ligne déjà abîmée gardée par une remise à zéro — n'est pas
+        // remise en place.)
+        if (!is_object(json_decode((string)$vers, false))) {
+            transaction_annuler($pdo);
+            return ['illisible' => true];
         }
         // L'époque est relevée ICI, sous le verrou : l'état courant qu'elle
         // doit dépasser est celui qu'on vient de lire, pas celui d'avant
@@ -1231,7 +1286,7 @@ try {
             //    l'écrasement date d'hier et que le dernier enregistrement est
             //    celui de l'intrus.
             // La révision monte dans les deux cas, l'appli de l'élève fusionnera.
-            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            $eleve = eleve_pour_action($pdo, $profId, identifiant_eleve_recu($corps['eleve_id'] ?? null), $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $jour = null;
@@ -1239,7 +1294,12 @@ try {
                 $jour = is_string($corps['jour']) ? $corps['jour'] : '';
                 if (!date_reelle($jour)) erreur("Jour à restaurer invalide.", 400);
             }
-            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli, $jour);
+            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli, $jour, $profId);
+            if (isset($resultat['refus'])) erreur("Introuvable.", 404);
+            if (isset($resultat['illisible'])) {
+                journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("Cette version ne se relit pas : choisis-en une autre.", 409);
+            }
             if (isset($resultat['inconnu'])) {
                 journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id'], 'erreur');
                 erreur("Cette journée n'est plus dans l'historique : recharge la classe.", 404);
@@ -1255,12 +1315,19 @@ try {
             // un élève d'une autre classe répond 404, un collègue en lecture
             // seule 403) ; aucune progression n'est reçue du navigateur — le
             // neuf est construit ici (progression_neuve).
-            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            // (Correctif K2, relecture Codex : la limite d'abord — un refus en
+            // lecture seule répété ne remplit plus le journal sans fin.)
             limiter('recommencer:' . $profId, 60, 600);
+            $eleve = eleve_pour_action($pdo, $profId, identifiant_eleve_recu($corps['eleve_id'] ?? null), $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_RECOMMENCABLES, true)) erreur("Cette activité ne se recommence pas d'ici.", 400);
-            $resultat = recommencer_progression($pdo, (int)$eleve['id'], $appli);
-            if (isset($resultat['rien'])) erreur("Rien à recommencer : cet élève n'a encore rien envoyé.", 409);
+            $resultat = recommencer_progression($pdo, $profId, (int)$eleve['id'], $appli);
+            if (isset($resultat['refus'])) erreur("Introuvable.", 404);
+            if (isset($resultat['rien'])) erreur("Rien à recommencer : l’élève n’a encore rien envoyé.", 409);
+            if (isset($resultat['plafond'])) {
+                journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("Cette progression ne peut plus repartir de zéro d'ici : écris à l'administrateur du serveur.", 409);
+            }
             if (isset($resultat['conflit'])) {
                 journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id'], 'erreur');
                 erreur("La progression a changé pendant la remise à zéro : regarde le tableau, puis réessaie.", 409);
@@ -1525,7 +1592,8 @@ try {
                     // La version qui porte la révision du moment EST l'état
                     // actuel : y « revenir » ne ferait rien.
                     if ($version['courante']) continue;
-                    $journees[] = ['jour' => $version['jour'], 'calculs' => $version['calculs']];
+                    $journees[] = ['jour' => $version['jour'], 'calculs' => $version['calculs']]
+                        + ($version['remise'] ? ['remise' => true] : []);
                 }
                 $lignes[] = [
                     'id' => (int)$ligne['id'],

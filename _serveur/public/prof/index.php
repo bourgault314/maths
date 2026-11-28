@@ -11904,6 +11904,14 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // écrase le travail actuel, cela ne se fait pas d'un seul clic.
   function versionsProposees(eleve) {
     const options = [];
+    // (Lot K2, correctif : l'état gardé par « Recommencer à zéro » vient en
+    // premier — c'est lui qu'on cherche après une remise à zéro par erreur.)
+    const unite = (APPLIS.find(appli => appli.cle === appliAffichee) || APPLIS[0]).unite;
+    const libelleJournee = journee => `${journee.remise ? "avant la remise à zéro" : "fin de journée"} du ${jourLisible(journee.jour)} — ${journee.calculs}\u00a0`
+      + (journee.calculs > 1 ? unite[1] : unite[0]);
+    (eleve.journees || []).filter(journee => journee.remise).forEach(journee => {
+      options.push({valeur: journee.jour, libelle: libelleJournee(journee)});
+    });
     if (eleve.restaurable) {
       const quand = dateLisible(eleve.maj_le);
       options.push({valeur: "avant",
@@ -11911,11 +11919,8 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     }
     // Le compteur de l'activité affichée : « 12 calculs » pour Défi tables,
     // « 13 étapes » pour SPLAT! (le serveur compte ce que lib/applis.php lui dit).
-    const unite = (APPLIS.find(appli => appli.cle === appliAffichee) || APPLIS[0]).unite;
-    (eleve.journees || []).forEach(journee => {
-      options.push({valeur: journee.jour,
-        libelle: `fin de journée du ${jourLisible(journee.jour)} — ${journee.calculs} `
-          + (journee.calculs > 1 ? unite[1] : unite[0])});
+    (eleve.journees || []).filter(journee => !journee.remise).forEach(journee => {
+      options.push({valeur: journee.jour, libelle: libelleJournee(journee)});
     });
     return options;
   }

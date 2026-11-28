@@ -540,3 +540,36 @@ test("lot K2 — « Recommencer Défi calcul à zéro » : la confirmation de la
   assert.match(f, /api\("eleves\.recommencer", \{eleve_id: eleve\.id, appli: "defi-calcul"\}\)/);
   assert.match(fonction("demander"), /if \(options && options\.detail\) \$\("boite-texte"\)\.append\(el\("span", "boite-detail", options\.detail\)\);/);
 });
+
+// ---------------------------------------------- lot K2, correctif (relecture Codex du 28/11/2026)
+
+test("lot K2, correctif — « Revenir à… » nomme l'état gardé par « Recommencer à zéro » : « avant la remise à zéro du … »", () => {
+  const proposees = new Function("APPLIS", "appliAffichee", "dateLisible", "jourLisible",
+    `${fonction("versionsProposees")}\nreturn versionsProposees;`)(
+    [{cle: "defi-calcul", unite: ["calcul", "calculs"]}], "defi-calcul", () => "", j => j);
+  const eleve = {restaurable: false, journees: [{jour: "2026-11-28", calculs: 30, remise: true}, {jour: "2026-11-27", calculs: 1}]};
+  assert.deepEqual(proposees(eleve).map(o => [o.valeur, o.libelle]), [
+    ["2026-11-28", "avant la remise à zéro du 2026-11-28 — 30 calculs"],
+    ["2026-11-27", "fin de journée du 2026-11-27 — 1 calcul"]]);
+});
+
+test("lot K2, correctif — une série ouverte quand le professeur remet l'élève à zéro ne s'applique pas au parcours neuf", () => {
+  const modules = lire("outils/calcul_mental/defi_calcul_modules.html");
+  // Les deux endroits où un parcours du serveur remplace celui de la page.
+  assert.match(modules, /marquerSeriePerimee\(recu\.parcours\);\s*parcours = recu\.parcours;/);
+  assert.match(modules, /marquerSeriePerimee\(fusion\);\s*parcours = fusion;/);
+  const marquer = modules.slice(modules.indexOf("function marquerSeriePerimee"), modules.indexOf("function arreterActivite"));
+  const state = {running: true, serie: {}};
+  let parcours = {epoque: 4};
+  const f = new Function("state", "parcoursDe", `let parcours = parcoursDe; ${marquer}; return marquerSeriePerimee;`);
+  f(state, parcours)({epoque: 4});
+  assert.equal(state.serie.perimee, undefined, "même époque : la série continue");
+  f(state, parcours)({epoque: 5});
+  assert.equal(state.serie.perimee, true, "époque plus haute : la série est périmée");
+  const autre = {running: false, serie: {}};
+  f(autre, parcours)({epoque: 9});
+  assert.equal(autre.serie.perimee, undefined, "pas de série en cours : rien");
+  // À la fin, la série périmée se referme comme quand on la quitte ; les retours ne se notent plus.
+  assert.match(modules, /function finish\(\) \{\s*if \(!state\.running\) return;\s*const serie = state\.serie;\s*if \(serie && serie\.perimee\) \{ quitterSerie\(\); return; \}/);
+  assert.match(modules, /if \(serie\.genre === "jour" && !serie\.perimee\) \{\s*const mouvement = noterRetour\(/);
+});
