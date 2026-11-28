@@ -13,6 +13,9 @@
 // et la même étiquette sur tablette (jusqu'à 1 121 px de large) ; au-dessus, le tableau de l'ordinateur, inchangé.
 // Lot 5c (26/11/2026) : jusqu'à 1 121 px, les petits noms (kL… mL ; ha, a) passent sous les cases ; la case et le nom restent dessinés
 // dans la fenêtre ; le litre demandé est plus vif et plus grand ; hL, daL, dL, cL : la fenêtre encadre la case seule ; le cadre du nom en fondu.
+// Lot 6 (28/11/2026) : les niveaux 2 et 3 refaits (la virgule au niveau 2, les zéros et les grands écarts au niveau 3) ; dam³, hm³, km³
+// et le quintal retirés ; jamais moins de 1 dans la petite unité. Correctif : niveaux purs (on coche plusieurs niveaux pour mélanger),
+// et chaque série suit une recette (mêmes sortes de questions, autant vers la petite unité que vers la grande, une conversion 2 fois au plus).
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -458,14 +461,18 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
 });
 
-test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 5)", () => {
+test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 6)", () => {
+  // Lot 6 (28/11/2026) : les niveaux 2 et 3 des conversions tirent autrement, et chaque série suit sa recette (sens équilibrés,
+  // une conversion 2 fois au plus) : les 12 séries changent, celles du niveau 1 seul aussi (c'est voulu). Empreintes du lot 5 (main cfddd12) :
+  // b1bf5c6cea92df25 abfd8cc5cf7adc44 8ce458a12d6b1106 b1d19b6f4ff14216 041ef6dfb61a4dff 73e4d6de2a9c3668
+  // 9eb3c6b3676e7bcf 2221fcf22fbf455f fb41aa61468a7ad2 65070687aa4fbda6 51979d9c08eda848 5d9c80bfd2fbb109
   // Empreintes recalculées au lot 5 (25/11/2026) : les niveaux 1 et 2 des conversions tirent autrement (c'est voulu), et les 12 séries
   // en contiennent : les 12 changent. Sur les 400 séries de series-lot5.mjs (toutes ont une case de conversion) : 90 identiques ;
   // 257 changent par les niveaux 1 ou 2 ; 53 séries du niveau 3 seul changent parce qu'un monstre en est retiré (les 80 autres
   // sont identiques). 3 218 questions sur 5 000 gardent leur énoncé. Avant (main ea60818, lot 4) :
   // 7ea23a256e4ce84a 3ff1044104a1459c 3dba203c922ab7d9 396ca0475cb90a45 1882a290f925b597 1093cdf615757fb3
   // aebbf08878649521 edf17416f518c1e2 9f8433c35ad69b43 561637ada18f0264 bf8489d85a652448 ded48cda8fe4b5a3
-  const MAIN = ["b1bf5c6cea92df25", "abfd8cc5cf7adc44", "8ce458a12d6b1106", "b1d19b6f4ff14216", "041ef6dfb61a4dff", "73e4d6de2a9c3668", "9eb3c6b3676e7bcf", "2221fcf22fbf455f", "fb41aa61468a7ad2", "65070687aa4fbda6", "51979d9c08eda848", "5d9c80bfd2fbb109"];
+  const MAIN = ["fe836e77fa942f5c", "89166615b8e04dc0", "f914e554e5065207", "abe27b29958c9ba4", "3e39c7fcbf32731d", "2baf4ce7a6ff8746", "2cb165181e7ec682", "2b7c873073daf350", "3dfe115b871f509c", "3784d241b9efd6d6", "121d61a755dd9749", "f249bc241f70243d"];
   const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
   const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
   const lot = [];
@@ -805,67 +812,160 @@ test("lot 5, niveau 1 « Les bases » : seulement les relations connues par cœu
   }
 });
 
-test("lot 5, niveau 2 « Tout le tableau » : jusqu'à × 1 000, un nombre simple avec la plus grande unité, jamais de zéro juste après la virgule", () => {
-  const SIMPLE = /^(\d{1,3}|\d{1,2},\d|\d,\d{2,3}|0,\d{1,3})$/;
+// ---- lot 6 (28/11/2026) : les niveaux 2 et 3 refaits — chaque question tirée dans une « sorte » précise, puis vérifiée ----
+// Ce qui tombait avant (main cfddd12, 2 000 questions par case) : au niveau 2, une question sur deux d'entier à entier et 29 % de réponses
+// avec une virgule ; au niveau 3, 41 % de zéros à placer, 12 à 25 % d'entiers ordinaires et des « 17 000 km = 1 700 000 dam ».
+const valeurNb = (s) => Number(s.replace(",", "."));
+const petiteDe = (q) => (q.targetPos >= q.sourcePos ? q.calcValStr : q.valStr);
+const SANS_SENS = /^((da|h|k)m³|q)$/;
+// toujours, aux niveaux 2 et 3 : au moins 1 dans la petite unité, 3 décimales au plus (et 3 seulement à × 1 000), ni dam³, ni hm³, ni km³, ni quintal
+function communes(q, t) {
+  const quoi = `${q.valStr} ${q.sourceUnit} = ${q.calcValStr} ${q.targetUnit}`;
+  assert.ok(valeurNb(petiteDe(q)) >= 1, `${quoi} : moins de 1 dans la petite unité`);
+  assert.ok(!SANS_SENS.test(q.sourceUnit) && !SANS_SENS.test(q.targetUnit), `${quoi} : unité sans usage`);
+  const ecart = Math.abs(q.targetPos - q.sourcePos);
+  for (const s of [q.valStr, q.calcValStr]) {
+    assert.ok(decimales(s) <= 3, `${quoi} : plus de 3 décimales`);
+    if (decimales(s) === 3) assert.ok(ecart === 3 || ecart === 6, `${quoi} : des millièmes seulement à × 1 000`);
+    assert.doesNotMatch(s, /,\d*0$/, `${quoi} : zéro inutile`);
+  }
+  if (["length", "mass", "massT", "volL"].includes(t)) assert.ok(ecart <= 3, `${quoi} : plus de × 1 000`);
+  return quoi;
+}
+
+test("lot 6, niveau 2 « Tout le tableau » : la virgule avec les unités usuelles et les autres unités, jusqu'à × 1 000, sans zéro juste après la virgule", () => {
+  assert.deepEqual([...P.USUELLES].sort(), ["L", "cL", "cm", "cm²", "cm³", "dm", "dm²", "dm³", "g", "kg", "km", "km²", "m", "mL", "mg", "mm", "m²", "m³", "t"].sort());
   for (const t of TYPES) {
-    P.setSeed(`T2${t}`);
-    const N = 6000, schema = P.SCHEMAS[t], colonne = schema.slots, vues = new Set();
-    let haut = 0, usuelles2 = 0, rare = 0, petit1 = 0, virgule = 0, milliemes = 0, meme = 0;
+    P.setSeed(`L6N2${t}`);
+    const N = 4000, schema = P.SCHEMAS[t];
+    let entEnt = 0, repDec = 0, autre = 0, haut = 0, meme = 0, bouge = 0;
     for (let i = 0; i < N; i++) {
-      const q = P.buildQuestionLogic(t, 2), g = grand(q), ecart = Math.abs(q.targetPos - q.sourcePos);
-      // l'écart : 1 à 3 colonnes (longueurs, masses, capacités), une seule pour les aires et les volumes, 3 cases au plus pour « L ↔ m³ »
-      assert.ok(ecart <= 3, `${q.sourceUnit} → ${q.targetUnit} : plus de × 1 000`);
-      if (t !== "cross") assert.ok(ecart >= colonne && ecart <= (colonne === 1 ? 3 : colonne), `${q.sourceUnit} → ${q.targetUnit}`);
-      assert.match(g, SIMPLE, `${g} ${q.sourceUnit}/${q.targetUnit} n'est pas un nombre simple`);
+      const q = P.buildQuestionLogic(t, 2), quoi = communes(q, t), ecart = Math.abs(q.targetPos - q.sourcePos);
+      assert.ok(ecart <= 3, `${quoi} : plus de × 1 000`);
+      if (t !== "cross") assert.ok(ecart >= schema.slots, quoi);
       for (const s of [q.valStr, q.calcValStr]) {
-        assert.doesNotMatch(s, /,0/, `${s} : un zéro juste après la virgule, c'est le niveau 3`);
-        assert.ok(decimales(s) <= 3 && ecrits(s) <= 7, `${s} : 3 décimales et 7 chiffres au plus`);
-        assert.doesNotMatch(s, /,\d*0$/, `${s} : pas de zéro inutile`);
+        assert.doesNotMatch(s, /,0/, `${quoi} : un zéro juste après la virgule, c'est le niveau 3`);
+        assert.ok(ecrits(s.replace(/^0,/, "")) <= 5, `${quoi} : 5 chiffres au plus`);
       }
-      if (decimales(g) === 3) { assert.equal(ecart, 3, `${g} : des millièmes seulement à × 1 000`); milliemes++; }
-      const u = [q.sourceUnit, q.targetUnit].filter((x) => P.USUELLES.has(x)).length;
-      if (u === 2) usuelles2++; else rare++;
+      if (!/,/.test(q.valStr + q.calcValStr)) entEnt++;
+      if (/,/.test(q.calcValStr)) repDec++;
+      if (/,/.test(q.valStr) && /,/.test(q.calcValStr)) bouge++;
+      if (!(P.USUELLES.has(q.sourceUnit) && P.USUELLES.has(q.targetUnit))) autre++;
       if (q.targetPos < q.sourcePos) haut++;
       if (q.targetPos === q.sourcePos) meme++;
-      if (/^0,/.test(g)) petit1++;
-      if (/,/.test(q.valStr + q.calcValStr)) virgule++;
-      vues.add(paire(q));
     }
-    const p = P.pairesDuTableau(t);
-    assert.ok(vues.size >= p.toutes.length - (t === "cross" ? 2 : 0), `${t} : tout le tableau sort (${vues.size} paires sur ${p.toutes.length})`);
-    assert.ok(p.deux.length >= 2 && p.une.length >= 2, "des paires de chaque sorte");
+    // niveaux purs (correctif du lot 6) : plus de rappel du niveau 1, seulement « 7 hm = 700 m » d'entier à entier ; la virgule dans la réponse une fois sur deux
+    assert.ok(part(entEnt, N) > 5 && part(entEnt, N) < 15, `${t} : ${part(entEnt, N)} % d'entier à entier (1 sur 10 : 7 hm = 700 m)`);
+    assert.ok(part(repDec, N) > 35 && part(repDec, N) < 58, `${t} : ${part(repDec, N)} % de réponses avec une virgule (près de la moitié ; 4 sur 10 pour les aires et les volumes, où « elle bouge » n'existe pas)`);
+    assert.ok(part(autre, N) > 23 && part(autre, N) < 37, `${t} : ${part(autre, N)} % avec une autre unité du tableau (3 sur 10)`);
     const sens = part(haut, N - meme);
-    assert.ok(sens > 45 && sens < 55, `${t} : ${sens} % vers la plus grande unité`);
-    // 1 question sur 2 entre deux unités usuelles (plus celles du quart « tout le tableau »)
-    assert.ok(part(usuelles2, N) > 50 && part(usuelles2, N) < 70, `${t} : ${part(usuelles2, N)} % entre deux unités usuelles`);
-    assert.ok(part(rare, N) > 30, `${t} : ${part(rare, N)} % avec une autre unité du tableau`);
-    // les nombres plus petits que 1 (0,5 L = 50 cL ; 750 g = 0,75 kg), qu'aucun niveau ne posait avant le lot 5
-    assert.ok(part(petit1, N) > 10 && part(petit1, N) < 20, `${t} : ${part(petit1, N)} % de nombres plus petits que 1 (3 sur 20)`);
-    assert.ok(part(virgule, N) > 40 && part(virgule, N) < 62, `${t} : ${part(virgule, N)} % de questions avec une virgule`);
-    if (colonne !== 2) assert.ok(milliemes > 0, "des millièmes à × 1 000 (2,375 kg = 2 375 g)");
+    assert.ok(sens > 42 && sens < 58, `${t} : ${sens} % vers la plus grande unité`);
+    // « la virgule bouge » (2,75 m = 27,5 dm) : possible là où il y a des × 10 entre unités voisines
+    if (["length", "volL", "cross", "mass"].includes(t)) assert.ok(part(bouge, N) > 2, `${t} : ${part(bouge, N)} % où la virgule bouge`);
   }
-  // les unités usuelles : celles du niveau 1 (sans dm), la tonne, et km²
-  assert.deepEqual([...P.USUELLES].sort(), ["L", "cL", "cm", "cm²", "cm³", "dm²", "dm³", "g", "kg", "km", "km²", "m", "mL", "mg", "mm", "m²", "m³", "t"].sort());
 });
 
-test("lot 5, niveau 3 « Les pièges » : le tirage d'avant le lot 5, sans les monstres (4 décimales et 8 chiffres au plus)", () => {
-  // Empreintes des 300 premières questions par case : calculées avec la page du main ea60818 (lot 4), en sautant les monstres
-  // (n3-identique.mjs : sur 2 000 questions par case, la suite du lot est exactement celle du main, monstres en moins).
-  const AVANT = { length: "bca852335407129f", mass: "77f1d83a86f6e15f", massT: "bba83573d5c2621f", volL: "269df653f757bd43", area: "051d128368dc7719", volM3: "fefc43b452e888e3", cross: "268f3ab63aa9f367" };
+test("lot 6, niveau 3 « Les pièges » : les zéros à placer sous leurs quatre formes, les grands écarts des aires et des volumes", () => {
   for (const t of TYPES) {
-    P.setSeed(`N3${t}`);
-    const N = 3000, suite = []; let zero = 0, grandEcart = 0;
+    P.setSeed(`L6N3${t}`);
+    const N = 4000, unD = ["length", "mass", "massT", "volL"].includes(t);
+    let zero = 0, grand = 0, entEnt = 0, repDec = 0;
+    const formes = [0, 0, 0, 0];
     for (let i = 0; i < N; i++) {
-      const q = P.buildQuestionLogic(t, 3);
-      if (i < 300) suite.push(`${q.valStr} ${q.sourceUnit} = ${q.calcValStr} ${q.targetUnit}`);
-      for (const s of [q.valStr, q.calcValStr]) assert.ok(decimales(s) <= 4 && ecrits(s) <= 8, `${q.valStr} ${q.sourceUnit} = ${q.calcValStr} ${q.targetUnit}`);
-      if (/^0,0|,0\d/.test(q.valStr) || /^0,0/.test(q.calcValStr)) zero++;
-      if (Math.abs(q.targetPos - q.sourcePos) > 3) grandEcart++;
+      const q = P.buildQuestionLogic(t, 3), quoi = communes(q, t), a = q.valStr, c = q.calcValStr;
+      const loin = Math.abs(q.targetPos - q.sourcePos) > 3;
+      for (const s of [a, c]) assert.ok(ecrits(s.replace(/^0,0*/, "")) <= (loin ? 7 : 6), `${quoi} : trop de chiffres`);
+      if (loin) {
+        grand++;
+        assert.ok([q.sourceUnit, q.targetUnit].every((u) => /^(m|dm|cm|mm)[²³]$|^(L|cL|mL)$/.test(u)), `${quoi} : un grand écart entre unités usuelles`);
+      }
+      if (/,0/.test(a) || /,0/.test(c)) {
+        zero++;
+        if (/,0/.test(a) && valeurNb(a) >= 1 && !/,/.test(c)) formes[0]++;        // 3,05 m = 305 cm
+        else if (/^0,0/.test(c)) formes[1]++;                                       // 3 cm = 0,03 m
+        else if (/,0/.test(c)) formes[2]++;                                         // 305 cm = 3,05 m
+        else if (/^0,0/.test(a)) formes[3]++;                                       // 0,05 hm = 50 dm
+      }
+      if (!/,/.test(a + c)) entEnt++;
+      if (/,/.test(c)) repDec++;
     }
-    assert.equal(createHash("sha256").update(JSON.stringify(suite)).digest("hex").slice(0, 16), AVANT[t], `${t} : le tirage du niveau 3 a changé`);
-    assert.ok(part(zero, N) > 30, `${t} : ${part(zero, N)} % de zéros à placer (0,05 ; 3,05 ; 0,045)`);
-    // les grands écarts des aires et des volumes (1 m² = 10 000 cm², 1 m³ = 1 000 000 cm³) restent au niveau 3
-    if (t === "area" || t === "volM3") assert.ok(part(grandEcart, N) > 15, `${t} : ${part(grandEcart, N)} % de grands écarts`);
+    if (unD) {
+      assert.equal(grand, 0, `${t} : jamais plus de × 1 000`);
+      assert.ok(part(zero, N) > 72, `${t} : ${part(zero, N)} % de zéros à placer (8 sur 10)`);
+      assert.ok(part(entEnt, N) < 3, `${t} : ${part(entEnt, N)} % d'entier à entier (plus de rappel du niveau 1)`);
+    } else {
+      assert.ok(part(grand, N) > 30 && part(grand, N) < 48, `${t} : ${part(grand, N)} % de grands écarts (4 sur 10)`);
+      assert.ok(part(zero, N) > 38, `${t} : ${part(zero, N)} % de zéros à placer`);
+    }
+    for (let f = 0; f < 4; f++) assert.ok(formes[f] / zero > 0.12, `${t} : la forme ${f + 1} du piège ne sort que ${Math.round((100 * formes[f]) / zero)} %`);
+    assert.ok(part(repDec, N) > 38 && part(repDec, N) < 56, `${t} : ${part(repDec, N)} % de réponses avec une virgule`);
+  }
+});
+
+// ---- correctif du lot 6 : la recette de chaque série, vérifiée série par série ----
+function sorteDe(q) {
+  const a = q.valStr, c = q.calcValStr, d = (s) => s.includes(","), usu = P.USUELLES.has(q.sourceUnit) && P.USUELLES.has(q.targetUnit);
+  if (Math.abs(q.targetPos - q.sourcePos) > 3) return "G";
+  if (/,0/.test(a) && valeurNb(a) >= 1 && !d(c)) return "P1";
+  if (/^0,0/.test(c)) return "P2";
+  if (/,0/.test(c)) return "P3";
+  if (/^0,0/.test(a)) return "P4";
+  if (!d(a) && !d(c)) return usu ? "B" : "AE";
+  if (!usu) return "AV";
+  return d(a) && d(c) ? "V3" : d(a) ? "V1" : "V2";
+}
+const UN_D = ["length", "mass", "massT", "volL"];
+
+test("lot 6, correctif : chaque série de 10 suit sa recette (150 séries par case et par niveau)", () => {
+  for (const t of TYPES) for (const lvl of [1, 2, 3]) for (let k = 0; k < 150; k++) {
+    const serie = P.tirerSerie([t], [lvl], 10, `RC${k}`), so = serie.map(sorteDe), n = {};
+    so.forEach((x) => (n[x] = (n[x] || 0) + 1));
+    const quoi = `${t} niveau ${lvl} série RC${k} : ${so.join(" ")}`;
+    assert.equal(serie.length, 10, quoi);
+    // autant vers la petite unité que vers la grande (« 5 L = 5 dm³ » ne compte pas)
+    const petite = serie.filter((q) => q.targetPos > q.sourcePos).length, grande = serie.filter((q) => q.targetPos < q.sourcePos).length;
+    // (L ↔ m³ au niveau 1 : « 5 L = 5 dm³ » prend sa place dans la recette sans aller nulle part, d'où un écart de 3 au plus)
+    assert.ok(Math.abs(petite - grande) <= (t === "cross" && lvl === 1 ? 3 : 2), `${quoi} : ${petite} vers la petite unité, ${grande} vers la grande`);
+    // une même conversion 2 fois au plus : partout au niveau 3, et pour les longueurs au niveau 2 ; au niveau 2, la virgule se travaille
+    // avec les unités usuelles, et certaines cases n'en ont que 2 ou 3 paires (kg ↔ g, g ↔ mg ; m² ↔ dm², dm² ↔ cm² ; L ↔ cL, L ↔ mL,
+    // cL ↔ mL) : elles reviennent alors 3 ou 4 fois
+    if (lvl > 1) {
+      const paires = {};
+      for (const q of serie) { const p = [q.sourceUnit, q.targetUnit].sort().join(); paires[p] = (paires[p] || 0) + 1; }
+      const max = lvl === 3 || t === "length" ? 2 : t === "cross" || t === "volL" ? 3 : 4;
+      assert.ok(Math.max(...Object.values(paires)) <= max, `${quoi} : une conversion revient plus de ${max} fois`);
+    }
+    const rep = serie.filter((q) => q.calcValStr.includes(",")).length;
+    if (lvl === 1) assert.deepEqual(Object.keys(n), ["B"], quoi);
+    if (lvl === 2) {
+      // 3 « s'en va », 3 « arrive », 1 « bouge » (ou l'une des deux autres là où elle n'existe pas), 3 avec une autre unité
+      assert.equal((n.AE || 0) + (n.AV || 0), 3, quoi);
+      assert.ok((n.V1 || 0) >= 3 && (n.V2 || 0) >= 3 && (n.V1 || 0) + (n.V2 || 0) + (n.V3 || 0) === 7, quoi);
+      if (["length", "volL"].includes(t)) assert.ok(n.V3 >= 1, `${quoi} : la virgule ne bouge jamais`);
+      assert.ok(!n.B && !n.G && !Object.keys(n).some((x) => x[0] === "P"), quoi);
+      assert.ok(rep >= 3 && rep <= 7, `${quoi} : ${rep} réponses avec une virgule`);
+    }
+    if (lvl === 3) {
+      if (UN_D.includes(t)) {
+        assert.deepEqual([n.P1, n.P2, n.P3, n.P4], [3, 3, 2, 2], `${quoi} : les quatre formes du piège`);
+      } else {
+        assert.equal(n.G, 4, `${quoi} : 4 grands écarts`);
+        assert.equal((n.P1 || 0) + (n.P2 || 0) + (n.P3 || 0) + (n.P4 || 0), 6, quoi);
+        assert.ok(["P1", "P2", "P3", "P4"].every((f) => n[f]), `${quoi} : il manque une forme du piège`);
+      }
+    }
+  }
+});
+
+test("lot 6, correctif : une série de 5 reste équilibrée, et cocher deux niveaux partage la série", () => {
+  for (const t of TYPES) for (let k = 0; k < 100; k++) {
+    const cinq = P.tirerSerie([t], [2], 5, `C5${k}`).map(sorteDe);
+    assert.ok(cinq.includes("V1") && cinq.includes("V2"), `${t} : ${cinq.join(" ")}`);
+    const trois = P.tirerSerie([t], [3], 5, `C3${k}`).map(sorteDe);
+    assert.ok(new Set(trois).size >= 3, `${t} niveau 3 en 5 questions : ${trois.join(" ")}`);
+    // niveaux 1 et 2 cochés : 5 questions de chaque (plus de doublon de rappel)
+    const deux = P.tirerSerie([t], [1, 2], 10, `C12${k}`).map(sorteDe);
+    assert.equal(deux.filter((x) => x === "B").length, 5, `${t} niveaux 1 + 2 : ${deux.join(" ")}`);
   }
 });
 
