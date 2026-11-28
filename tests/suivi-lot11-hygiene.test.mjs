@@ -69,6 +69,9 @@ test("la matrice décrit exactement les droits décidés le 05/09/2026", () => {
     "eleves.nommer": "ecriture",
     "eleves.regenerer": "ecriture",
     "eleves.restaurer": "ecriture",
+    // Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à zéro »,
+    // défait par « Revenir à… » : un dépannage, écriture.
+    "eleves.recommencer": "ecriture",
     "classes.modifier": "proprietaire",
     "classes.supprimer": "proprietaire",
     // Lot serveur A (06/09/2026) : supprimer les classes de l'année écoulée,

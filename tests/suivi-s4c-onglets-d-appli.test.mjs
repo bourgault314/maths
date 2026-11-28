@@ -329,7 +329,7 @@ test("2 — SPLAT!, « Par monde » : seulement les mondes ouverts à la classe 
   assert.match(fonction("poserAppli"), /if \(!splat\) \$\("splat-mondes"\)\.hidden = true;/, "hors de SPLAT!, la carte part");
   assert.match(fonction("dessinerTableauSplat"), /dessinerObjectifSplat\(\);\s*dessinerMondesSplat\(\);/);
   for (const id of ["splat-mondes-liste", "splat-mondes-vues"]) assert.match(constante("ZONES_TEXTE"), new RegExp(`"${id}"`), `${id} vidée à la déconnexion`);
-  assert.match(script, /"vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop", "pop-eleves",\s*\/\/[^\n]*\n\s*"splat-mondes",/, "et cachée");
+  assert.match(script, /"vue-classe", "dc-ouest", "dc-qui", "dc-aider", "pop-eleves",\s*\/\/[^\n]*\n\s*"splat-mondes",/, "et cachée");
 });
 
 // ------------------------------------------------------------ 3. Anzan

@@ -223,7 +223,13 @@ test("dans le tableau d'une appli, « Revenir à… » est dans le « ⋯ » au 
   // Lot 5f (retour de Gwenaël du 25/10/2026) : sorti de la fenêtre de l'élève,
   // où il était « trop visible » ; dans le « ⋯ » de la ligne, comme avant le 5c.
   // Lot 8 (31/10/2026) : le « ⋯ » dans sa propre case, avant celle de la flèche.
-  assert.match(fonction("finirLigne"), /if \(peutRevenir\(eleve\)\) \{\s*menuGestes\(geste, \[boutonGeste\("Revenir à…", "secondaire", \(\) => revenirA\(eleve\),/);
+  // Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à zéro »
+  // vient dessous, dans le même menu — onglet Défi calcul, en écriture, un
+  // élève qui a déjà envoyé quelque chose.
+  assert.match(fonction("finirLigne"), /if \(peutRevenir\(eleve\)\) \{\s*gestes\.push\(boutonGeste\("Revenir à…", "secondaire", \(\) => revenirA\(eleve\),/);
+  assert.match(fonction("finirLigne"), /if \(appliAffichee === "defi-calcul" && droitClasse !== "lecture" && eleve\.maj_le\) \{\s*gestes\.push\(boutonGeste\("Recommencer Défi calcul à zéro", "danger", \(\) => recommencerCalcul\(eleve\),/);
+  assert.ok(fonction("finirLigne").indexOf("Revenir à…") < fonction("finirLigne").indexOf("Recommencer Défi calcul à zéro"), "« Recommencer » sous « Revenir à… »");
+  assert.match(fonction("finirLigne"), /menuGestes\(geste, gestes\);/);
   assert.doesNotMatch(page, /id="fe-gestes"|id="fe-revenir"/, "plus de « Revenir à… » dans la fenêtre");
   assert.doesNotMatch(fonction("dessinerFenetreEleve"), /peutRevenir/);
 });

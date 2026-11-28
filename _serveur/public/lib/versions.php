@@ -58,6 +58,14 @@ function premier_jour_garde(?string $aujourdhui = null): string
 // L'insertion-ou-remplacement tient en une seule instruction, comme le
 // limiteur (lib/limite.php) : deux enregistrements du même élève au même
 // instant ne peuvent pas se heurter sur la clé unique.
+//
+// Lot K2 de Défi calcul (correctif du 28/11/2026, relecture Codex) : une
+// ligne dont la révision est NÉGATIVE est l'état d'« avant la remise à
+// zéro » de ce jour-là (garder_avant_remise) — elle n'est JAMAIS remplacée
+// par un enregistrement. Sinon, un élève qui a joué le matin puis a été
+// remis à zéro perdait son travail du matin à sa synchronisation suivante,
+// malgré les sept jours promis. MySQL évalue les affectations dans l'ordre :
+// « revision » se teste dans chaque IF et ne change qu'en dernier.
 function enregistrer_version(PDO $pdo, int $eleveId, string $appli, string $donnees, int $revision): void
 {
     $jour = jour_local();
@@ -67,8 +75,10 @@ function enregistrer_version(PDO $pdo, int $eleveId, string $appli, string $donn
         $pdo->prepare(
             'INSERT INTO versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le)
              VALUES (?, ?, ?, ?, ?, ?, ?)
-             ON DUPLICATE KEY UPDATE revision = VALUES(revision), calculs = VALUES(calculs),
-                                     donnees = VALUES(donnees), maj_le = VALUES(maj_le)'
+             ON DUPLICATE KEY UPDATE calculs = IF(revision < 0, calculs, VALUES(calculs)),
+                                     donnees = IF(revision < 0, donnees, VALUES(donnees)),
+                                     maj_le = IF(revision < 0, maj_le, VALUES(maj_le)),
+                                     revision = IF(revision < 0, revision, VALUES(revision))'
         )->execute([$eleveId, $appli, $jour, $revision, $calculs, $donnees, $maintenant]);
     } else {
         $pdo->prepare(
@@ -76,7 +86,8 @@ function enregistrer_version(PDO $pdo, int $eleveId, string $appli, string $donn
              VALUES (?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(eleve_id, appli, jour) DO UPDATE SET
                revision = excluded.revision, calculs = excluded.calculs,
-               donnees = excluded.donnees, maj_le = excluded.maj_le'
+               donnees = excluded.donnees, maj_le = excluded.maj_le
+             WHERE versions.revision >= 0'
         )->execute([$eleveId, $appli, $jour, $revision, $calculs, $donnees, $maintenant]);
     }
     $pdo->prepare('DELETE FROM versions WHERE eleve_id = ? AND appli = ? AND jour < ?')
@@ -122,6 +133,8 @@ function versions_des_eleves(PDO $pdo, array $eleveIds, string $appli, array $re
             'calculs' => (int)$ligne['calculs'],
             'courante' => isset($revisionsCourantes[$eleveId])
                 && (int)$revisionsCourantes[$eleveId] === (int)$ligne['revision'],
+            // Lot K2 : l'état d'avant une remise à zéro (révision négative).
+            'remise' => (int)$ligne['revision'] < 0,
         ];
     }
     return $parEleve;
@@ -143,4 +156,32 @@ function version_du_jour(PDO $pdo, int $eleveId, string $appli, string $jour): ?
 function oublier_versions_de_l_eleve(PDO $pdo, int $eleveId): void
 {
     $pdo->prepare('DELETE FROM versions WHERE eleve_id = ?')->execute([$eleveId]);
+}
+
+// Lot K2 de Défi calcul (correctif du 28/11/2026, relecture Codex) : range
+// l'état d'AVANT une remise à zéro comme la ligne du jour, épinglée par une
+// révision négative (-1 - révision lue) : aucun enregistrement ne la
+// remplace (enregistrer_version), elle part avec la purge des sept jours
+// comme les autres, « Revenir à… » la propose sous son nom.
+// S'il y a déjà une ligne épinglée ce jour-là (deux remises à zéro le même
+// jour), on garde celle qui compte le plus de calculs : la première remise
+// a vidé le parcours, la seconde ne doit pas remplacer le vrai travail par
+// un parcours presque vide.
+function garder_avant_remise(PDO $pdo, int $eleveId, string $appli, string $donnees, int $revision): void
+{
+    $jour = jour_local();
+    $calculs = compter_elements_declares($appli, $donnees);
+    $requete = $pdo->prepare('SELECT revision, calculs FROM versions WHERE eleve_id = ? AND appli = ? AND jour = ?' . pour_mise_a_jour($pdo));
+    $requete->execute([$eleveId, $appli, $jour]);
+    $ligne = $requete->fetch();
+    $requete->closeCursor();
+    $epingle = -1 - max(0, $revision);
+    if ($ligne === false) {
+        $pdo->prepare('INSERT INTO versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, ?, ?, ?, ?)')
+            ->execute([$eleveId, $appli, $jour, $epingle, $calculs, $donnees, maintenant()]);
+        return;
+    }
+    if ((int)$ligne['revision'] < 0 && (int)$ligne['calculs'] > $calculs) return;
+    $pdo->prepare('UPDATE versions SET revision = ?, calculs = ?, donnees = ?, maj_le = ? WHERE eleve_id = ? AND appli = ? AND jour = ?')
+        ->execute([$epingle, $calculs, $donnees, maintenant(), $eleveId, $appli, $jour]);
 }

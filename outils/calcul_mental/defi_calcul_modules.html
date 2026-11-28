@@ -878,6 +878,7 @@
             renderRepere();
             return;
           }
+          marquerSeriePerimee(recu.parcours);
           parcours = recu.parcours;
           sync.revision = Number.isInteger(donnees.revision) ? donnees.revision : base;
           // (Correctif K1, relecture de Codex du 26/11 : quand le serveur
@@ -1500,6 +1501,7 @@
             // suffit plus — l'envoi de fermeture a pu arriver sans que sa
             // réponse soit lue ; si le serveur a déjà tout, rien ne repart.)
             const apporte = recu.apporte;
+            marquerSeriePerimee(fusion);
             parcours = fusion;
             sauverCase();
             sync.dirty = apporte;
@@ -2639,6 +2641,16 @@
         $("escalier").hidden = true;
         $("escalier").replaceChildren();
         $("annonce").hidden = true;
+      }
+
+      // Lot K2 (correctif du 28/11, relecture Codex) : le professeur a remis
+      // le parcours à zéro (« Recommencer Défi calcul à zéro ») pendant une
+      // série — le parcours reçu a une époque plus haute. Les réponses de
+      // cette série datent de l'ancien parcours : elles ne s'appliquent pas
+      // au neuf. À la fin, la série se referme comme quand on la quitte.
+      function marquerSeriePerimee(recu) {
+        if (!state.running || !state.serie || !recu || !parcours) return;
+        if ((Number(recu.epoque) || 0) > (Number(parcours.epoque) || 0)) state.serie.perimee = true;
       }
 
       function arreterActivite() {
@@ -4865,7 +4877,7 @@
           serie.reponses.push(Object.assign({juste, ms, valeur, passe, calcul: question.calcul, outil: question.outil || "aucun"},
             !passe && saisieFraction() ? {ecrit: state.answer} : {},
             question.rappel ? {rappel: true} : {}, question.deuxieme ? {deuxieme: true} : {}));
-          if (serie.genre === "jour") {
+          if (serie.genre === "jour" && !serie.perimee) {
             const mouvement = noterRetour(serie, question.calcul, juste, ms, cause, question.deuxieme, question.premierLe);
             // Lot 1 (planche 4, choix de Gwenaël) : un faux appelle un 2e
             // calcul du même niveau, tout de suite après la correction. Le
@@ -4951,6 +4963,7 @@
       function finish() {
         if (!state.running) return;
         const serie = state.serie;
+        if (serie && serie.perimee) { quitterSerie(); return; }
         arreterActivite();
         const options = {aujourdhui: jourCourant(), carte: CARTE, seance: enSeance() && !MODE_PROF, palier: palierRegle(), source: SOURCE};
         // Le temps actif d'abord : c'est sur lui que la séance décide si elle

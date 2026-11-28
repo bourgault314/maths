@@ -81,7 +81,7 @@ function zone() {
 
 const LECTURES = ["applisDuBilan", "applisDeLaVue", "elevesDeLaVue", "listesManquantes", "sansSupprimes", "chargerApplis",
   "lectureAJour", "coursALire", "listesALire", "chargerLaClasse", "lectureDeLaClasse", "textePanne", "reporterEleve", "moteurSuivi",
-  "fermerPopOuEnEst", "viderZonesIds", "viderZonesClasse", "viderZonesCalcul"].map(n => fonction(n)).join("\n");
+  "viderZonesIds", "viderZonesClasse", "viderZonesCalcul"].map(n => fonction(n)).join("\n");
 const CONSTANTES = ["APPLIS", "ZONES_LA_CLASSE", "ZONES_CALCUL_CLASSE"].map(constante).join("\n");
 
 // La page, rejouée : `api(action, corps)` est le serveur (une promesse que le
@@ -250,14 +250,13 @@ test("point 1 — hors de La classe, ses zones sont vidées ; la liste d'une bar
   const {p, $} = pageLectures(() => new Promise(() => {}));
   const ids = p.run("ZONES_LA_CLASSE.concat(ZONES_CALCUL_CLASSE)");
   ids.forEach(id => $(id).append("Alice"));
-  $("dc-ouest-pop").hidden = false;
-  p.run("fermerPopOuEnEst()");
-  assert.equal($("dc-ouest-pop").hidden, true);
-  assert.equal($("dc-ouest-pop").textContent, "", "fermée, la liste n'a plus de prénom");
+  // (Lot K2 : plus de liste de barre — le détail d'une case de la grille
+  // s'ouvre dans la liste des prénoms, pop-eleves, vidée à sa fermeture.)
   p.run("viderZonesClasse(); viderZonesCalcul();");
   ids.forEach(id => assert.equal($(id).textContent, "", `${id} vidée`));
   assert.equal($("dc-ouest").hidden, true);
   assert.equal($("dc-qui").hidden, true);
+  assert.equal($("dc-aider").hidden, true, "« À aider » (des prénoms) se cache aussi");
   // Où c'est appelé : chaque redessin du tableau (la suppression d'un élève
   // en redessine un, quel que soit l'onglet), et l'ouverture d'une autre classe.
   const tableau = fonction("dessinerTableau");
@@ -265,7 +264,7 @@ test("point 1 — hors de La classe, ses zones sont vidées ; la liste d'une bar
   assert.match(fonction("ouvrirClasse"), /if \(!memeClasse\) \{ viderZonesClasse\(\); viderZonesCalcul\(\); \}/);
   assert.match(fonction("supprimerEleve"), /reporterEleve\(eleve, true\);\s*redessin\.demander\(\);/);
   // Les cartes de Défi calcul sans élève commencé se vident aussi.
-  assert.match(fonction("dessinerOuEnEst"), /bloc\.hidden = true;\s*viderZonesIds\(\["dc-ouest-sous", "dc-ouest-paliers", "dc-ouest-liste"\]\);/);
+  assert.match(fonction("dessinerOuEnEst"), /bloc\.hidden = true;\s*viderZonesIds\(\["dc-ouest-paliers", "dc-grille", "dc-grille-legende"\]\);/);
   assert.match(fonction("dessinerQuiSentraine"), /bloc\.hidden = true;\s*viderZonesIds\(\["dc-qui-barres", "dc-qui-texte"\]\);/);
   // Et à la déconnexion, comme avant : toutes dans ZONES_TEXTE.
   const zonesTexte = constante("ZONES_TEXTE");

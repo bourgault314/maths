@@ -81,19 +81,19 @@ test("3. la page charge le noyau, le moteur et la feuille du lot (numéros de ca
   }
 });
 
-test("4. la page du professeur : la classe de la ceinture dans « À féliciter » ; six onglets d'une rangée au téléphone", () => {
+test("4. la page du professeur : la classe de la ceinture dans « À féliciter » ; six onglets qui passent à la ligne au téléphone (lot K2)", () => {
   assert.match(PROF, /const CLASSES_CEINTURES = \["CP", "CE1", "CE2", "CM1", "CM2", "6e"\];/);
   assert.match(PROF, /texte: `\$\{NOMS_CEINTURES\[x\.ceinture - 1\]\} \(\$\{CLASSES_CEINTURES\[x\.ceinture - 1\]\}\) gagnée`/);
   // (Même compte et même ordre que le noyau.)
   const noms = PROF.match(/const NOMS_CEINTURES = (\[[^\]]*\]);/);
   assert.deepEqual(JSON.parse(noms[1]), CORE.CEINTURES.slice(1).map(c => `ceinture ${c.nom.replace(/^Ceinture /i, "").toLowerCase()}`));
-  // Au téléphone : six colonnes, la classe en un mot, le nombre de modules dessous ;
-  // la règle ne vise que « Où en est la classe » (la période de Coffres garde ses boutons).
-  assert.match(PROF, /@media \(max-width: 700px\) \{\n    #dc-ouest-paliers \{ display: grid; grid-template-columns: repeat\(6, minmax\(0, 1fr\)\); gap: 4px; \}/);
-  assert.match(PROF, /#dc-ouest-paliers \.dc-long \{ display: none; \}/);
-  assert.match(PROF, /\.dc-paliers-choix \.dc-court \{ display: none; \}/);
-  assert.match(PROF, /el\("span", "dc-court", \(\{1: "CP", 2: "CE1", 3: "CE2", 4: "CM1", 5: "CM2", 6: "6e"\}\)\[n\]/);
-  assert.match(PROF, /bouton\.setAttribute\("aria-label", `\$\{nomPalierCalcul\(n\)\}, \$\{modulesDu\(n\)\.length\} modules`\);/);
+  // (Lot K2 « le professeur », planche K2-4 : les six onglets de « Où en est
+  // chacun » passent à la ligne au téléphone — « CE1 · 20 », jamais
+  // chevauchés ; la rangée de six colonnes du lot K1b est partie.)
+  assert.doesNotMatch(PROF, /#dc-ouest-paliers \{ display: grid; grid-template-columns: repeat\(6/);
+  assert.match(PROF, /\.dc-paliers-choix \{ display: flex; flex-wrap: wrap;/);
+  assert.match(PROF, /el\("button", "", `\$\{CLASSES_ETAGES\[e\.etage\] \|\| e\.etage\} · \$\{e\.total\}`\)/);
+  assert.match(PROF, /bouton\.setAttribute\("aria-label", `\$\{nomPalierCalcul\(e\.etage\)\}, \$\{e\.total\} étoiles`\);/);
 });
 
 test("5. le ménage : Mon parcours, la pastille des soirs, l'ancien bilan — partis, et rien d'autre", () => {

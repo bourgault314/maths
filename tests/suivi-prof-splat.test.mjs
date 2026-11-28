@@ -602,9 +602,9 @@ test("« Revenir à… » revient dans l'activité affichée, et compte ses éta
     [{cle: "defi-tables", unite: ["calcul", "calculs"]}, {cle: "splat", unite: ["étape", "étapes"]}], appli, () => "", j => j);
   const eleve = {restaurable: false, journees: [{jour: "2026-10-07", calculs: 13}, {jour: "2026-10-06", calculs: 1}]};
   assert.deepEqual(proposees("splat")(eleve).map(o => o.libelle),
-    ["fin de journée du 2026-10-07 — 13 étapes", "fin de journée du 2026-10-06 — 1 étape"]);
+    ["fin de journée du 2026-10-07 — 13\u00a0étapes", "fin de journée du 2026-10-06 — 1\u00a0étape"]);
   assert.deepEqual(proposees("defi-tables")(eleve).map(o => o.libelle),
-    ["fin de journée du 2026-10-07 — 13 calculs", "fin de journée du 2026-10-06 — 1 calcul"]);
+    ["fin de journée du 2026-10-07 — 13\u00a0calculs", "fin de journée du 2026-10-06 — 1\u00a0calcul"]);
   assert.match(fonction("revenirA"), /const corps = \{eleve_id: eleve\.id, appli: appliAffichee\};/);
   assert.doesNotMatch(fonction("revenirA"), /"defi-tables"/);
 });

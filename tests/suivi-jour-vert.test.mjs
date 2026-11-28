@@ -271,7 +271,7 @@ test("Page prof, « Activité » : chaque ligne dit ce qui a été fait — sans
   assert.deepEqual(texteLigne("coffres", {tresors: null, parfaits: null, aides: null, solutions: null, cles: null, partie: 1, niveau: 1})[0], "partie en cours : 1 clé sur 10 · niveau 1");
   assert.deepEqual(texteLigne("coffres", {tresors: null, parfaits: null, aides: null, solutions: null})[0], "une partie", "jamais une ligne vide");
   const nom = DCORE.moduleDe("A1").nom;
-  assert.deepEqual(texteLigne("defi-calcul", {calculs: 0, justes: 0, nouveautes: 1, prouvees: 0, rouges: 0, modules: ["A1", "ZZ9"]})[0], `${nom} · 1 nouveauté réussie`, "un code sans nom n'est jamais écrit");
+  assert.deepEqual(texteLigne("defi-calcul", {calculs: 0, justes: 0, nouveautes: 1, prouvees: 0, rouges: 0, modules: ["A1", "ZZ9"]})[0], `${nom} · 1 étoile gagnée par J’apprends`, "un code sans nom n'est jamais écrit");
   assert.match(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 6, prevus: 10, grade: 1, reussi: 0})[0], / · pas encore$/);
   assert.match(texteLigne("flash-anzan", {mode: "grade", calculs: 10, justes: 10, prevus: 10, grade: 1, reussi: 1})[0], / · réussi ✓$/);
   // Barème révisé (22/11/2026) : la ligne dit l'étape, quand le grade en a plusieurs.

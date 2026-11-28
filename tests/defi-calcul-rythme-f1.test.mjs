@@ -76,12 +76,14 @@ test("page prof : « Régler Défi calcul » — la durée et le palier pour la 
   assert.match(page, /aChanger\.concat\(aRegler\)\.forEach/);
   assert.match(page, /`Les autres : \$\{c\.minutes\} minutes, /);
   assert.match(page, /"Durée d’une séance"/);
-  assert.match(page, /"Jusqu’où va l’appli"/);
+  // (Lot K2 « le professeur », planche K2-6 : le réglage se dit en ceintures.)
+  assert.match(page, /"Jusqu’à quelle ceinture"/);
   assert.match(page, /"15 minutes : plus de temps pour apprendre, pour une classe qui en a besoin\."/);
-  assert.match(page, /"Au-delà, ni test ni leçon\. Ce qui est déjà appris continue de revenir\."/);
+  assert.match(page, /"Tout est ouvert jusqu’à cette ceinture\. Au-delà, l’élève ne voit pas les étages, et ce qu’il y a déjà gagné ne revient pas dans ses calculs du jour\."/);
   assert.match(page, /el\("h3", "", "Autrement pour quelques élèves"\), el\("p", "aide", "Le choix de l’élève l’emporte sur celui de la classe\."\)/);
   // (Lot K1b : six étages, un par classe ; le réglage part sous le nom « etage ».)
-  assert.match(page, /const PALIERS_CALCUL = \[\[1, "CP", "Jusqu’au CP"\], \[2, "CE1", "Jusqu’au CE1"\], \[3, "CE2", "Jusqu’au CE2"\], \[4, "CM1", "Jusqu’au CM1"\], \[5, "CM2", "Jusqu’au CM2"\],\s+\[6, "La 6e \(tout\)", "Jusqu’à la 6e"\]\];/);
+  // (Lot K2 : les mêmes six étages, dits en ceintures, la classe à côté.)
+  assert.match(page, /const PALIERS_CALCUL = \[\[1, "Ceinture blanche-jaune · CP", "Ceinture blanche-jaune · CP"\],\s+\[2, "Ceinture jaune · CE1", "Ceinture jaune · CE1"\], \[3, "Ceinture jaune-orange · CE2", "Ceinture jaune-orange · CE2"\],\s+\[4, "Ceinture orange · CM1", "Ceinture orange · CM1"\], \[5, "Ceinture verte · CM2", "Ceinture verte · CM2"\],\s+\[6, "Ceinture bleue · 6e \(tout\)", "Ceinture bleue · 6e"\]\];/);
   assert.match(page, /const palier = palierValable\(r\.etage\);/);
   assert.doesNotMatch(page, /r\.palier\b|propre\.palier\b|pourLAppli\.palier\b/, "plus rien ne part ni ne se lit sous l'ancien nom");
   // Une ligne par valeur différente de celle de la classe.

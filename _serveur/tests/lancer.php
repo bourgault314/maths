@@ -3232,6 +3232,9 @@ const MATRICE_ATTENDUE = [
     'eleves.nommer' => 'ecriture',
     'eleves.regenerer' => 'ecriture',
     'eleves.restaurer' => 'ecriture',
+    // Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à zéro »,
+    // défait par « Revenir à… » : un dépannage, écriture.
+    'eleves.recommencer' => 'ecriture',
     'classes.modifier' => 'proprietaire',
     'classes.supprimer' => 'proprietaire',
     'classes.supprimer_echues' => 'proprietaire',
@@ -3384,6 +3387,20 @@ function jouer_action_lot11(string $action, array $lot11, string $jeton): int
         case 'eleves.restaurer':
             $corps['eleve_id'] = $lot11['eleve']['id'];
             $corps['appli'] = 'defi-tables';
+            break;
+        case 'eleves.recommencer':
+            // Une progression de Défi calcul posée en base s'il n'y en a pas
+            // (l'élève du lot 11 n'a que Défi tables) : la remise à zéro a
+            // quelque chose à remettre, le droit seul est éprouvé.
+            $existe = bd_test()->prepare("SELECT COUNT(*) FROM progressions WHERE eleve_id = ? AND appli = 'defi-calcul'");
+            $existe->execute([(int)$lot11['eleve']['id']]);
+            if ((int)$existe->fetchColumn() === 0) {
+                bd_test()->prepare("INSERT INTO progressions (eleve_id, appli, donnees, maj_le, revision, donnees_avant) VALUES (?, 'defi-calcul', '{\"version\":15,\"epoque\":0}', ?, 1, NULL)")
+                    ->execute([(int)$lot11['eleve']['id'], gmdate('Y-m-d\\TH:i:s\\Z')]);
+            }
+            $existe->closeCursor();
+            $corps['eleve_id'] = $lot11['eleve']['id'];
+            $corps['appli'] = 'defi-calcul';
             break;
         case 'eleves.acces': // rien en plus : la colonne reste vide, le droit seul est éprouvé
             $corps['eleve_id'] = $lot11['eleve']['id'];
@@ -10504,6 +10521,160 @@ verifier("defi-calcul lot K1b, correctif — un ancien « palier » écrit « 2.
     egal([], reglages_anciens_repris('defi-calcul', ['palier' => INF]), 'l’infini : rien');
     egal([], reglages_anciens_repris('defi-calcul', ['palier' => NAN]), 'pas un nombre : rien');
     appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    vider_compteurs();
+});
+
+// ------------------------------------------------- Défi calcul, lot K2 « le professeur »
+//
+// « Recommencer Défi calcul à zéro » (28/11/2026) : le parcours neuf est
+// construit par le serveur (aucune progression reçue de la page), son époque
+// dépasse celle d'avant (la fusion du moteur le prend en bloc), l'état d'avant
+// reste dans donnees_avant et dans l'historique des sept jours, « Revenir à… »
+// le défait ; seul qui peut écrire dans la classe de l'élève le fait.
+
+function progression_k2(int $eleveId): array
+{
+    $requete = bd_test()->prepare("SELECT donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = 'defi-calcul'");
+    $requete->execute([$eleveId]);
+    $ligne = $requete->fetch(PDO::FETCH_ASSOC);
+    $requete->closeCursor();
+    return $ligne === false ? [] : $ligne;
+}
+
+function versions_k2(int $eleveId): array
+{
+    $requete = bd_test()->prepare("SELECT jour, revision, calculs, donnees FROM versions WHERE eleve_id = ? AND appli = 'defi-calcul' ORDER BY jour");
+    $requete->execute([$eleveId]);
+    $lignes = $requete->fetchAll(PDO::FETCH_ASSOC);
+    $requete->closeCursor();
+    return $lignes;
+}
+
+verifier("defi-calcul lot K2 — « Recommencer à zéro » : le neuf vient du serveur, l'époque monte, l'état d'avant est gardé (donnees_avant, historique), « Revenir à… » le défait, le journal le dit", function () use (&$jetonS1) {
+    vider_compteurs();
+    $id = appel('/api/prof.php', ['action' => 'classes.creer', 'libelle' => 'K2', 'applis' => ['defi-calcul']], ['jeton' => $jetonS1])['json']['id'];
+    [$rania, $lucas] = appel('/api/prof.php', ['action' => 'eleves.ajouter', 'classe_id' => $id, 'nombre' => 2], ['jeton' => $jetonS1])['json']['eleves'];
+    $v15 = json_decode((string)file_get_contents(__DIR__ . '/parcours-reference-defi-calcul.json'), true);
+    $v15['epoque'] = 4;
+    egal(200, ecrire($rania['code'], $v15, 0, 'defi-calcul')['code'], 'la progression de Rania');
+    $avant = progression_k2((int)$rania['id']);
+    egal(1, (int)$avant['revision'], 'révision 1');
+    $recommencer = fn (array $corps, string $jeton) => appel('/api/prof.php', ['action' => 'eleves.recommencer'] + $corps, ['jeton' => $jeton]);
+
+    // 1. Rania a écrit aujourd'hui (le matin) : la ligne du jour garde l'état d'AVANT, épinglée.
+    $majAvant = bd_test()->query("SELECT maj_le FROM progressions WHERE eleve_id = " . (int)$rania['id'] . " AND appli = 'defi-calcul'")->fetchColumn();
+    $r = $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul',
+        // Ce que la page n'envoie pas, et qui ne doit servir à rien :
+        'parcours' => ['version' => 15, 'epoque' => 999, 'modules' => ['A1' => $v15['modules']['A1'] ?? []]], 'donnees' => 'x'], $jetonS1);
+    egal([200, true, 2], [$r['code'], $r['json']['ok'] ?? null, $r['json']['revision'] ?? null], 'le propriétaire recommence : ' . $r['texte']);
+    $apres = progression_k2((int)$rania['id']);
+    $neuf = json_decode((string)$apres['donnees'], true);
+    egal(['version' => 15, 'epoque' => 5], $neuf, 'le neuf : version 15, époque 4 + 1, rien d’autre (le JSON envoyé est ignoré)');
+    egal(2, (int)$apres['revision'], 'la révision monte');
+    egal($avant['donnees'], $apres['donnees_avant'], '« avant le dernier enregistrement » = l’état d’avant');
+    egal($majAvant, bd_test()->query("SELECT maj_le FROM progressions WHERE eleve_id = " . (int)$rania['id'] . " AND appli = 'defi-calcul'")->fetchColumn(), 'maj_le (dernière activité) ne bouge pas');
+    $versions = versions_k2((int)$rania['id']);
+    egal([jour_local()], array_column($versions, 'jour'), 'une seule ligne : aujourd’hui (aucune ligne d’hier inventée)');
+    egal([-2, $avant['donnees']], [(int)$versions[0]['revision'], $versions[0]['donnees']], 'la ligne du jour = l’état d’avant, épinglée (révision -1 - 1)');
+    $journal = bd_test()->prepare("SELECT resultat FROM journal WHERE action = 'eleves.recommencer' AND cible_type = 'eleve' AND cible_id = ?");
+    $journal->execute([(int)$rania['id']]);
+    egal(['ok'], $journal->fetchAll(PDO::FETCH_COLUMN), 'le journal : une ligne « ok »');
+
+    // 2. L'appli de l'élève lit le neuf, puis rejoue et écrit : la ligne épinglée ne bouge pas (bloquant de la relecture Codex).
+    $lu = lire($rania['code'], 'defi-calcul');
+    egal([200, 2, ['version' => 15, 'epoque' => 5]], [$lu['code'], $lu['json']['revision'], $lu['json']['parcours']], 'l’appli de l’élève reçoit le neuf');
+    $rejoue = ['version' => 15, 'epoque' => 5, 'modules' => ['A1' => $v15['modules']['A1'] ?? []]];
+    egal(200, ecrire($rania['code'], $rejoue, 2, 'defi-calcul')['code'], 'l’élève rejoue après la remise à zéro');
+    egal(200, ecrire($rania['code'], $rejoue, 3, 'defi-calcul')['code'], 'et écrit encore');
+    $versions = versions_k2((int)$rania['id']);
+    egal([[jour_local()], -2, $avant['donnees']], [array_column($versions, 'jour'), (int)$versions[0]['revision'], $versions[0]['donnees']], 'la ligne du jour garde toujours l’état d’avant');
+    $t = appel('/api/prof.php', ['action' => 'tableau', 'classe_id' => $id, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1])['json'];
+    $ligne = array_values(array_filter($t['eleves'], fn ($e) => (int)$e['id'] === (int)$rania['id']))[0];
+    egal([['jour' => jour_local(), 'calculs' => (int)$versions[0]['calculs'], 'remise' => true]],
+        array_map(fn ($j) => ['jour' => $j['jour'], 'calculs' => (int)$j['calculs'], 'remise' => $j['remise'] ?? false], $ligne['journees'] ?? []),
+        '« Revenir à… » propose « avant la remise à zéro » du jour');
+
+    // 3. « Revenir à… » ce jour-là rend le travail du matin, avec une époque plus haute que le neuf.
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $rania['id'], 'appli' => 'defi-calcul', 'jour' => jour_local()], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'Revenir à… (avant la remise à zéro) : ' . $r['texte']);
+    $revenu = json_decode((string)progression_k2((int)$rania['id'])['donnees'], true);
+    egal([6, $v15['modules']], [$revenu['epoque'] ?? null, $revenu['modules'] ?? null], 'la progression d’avant revient, époque 6 (au-dessus du neuf)');
+    // « avant le dernier enregistrement » marche toujours aussi.
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    egal(200, $r['code'], 'avant le dernier enregistrement');
+
+    // 4. Une 2e remise à zéro le même jour ne remplace pas le vrai travail par un parcours presque vide…
+    bd_test()->prepare("UPDATE progressions SET donnees = '{\"version\":15,\"epoque\":9}' WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'recommencer encore, depuis un parcours vide');
+    $versions = versions_k2((int)$rania['id']);
+    egal($avant['donnees'], $versions[0]['donnees'], 'la ligne épinglée garde le travail du matin');
+    // … mais un parcours plus fourni la remplace.
+    bd_test()->prepare("UPDATE progressions SET donnees = ? WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([json_encode(array_merge($v15, ['epoque' => 20])), (int)$rania['id']]);
+    $plusFourni = (string)progression_k2((int)$rania['id'])['donnees'];
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'recommencer depuis un parcours fourni');
+    egal($plusFourni, versions_k2((int)$rania['id'])[0]['donnees'], 'à calculs égaux ou plus nombreux, l’état d’avant le plus récent est gardé');
+    // Sans ligne du jour (rien écrit aujourd'hui) : l'état d'avant devient la ligne du jour, épinglée ; aucune ligne d'hier.
+    bd_test()->prepare("DELETE FROM versions WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    $avant = progression_k2((int)$rania['id']);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'recommencer sans ligne du jour');
+    $versions = versions_k2((int)$rania['id']);
+    egal([[jour_local()], -1 - (int)$avant['revision'], $avant['donnees']], [array_column($versions, 'jour'), (int)$versions[0]['revision'], $versions[0]['donnees']], 'l’état d’avant, épinglé au jour de la remise à zéro');
+
+    // 5. Les bornes : époque au plafond refusée (409, rien ne change) ; version hors catalogue → 15 ; une version plus récente est gardée ; illisible → 15, époque 1.
+    bd_test()->prepare("UPDATE progressions SET donnees = '{\"version\":14,\"epoque\":1000000}' WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    egal(409, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'au plafond : refusé');
+    egal('{"version":14,"epoque":1000000}', (string)progression_k2((int)$rania['id'])['donnees'], 'au plafond : rien n’a bougé');
+    bd_test()->prepare("UPDATE progressions SET donnees = '{\"version\":1500,\"epoque\":3}' WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'version 1500 en base');
+    egal(['version' => 15, 'epoque' => 4], json_decode((string)progression_k2((int)$rania['id'])['donnees'], true), 'au-delà du catalogue (999) : version 15, jamais un parcours sans version');
+    bd_test()->prepare("UPDATE progressions SET donnees = '{\"version\":16,\"epoque\":3}' WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'version 16 en base');
+    egal(['version' => 16, 'epoque' => 4], json_decode((string)progression_k2((int)$rania['id'])['donnees'], true), 'une version plus récente est gardée');
+    bd_test()->prepare("UPDATE progressions SET donnees = 'pas du json' WHERE eleve_id = ? AND appli = 'defi-calcul'")->execute([(int)$rania['id']]);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'une ligne illisible');
+    egal(['version' => 15, 'epoque' => 1], json_decode((string)progression_k2((int)$rania['id'])['donnees'], true), 'illisible : version 15, époque 1');
+    // « Revenir à… » ne remet pas en place une version qui ne se relit pas (donnees_avant = « pas du json »).
+    $temoin = progression_k2((int)$rania['id']);
+    $r = appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], ['jeton' => $jetonS1]);
+    egal(409, $r['code'], 'Revenir à une version illisible : refusé');
+    egal($temoin, progression_k2((int)$rania['id']), 'rien n’a bougé');
+
+    // 6. Ce qui est refusé, sans rien changer.
+    $temoin = progression_k2((int)$rania['id']);
+    egal(409, $recommencer(['eleve_id' => $lucas['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'Lucas n’a rien envoyé : rien à recommencer');
+    egal([], progression_k2((int)$lucas['id']), 'aucune ligne créée pour Lucas');
+    foreach (['defi-tables', 'splat', 'coffres', '', 'inconnue'] as $appli) {
+        egal(400, $recommencer(['eleve_id' => $rania['id'], 'appli' => $appli], $jetonS1)['code'], "appli « $appli » refusée");
+    }
+    egal(404, $recommencer(['eleve_id' => 999999, 'appli' => 'defi-calcul'], $jetonS1)['code'], 'un élève qui n’existe pas : 404');
+    // L'identifiant : un entier positif, ou son écriture en chiffres — rien d'autre.
+    egal(200, $recommencer(['eleve_id' => (string)$rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'], 'l’identifiant en chiffres');
+    foreach ([[(string)$rania['id'] . 'abc'], [[$rania['id']]], [true], ['0'], [-3], [(float)$rania['id'] + 0.5], [' ' . $rania['id']]] as [$brut]) {
+        egal(404, $recommencer(['eleve_id' => $brut, 'appli' => 'defi-calcul'], $jetonS1)['code'], 'identifiant refusé : ' . json_encode($brut));
+        egal(404, appel('/api/prof.php', ['action' => 'eleves.restaurer', 'eleve_id' => $brut, 'appli' => 'defi-calcul'], ['jeton' => $jetonS1])['code'], 'Revenir à… : identifiant refusé : ' . json_encode($brut));
+    }
+    $temoin = progression_k2((int)$rania['id']);
+    $cree = appel('/api/prof.php', ['action' => 'profs.ajouter', 'identifiant' => 'k2-collegue'], ['jeton' => $jetonS1])['json'];
+    $jetonNeuf = connexion('k2-collegue', $cree['motdepasse'])['json']['jeton'];
+    appel('/api/prof.php', ['action' => 'profs.motdepasse', 'ancien' => $cree['motdepasse'], 'nouveau' => 'une phrase pour k2 en 2026'], ['jeton' => $jetonNeuf]);
+    egal(404, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonNeuf)['code'], 'un collègue sans partage : 404 (la classe ne se révèle pas)');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $id, 'prof_id' => (int)$cree['id'], 'droit' => 'lecture'], ['jeton' => $jetonS1]);
+    egal(403, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonNeuf)['code'], 'un collègue en lecture seule : 403');
+    egal($temoin, progression_k2((int)$rania['id']), 'rien n’a bougé');
+    $refus = bd_test()->query("SELECT COUNT(*) FROM journal WHERE action = 'eleves.recommencer' AND resultat = 'refus'")->fetchColumn();
+    vrai((int)$refus >= 1, 'le refus en lecture seule est au journal');
+    appel('/api/prof.php', ['action' => 'partages.ajouter', 'classe_id' => $id, 'prof_id' => (int)$cree['id'], 'droit' => 'ecriture'], ['jeton' => $jetonS1]);
+    egal(200, $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonNeuf)['code'], 'un collègue en écriture : comme « Revenir à… », il peut');
+    egal(400, appel('/api/prof.php', '{"action":"eleves.recommencer","eleve_id":' . (int)$rania['id'] . ',"appli":["defi-calcul"]}', ['jeton' => $jetonS1])['code'], 'une appli qui n’est pas un texte');
+
+    // 7. Le débit : 60 remises à zéro par tranche de 10 minutes et par professeur.
+    vider_compteurs();
+    $codes = [];
+    for ($i = 0; $i < 61; $i++) $codes[] = $recommencer(['eleve_id' => $rania['id'], 'appli' => 'defi-calcul'], $jetonS1)['code'];
+    egal(array_merge(array_fill(0, 60, 200), [429]), $codes, 'la 61e est freinée');
+    vider_compteurs();
+    appel('/api/prof.php', ['action' => 'classes.supprimer', 'classe_id' => $id], ['jeton' => $jetonS1]);
+    appel('/api/prof.php', ['action' => 'profs.supprimer', 'prof_id' => (int)$cree['id']], ['jeton' => $jetonS1]);
     vider_compteurs();
 });
 

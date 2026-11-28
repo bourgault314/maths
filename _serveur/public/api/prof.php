@@ -75,6 +75,10 @@ const DROIT_PAR_ACTION = [
     'eleves.nommer' => 'ecriture',
     'eleves.regenerer' => 'ecriture',
     'eleves.restaurer' => 'ecriture',
+    // Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à
+    // zéro », dans le même menu « ⋯ » que « Revenir à… », et défait par lui
+    // pendant sept jours : un dépannage, comme « Revenir à… » — écriture.
+    'eleves.recommencer' => 'ecriture',
     // Propriétaire : ce qui efface, et ce qui change la classe elle-même.
     'classes.modifier' => 'proprietaire',
     'classes.supprimer' => 'proprietaire',
@@ -356,6 +360,136 @@ function applis_avec_cle_reservee(mixed $applis): bool
 // Correctif B3 (relecture Codex, point 3) : le refus d'une page d'avant ce lot.
 const MESSAGE_PAGE_B2 = "Cette page date d'avant une mise à jour de Ma classe : recharge-la, puis refais ton choix.";
 
+// Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à zéro »
+// pour un élève, depuis le « ⋯ » de sa ligne. Les applis qui savent repartir
+// de zéro côté serveur : Défi calcul seulement (son moteur fusionne deux
+// copies en gardant EN BLOC celle dont l'époque est la plus haute).
+const APPLIS_RECOMMENCABLES = ['defi-calcul'];
+// La version du parcours neuf : celle que le catalogue exige des pages
+// d'aujourd'hui (lib/applis.php, « version_min » : 15 au lot K2), ou celle
+// en base si elle est plus haute (une page plus récente l'a écrite). Jamais
+// plus basse : une page à jour lirait une version plus ancienne, mais
+// api/parcours.php refuse de servir une version sous « version_min ».
+// Le parcours neuf, construit ICI : la page n'envoie aucune progression.
+// Le même que remettreAZero() du moteur (defi_calcul_mon_parcours.js) : tout
+// s'efface, l'époque monte d'un cran — à la fusion, l'époque la plus haute
+// gagne en bloc, l'ancien travail ne revient pas des appareils de l'élève.
+// Le moteur complète tout le reste (normaliserParcours) ; le filtre du
+// serveur (filtrer_progression) passe dessus comme sur toute écriture.
+function progression_neuve(string $appli, string $courantJson): string
+{
+    $courant = json_decode($courantJson, false);
+    $version = is_object($courant) ? ($courant->version ?? null) : null;
+    if (is_float($version) && floor($version) === $version) $version = (int)$version;
+    $minimum = (int)(CATALOGUE_APPLIS[$appli]['version_min'] ?? 1);
+    // (Correctif K2, relecture Codex : la borne haute est celle du catalogue,
+    // « version_max » — au-delà, filtrer_progression retirait la version et
+    // la remise à zéro rangeait un parcours sans version.)
+    $maximum = (int)(CATALOGUE_APPLIS[$appli]['version_max'] ?? $minimum);
+    if (!is_int($version) || $version < $minimum || $version > $maximum) $version = $minimum;
+    $neuf = (object)[
+        'version' => $version,
+        'epoque' => min(epoque_de($courantJson) + 1, PROGRESSION_ENTIER_MAX),
+    ];
+    $encode = json_encode(filtrer_progression($appli, $neuf), JSON_UNESCAPED_UNICODE);
+    if (!is_string($encode)) throw new RuntimeException('progression neuve illisible');
+    return $encode;
+}
+
+// La remise à zéro, sous le même verrou que « Revenir à… » et que les
+// écritures de l'appli (restaurer_progression, api/parcours.php) : la ligne
+// est verrouillée, l'UPDATE ne passe que si la révision lue est encore celle
+// en base. Ce qui est gardé pour faire marche arrière :
+//  - donnees_avant = l'état d'avant (« avant le dernier enregistrement »),
+//    comme pour un enregistrement — jusqu'à la prochaine écriture ;
+//  - et, pour les sept jours promis, l'état d'avant rangé comme la ligne du
+//    jour, ÉPINGLÉE (lib/versions.php, garder_avant_remise) : aucune
+//    synchronisation de l'élève ne la remplace, « Revenir à… » la propose
+//    sous le nom « avant la remise à zéro du … ».
+//    (Correctif du 28/11, relecture Codex, bloquant : avant, la ligne du
+//    jour recevait l'état neuf et l'état d'avant n'était rangé — comme
+//    ligne d'HIER — que si l'élève n'avait rien écrit ce jour-là. Un élève
+//    qui avait joué le matin perdait ce travail à sa synchronisation
+//    suivante ; et la ligne « d'hier » pouvait porter un autre état.)
+// maj_le n'est PAS touché : c'est la dernière activité de l'élève (le
+// tableau l'affiche, le ménage des classes échues s'en sert), et une remise
+// à zéro n'en est pas une.
+// Le droit d'écrire est relu ICI, sous le verrou (droit_ecriture_sous_verrou) :
+// un partage retiré entre le contrôle de l'action et l'écriture l'emporte.
+// Renvoie ['rien' => true] sans progression, ['refus' => true] si le droit
+// a disparu, ['plafond' => true] si l'époque ne peut plus monter,
+// ['conflit' => true] si la ligne a bougé sous le verrou, sinon
+// ['donnees' => …, 'revision' => …].
+function recommencer_progression(PDO $pdo, int $profId, int $eleveId, string $appli): array
+{
+    return avec_reprise($pdo, function () use ($pdo, $profId, $eleveId, $appli): array {
+        transaction_ouvrir($pdo);
+        $requete = $pdo->prepare('SELECT id, donnees, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
+        $requete->execute([$eleveId, $appli]);
+        $ligne = $requete->fetch();
+        $requete->closeCursor();
+        if ($ligne === false) {
+            transaction_annuler($pdo);
+            return ['rien' => true];
+        }
+        if (!droit_ecriture_sous_verrou($pdo, $profId, $eleveId)) {
+            transaction_annuler($pdo);
+            return ['refus' => true];
+        }
+        $avant = (string)$ligne['donnees'];
+        // Une époque déjà au plafond ne peut plus monter : le parcours neuf
+        // ne gagnerait pas la fusion contre l'ancien appareil de l'élève.
+        if (epoque_de($avant) >= PROGRESSION_ENTIER_MAX) {
+            transaction_annuler($pdo);
+            return ['plafond' => true];
+        }
+        $revision = (int)$ligne['revision'];
+        $neuf = progression_neuve($appli, $avant);
+        $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ? WHERE id = ? AND revision = ?');
+        $requete->execute([$neuf, $avant, $revision + 1, (int)$ligne['id'], $revision]);
+        if ($requete->rowCount() !== 1) {
+            transaction_annuler($pdo);
+            return ['conflit' => true];
+        }
+        garder_avant_remise($pdo, $eleveId, $appli, $avant, $revision);
+        transaction_valider($pdo);
+        return ['donnees' => $neuf, 'revision' => $revision + 1];
+    });
+}
+
+// Lot K2 (correctif du 28/11, relecture Codex) : le droit d'écrire du
+// professeur sur la classe de l'élève, relu DANS la transaction. MySQL :
+// lectures verrouillantes — un retrait de partage en cours attend la fin de
+// l'action, un retrait déjà validé est vu. SQLite : la transaction tient
+// déjà le verrou d'écriture de toute la base (BEGIN IMMEDIATE).
+function droit_ecriture_sous_verrou(PDO $pdo, int $profId, int $eleveId): bool
+{
+    $verrou = pour_mise_a_jour($pdo);
+    $requete = $pdo->prepare('SELECT c.id, c.prof_id FROM eleves e JOIN classes c ON c.id = e.classe_id WHERE e.id = ?' . $verrou);
+    $requete->execute([$eleveId]);
+    $classe = $requete->fetch();
+    $requete->closeCursor();
+    if ($classe === false) return false;
+    if ((int)$classe['prof_id'] === $profId) return true;
+    $requete = $pdo->prepare('SELECT droit FROM partages WHERE classe_id = ? AND prof_id = ?' . $verrou);
+    $requete->execute([(int)$classe['id'], $profId]);
+    $droit = $requete->fetchColumn();
+    $requete->closeCursor();
+    return $droit !== false && in_array($droit, DROITS_PARTAGE, true) && $droit !== 'lecture';
+}
+
+// Lot K2 (correctif du 28/11, relecture Codex) : l'identifiant d'un élève
+// reçu pour « Recommencer » et « Revenir à… » — un entier positif, ou son
+// écriture en chiffres ; rien d'autre (avant, (int) ramenait un tableau, un
+// booléen ou « 12abc » à un identifiant). Sinon : « Introuvable. », comme
+// un élève qui n'existe pas.
+function identifiant_eleve_recu(mixed $brut): int
+{
+    if (is_int($brut) && $brut > 0) return $brut;
+    if (is_string($brut) && preg_match('/^[1-9][0-9]{0,17}$/', $brut) === 1) return (int)$brut;
+    erreur("Introuvable.", 404);
+}
+
 // La restauration écrit dans la même ligne que l'appli de l'élève, avec le
 // même verrou qu'elle (lib/bd.php, lot 6) : la ligne est verrouillée le temps
 // de lire la version précédente et de l'écrire, et l'UPDATE ne passe que si
@@ -386,9 +520,9 @@ const MESSAGE_PAGE_B2 = "Cette page date d'avant une mise à jour de Ma classe :
 // à époque égale, la fusion du moteur additionne au lieu de trancher. Défaut
 // vu en production le jour de la mise en ligne de la PR A. Voir
 // lib/progression.php, version_avec_epoque_relevee().
-function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null): array
+function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $jour = null, ?int $profId = null): array
 {
-    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour): array {
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli, $jour, $profId): array {
         transaction_ouvrir($pdo);
         $requete = $pdo->prepare('SELECT id, donnees, donnees_avant, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
         $requete->execute([$eleveId, $appli]);
@@ -397,6 +531,10 @@ function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $j
         if ($ligne === false) {
             transaction_annuler($pdo);
             return ['rien' => true];
+        }
+        if ($profId !== null && !droit_ecriture_sous_verrou($pdo, $profId, $eleveId)) {
+            transaction_annuler($pdo);
+            return ['refus' => true];
         }
         if ($jour === null) {
             $vers = $ligne['donnees_avant'];
@@ -410,6 +548,13 @@ function restaurer_progression(PDO $pdo, int $eleveId, string $appli, ?string $j
                 transaction_annuler($pdo);
                 return ['inconnu' => true];
             }
+        }
+        // (Correctif K2, relecture Codex : une version qui ne se relit pas
+        // — une ligne déjà abîmée gardée par une remise à zéro — n'est pas
+        // remise en place.)
+        if (!is_object(json_decode((string)$vers, false))) {
+            transaction_annuler($pdo);
+            return ['illisible' => true];
         }
         // L'époque est relevée ICI, sous le verrou : l'état courant qu'elle
         // doit dépasser est celui qu'on vient de lire, pas celui d'avant
@@ -1141,7 +1286,7 @@ try {
             //    l'écrasement date d'hier et que le dernier enregistrement est
             //    celui de l'intrus.
             // La révision monte dans les deux cas, l'appli de l'élève fusionnera.
-            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            $eleve = eleve_pour_action($pdo, $profId, identifiant_eleve_recu($corps['eleve_id'] ?? null), $action);
             $appli = appli_recue($corps['appli'] ?? null);
             if (!in_array($appli, APPLIS_PROPOSABLES, true)) erreur("Application inconnue.", 400);
             $jour = null;
@@ -1149,7 +1294,12 @@ try {
                 $jour = is_string($corps['jour']) ? $corps['jour'] : '';
                 if (!date_reelle($jour)) erreur("Jour à restaurer invalide.", 400);
             }
-            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli, $jour);
+            $resultat = restaurer_progression($pdo, (int)$eleve['id'], $appli, $jour, $profId);
+            if (isset($resultat['refus'])) erreur("Introuvable.", 404);
+            if (isset($resultat['illisible'])) {
+                journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("Cette version ne se relit pas : choisis-en une autre.", 409);
+            }
             if (isset($resultat['inconnu'])) {
                 journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id'], 'erreur');
                 erreur("Cette journée n'est plus dans l'historique : recharge la classe.", 404);
@@ -1158,6 +1308,32 @@ try {
             if (isset($resultat['conflit'])) erreur("La progression a changé pendant la restauration : regarde le tableau, puis réessaie.", 409);
             journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true, 'parcours' => json_decode($resultat['donnees'], false), 'revision' => $resultat['revision']]);
+
+        case 'eleves.recommencer':
+            // Lot K2 de Défi calcul : « Recommencer Défi calcul à zéro ».
+            // Le droit est celui de la classe DE L'ÉLÈVE (eleve_pour_action :
+            // un élève d'une autre classe répond 404, un collègue en lecture
+            // seule 403) ; aucune progression n'est reçue du navigateur — le
+            // neuf est construit ici (progression_neuve).
+            // (Correctif K2, relecture Codex : la limite d'abord — un refus en
+            // lecture seule répété ne remplit plus le journal sans fin.)
+            limiter('recommencer:' . $profId, 60, 600);
+            $eleve = eleve_pour_action($pdo, $profId, identifiant_eleve_recu($corps['eleve_id'] ?? null), $action);
+            $appli = appli_recue($corps['appli'] ?? null);
+            if (!in_array($appli, APPLIS_RECOMMENCABLES, true)) erreur("Cette activité ne se recommence pas d'ici.", 400);
+            $resultat = recommencer_progression($pdo, $profId, (int)$eleve['id'], $appli);
+            if (isset($resultat['refus'])) erreur("Introuvable.", 404);
+            if (isset($resultat['rien'])) erreur("Rien à recommencer : l’élève n’a encore rien envoyé.", 409);
+            if (isset($resultat['plafond'])) {
+                journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("Cette progression ne peut plus repartir de zéro d'ici : écris à l'administrateur du serveur.", 409);
+            }
+            if (isset($resultat['conflit'])) {
+                journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("La progression a changé pendant la remise à zéro : regarde le tableau, puis réessaie.", 409);
+            }
+            journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id']);
+            repondre(['ok' => true, 'revision' => $resultat['revision']]);
 
         case 'eleves.supprimer':
             // Supprimer un élève efface sa progression pour de bon : depuis le
@@ -1416,7 +1592,8 @@ try {
                     // La version qui porte la révision du moment EST l'état
                     // actuel : y « revenir » ne ferait rien.
                     if ($version['courante']) continue;
-                    $journees[] = ['jour' => $version['jour'], 'calculs' => $version['calculs']];
+                    $journees[] = ['jour' => $version['jour'], 'calculs' => $version['calculs']]
+                        + ($version['remise'] ? ['remise' => true] : []);
                 }
                 $lignes[] = [
                     'id' => (int)$ligne['id'],
