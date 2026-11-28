@@ -1146,21 +1146,13 @@
     /* =========================================
        GÉNÉRATEURS (CONVERSIONS ET PROBLÈMES)
        ========================================= */
-    /* lot 5 (25/11/2026) : trois vrais niveaux pour les conversions
+    /* Les trois niveaux des conversions (lot 5 du 25/11/2026, refait au lot 6 du 28/11/2026). Chaque niveau reprend un peu du précédent.
        1 « Les bases »       : les relations qu'on connaît par cœur, dans les deux sens, des entiers de 1 à 99, résultat entier
-       2 « Tout le tableau » : toutes les unités, dans les deux sens, jusqu'à × 1 000 et ÷ 1 000 ; le nombre écrit avec la plus
-                               grande des deux unités est simple (un entier jusqu'à 999 ; 3,5 ; 2,75 ; 0,5 ; 0,25), et il n'y a
-                               jamais de zéro juste après la virgule
-       3 « Les pièges »      : les nombres et les unités d'avant le lot 5 (0,05 ; 3,05 ; 45 000 ; les grands écarts des aires et
-                               des volumes), sans ce qui a plus de 4 chiffres après la virgule ou plus de 8 chiffres */
-    // niveau 3 : les nombres pièges (le tirage d'avant le lot 5, inchangé)
-    function nombrePiege() {
-      let type = rand(1, 4);
-      if (type === 1) { let zeros = rand(1, 2) === 1 ? "0,0" : "0,00"; return zeros + rand(1, 9); }
-      if (type === 2) { if (rand(1, 2) === 1) return rand(1, 9) + ",0" + rand(1, 9); return rand(1, 9) + "0," + rand(1, 9); }
-      if (type === 3) return rand(1, 99) + "," + rand(1, 9);   // lot 4 : plus de zéro inutile en fin de nombre (« 89,50 » → « 89,5 »), même tirage
-      let zeros = rand(1, 2) === 1 ? "00" : "000"; return rand(1, 99) + zeros;
-    }
+       2 « Tout le tableau » : la virgule avec les unités usuelles (3,5 m = 350 cm ; 45 cm = 0,45 m) et les autres unités du tableau
+                               (7 hm = 700 m ; 2,16 km = 216 dam), jusqu'à × 1 000, jamais de zéro juste après la virgule
+       3 « Les pièges »      : les zéros à placer (3,05 m = 305 cm ; 3 cm = 0,03 m ; 305 cm = 3,05 m ; 0,05 hm = 50 dm) et, pour les aires
+                               et les volumes, les grands écarts (1 m² = 10 000 cm² ; 0,35 m³ = 350 000 cm³)
+       Longueurs, masses, capacités : jamais plus de × 1 000, à aucun niveau. */
 
     function questionDeConversion(base, valStr, sourceUnit, targetUnit, srcPos, tgtPos) {
       const calcValStr = decaler(valStr, tgtPos - srcPos);
@@ -1193,94 +1185,126 @@
       return questionDeConversion(base, decaler(k, pp - pg), petite, grande, pp, pg);
     }
 
-    // ---- niveau 2 : tout le tableau, jusqu'à × 1 000
-    const USUELLES = new Set(['km', 'm', 'cm', 'mm', 't', 'kg', 'g', 'mg', 'L', 'cL', 'mL', 'km²', 'm²', 'dm²', 'cm²', 'm³', 'dm³', 'cm³']);
-    // toutes les paires [grande unité, petite unité, leurs cases] d'une case du menu : 1 à 3 colonnes d'écart
-    // (une seule pour les aires et les volumes : × 100 et × 1 000)
+    // ---- niveaux 2 et 3 (lot 6, 28/11/2026) : chaque question est tirée dans une « sorte » précise, puis vérifiée
+    // les unités usuelles : celles du niveau 1 (dm compris), la tonne, km²
+    const USUELLES = new Set(['km', 'm', 'dm', 'cm', 'mm', 't', 'kg', 'g', 'mg', 'L', 'cL', 'mL', 'km²', 'm²', 'dm²', 'cm²', 'm³', 'dm³', 'cm³']);
+    // dam³, hm³, km³ (qu'on n'utilise jamais) et le quintal (hors programme) : plus aucune question ne les pose
+    const SANS_SENS = /^((da|h|k)m³|q)$/;
+    // toutes les paires [grande unité, petite unité, leurs cases] d'une case du menu :
+    //   « usu » et « rares » : au plus × 1 000 (1 à 3 colonnes ; une unité pour les aires et les volumes), entre deux unités usuelles ou non
+    //   « loin » : les grands écarts des aires et des volumes (m² ↔ cm², m³ ↔ cm³, m³ ↔ mL…), entre unités usuelles seulement
     const PAIRES_DU_TABLEAU = {};
     function pairesDuTableau(type) {
       if (PAIRES_DU_TABLEAU[type]) return PAIRES_DU_TABLEAU[type];
-      const base = SCHEMAS[type], toutes = [];
+      const base = SCHEMAS[type], proches = [], loin = [];
       if (type === 'cross') {
         for (const l of LITRES) for (const c of CUBES) {
-          const pl = posUnite(base, l), pc = posUnite(base, c);
-          if (Math.abs(pl - pc) <= 3) toutes.push(pl <= pc ? [l, c, pl, pc] : [c, l, pc, pl]);
+          const pl = posUnite(base, l), pc = posUnite(base, c), d = Math.abs(pl - pc);
+          const p = pl <= pc ? [l, c, pl, pc] : [c, l, pc, pl];
+          if (d >= 1 && d <= 3) proches.push(p);
+          else if (d >= 4 && d <= 6 && ['L', 'cL', 'mL'].includes(l) && c === 'm³') loin.push(p);
         }
       } else {
-        const u = base.units, s = base.slots, max = s === 1 ? 3 : 1;
-        for (let i = 0; i < u.length; i++) for (let j = i + 1; j <= i + max && j < u.length; j++) {
-          if (u[i] !== '-' && u[j] !== '-') toutes.push([u[i], u[j], i * s + s - 1, j * s + s - 1]);
+        const u = base.units, s = base.slots;
+        for (let i = 0; i < u.length; i++) for (let j = i + 1; j < u.length; j++) {
+          if (u[i] === '-' || u[j] === '-' || SANS_SENS.test(u[i]) || SANS_SENS.test(u[j])) continue;
+          const p = [u[i], u[j], i * s + s - 1, j * s + s - 1];
+          if ((j - i) * s <= 3) proches.push(p);
+          else if (s > 1 && j - i === 2 && /^(m|dm|cm|mm)[²³]$/.test(u[i]) && /^(m|dm|cm|mm)[²³]$/.test(u[j])) loin.push(p);
         }
       }
-      const usuelles = n => toutes.filter(([a, b]) => USUELLES.has(a) + USUELLES.has(b) === n);
-      return PAIRES_DU_TABLEAU[type] = { toutes, deux: usuelles(2), une: usuelles(1) };
+      const usu = proches.filter(([a, b]) => USUELLES.has(a) && USUELLES.has(b));
+      const rares = proches.filter(([a, b]) => !(USUELLES.has(a) && USUELLES.has(b)));
+      return PAIRES_DU_TABLEAU[type] = { usu, rares, loin };
     }
-    // le nombre écrit avec la plus grande des deux unités (« ecart » : le nombre de cases entre les deux unités)
-    function nombreSimple(ecart) {
-      const r = rand(1, 20);
-      if (r <= 6) return String(rand(1, 99));                    // 6 sur 20 : un entier jusqu'à 99
-      if (r <= 9) return String(rand(100, 999));                 // 3 sur 20 : un entier jusqu'à 999
-      if (r <= 14) return depuisEntier(rand(11, 999), 1);        // 5 sur 20 : un chiffre après la virgule (3,5 ; 12,5)
-      if (r <= 16) return depuisEntier(rand(101, 999), 2);       // 2 sur 20 : deux chiffres après la virgule (2,75)
-      if (r <= 19) {                                             // 3 sur 20 : plus petit que 1 (0,5 ; 0,25 ; 0,75 ; 0,45)
-        const sorte = rand(1, 4);
-        if (sorte <= 2) return '0,' + rand(1, 9);
-        return sorte === 3 ? pick(['0,25', '0,75']) : depuisEntier(rand(11, 99), 2);
+    const nbChiffres = s => s.replace(',', '').replace(/^0+/, '').length;
+    const aVirgule = s => s.indexOf(',') >= 0;
+    const valeur = s => Number(s.replace(',', '.'));
+    // les chiffres significatifs : de 1 à 9 trois fois sur dix, de 11 à 99 quatre fois sur dix, de 101 à 999 sinon (jamais finis par 0)
+    function significatif() {
+      const r = rand(1, 10);
+      if (r <= 3) return rand(1, 9);
+      let n; do n = r <= 7 ? rand(11, 99) : rand(101, 999); while (n % 10 === 0);
+      return n;
+    }
+    // une question d'une paire de la liste, dans le sens demandé (ou au hasard), qui passe le filtre ; null si aucune en 800 essais
+    // Toujours : au moins 1 dans la petite unité (jamais « 0,009 mm ») ; 3 décimales au plus, et seulement à × 1 000 (2,375 kg = 2 375 g)
+    function tirerDans(type, liste, filtre, sens) {
+      const base = SCHEMAS[type];
+      for (let i = 0; i < 800; i++) {
+        const [g, p, pg, pp] = pick(liste);
+        const versPetite = sens ? sens === 'petite' : rand(1, 2) === 1;
+        const d = rand(0, 3), n = significatif();
+        const brut = d ? depuisEntier(n, d) : String(n * Math.pow(10, rand(0, 2)));
+        // le nombre est lu dans l'unité de départ, ou (vers la grande unité, une fois sur deux) dans la grande unité : 0,35 m³ = 350 000 cm³
+        const depart = (versPetite || rand(1, 2) === 1) ? brut : decaler(brut, pp - pg);
+        const q = versPetite ? questionDeConversion(base, depart, g, p, pg, pp) : questionDeConversion(base, depart, p, g, pp, pg);
+        const dansGrande = versPetite ? q.valStr : q.calcValStr, dansPetite = versPetite ? q.calcValStr : q.valStr;
+        if (valeur(dansPetite) < 1 || nbDecimales(dansGrande) > (pp - pg === 3 ? 3 : 2) || nbDecimales(dansPetite) > 2) continue;
+        if (filtre(q.valStr, q.calcValStr)) return q;
       }
-      // 1 sur 20 : des millièmes, seulement à × 1 000 (2,375 kg = 2 375 g)
-      return ecart === 3 ? depuisEntier(rand(101, 9999), 3) : depuisEntier(rand(11, 999), 1);
+      return null;
     }
-    const nbChiffres = s => s.replace(',', '').length;
-    // pas de piège au niveau 2 : jamais de zéro juste après la virgule (0,05 ; 3,05), 3 décimales et 7 chiffres au plus
-    function sansPiege(q) { return [q.valStr, q.calcValStr].every(s => !/,0/.test(s) && nbDecimales(s) <= 3 && nbChiffres(s) <= 7); }
+    // les sortes de questions
+    const sansZero = (a, c) => !/,0/.test(a) && !/,0/.test(c) && nbChiffres(a) <= 5 && nbChiffres(c) <= 5;
+    const entiers = (a, c) => !aVirgule(a) && !aVirgule(c) && nbChiffres(a) <= 3 && nbChiffres(c) <= 5;   // 7 hm = 700 m
+    // les trois façons d'avoir une virgule, à part égale : elle s'en va (3,5 m = 350 cm), elle arrive (45 cm = 0,45 m),
+    // elle bouge (2,75 m = 27,5 dm) ; « elle bouge » est impossible à × 100 et à × 1 000 avec nos limites (m² ↔ dm², kg ↔ g) :
+    // on prend alors l'une des deux autres, au hasard
+    const VIRGULES = [
+      (a, c) => aVirgule(a) && !aVirgule(c),
+      (a, c) => !aVirgule(a) && aVirgule(c),
+      (a, c) => aVirgule(a) && aVirgule(c)
+    ];
+    function tirerAvecVirgule(type, liste) {
+      const k = rand(0, 2), autre = rand(0, 1);
+      const ordre = k === 2 ? [2, autre, 1 - autre] : [k, 1 - k, 2];
+      for (const j of ordre) {
+        const q = tirerDans(type, liste, (a, c) => sansZero(a, c) && VIRGULES[j](a, c));
+        if (q) return q;
+      }
+      return null;
+    }
+    // les quatre formes du piège, à part égale : 3,05 m = 305 cm · 3 cm = 0,03 m · 305 cm = 3,05 m · 0,05 hm = 50 dm
+    const FORMES_PIEGE = [
+      [(a, c) => /,0/.test(a) && valeur(a) >= 1 && !aVirgule(c), 'petite'],
+      [(a, c) => /^0,0/.test(c), 'grande'],
+      [(a, c) => /,0/.test(c) && valeur(c) >= 1, 'grande'],
+      [(a, c) => /^0,0/.test(a) && !aVirgule(c), 'petite']
+    ];
+    const piegeLisible = (a, c) => nbChiffres(a) <= 6 && nbChiffres(c) <= 6;
+    const grandEcart = (a, c) => nbChiffres(a) <= 7 && nbChiffres(c) <= 7;
+
+    // niveau 2 « Tout le tableau » : 1 sur 10 du niveau 1 ; 6 sur 10 unités usuelles avec une virgule ;
+    // 1 sur 10 une autre unité avec des entiers (7 hm = 700 m) ; 2 sur 10 une autre unité avec une virgule (2,16 km = 216 dam)
     function questionDuTableau(type) {
-      const base = SCHEMAS[type], p = pairesDuTableau(type);
-      for (let i = 0; i < 200; i++) {
-        // 1 fois sur 2, deux unités usuelles (3,5 m = 350 cm) ; 1 sur 4, une usuelle et une autre (41 dg = 4,1 g) ; 1 sur 4, tout le tableau
-        const r = rand(1, 4), liste = r <= 2 ? p.deux : (r === 3 ? p.une : p.toutes);
-        const [grande, petite, pg, pp] = pick(liste.length ? liste : p.toutes);
-        const n = nombreSimple(pp - pg);
-        const q = rand(1, 2) === 1 ? questionDeConversion(base, n, grande, petite, pg, pp)
-                                   : questionDeConversion(base, decaler(n, pp - pg), petite, grande, pp, pg);
-        if (sansPiege(q)) return q;
-      }
-      return questionDesBases(type);
+      const P = pairesDuTableau(type), r = rand(1, 10), rares = P.rares.length ? P.rares : P.usu;
+      let q = null;
+      if (r === 1) return questionDesBases(type);
+      if (r <= 7) q = tirerAvecVirgule(type, P.usu);
+      else if (r === 8) q = tirerDans(type, rares, entiers);
+      else q = tirerAvecVirgule(type, rares);
+      return q || questionDesBases(type);
     }
-
-    // ---- niveau 3 : n'importe quelles unités du tableau et les nombres pièges, comme avant le lot 5
-    function conversionPiege(type) {
-      if (type === 'cross') {
-        const base = SCHEMAS.cross, paires = [];
-        for (const l of LITRES) for (const c of CUBES) {
-          const pl = posUnite(base, l), pc = posUnite(base, c);
-          paires.push([l, c, pl, pc], [c, l, pc, pl]);
-        }
-        const [src, tgt, a, b] = pick(paires);
-        return questionDeConversion(base, nombrePiege(), src, tgt, a, b);
+    // niveau 3 « Les pièges » : 1 sur 10 du niveau 1, 1 sur 10 du niveau 2 ; le reste, les zéros à placer
+    // (aires, volumes, L ↔ m³ : 4 sur 10 de grands écarts, 1 m² = 10 000 cm²) ; jamais plus de × 1 000 pour les longueurs, masses, capacités
+    function questionPiege(type) {
+      const P = pairesDuTableau(type), r = rand(1, 10);
+      let q = null;
+      if (r === 1) return questionDesBases(type);
+      if (r === 2) q = tirerAvecVirgule(type, P.usu.concat(P.rares));
+      else if (P.loin.length && r >= 7) q = tirerDans(type, P.loin, grandEcart, rand(1, 2) === 1 ? 'petite' : 'grande');
+      else {
+        const [forme, sens] = pick(FORMES_PIEGE);
+        q = tirerDans(type, rand(1, 3) === 1 && P.rares.length ? P.rares : P.usu, (a, c) => forme(a, c) && piegeLisible(a, c), sens);
       }
-      const schema = SCHEMAS[type];
-      let maxGap = 3; if (schema.slots === 2 || schema.slots === 3) maxGap = 2;
-      let gap = rand(1, maxGap);
-      let direction = rand(1, 2) === 1 ? 1 : -1;
-
-      let validStarts = [];
-      for (let i = 0; i < schema.units.length; i++) {
-          let targetIdx = i + (gap * direction);
-          if (targetIdx >= 0 && targetIdx < schema.units.length && schema.units[i] !== '-' && schema.units[targetIdx] !== '-') validStarts.push(i);
-      }
-      let uIndex1 = pick(validStarts); let uIndex2 = uIndex1 + (gap * direction);
-      const valStr = nombrePiege();
-      const s = schema.slots;
-      return questionDeConversion(schema, valStr, schema.units[uIndex1], schema.units[uIndex2], uIndex1 * s + s - 1, uIndex2 * s + s - 1);
+      return q || questionDuTableau(type);
     }
-    // … sans les monstres : « 0,009 dm³ = 0,000 000 009 dam³ », « 64 000 hm³ = 64 000 000 000 m³ » sont retirés
-    function sansMonstre(q) { return [q.valStr, q.calcValStr].every(s => nbDecimales(s) <= 4 && nbChiffres(s) <= 8); }
 
     function buildQuestionLogic(type, level) {
       if (level === 1) return questionDesBases(type);
       if (level === 2) return questionDuTableau(type);
-      for (let i = 0; i < 200; i++) { const q = conversionPiege(type); if (sansMonstre(q)) return q; }
-      return conversionPiege(type);
+      return questionPiege(type);
     }
 
     // une question de problème : la conversion montrée dans le tableau, plus l'énoncé et la correction ;
