@@ -16,6 +16,8 @@
 // Lot 6 (28/11/2026) : les niveaux 2 et 3 refaits (la virgule au niveau 2, les zéros et les grands écarts au niveau 3) ; dam³, hm³, km³
 // et le quintal retirés ; jamais moins de 1 dans la petite unité. Correctif : niveaux purs (on coche plusieurs niveaux pour mélanger),
 // et chaque série suit une recette (mêmes sortes de questions, autant vers la petite unité que vers la grande, une conversion 2 fois au plus).
+// Lot 7b (28/11/2026) : les ordres de grandeur en niveaux purs (objets familiers, moins familiers, dits dans une autre unité),
+// 102 objets, « Quel objet ? » remis au menu, et une recette par série (un objet une fois, vrai/faux 5 contre 5, A, B, C équilibrés).
 // Le script de la page est joué dans node:vm, sans navigateur.
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -28,7 +30,7 @@ const script = html.match(/<script>\n([\s\S]*?)<\/script>/)[1];
 
 function page() {
   const ctx = vm.createContext({ document: { addEventListener() {}, getElementById() { return null; } }, console, URLSearchParams });
-  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, convertTricky, seriePlusCourte, BASES, USUELLES, pairesDuTableau, posUnite };`, ctx);
+  vm.runInContext(`${script}\n;globalThis.__x = { SCHEMAS, EST_DB, ACTIONS_DB, PONTS_DB, TRI_DB, PROBLEMES, FRISE_EMOJIS, setSeed, decaler, ecrire, typo, valeurDe, buildQuestionLogic, buildProblemLogic, buildEstimationLogic, tirerSerie, chiffresDuTableau, vueColonnesUtiles, lireLien, ecrireLien, CASES_LIEN, normaliser, lireSaisie, dansLaFourchette, moitie, double, estJuste, bonneReponse, genreDe, etatFinal, typesEntrainement, resumeDe, MAX_SAISIE, MODES, AIDES, seriePlusCourte, BASES, USUELLES, pairesDuTableau, posUnite };`, ctx);
   return ctx.__x;
 }
 const P = page();
@@ -201,12 +203,12 @@ function PONTS_ET_ACTIONS() {
   return [...P.PONTS_DB.flatMap((p) => [p.q, p.c, p.w1, p.w2]), ...P.ACTIONS_DB.flatMap((a) => [a.q, a.c])];
 }
 
-test("la frise : un émoji seulement s'il est à la bonne échelle (dg, m³, dam³, kL corrigés)", () => {
+test("la frise : un émoji seulement s'il est à la bonne échelle (dg, m³ corrigés) ; plus de kL, dam³, hm³, km³ (lot 7b)", () => {
   const e = (dim, u) => P.FRISE_EMOJIS[dim].find((x) => x.u === u).e;
   assert.notEqual(e("mass", "dg"), "✉️");
   assert.notEqual(e("vol", "m³"), "🗑️");
-  assert.notEqual(e("vol", "dam³"), "🚌");
-  assert.notEqual(e("cap", "kL"), "🛢️");
+  const unites = Object.values(P.FRISE_EMOJIS).flat().map((x) => x.u);
+  for (const u of ["kL", "dam³", "hm³", "km³"]) assert.ok(!unites.includes(u), u);
 });
 
 test("tirage d'une série : chaque case cochée sort, jamais deux fois le même énoncé, toujours le même pour un code", () => {
@@ -450,7 +452,7 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.deepEqual([...P.typesEntrainement(["length", "est_action", "est_tri"])], ["length", "est_tri"]);
   const toutes = Object.keys(P.CASES_LIEN);
   for (let k = 0; k < 300; k++) {
-    const cases = toutes.filter((_, i) => (i * 5 + k) % 4 === 0 || i === 17);   // 17 : « Action en classe » toujours cochée
+    const cases = toutes.filter((c, i) => (i * 5 + k) % 4 === 0 || c === "est_action");   // « Action en classe » toujours cochée
     const s = P.tirerSerie(P.typesEntrainement(cases), [1, 2, 3].slice(k % 3), [5, 10, 15, 20][k % 4], `A${k}`);
     assert.ok(s.length > 0 && s.every((q) => q.caseCochee !== "est_action" && q.qType !== 5));
   }
@@ -461,7 +463,7 @@ test("je m'entraîne : « Action en classe » n'est jamais tirée, et sans elle 
   assert.doesNotMatch(corps("generateQuiz"), /getQuizData\(true\)/);
 });
 
-test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 6)", () => {
+test("mêmes séries : pour un code, le diaporama redonne toujours la même série (empreintes du lot 7b)", () => {
   // Lot 6 (28/11/2026) : les niveaux 2 et 3 des conversions tirent autrement, et chaque série suit sa recette (sens équilibrés,
   // une conversion 2 fois au plus) : les 12 séries changent, celles du niveau 1 seul aussi (c'est voulu). Empreintes du lot 5 (main cfddd12) :
   // b1bf5c6cea92df25 abfd8cc5cf7adc44 8ce458a12d6b1106 b1d19b6f4ff14216 041ef6dfb61a4dff 73e4d6de2a9c3668
@@ -472,7 +474,11 @@ test("mêmes séries : pour un code, le diaporama redonne toujours la même sér
   // sont identiques). 3 218 questions sur 5 000 gardent leur énoncé. Avant (main ea60818, lot 4) :
   // 7ea23a256e4ce84a 3ff1044104a1459c 3dba203c922ab7d9 396ca0475cb90a45 1882a290f925b597 1093cdf615757fb3
   // aebbf08878649521 edf17416f518c1e2 9f8433c35ad69b43 561637ada18f0264 bf8489d85a652448 ded48cda8fe4b5a3
-  const MAIN = ["fe836e77fa942f5c", "89166615b8e04dc0", "f914e554e5065207", "abe27b29958c9ba4", "3e39c7fcbf32731d", "2baf4ce7a6ff8746", "2cb165181e7ec682", "2b7c873073daf350", "3dfe115b871f509c", "3784d241b9efd6d6", "121d61a755dd9749", "f249bc241f70243d"];
+  // Lot 7b (28/11/2026) : les ordres de grandeur tirent autrement (niveaux purs, objets neufs, recette par série) ; les 12 séries
+  // en contiennent : les 12 changent (c'est voulu). Empreintes du lot 6 (main 19a2821) :
+  // fe836e77fa942f5c 89166615b8e04dc0 f914e554e5065207 abe27b29958c9ba4 3e39c7fcbf32731d 2baf4ce7a6ff8746
+  // 2cb165181e7ec682 2b7c873073daf350 3dfe115b871f509c 3784d241b9efd6d6 121d61a755dd9749 f249bc241f70243d
+  const MAIN = ["0ce84bde809ef740", "01646b7bb5a674fe", "7783ded91845738a", "197570c9b5581750", "44f4d045ad157d66", "29b0446c1550bd19", "2077a48149706d80", "faa655745aab4736", "094c1e8993494f0e", "c6bd821628aad86c", "a1f1bbc2a6526d6e", "4588ac5be28337ba"];
   const CHAMPS = ["isProblem", "isEstimation", "qType", "valStr", "calcValStr", "sourceUnit", "targetUnit", "sourcePos", "targetPos", "choices", "correctIndex", "correctionText", "textId", "emoji", "caseCochee"];
   const toutes = ["length", "mass", "massT", "volL", "area", "volM3", "cross", "prob_add", "prob_sub", "prob_mult", "prob_div", "prob_frac", "prob_geom", "est_grandeur", "est_unit", "est_val", "est_tf", "est_action", "est_pont", "est_assoc", "est_trou", "est_tri"];
   const lot = [];
@@ -713,7 +719,7 @@ test("lot 4 : émojis, rappels, ponts et actions corrigés", () => {
   assert.equal(e("la masse d'un tube de colle"), "");
   assert.equal(e("la quantité d'eau dans un grand arrosoir"), "");
   assert.equal(e("l'espace pris par une grosse gomme"), "");
-  assert.equal(P.PONTS_DB.find((p) => /kilolitre/.test(p.q)).e, "📦");
+  assert.ok(!P.PONTS_DB.some((p) => /kilolitre|kL|dam³|km³/.test(p.q + p.c + p.w1 + p.w2)), "lot 7b : plus de kL, dam³ ni km³ dans les ponts");
   const tout = JSON.stringify([P.EST_DB, P.PONTS_DB, P.ACTIONS_DB]);
   assert.doesNotMatch(tout, /petit bassin|feuille de cahier|pèse exactement|épaule opposée|gourde pleine|comme une brique de lait|effaceur, un tube de colle/);
   assert.match(tout, /un bassin de piscine municipale/);
@@ -736,11 +742,8 @@ test("lot 4 : les énoncés des problèmes (verbes, bouillon, bidon d'eau, multi
 });
 
 test("lot 4 : au niveau 3, 10 m et plus restent en m, 10 L et plus restent en L", () => {
-  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(100, "m"))), { val: "100", unit: "m" });
-  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(25, "m"))), { val: "25", unit: "m" });
-  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(1.5, "m"))), { val: "150", unit: "cm" });
-  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(50, "L"))), { val: "50", unit: "L" });
-  assert.deepEqual(JSON.parse(JSON.stringify(P.convertTricky(1.5, "L"))), { val: "150", unit: "cL" });
+  // lot 7b : l'objet dit dans son autre unité est écrit dans la banque (« autre ») ; jamais « 10 000 cm » ni « 5 000 cL »
+  for (const it of Object.values(P.EST_DB).flat()) if (it.autre) assert.doesNotMatch(`${it.autre.val} ${it.autre.unit}`, /^\d{4,} (cm|cL)$/, it.items[0].n);
   P.setSeed("NIV3");
   for (let i = 0; i < 3000; i++) for (const t of ["est_val", "est_trou"]) {
     const q = P.buildEstimationLogic(3, t, ["len", "cap"]);
@@ -757,8 +760,8 @@ test("lot 4 : une case épuisée laisse sa place aux autres ; sinon la série es
   }
   // toutes les cases épuisées : la série reste courte, sans doublon, et le message le dit
   const p = P.tirerSerie(["est_pont"], [1], 20, "PONT");
-  assert.equal(p.length, 8);
-  assert.equal(new Set(p.map((q) => q.textId)).size, 8);
+  assert.equal(p.length, 12, "lot 7b : 12 ponts au niveau 1");
+  assert.equal(new Set(p.map((q) => q.textId)).size, 12);
   assert.equal(P.seriePlusCourte(10, 10), "");
   assert.match(P.seriePlusCourte(8, 20), /que 8 questions différentes : la série n'en a que 8 \(sur 20\)\.$/);
   assert.match(corps("getQuizData"), /const court = seriePlusCourte\(quizData\.length, targetCount\);\s*if \(court\) montrerMessage\(court\);/);
@@ -1268,4 +1271,133 @@ test("lot 5c : le cadre du nom apparaît et disparaît en fondu pendant le gliss
   const p = corps("positionDiapoCursor");
   assert.match(p, /const trans = animate \? 'transform 1s ease-in-out, width 1s ease-in-out, top 1s ease-in-out, height 1s ease-in-out, opacity 1s ease-in-out, border-top-width 1s ease-in-out, border-radius 1s ease-in-out' : 'none';/);
   assert.match(p, /cursor\.style\.transition = trans;/);
+});
+
+// ---- Lot 7b (28/11/2026) : les ordres de grandeur, niveaux purs et recette par série ----
+// 1 : objets familiers, fausses à × 100 ou × 1 000 · 2 : objets moins familiers, fausses à × 10 ·
+// 3 : l'objet dit dans une autre unité, fausses à × 10, jamais « 0,0… ». Dans une série : un objet une seule fois,
+// vrai/faux 5 contre 5, la bonne réponse autant en A, B et C, jamais deux fois la même liste à classer.
+const EST7 = ["est_grandeur", "est_unit", "est_obj", "est_val", "est_tf", "est_trou", "est_assoc", "est_tri", "est_pont"];
+const OBJ7 = () => Object.entries(P.EST_DB).flatMap(([d, l]) => l.map((it) => ({ d, it, n: it.items[0].n, c: it.items[0].c })));
+const vrai7 = (val, unit) => Number(P.valeurDe(String(val).replace(".", ",").replace(/[\s  ]/g, ""), unit).replace(",", "."));
+const lu7 = (m) => { const x = sansBalises(m).replace(/[\s  ]/g, " ").trim().match(/^([\d ,]+) (\S+)$/); return x && { val: x[1].replace(/ /g, ""), unit: x[2], v: vrai7(x[1], x[2]) }; };
+// les objets que pose une question (« Quel objet ? » : la bonne réponse ; « Quelle grandeur ? » : la phrase « Pour savoir »)
+function objets7(q) {
+  const o = OBJ7();
+  if (q.objets) return q.objets.map((n) => o.find((x) => x.n === n));
+  if (q.qType === 3) return [o.find((x) => P.typo(x.c.charAt(0).toUpperCase() + x.c.slice(1)) === P.typo(q.choices[q.correctIndex]))];
+  if (q.qType === 6) { const p = sansBalises(q.problemText).replace(/^Pour savoir (.*), quelle.*$/, "$1"); return [o.find((x) => x.it.items[0].pour === p)]; }
+  return q.sujet ? [o.find((x) => x.n === q.sujet)] : [];
+}
+
+test("lot 7b : la banque des objets (assez à chaque niveau, un nom court, l'autre unité au niveau 3, jamais « 0,0… »)", () => {
+  const o = OBJ7();
+  for (const lvl of [1, 2, 3]) assert.ok(o.filter((x) => x.it.lvl === lvl).length >= 30, `niveau ${lvl}`);
+  assert.equal(new Set(o.map((x) => x.n)).size, o.length, "deux objets du même nom");
+  assert.equal(new Set(o.map((x) => x.c)).size, o.length, "deux noms courts identiques");
+  for (const { d, it, n, c } of o) {
+    assert.ok(c && it.items[0].pour && it.repere, n);
+    if (it.lvl === 3) {
+      assert.ok(it.autre, `${n} : pas d'autre unité au niveau 3`);
+      assert.notEqual(it.autre.unit, it.unit, n);
+      assert.equal(vrai7(it.autre.val, it.autre.unit), vrai7(it.val, it.unit), `${n} : l'autre unité ne dit pas la même mesure`);
+      assert.doesNotMatch(String(it.autre.val), /^0[,.]0/, n);
+    } else assert.ok(!it.autre, n);
+    // « Quel objet ? » : chaque objet a au moins deux voisins de sa grandeur et de son niveau, 3 fois plus grands ou plus petits
+    const m = (x) => (it.lvl === 3 ? vrai7(x.autre.val, x.autre.unit) : vrai7(x.val, x.unit));
+    const voisins = P.EST_DB[d].filter((x) => x !== it && x.lvl === it.lvl && Math.max(m(x), m(it)) / Math.min(m(x), m(it)) >= 3);
+    assert.ok(voisins.length >= 2, `${n} : moins de deux voisins à × 3`);
+  }
+  // les ponts : 10 au moins par niveau, plus de kL, dam³, km³
+  for (const lvl of [1, 2, 3]) assert.ok(P.PONTS_DB.filter((p) => p.lvl === lvl).length >= 10, `ponts niveau ${lvl}`);
+  // les listes à classer : 13 au moins par niveau, bien rangées, sans « 0,0… » ni dam³, kL ; hL, daL, dag seulement au niveau 2
+  for (const lvl of [1, 2, 3]) assert.ok(P.TRI_DB.filter((t) => t.lvl === lvl).length >= 13, `classer niveau ${lvl}`);
+  for (const t of P.TRI_DB) {
+    const v = t.arr.map((m) => { const x = lu7(m); return vrai7(x.val, ({ "dm³": "L", "cm³": "mL" })[x.unit] && t.dim === "Capacité" ? ({ "dm³": "L", "cm³": "mL" })[x.unit] : x.unit); });
+    for (let k = 1; k < 4; k++) assert.ok(v[k] > v[k - 1], t.arr.join(" < "));
+    assert.ok(!t.arr.some((m) => /^0,0|dam³|kL|km³/.test(m)), t.arr.join(" "));
+    if (t.lvl !== 2) assert.ok(!t.arr.some((m) => / (hL|daL|dag|hg)$/.test(m)), t.arr.join(" "));
+  }
+  // la frise de « Quelle unité ? » et le menu : « Quel objet ? » après « Quelle unité ? », « objet » dans le lien
+  assert.match(html, /value="est_unit"> <div><strong>Quelle unité \?<\/strong><\/div><\/label>\n\s*<label class="cb-row"><input type="checkbox" value="est_obj"> <div><strong>Quel objet \?<\/strong><\/div><\/label>/);
+  assert.equal(P.CASES_LIEN.est_obj, "objet");
+});
+
+test("lot 7b : chaque série de 10 suit sa recette (150 séries par case et par niveau)", () => {
+  for (const t of EST7) for (const lvl of [1, 2, 3]) for (let k = 0; k < 150; k++) {
+    const serie = P.tirerSerie([t], [lvl], 10, `R7${k}`);
+    const quoi = `${t} niveau ${lvl} série R7${k}`;
+    assert.equal(serie.length, 10, quoi);
+    const vus = {}, lettres = [0, 0, 0], listes = new Set();
+    let vrais = 0;
+    for (const q of serie) {
+      const txt = [q.problemText, q.correctionText, ...(q.choices || [])].map(sansBalises).join(" | ");
+      assert.doesNotMatch(txt.replace(/[  ]/g, " "), /(^|[^\d,])0,0\d/, `${quoi} : « 0,0… » dans ${txt}`);
+      if (q.choices && q.choices.length === 3) lettres[q.correctIndex]++;
+      if (t === "est_pont") assert.equal(P.PONTS_DB.find((p) => p.q === q.problemText).lvl, lvl, quoi);
+      if (t === "est_tri") {
+        assert.equal(P.TRI_DB.find((x) => x.arr.join("|") === q.ordre.join("|")).lvl, lvl, quoi);
+        assert.ok(!listes.has(q.ordre.join("|")), `${quoi} : la même liste deux fois`); listes.add(q.ordre.join("|"));
+      }
+      const objs = objets7(q);
+      for (const x of objs) { assert.ok(x, `${quoi} : objet introuvable`); assert.equal(x.it.lvl, lvl, `${quoi} : ${x.n} est du niveau ${x.it.lvl}`); vus[x.n] = (vus[x.n] || 0) + 1; }
+      if (t === "est_assoc") assert.equal(new Set(objs.map((x) => x.d)).size, 1, `${quoi} : trois grandeurs différentes`);
+      // la mesure juste : au niveau 3, dans l'autre unité ; les fausses : × 100 ou × 1 000 au niveau 1, × 10 ensuite
+      const x = objs[0];
+      let juste = null, fausses = [];
+      if (t === "est_val") { juste = lu7(q.choices[q.correctIndex]); fausses = q.choices.filter((_, i) => i !== q.correctIndex).map(lu7); }
+      if (t === "est_trou") juste = { val: q.reponse, unit: q.uniteReponse, v: vrai7(q.reponse, q.uniteReponse) };
+      if (t === "est_obj") juste = lu7(sansBalises(q.problemText).match(/environ (.*) \?$/)[1]);
+      if (t === "est_tf") {
+        const m = lu7(sansBalises(q.problemText).match(/environ (.*)\.$/)[1]);
+        if (q.correctIndex === 0) { juste = m; vrais++; } else { juste = { unit: m.unit, v: vrai7(x.it.val, x.it.unit) }; fausses = [m]; }
+      }
+      if (juste) {
+        assert.equal(juste.unit, lvl === 3 ? x.it.autre.unit : x.it.unit, `${quoi} : ${x.n} en ${juste.unit}`);
+        assert.equal(juste.v, vrai7(x.it.val, x.it.unit), `${quoi} : ${x.n}`);
+        for (const f of fausses) {
+          const e = Math.abs(Math.round(Math.log10(f.v / juste.v)));
+          assert.equal(f.unit, juste.unit, quoi);
+          if (lvl === 1) assert.ok(e === 2 || e === 3, `${quoi} : ${x.n} faux à × 10^${e}`);
+          else if (t === "est_tf" || lvl === 2) assert.equal(e, 1, `${quoi} : ${x.n} faux à × 10^${e}`);
+          else assert.ok(e === 1 || e === 2, `${quoi} : ${x.n} faux à × 10^${e}`);
+        }
+      }
+      if (t === "est_obj") {
+        const autres = q.choices.filter((_, i) => i !== q.correctIndex).map((c) => OBJ7().find((o) => P.typo(o.c.charAt(0).toUpperCase() + o.c.slice(1)) === P.typo(c)));
+        for (const o of autres) {
+          assert.ok(o && o.d === x.d && o.it.lvl === lvl, `${quoi} : un autre choix hors de la grandeur ou du niveau`);
+          const m = (y) => vrai7(y.it.val, y.it.unit);
+          assert.ok(Math.max(m(o), m(x)) / Math.min(m(o), m(x)) >= 3, `${quoi} : ${o.n} trop proche de ${x.n}`);
+        }
+      }
+    }
+    // un objet une seule fois (« Associer » au niveau 3 : 30 places pour 32 objets, deux fois au plus)
+    const max = Math.max(0, ...Object.values(vus));
+    assert.ok(max <= (t === "est_assoc" ? 2 : 1), `${quoi} : un objet ${max} fois`);
+    if (t === "est_tf") assert.equal(vrais, 5, `${quoi} : ${vrais} vrais`);
+    if (lettres.some((n) => n)) assert.ok(Math.max(...lettres) <= 4, `${quoi} : A ${lettres[0]}, B ${lettres[1]}, C ${lettres[2]}`);
+  }
+});
+
+test("lot 7b : séries de 5, plusieurs niveaux cochés, toutes les cases ensemble", () => {
+  for (let k = 0; k < 100; k++) {
+    const tf = P.tirerSerie(["est_tf"], [1, 2, 3], 10, `T7${k}`);
+    assert.equal(tf.filter((q) => q.correctIndex === 0).length, 5, "trois niveaux cochés : 5 vrais sur 10");
+    const cinq = P.tirerSerie(["est_tf"], [2], 5, `F7${k}`).filter((q) => q.correctIndex === 0).length;
+    assert.ok(cinq === 2 || cinq === 3, `série de 5 : ${cinq} vrais`);
+    for (const [niv, n] of [[[1, 2, 3], 10], [[2], 10], [[1, 2, 3], 5]]) {
+      const s = P.tirerSerie(EST7, niv, n, `M7${k}`);
+      assert.equal(s.length, n);
+      const vus = {};
+      for (const q of s) for (const x of objets7(q)) { vus[x.n] = (vus[x.n] || 0) + 1; assert.ok(niv.includes(x.it.lvl)); }
+      assert.ok(Math.max(0, ...Object.values(vus)) === 1, `toutes les cases, niveaux ${niv} : un objet revient`);
+    }
+  }
+  // chaque case seule a assez de questions pour une série de 10 à chaque niveau (« Action en classe » : 9 au niveau 3, le menu le dit)
+  for (const t of [...EST7, "est_action"]) for (const lvl of [1, 2, 3]) {
+    const s = P.tirerSerie([t], [lvl], 10, `N7${t}${lvl}`);
+    assert.equal(s.length, t === "est_action" && lvl === 3 ? 9 : 10, `${t} niveau ${lvl}`);
+    if (t === "est_action") assert.ok(s.every((q) => P.ACTIONS_DB.find((a) => a.q === q.problemText).lvl === lvl));
+  }
 });

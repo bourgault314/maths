@@ -644,6 +644,7 @@
             <div class="checkbox-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <label class="cb-row"><input type="checkbox" value="est_grandeur"> <div><strong>Quelle grandeur ?</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="est_unit"> <div><strong>Quelle unité ?</strong></div></label>
+              <label class="cb-row"><input type="checkbox" value="est_obj"> <div><strong>Quel objet ?</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="est_val"> <div><strong>Ordre de valeur</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="est_tf"> <div><strong>Vrai ou faux</strong></div></label>
               <label class="cb-row"><input type="checkbox" value="est_action"> <div><strong>Action en classe</strong></div></label>
@@ -836,7 +837,7 @@
     }
     // puissance de 10 de chaque unité par rapport à l'unité principale (pour comparer deux mesures)
     const PUISSANCE = { mm:-3, cm:-2, dm:-1, m:0, dam:1, hm:2, km:3, mg:-3, cg:-2, dg:-1, g:0, dag:1, hg:2, kg:3, q:5, t:6,
-      mL:-3, cL:-2, dL:-1, L:0, daL:1, hL:2, kL:3, 'mm²':-6, 'cm²':-4, 'dm²':-2, 'm²':0, 'dam²':2, 'hm²':4, 'km²':6,
+      mL:-3, cL:-2, dL:-1, L:0, daL:1, hL:2, kL:3, ha:4, a:2, 'mm²':-6, 'cm²':-4, 'dm²':-2, 'm²':0, 'dam²':2, 'hm²':4, 'km²':6,
       'mm³':-9, 'cm³':-6, 'dm³':-3, 'm³':0, 'dam³':3, 'hm³':6, 'km³':9 };
     function valeurDe(v, u) { return decaler(versChaine(v), PUISSANCE[u]); }
 
@@ -939,9 +940,9 @@
     const FRISE_EMOJIS = {
        len: [ {u:'mm', e:'🐜'}, {u:'cm', e:'🐞'}, {u:'dm', e:'📏'}, {u:'m', e:'🚪'}, {u:'dam', e:'🏢'}, {u:'hm', e:'🗼'}, {u:'km', e:'🛣️'} ],
        mass: [ {u:'mg', e:'🪶'}, {u:'cg', e:''}, {u:'dg', e:'💊'}, {u:'g', e:'📎'}, {u:'dag', e:'🪙'}, {u:'hg', e:'🍫'}, {u:'kg', e:'📦'}, {u:'t', e:'🐘'} ],
-       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🍾'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'}, {u:'kL', e:''} ],
+       cap: [ {u:'mL', e:'💧'}, {u:'cL', e:'🥄'}, {u:'dL', e:'☕'}, {u:'L', e:'🍾'}, {u:'daL', e:'🪣'}, {u:'hL', e:'🛁'} ],
        area: [ {u:'mm²', e:'🖊️'}, {u:'cm²', e:''}, {u:'dm²', e:'🖐️'}, {u:'m²', e:'🪟'}, {u:'dam²', e:'🏠'}, {u:'hm²', e:'🏟️'}, {u:'km²', e:'🏙️'} ],
-       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🎲'}, {u:'dm³', e:'🍾'}, {u:'m³', e:''}, {u:'dam³', e:'🏊'}, {u:'hm³', e:''}, {u:'km³', e:'🌋'} ]
+       vol: [ {u:'mm³', e:'🧂'}, {u:'cm³', e:'🎲'}, {u:'dm³', e:'🍾'}, {u:'m³', e:''} ]
     };
 
     function generateFriseHTML(dim) {
@@ -987,6 +988,7 @@
         { lvl: 3, q: "Combien de seaux d'eau de 10 L faut-il pour faire 1 m³ d'eau ?", c: "Il faut 100 seaux ! (Puisque 1 m³ = 1 000 L.)" }
     ];
 
+    // Lot 7b : 12, 12 et 11 ponts (assez pour une série de 10 à chaque niveau seul) ; plus de kL, dam³ ni km³
     const PONTS_DB = [
         { lvl: 1, q: "1 litre d'eau pèse :", c: "1 kg", w1: "100 g", w2: "10 kg", e: "💧" },
         { lvl: 1, q: "Un demi-litre (½ L), c'est la même chose que :", c: "50 cL", w1: "5 cL", w2: "500 cL", e: "🥛" },
@@ -996,7 +998,10 @@
         { lvl: 1, q: "1 kilomètre (1 km), c'est la même distance que :", c: "1 000 m", w1: "100 m", w2: "10 000 m", e: "📏" },
         { lvl: 1, q: "1 tonne (1 t), c'est la même chose que :", c: "1 000 kg", w1: "100 kg", w2: "10 000 kg", e: "🐘" },
         { lvl: 1, q: "1 mètre (1 m), c'est :", c: "100 cm", w1: "10 cm", w2: "1 000 cm", e: "📏" },
-
+        { lvl: 1, q: "1 litre (1 L), c'est :", c: "100 cL", w1: "10 cL", w2: "1 000 cL", e: "🥛" },
+        { lvl: 1, q: "Un demi-mètre (½ m), c'est :", c: "50 cm", w1: "5 cm", w2: "500 cm", e: "📏" },
+        { lvl: 1, q: "Un demi-kilomètre (½ km), c'est :", c: "500 m", w1: "50 m", w2: "5 000 m", e: "🚶" },
+        { lvl: 1, q: "Le mot « centi » (comme dans centimètre) veut dire :", c: "Cent fois plus petit", w1: "Dix fois plus petit", w2: "Mille fois plus petit", e: "🔍" },
         { lvl: 2, q: "1 litre, c'est exactement le même volume que :", c: "1 dm³", w1: "1 m³", w2: "1 cm³", e: "📦" },
         { lvl: 2, q: "1 mètre cube (1 m³) d'eau pèse :", c: "1 tonne (1 000 kg)", w1: "100 kg", w2: "10 tonnes", e: "🌊" },
         { lvl: 2, q: "Un quart de litre (¼ L), c'est :", c: "25 cL", w1: "15 cL", w2: "250 cL", e: "🥛" },
@@ -1005,101 +1010,204 @@
         { lvl: 2, q: "1 mètre cube (1 m³), c'est la même chose que :", c: "1 000 L", w1: "100 L", w2: "10 L", e: "📦" },
         { lvl: 2, q: "En surface, 1 are (1 a) représente :", c: "100 m² (1 dam²)", w1: "10 m²", w2: "1 000 m²", e: "🟨" },
         { lvl: 2, q: "1 centimètre (1 cm), c'est :", c: "10 mm", w1: "100 mm", w2: "1 000 mm", e: "📏" },
-
+        { lvl: 2, q: "1 décimètre (1 dm), c'est :", c: "10 cm", w1: "100 cm", w2: "1 cm", e: "📏" },
+        { lvl: 2, q: "1 centilitre (1 cL), c'est :", c: "10 mL", w1: "100 mL", w2: "1 mL", e: "🧪" },
+        { lvl: 2, q: "1 gramme (1 g), c'est :", c: "1 000 mg", w1: "100 mg", w2: "10 mg", e: "⚖️" },
+        { lvl: 2, q: "Une canette de 33 cL, c'est à peu près :", c: "Un tiers de litre", w1: "Un quart de litre", w2: "La moitié d'un litre", e: "🥤" },
         { lvl: 3, q: "1 millilitre (1 mL), c'est équivalent à :", c: "1 cm³", w1: "1 dm³", w2: "1 mm³", e: "🧪" },
         { lvl: 3, q: "1 millilitre (1 mL) d'eau pèse :", c: "1 gramme (1 g)", w1: "1 milligramme", w2: "10 grammes", e: "💧" },
         { lvl: 3, q: "Un dixième de litre (1/10 L), c'est :", c: "10 cL (ou 1 dL)", w1: "1 cL", w2: "100 cL", e: "🥛" },
         { lvl: 3, q: "En agriculture, 1 hectare (1 ha), c'est la même surface que :", c: "1 hm² (10 000 m²)", w1: "1 km²", w2: "1 dam²", e: "🚜" },
-        { lvl: 3, q: "1 kilolitre (1 kL) d'eau, c'est :", c: "1 m³", w1: "1 dam³", w2: "1 km³", e: "📦" },
         { lvl: 3, q: "Un carré de 1 mètre de côté (1 m²), c'est :", c: "10 000 cm²", w1: "100 cm²", w2: "1 000 cm²", e: "🟨" },
-        { lvl: 3, q: "Un kilomètre carré (1 km²), c'est immense, cela fait :", c: "100 hectares", w1: "10 hectares", w2: "1 000 hectares", e: "🗺️" }
+        { lvl: 3, q: "Un kilomètre carré (1 km²), c'est immense, cela fait :", c: "100 hectares", w1: "10 hectares", w2: "1 000 hectares", e: "🗺️" },
+        { lvl: 3, q: "1 dm³, c'est :", c: "1 000 cm³", w1: "100 cm³", w2: "10 cm³", e: "📦" },
+        { lvl: 3, q: "1 m³, c'est :", c: "1 000 dm³", w1: "100 dm³", w2: "10 dm³", e: "📦" },
+        { lvl: 3, q: "Un carré de 1 dm de côté (1 dm²), c'est :", c: "100 cm²", w1: "10 cm²", w2: "1 000 cm²", e: "🟨" },
+        { lvl: 3, q: "0,5 L, c'est la même chose que :", c: "500 mL", w1: "50 mL", w2: "5 mL", e: "🧴" },
+        { lvl: 3, q: "Un quart de kilomètre (¼ km), c'est :", c: "250 m", w1: "25 m", w2: "400 m", e: "🏃" }
     ];
 
-    // « unite: false » : l'objet ne sert pas à « Quelle unité ? » (deux unités y seraient justes : lot 4, le lit et le vélo, 200 cm et 150 cm)
-    // « pour » (lot 4) : « Quelle grandeur ? » demande « Pour savoir …, quelle grandeur mesure-t-on ? » sans nommer la grandeur ;
+    // Lot 7b (28/11/2026) : des niveaux purs. Niveau 1 : objets familiers ; niveau 2 : objets moins familiers ;
+    // niveau 3 : l'objet est dit dans une autre unité (« autre », jamais « 0,0… »).
+    // « c » : le nom court (« Quel objet ? ») ; « unite: false » : l'objet ne sert pas à « Quelle unité ? » (deux unités y seraient justes) ;
+    // « pour » : « Quelle grandeur ? » demande « Pour savoir …, quelle grandeur mesure-t-on ? » sans nommer la grandeur ;
     // « e » vide : pas d'émoji juste pour cet objet
     const EST_DB = {
         len: [
-            { items: [{n: "la longueur de ton pouce", e: "👍", pour: "si ton pouce est plus long que ton petit doigt"}], val: 5, unit: "cm", repere: "5 cm = à peu près la largeur de trois doigts", lvl: 1 },
-            { items: [{n: "la longueur d'un stylo", e: "🖊️", pour: "si un stylo tient dans ta trousse"}], val: 15, unit: "cm", repere: "15 cm = un petit objet de trousse", lvl: 1 },
-            { items: [{n: "la longueur d'un lit", e: "🛏️", pour: "si un lit est assez long pour un adulte"}], val: 2, unit: "m", repere: "2 m = pour qu'un adulte puisse s'allonger", lvl: 1, unite: false },
-            { items: [{n: "la longueur d'un vélo", e: "🚲", pour: "si un vélo tient dans un ascenseur, de la roue avant à la roue arrière"}], val: 1.5, unit: "m", repere: "1,5 m = un vélo, de la roue avant à la roue arrière", lvl: 1, unite: false },
-            { items: [{n: "l'épaisseur d'une pièce de 2 €", e: "🪙", pour: "si une pièce de 2 € passe dans la fente d'une tirelire"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une grosse pièce", lvl: 2 },
-            { items: [{n: "la longueur d'un terrain de football", e: "⚽", pour: "la distance d'un but à l'autre sur un terrain de football"}], val: 100, unit: "m", repere: "100 m = un terrain de football", lvl: 2 },
-            { items: [{n: "la longueur d'une piscine municipale", e: "🏊", pour: "jusqu'où on nage d'un bord à l'autre d'une piscine"}], val: 25, unit: "m", repere: "25 m = un bassin de piscine municipale", lvl: 2 },
-            { items: [{n: "l'épaisseur d'une carte bancaire", e: "💳", pour: "si une carte bancaire glisse sous une porte"}], val: 1, unit: "mm", repere: "1 mm = une fente très fine", lvl: 3 },
-            { items: [{n: "l'altitude de vol d'un avion", e: "✈️", pour: "à quelle hauteur vole un avion"}], val: 10, unit: "km", repere: "10 km = tout en haut dans le ciel", lvl: 3 }
+            { items: [{n: "la longueur de ton pouce", c: "ton pouce", e: "👍", pour: "si ton pouce est plus long que ton petit doigt"}], val: 5, unit: "cm", repere: "5 cm = à peu près la largeur de trois doigts", lvl: 1 },
+            { items: [{n: "la longueur d'un stylo", c: "un stylo", e: "🖊️", pour: "si un stylo tient dans ta trousse"}], val: 15, unit: "cm", repere: "15 cm = un petit objet de trousse", lvl: 1 },
+            { items: [{n: "la longueur d'un lit", c: "un lit", e: "🛏️", pour: "si un lit est assez long pour un adulte"}], val: 2, unit: "m", repere: "2 m = pour qu'un adulte puisse s'allonger", lvl: 1, unite: false },
+            { items: [{n: "la longueur d'un vélo", c: "un vélo", e: "🚲", pour: "si un vélo tient dans un ascenseur, de la roue avant à la roue arrière"}], val: 1.5, unit: "m", repere: "1,5 m = un vélo, de la roue avant à la roue arrière", lvl: 1, unite: false },
+            { items: [{n: "la longueur d'un bus", c: "un bus", e: "🚌", pour: "si un bus peut se garer devant le collège"}], val: 12, unit: "m", repere: "12 m = un bus, d'un bout à l'autre", lvl: 1 },
+            { items: [{n: "la longueur d'une fourmi", c: "une fourmi", e: "🐜", pour: "si une fourmi est plus grande qu'une coccinelle"}], val: 5, unit: "mm", repere: "5 mm = une toute petite bête", lvl: 1 },
+            { items: [{n: "la distance parcourue en une heure de marche", c: "la distance d'une heure de marche", e: "🚶", pour: "jusqu'où on va en marchant pendant une heure"}], val: 5, unit: "km", repere: "5 km = une heure à pied", lvl: 1 },
+
+            { items: [{n: "l'épaisseur d'une pièce de 2 €", c: "l'épaisseur d'une pièce de 2 €", e: "🪙", pour: "si une pièce de 2 € passe dans la fente d'une tirelire"}], val: 2, unit: "mm", repere: "2 mm = l'épaisseur d'une grosse pièce", lvl: 2 },
+            { items: [{n: "l'épaisseur d'une carte bancaire", c: "l'épaisseur d'une carte bancaire", e: "💳", pour: "si une carte bancaire glisse sous une porte"}], val: 1, unit: "mm", repere: "1 mm = une fente très fine", lvl: 2 },
+            { items: [{n: "la longueur d'une piscine municipale", c: "une piscine municipale", e: "🏊", pour: "jusqu'où on nage pour aller d'un bord à l'autre d'une piscine"}], val: 25, unit: "m", repere: "25 m = un bassin de piscine municipale", lvl: 2 },
+            { items: [{n: "la longueur d'un terrain de football", c: "un terrain de football", e: "⚽", pour: "jusqu'où il faut courir pour aller d'un but à l'autre"}], val: 100, unit: "m", repere: "100 m = un terrain de football", lvl: 2 },
+            { items: [{n: "la hauteur d'une girafe", c: "une girafe", e: "🦒", pour: "si une girafe peut passer sous un pont"}], val: 5, unit: "m", repere: "5 m = presque deux étages", lvl: 2 },
+            { items: [{n: "la hauteur d'un immeuble de 10 étages", c: "un immeuble de 10 étages", e: "🏢", pour: "si l'échelle des pompiers arrive en haut d'un immeuble de 10 étages"}], val: 30, unit: "m", repere: "30 m = 10 étages de 3 m", lvl: 2 },
+            { items: [{n: "la longueur d'un marathon", c: "un marathon", e: "🏃", pour: "jusqu'où on court pendant un marathon"}], val: 42, unit: "km", repere: "42 km = une très longue course", lvl: 2 },
+            { items: [{n: "la distance de Saint-Denis à Saint-Pierre par la route", c: "le trajet Saint-Denis – Saint-Pierre", e: "🚗", pour: "jusqu'où on roule pour aller de Saint-Denis à Saint-Pierre"}], val: 70, unit: "km", repere: "70 km = traverser l'île du nord au sud", lvl: 2 },
+
+            { items: [{n: "la longueur d'un canapé", c: "un canapé", e: "🛋️", pour: "si un canapé passe le long d'un mur"}], val: 2, unit: "m", autre: { val: "200", unit: "cm" }, repere: "2 m = 200 cm, un canapé pour trois", lvl: 3, unite: false },
+            { items: [{n: "la taille d'un enfant de 11 ans", c: "un enfant de 11 ans", e: "🧒", pour: "si un enfant de 11 ans peut monter dans un manège"}], val: 1.5, unit: "m", autre: { val: "150", unit: "cm" }, repere: "1,5 m = 150 cm, un enfant de 11 ans", lvl: 3, unite: false },
+            { items: [{n: "l'épaisseur d'un téléphone", c: "l'épaisseur d'un téléphone", e: "📱", pour: "si un téléphone passe dans la fente d'une boîte aux lettres"}], val: 8, unit: "mm", autre: { val: "0,8", unit: "cm" }, repere: "8 mm = 0,8 cm, un téléphone posé à plat", lvl: 3 },
+            { items: [{n: "la longueur d'un tour de piste d'athlétisme", c: "un tour de piste", e: "🏟️", pour: "jusqu'où on court quand on fait un tour de stade"}], val: 400, unit: "m", autre: { val: "0,4", unit: "km" }, repere: "400 m = 0,4 km, un tour de stade", lvl: 3 },
+            { items: [{n: "la hauteur de la tour Eiffel", c: "la tour Eiffel", e: "🗼", pour: "si la tour Eiffel est plus haute qu'un immeuble de 10 étages"}], val: 300, unit: "m", autre: { val: "0,3", unit: "km" }, repere: "300 m = 0,3 km, la tour Eiffel", lvl: 3 },
+            { items: [{n: "la hauteur du Piton des Neiges", c: "le Piton des Neiges", e: "🏔️", pour: "combien on monte entre la mer et le sommet du Piton des Neiges"}], val: 3, unit: "km", autre: { val: "3000", unit: "m" }, repere: "3 km = 3 000 m, le plus haut sommet de La Réunion", lvl: 3, unite: false },
+            { items: [{n: "l'altitude de vol d'un avion", c: "l'altitude d'un avion en vol", e: "✈️", pour: "jusqu'où un avion monte dans le ciel"}], val: 10, unit: "km", autre: { val: "10000", unit: "m" }, repere: "10 km = 10 000 m, tout en haut dans le ciel", lvl: 3 }
         ],
         mass: [
-            { items: [{n: "la masse d'un tube de colle", e: "", pour: "si un tube de colle alourdit ta trousse"}], val: 20, unit: "g", repere: "20 g = un petit objet léger", lvl: 1 },
-            { items: [{n: "la masse d'un œuf", e: "🥚", pour: "si un œuf est plus lourd qu'une balle de ping-pong"}], val: 60, unit: "g", repere: "60 g = un œuf moyen", lvl: 1 },
-            { items: [{n: "la masse d'une baguette de pain", e: "🥖", pour: "si une baguette de pain est lourde à porter"}], val: 250, unit: "g", repere: "250 g = la baguette du boulanger", lvl: 1 },
-            { items: [{n: "la masse d'un dictionnaire", e: "📖", pour: "si un dictionnaire est trop lourd pour ton cartable"}], val: 1, unit: "kg", repere: "1 kg = un gros livre", lvl: 1 },
-            { items: [{n: "la masse d'un chat", e: "🐈", pour: "si un chat est plus lourd qu'un lapin"}], val: 4, unit: "kg", repere: "4 kg = un animal de compagnie", lvl: 1 },
-            { items: [{n: "la masse d'un pack de 6 bouteilles d'eau", e: "💧", pour: "si tu peux soulever un pack de 6 bouteilles d'eau"}], val: 9, unit: "kg", repere: "9 kg = très lourd à porter", lvl: 1 },
-            { items: [{n: "la masse d'une petite voiture", e: "🚗", pour: "si une petite voiture peut passer sur un vieux pont"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1 000 kg", lvl: 2, unite: false },
-            { items: [{n: "la masse d'un macaron", e: "🍪", pour: "si un macaron est plus lourd qu'un bonbon"}], val: 15, unit: "g", repere: "15 g = une petite douceur", lvl: 2 },
-            { items: [{n: "la masse d'un moustique", e: "🦟", pour: "si un moustique est plus léger qu'une fourmi"}], val: 2, unit: "mg", repere: "2 mg = presque rien", lvl: 3 },
-            { items: [{n: "la masse d'un steak haché", e: "🥩", pour: "ce qu'affiche la balance quand on y pose un steak haché"}], val: 100, unit: "g", repere: "100 g = la portion classique", lvl: 3 },
-            { items: [{n: "la masse d'une baleine bleue", e: "🐋", pour: "si une baleine bleue est plus lourde qu'un camion"}], val: 150, unit: "t", repere: "150 t = l'animal le plus lourd", lvl: 3 }
+            { items: [{n: "la masse d'un tube de colle", c: "un tube de colle", e: "", pour: "si un tube de colle alourdit ta trousse"}], val: 20, unit: "g", repere: "20 g = un petit objet léger", lvl: 1 },
+            { items: [{n: "la masse d'un œuf", c: "un œuf", e: "🥚", pour: "si un œuf est plus lourd qu'une balle de ping-pong"}], val: 60, unit: "g", repere: "60 g = un œuf moyen", lvl: 1 },
+            { items: [{n: "la masse d'une baguette de pain", c: "une baguette de pain", e: "🥖", pour: "si une baguette de pain est lourde à porter"}], val: 250, unit: "g", repere: "250 g = la baguette du boulanger", lvl: 1 },
+            { items: [{n: "la masse d'un dictionnaire", c: "un dictionnaire", e: "📖", pour: "si un dictionnaire est trop lourd pour ton cartable"}], val: 1, unit: "kg", repere: "1 kg = un gros livre", lvl: 1 },
+            { items: [{n: "la masse d'un chat", c: "un chat", e: "🐈", pour: "si un chat est plus lourd qu'un lapin"}], val: 4, unit: "kg", repere: "4 kg = un animal de compagnie", lvl: 1 },
+            { items: [{n: "la masse d'un pack de 6 bouteilles d'eau", c: "un pack de 6 bouteilles d'eau", e: "💧", pour: "si tu peux soulever un pack de 6 bouteilles d'eau"}], val: 9, unit: "kg", repere: "9 kg = très lourd à porter", lvl: 1 },
+            { items: [{n: "la masse d'un éléphant", c: "un éléphant", e: "🐘", pour: "si un éléphant peut monter sur un petit pont de bois"}], val: 5, unit: "t", repere: "5 t = le plus lourd des animaux qui vivent sur terre", lvl: 1 },
+
+            { items: [{n: "la masse d'un macaron", c: "un macaron", e: "🍪", pour: "si un macaron est plus lourd qu'un bonbon"}], val: 15, unit: "g", repere: "15 g = une petite douceur", lvl: 2 },
+            { items: [{n: "la masse d'un steak haché", c: "un steak haché", e: "🥩", pour: "ce qu'affiche la balance quand on y pose un steak haché"}], val: 100, unit: "g", repere: "100 g = la portion classique", lvl: 2 },
+            { items: [{n: "la masse d'une feuille de papier", c: "une feuille de papier", e: "📄", pour: "combien de feuilles on peut envoyer avec un seul timbre"}], val: 5, unit: "g", repere: "5 g = presque rien dans la main", lvl: 2 },
+            { items: [{n: "la masse d'un moustique", c: "un moustique", e: "🦟", pour: "si un moustique est plus léger qu'une fourmi"}], val: 2, unit: "mg", repere: "2 mg = presque rien", lvl: 2 },
+            { items: [{n: "la masse d'un grain de riz", c: "un grain de riz", e: "🍚", pour: "combien de grains il y a dans un paquet de riz"}], val: 20, unit: "mg", repere: "20 mg = un tout petit grain", lvl: 2 },
+            { items: [{n: "la masse d'un sac de ciment", c: "un sac de ciment", e: "🧱", pour: "si on peut porter un sac de ciment tout seul"}], val: 25, unit: "kg", repere: "25 kg = lourd, même pour un adulte", lvl: 2 },
+            { items: [{n: "la masse d'une petite voiture", c: "une petite voiture", e: "🚗", pour: "si une petite voiture peut passer sur un vieux pont"}], val: 1.2, unit: "t", repere: "1,2 t = plus de 1 000 kg", lvl: 2, unite: false },
+            { items: [{n: "la masse d'un camion de pompiers", c: "un camion de pompiers", e: "🚒", pour: "si un camion de pompiers peut rouler sur un chemin de terre"}], val: 15, unit: "t", repere: "15 t = plus de dix petites voitures", lvl: 2 },
+
+            { items: [{n: "la masse d'une plaquette de beurre", c: "une plaquette de beurre", e: "🧈", pour: "s'il reste assez de beurre pour faire un gâteau"}], val: 250, unit: "g", autre: { val: "0,25", unit: "kg" }, repere: "250 g = 0,25 kg, une plaquette de beurre", lvl: 3 },
+            { items: [{n: "la masse d'un ananas Victoria", c: "un ananas Victoria", e: "🍍", pour: "combien coûte un ananas Victoria vendu au poids"}], val: 800, unit: "g", autre: { val: "0,8", unit: "kg" }, repere: "800 g = 0,8 kg, un ananas de La Réunion", lvl: 3 },
+            { items: [{n: "la masse d'un nouveau-né", c: "un nouveau-né", e: "👶", pour: "ce qu'affiche la balance de la maternité à la naissance d'un bébé"}], val: 3.5, unit: "kg", autre: { val: "3500", unit: "g" }, repere: "3,5 kg = 3 500 g, un bébé à la naissance", lvl: 3 },
+            { items: [{n: "la masse d'un cartable rempli", c: "un cartable rempli", e: "🎒", pour: "si un cartable n'est pas trop lourd pour ton dos"}], val: 5, unit: "kg", autre: { val: "5000", unit: "g" }, repere: "5 kg = 5 000 g, un cartable plein de livres", lvl: 3 },
+            { items: [{n: "la masse d'une valise pleine", c: "une valise pleine", e: "🧳", pour: "si une valise peut partir en soute dans l'avion"}], val: 20, unit: "kg", autre: { val: "20000", unit: "g" }, repere: "20 kg = 20 000 g, ce qu'on a le droit d'emporter en avion", lvl: 3 },
+            { items: [{n: "la masse d'un cheval", c: "un cheval", e: "🐎", pour: "si une remorque peut transporter un cheval"}], val: 500, unit: "kg", autre: { val: "0,5", unit: "t" }, repere: "500 kg = 0,5 t, un gros animal de ferme", lvl: 3 },
+            { items: [{n: "la masse d'une baleine bleue", c: "une baleine bleue", e: "🐋", pour: "si une baleine bleue est plus lourde qu'un camion"}], val: 150, unit: "t", autre: { val: "150000", unit: "kg" }, repere: "150 t = 150 000 kg, l'animal le plus lourd", lvl: 3 }
         ],
         cap: [
-            { items: [{n: "la quantité de boisson dans une canette", e: "🥤", pour: "combien de boisson contient une canette"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1, unite: false },
-            { items: [{n: "la quantité d'essence dans le réservoir d'une voiture", e: "⛽", pour: "combien d'essence on met pour faire le plein d'une voiture"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 1 },
-            { items: [{n: "la quantité d'eau dans un grand arrosoir", e: "", pour: "combien d'eau contient un grand arrosoir"}], val: 10, unit: "L", repere: "10 L = lourd à porter", lvl: 1 },
-            { items: [{n: "la dose de sirop pour la toux", e: "🥄", pour: "combien de sirop on prend pour une dose contre la toux"}], val: 15, unit: "mL", repere: "15 mL = une cuillère à soupe", lvl: 2 },
-            { items: [{n: "la quantité d'eau dans une grande bouteille", e: "🍾", pour: "combien d'eau contient une grande bouteille"}], val: 1.5, unit: "L", repere: "1,5 L = la grande bouteille d'eau", lvl: 2 },
-            { items: [{n: "l'eau dans une baignoire bien remplie", e: "🛁", pour: "combien d'eau il faut pour remplir une baignoire"}], val: 150, unit: "L", repere: "150 L = un très grand bain", lvl: 2 },
-            { items: [{n: "la quantité d'eau dans une petite piscine gonflable", e: "🛟", pour: "combien d'eau il faut pour remplir une petite piscine gonflable"}], val: 200, unit: "L", repere: "200 L = beaucoup de seaux", lvl: 3 }
+            { items: [{n: "la quantité de liquide dans une cuillère à café", c: "une cuillère à café", e: "🥄", pour: "combien de vanille liquide on met avec une cuillère à café"}], val: 5, unit: "mL", repere: "5 mL = une petite cuillère", lvl: 1 },
+            { items: [{n: "la quantité d'eau dans un verre", c: "un verre d'eau", e: "🥛", pour: "combien de verres on remplit avec une bouteille"}], val: 20, unit: "cL", repere: "20 cL = un verre", lvl: 1 },
+            { items: [{n: "la quantité de boisson dans une canette", c: "une canette", e: "🥤", pour: "si une canette suffit pour remplir deux verres"}], val: 33, unit: "cL", repere: "33 cL = un tiers de litre", lvl: 1, unite: false },
+            { items: [{n: "la quantité d'eau dans une grande bouteille", c: "une grande bouteille d'eau", e: "🍾", pour: "combien d'eau on emporte avec une grande bouteille"}], val: 1.5, unit: "L", repere: "1,5 L = la grande bouteille d'eau", lvl: 1 },
+            { items: [{n: "la quantité d'eau dans un grand arrosoir", c: "un grand arrosoir", e: "", pour: "combien de fois il faut remplir un arrosoir pour arroser le jardin"}], val: 10, unit: "L", repere: "10 L = lourd à porter", lvl: 1 },
+            { items: [{n: "la quantité d'essence dans le réservoir d'une voiture", c: "le réservoir d'une voiture", e: "⛽", pour: "combien d'essence on met pour faire le plein d'une voiture"}], val: 50, unit: "L", repere: "50 L = faire le plein", lvl: 1 },
+            { items: [{n: "l'eau dans une baignoire bien remplie", c: "une baignoire bien remplie", e: "🛁", pour: "combien d'eau il faut pour remplir une baignoire"}], val: 150, unit: "L", repere: "150 L = un très grand bain", lvl: 1 },
+
+            { items: [{n: "la dose de sirop pour la toux", c: "une cuillère à soupe de sirop", e: "🥄", pour: "combien de sirop on prend pour une dose contre la toux"}], val: 15, unit: "mL", repere: "15 mL = une cuillère à soupe", lvl: 2 },
+            { items: [{n: "la quantité de dentifrice dans un tube", c: "un tube de dentifrice", e: "🪥", pour: "combien de dentifrice on achète avec un tube"}], val: 75, unit: "mL", repere: "75 mL = un tube de salle de bains", lvl: 2 },
+            { items: [{n: "la quantité de soupe dans un bol", c: "un bol", e: "🥣", pour: "combien de soupe on sert à chaque personne"}], val: 30, unit: "cL", repere: "30 cL = un bol bien rempli", lvl: 2 },
+            { items: [{n: "la quantité de lait dans une brique", c: "une brique de lait", e: "🥛", pour: "combien de briques de lait il faut pour une recette"}], val: 1, unit: "L", repere: "1 L = une brique de lait", lvl: 2 },
+            { items: [{n: "l'eau utilisée par une chasse d'eau", c: "une chasse d'eau", e: "🚽", pour: "combien d'eau part quand on tire la chasse"}], val: 6, unit: "L", repere: "6 L = quatre grandes bouteilles d'eau", lvl: 2 },
+            { items: [{n: "la quantité d'eau dans un aquarium de salon", c: "un aquarium de salon", e: "🐠", pour: "combien d'eau il faut pour remplir un aquarium de salon"}], val: 60, unit: "L", repere: "60 L = quarante grandes bouteilles d'eau", lvl: 2 },
+            { items: [{n: "la quantité d'eau dans une petite piscine gonflable", c: "une petite piscine gonflable", e: "🛟", pour: "combien d'eau il faut pour remplir une petite piscine gonflable"}], val: 200, unit: "L", repere: "200 L = beaucoup de seaux", lvl: 2 },
+
+            { items: [{n: "la quantité de jus dans une petite brique", c: "une petite brique de jus", e: "🧃", pour: "si une petite brique de jus remplit un verre"}], val: 20, unit: "cL", autre: { val: "200", unit: "mL" }, repere: "20 cL = 200 mL, une brique pour le goûter", lvl: 3 },
+            { items: [{n: "la quantité de lait dans un biberon", c: "un biberon", e: "🍼", pour: "combien de lait boit un bébé à chaque repas"}], val: 25, unit: "cL", autre: { val: "250", unit: "mL" }, repere: "25 cL = 250 mL, un biberon", lvl: 3 },
+            { items: [{n: "la quantité d'eau dans une petite bouteille", c: "une petite bouteille d'eau", e: "🧴", pour: "si une petite bouteille d'eau suffit pour la récréation"}], val: 50, unit: "cL", autre: { val: "0,5", unit: "L" }, repere: "50 cL = 0,5 L, une petite bouteille", lvl: 3 },
+            { items: [{n: "la quantité d'eau dans une gourde", c: "une gourde", e: "🫗", pour: "si une gourde suffit pour une randonnée"}], val: 75, unit: "cL", autre: { val: "0,75", unit: "L" }, repere: "75 cL = 0,75 L, une gourde", lvl: 3 },
+            { items: [{n: "la quantité de peinture dans un pot", c: "un pot de peinture", e: "🎨", pour: "combien de pots de peinture il faut pour un mur"}], val: 2.5, unit: "L", autre: { val: "250", unit: "cL" }, repere: "2,5 L = 250 cL, un pot de peinture", lvl: 3 },
+            { items: [{n: "la quantité de lessive dans un bidon", c: "un bidon de lessive", e: "🧺", pour: "combien de lavages on peut faire avec un bidon de lessive"}], val: 3, unit: "L", autre: { val: "300", unit: "cL" }, repere: "3 L = 300 cL, un gros bidon de lessive", lvl: 3 }
         ],
         area: [
-            { items: [{n: "la surface d'une carte vitale", e: "💳", pour: "combien de place une carte vitale couvre sur la table"}], val: 40, unit: "cm²", repere: "40 cm² = un petit rectangle de plastique", lvl: 1 },
-            { items: [{n: "la surface du sol d'une chambre", e: "🛏️", pour: "combien de moquette il faut pour couvrir le sol d'une chambre"}], val: 12, unit: "m²", repere: "12 m² = une belle pièce", lvl: 1 },
-            { items: [{n: "la surface d'un tapis", e: "🧶", pour: "combien de place un tapis couvre sur le sol"}], val: 4, unit: "m²", repere: "4 m² = une zone de jeu", lvl: 1 },
-            { items: [{n: "la surface de l'écran d'une tablette", e: "📱", pour: "combien de film protecteur il faut pour couvrir l'écran d'une tablette"}], val: 300, unit: "cm²", repere: "300 cm² = un petit écran", lvl: 2 },
-            { items: [{n: "la surface d'une feuille de papier A4", e: "📄", pour: "combien de place une feuille A4 couvre sur ton bureau"}], val: 600, unit: "cm²", repere: "600 cm² = une feuille d'imprimante", lvl: 2 },
-            { items: [{n: "la surface d'une tête d'épingle", e: "📍", pour: "combien de place une tête d'épingle couvre sur ta feuille"}], val: 1, unit: "mm²", repere: "1 mm² = une toute petite pointe", lvl: 3 },
-            { items: [{n: "la superficie de Paris", e: "🗼", pour: "combien de terrain couvre la ville de Paris"}], val: 100, unit: "km²", repere: "100 km² = une grande ville", lvl: 3 }
+            { items: [{n: "la surface d'un timbre", c: "un timbre", e: "✉️", pour: "combien de place prend un timbre sur une enveloppe"}], val: 6, unit: "cm²", repere: "6 cm² = un petit rectangle de papier", lvl: 1 },
+            { items: [{n: "la surface d'une carte vitale", c: "une carte vitale", e: "💳", pour: "combien de place une carte vitale couvre sur la table"}], val: 50, unit: "cm²", repere: "50 cm² = un petit rectangle de plastique", lvl: 1 },
+            { items: [{n: "la surface d'une feuille de papier A4", c: "une feuille A4", e: "📄", pour: "combien de place une feuille A4 couvre sur ton bureau"}], val: 600, unit: "cm²", repere: "600 cm² = une feuille d'imprimante", lvl: 1 },
+            { items: [{n: "la surface d'un grand tapis de salon", c: "un grand tapis de salon", e: "🧶", pour: "combien de place prend un grand tapis dans le salon"}], val: 4, unit: "m²", repere: "4 m² = un carré de 2 m de côté", lvl: 1 },
+            { items: [{n: "la surface du sol d'une chambre", c: "une chambre", e: "🛏️", pour: "combien de carrelage il faut pour le sol d'une chambre"}], val: 12, unit: "m²", repere: "12 m² = une belle pièce", lvl: 1 },
+            { items: [{n: "la surface du sol d'une salle de classe", c: "une salle de classe", e: "🏫", pour: "combien de dalles il faut pour couvrir le sol d'une salle de classe"}], val: 50, unit: "m²", repere: "50 m² = une salle pour une classe entière", lvl: 1 },
+            { items: [{n: "la surface d'un terrain de basket", c: "un terrain de basket", e: "🏀", pour: "combien de gazon synthétique il faut pour couvrir un terrain de basket"}], val: 400, unit: "m²", repere: "400 m² = un terrain de 28 m sur 15 m, à peu près", lvl: 1 },
+
+            { items: [{n: "la surface d'une tête d'épingle", c: "une tête d'épingle", e: "📍", pour: "combien de place une tête d'épingle couvre sur ta feuille"}], val: 1, unit: "mm²", repere: "1 mm² = une toute petite pointe", lvl: 2, unite: false },
+            { items: [{n: "la surface de l'ongle de ton pouce", c: "l'ongle de ton pouce", e: "💅", pour: "si une gommette couvre tout l'ongle de ton pouce"}], val: 1, unit: "cm²", repere: "1 cm² = l'ongle du pouce", lvl: 2 },
+            { items: [{n: "la surface de l'écran d'une tablette", c: "une tablette", e: "📱", pour: "combien de film protecteur il faut pour couvrir l'écran d'une tablette"}], val: 300, unit: "cm²", repere: "300 cm² = un petit écran", lvl: 2 },
+            { items: [{n: "la surface d'une porte", c: "une porte", e: "🚪", pour: "combien de peinture il faut pour une porte"}], val: 2, unit: "m²", repere: "2 m² = une porte de maison", lvl: 2 },
+            { items: [{n: "la surface d'un court de tennis", c: "un court de tennis", e: "🎾", pour: "combien de terre battue il faut étaler sur un court de tennis"}], val: 250, unit: "m²", repere: "250 m² = un court de tennis", lvl: 2 },
+            { items: [{n: "la superficie de Paris", c: "Paris", e: "🗼", pour: "combien de terrain couvre la ville de Paris"}], val: 100, unit: "km²", repere: "100 km² = une grande ville", lvl: 2 },
+            { items: [{n: "la superficie de La Réunion", c: "La Réunion", e: "🏝️", pour: "combien de terrain couvre l'île de La Réunion"}], val: 2500, unit: "km²", repere: "2 500 km² = notre île", lvl: 2 },
+
+            { items: [{n: "la surface d'un post-it", c: "un post-it", e: "🗒️", pour: "combien de post-it il faut pour couvrir une affiche"}], val: 50, unit: "cm²", autre: { val: "0,5", unit: "dm²" }, repere: "50 cm² = 0,5 dm², un petit carré de papier collant", lvl: 3 },
+            { items: [{n: "la surface d'une carte postale", c: "une carte postale", e: "📮", pour: "combien de cartes postales tiennent sur un panneau"}], val: 150, unit: "cm²", autre: { val: "1,5", unit: "dm²" }, repere: "150 cm² = 1,5 dm², une carte postale", lvl: 3 },
+            { items: [{n: "la surface d'un tapis de souris", c: "un tapis de souris", e: "🖱️", pour: "si un tapis de souris tient à côté du clavier"}], val: 400, unit: "cm²", autre: { val: "4", unit: "dm²" }, repere: "400 cm² = 4 dm², un tapis de souris", lvl: 3 },
+            { items: [{n: "la surface d'une table de classe pour deux", c: "une table de classe pour deux", e: "🪑", pour: "combien de nappe en papier il faut pour couvrir une table de classe"}], val: 0.6, unit: "m²", autre: { val: "60", unit: "dm²" }, repere: "0,6 m² = 60 dm², une table pour deux", lvl: 3 },
+            { items: [{n: "la surface d'une serviette de bain", c: "une serviette de bain", e: "🛁", pour: "si une serviette de bain couvre toute la place sur le sable"}], val: 1, unit: "m²", autre: { val: "10000", unit: "cm²" }, repere: "1 m² = 10 000 cm², une grande serviette", lvl: 3 },
+            { items: [{n: "la surface d'un champ de canne", c: "un champ de canne", e: "🌾", pour: "combien de terrain couvre un champ de canne"}], val: 1, unit: "ha", autre: { val: "10000", unit: "m²" }, repere: "1 ha = 10 000 m², un petit champ de canne", lvl: 3, unite: false }
         ],
         vol: [
-            { items: [{n: "l'espace pris par une grosse gomme", e: "", pour: "combien de place prend une grosse gomme dans ta trousse"}], val: 15, unit: "cm³", repere: "15 cm³ = un petit objet 3D", lvl: 1 },
-            { items: [{n: "l'espace à l'intérieur d'une cabine de douche", e: "🚿", pour: "combien d'air il y a dans une cabine de douche"}], val: 2, unit: "m³", repere: "2 m³ = la place pour une personne debout", lvl: 1 },
-            { items: [{n: "l'espace pris par une boîte à chaussures", e: "👟", pour: "combien de place prend une boîte à chaussures dans un placard"}], val: 6, unit: "dm³", repere: "6 dm³ = 6 litres", lvl: 2 },
-            { items: [{n: "l'espace dans le coffre d'une voiture familiale", e: "🚗", pour: "combien de bagages on peut ranger dans le coffre d'une voiture"}], val: 500, unit: "dm³", repere: "500 dm³ = 500 litres", lvl: 2, unite: false },
-            { items: [{n: "le volume d'eau d'une piscine olympique", e: "🏊", pour: "la place que prend toute l'eau d'une piscine olympique"}], val: 2500, unit: "m³", repere: "2 500 m³ = un grand bassin de 50 m", lvl: 3 },
-            { items: [{n: "l'espace de chargement d'un camion de déménagement", e: "🚛", pour: "combien de meubles on peut charger dans un camion de déménagement"}], val: 30, unit: "m³", repere: "30 m³ = beaucoup de meubles", lvl: 3 }
+            { items: [{n: "l'espace pris par un dé à jouer", c: "un dé à jouer", e: "🎲", pour: "combien de place prend un dé dans une boîte de jeu"}], val: 1, unit: "cm³", repere: "1 cm³ = un petit dé", lvl: 1 },
+            { items: [{n: "l'espace pris par une grosse gomme", c: "une grosse gomme", e: "", pour: "combien de place prend une grosse gomme dans ta trousse"}], val: 15, unit: "cm³", repere: "15 cm³ = un petit objet en 3D", lvl: 1 },
+            { items: [{n: "l'espace pris par une boîte à chaussures", c: "une boîte à chaussures", e: "👟", pour: "combien de place prend une boîte à chaussures dans un placard"}], val: 6, unit: "dm³", repere: "6 dm³ = 6 litres", lvl: 1 },
+            { items: [{n: "l'espace dans un carton de déménagement", c: "un carton de déménagement", e: "📦", pour: "combien de livres tiennent dans un carton de déménagement"}], val: 50, unit: "dm³", repere: "50 dm³ = 50 litres", lvl: 1 },
+            { items: [{n: "l'espace à l'intérieur d'une cabine de douche", c: "une cabine de douche", e: "🚿", pour: "combien d'air il y a dans une cabine de douche"}], val: 2, unit: "m³", repere: "2 m³ = la place pour une personne debout", lvl: 1 },
+            { items: [{n: "l'espace dans un garage", c: "un garage", e: "🏠", pour: "combien de cartons on peut entasser dans un garage"}], val: 50, unit: "m³", repere: "50 m³ = la place pour une voiture et des étagères", lvl: 1 },
+
+            { items: [{n: "l'espace pris par une balle de ping-pong", c: "une balle de ping-pong", e: "🏓", pour: "combien de balles de ping-pong tiennent dans une boîte"}], val: 30, unit: "cm³", repere: "30 cm³ = une petite balle", lvl: 2 },
+            { items: [{n: "l'espace dans une boîte de céréales", c: "une boîte de céréales", e: "🥣", pour: "combien de boîtes de céréales tiennent dans un placard"}], val: 4, unit: "dm³", repere: "4 dm³ = 4 litres", lvl: 2 },
+            { items: [{n: "l'espace dans un four à micro-ondes", c: "un four à micro-ondes", e: "🍲", pour: "si un grand plat entre dans un four à micro-ondes"}], val: 25, unit: "dm³", repere: "25 dm³ = 25 litres", lvl: 2 },
+            { items: [{n: "l'espace dans le coffre d'une voiture familiale", c: "le coffre d'une voiture", e: "🚗", pour: "combien de bagages on peut ranger dans le coffre d'une voiture"}], val: 500, unit: "dm³", repere: "500 dm³ = 500 litres", lvl: 2, unite: false },
+            { items: [{n: "l'espace de chargement d'un camion de déménagement", c: "un camion de déménagement", e: "🚛", pour: "combien de meubles on peut charger dans un camion de déménagement"}], val: 30, unit: "m³", repere: "30 m³ = beaucoup de meubles", lvl: 2 },
+            { items: [{n: "le volume d'eau d'une piscine olympique", c: "une piscine olympique", e: "🏊", pour: "quelle place prend toute l'eau d'une piscine olympique"}], val: 2500, unit: "m³", repere: "2 500 m³ = un grand bassin de 50 m", lvl: 2 },
+
+            { items: [{n: "l'espace pris par une boîte de mouchoirs", c: "une boîte de mouchoirs", e: "🤧", pour: "combien de boîtes de mouchoirs tiennent sur une étagère"}], val: 2.5, unit: "dm³", autre: { val: "2500", unit: "cm³" }, repere: "2,5 dm³ = 2 500 cm³, une boîte de mouchoirs", lvl: 3 },
+            { items: [{n: "l'espace pris par un ballon de foot", c: "un ballon de foot", e: "⚽", pour: "combien de ballons tiennent dans le sac du club"}], val: 5, unit: "dm³", autre: { val: "5000", unit: "cm³" }, repere: "5 dm³ = 5 000 cm³, un ballon de foot", lvl: 3 },
+            { items: [{n: "l'espace dans une glacière", c: "une glacière", e: "🧊", pour: "combien de bouteilles tiennent dans une glacière"}], val: 30, unit: "dm³", autre: { val: "30000", unit: "cm³" }, repere: "30 dm³ = 30 000 cm³, une glacière de pique-nique", lvl: 3 },
+            { items: [{n: "l'espace dans un réfrigérateur", c: "un réfrigérateur", e: "🍦", pour: "si toutes les courses tiennent dans un réfrigérateur"}], val: 300, unit: "dm³", autre: { val: "0,3", unit: "m³" }, repere: "300 dm³ = 0,3 m³, un réfrigérateur", lvl: 3 },
+            { items: [{n: "le volume d'eau d'une cuve de récupération d'eau de pluie", c: "une cuve d'eau de pluie", e: "🌧️", pour: "combien d'arrosages on peut faire avec une cuve d'eau de pluie"}], val: 1, unit: "m³", autre: { val: "1000", unit: "dm³" }, repere: "1 m³ = 1 000 dm³, une grosse cuve", lvl: 3 },
+            { items: [{n: "l'espace dans une benne de chantier", c: "une benne de chantier", e: "🚚", pour: "combien de gravats on peut jeter dans une benne"}], val: 10, unit: "m³", autre: { val: "10000", unit: "dm³" }, repere: "10 m³ = 10 000 dm³, une benne de chantier", lvl: 3 }
         ]
     };
-    // les unités qu'on utilise vraiment, pour « Quelle unité ? » et les pièges du vrai ou faux
+    // les unités qu'on utilise vraiment, pour « Quelle unité ? »
     const UNITES_USUELLES = { len: ['mm', 'cm', 'm', 'km'], mass: ['g', 'kg', 't'], cap: ['mL', 'cL', 'L'], area: ['cm²', 'm²', 'km²'], vol: ['cm³', 'dm³', 'm³'] };
-    const UNITES_PIEGES = { len: ['mm', 'cm', 'm', 'km'], mass: ['mg', 'g', 'kg', 't'], cap: ['mL', 'cL', 'L'], area: ['mm²', 'cm²', 'm²', 'km²'], vol: ['cm³', 'dm³', 'm³'] };
 
+    // Lot 7b : 13 listes par niveau, jamais deux fois la même dans une série ; ni dam³ ni kL ; hL, daL, dag seulement au niveau 2
+    // (les conversions les gardent au niveau 2) ; jamais « 0,0… ». Chaque liste est écrite dans le bon ordre.
     const TRI_DB = [
-        // Niveau 1 : même nombre, unités différentes
+        // Niveau 1 : même nombre (ou presque), seule l'unité change ; unités du niveau 1 des conversions
         { lvl: 1, arr: ['5 mm', '5 cm', '5 m', '5 km'], dim: 'Longueur' },
+        { lvl: 1, arr: ['3 mm', '3 cm', '3 dm', '3 m'], dim: 'Longueur' },
+        { lvl: 1, arr: ['8 mm', '8 cm', '8 m', '8 km'], dim: 'Longueur' },
+        { lvl: 1, arr: ['6 cm', '6 dm', '6 m', '60 m'], dim: 'Longueur' },
         { lvl: 1, arr: ['2 mg', '2 g', '2 kg', '2 t'], dim: 'Masse' },
-        { lvl: 1, arr: ['10 mL', '10 cL', '10 L', '10 hL'], dim: 'Capacité' },
-        { lvl: 1, arr: ['1 mm²', '1 cm²', '1 m²', '1 km²'], dim: 'Aire' },
-        { lvl: 1, arr: ['3 cm³', '3 dm³', '3 m³', '3 dam³'], dim: 'Volume' },
-        { lvl: 1, arr: ['15 g', '15 dag', '15 kg', '15 t'], dim: 'Masse' },
-        { lvl: 1, arr: ['8 cL', '8 dL', '8 L', '8 daL'], dim: 'Capacité' },
+        { lvl: 1, arr: ['50 mg', '50 g', '50 kg', '50 t'], dim: 'Masse' },
+        { lvl: 1, arr: ['15 g', '15 kg', '15 t', '150 t'], dim: 'Masse' },
+        { lvl: 1, arr: ['4 mL', '4 cL', '4 L', '40 L'], dim: 'Capacité' },
+        { lvl: 1, arr: ['2 cL', '2 L', '20 L', '200 L'], dim: 'Capacité' },
+        { lvl: 1, arr: ['1 cm²', '1 dm²', '1 m²', '1 km²'], dim: 'Aire' },
+        { lvl: 1, arr: ['7 cm²', '7 dm²', '7 m²', '70 m²'], dim: 'Aire' },
+        { lvl: 1, arr: ['3 cm³', '3 dm³', '3 m³', '30 m³'], dim: 'Volume' },
+        { lvl: 1, arr: ['20 cm³', '20 dm³', '20 m³', '200 m³'], dim: 'Volume' },
 
-        // Niveau 2 : mélange de nombres et d'unités usuelles
+        // Niveau 2 : des nombres et des unités usuelles, sans piège
         { lvl: 2, arr: ['12 mm', '15 cm', '1,2 m', '10 km'], dim: 'Longueur' },
-        { lvl: 2, arr: ['500 g', '2 kg', '15 kg', '1,5 t'], dim: 'Masse' },
-        { lvl: 2, arr: ['33 cL', '1,5 L', '10 L', '150 L'], dim: 'Capacité' },
-        { lvl: 2, arr: ['40 cm²', '12 dm²', '4 m²', '50 m²'], dim: 'Aire' },
-        { lvl: 2, arr: ['15 cm³', '6 dm³', '1 m³', '30 m³'], dim: 'Volume' },
         { lvl: 2, arr: ['2 mm', '5 cm', '80 cm', '2 m'], dim: 'Longueur' },
+        { lvl: 2, arr: ['25 cm', '75 cm', '1,5 m', '6 m'], dim: 'Longueur' },
+        { lvl: 2, arr: ['500 g', '2 kg', '15 kg', '1,5 t'], dim: 'Masse' },
         { lvl: 2, arr: ['20 g', '250 g', '4 kg', '1,2 t'], dim: 'Masse' },
+        { lvl: 2, arr: ['5 g', '60 g', '250 g', '1,5 kg'], dim: 'Masse' },
+        { lvl: 2, arr: ['300 g', '800 g', '4 kg', '12 kg'], dim: 'Masse' },
+        { lvl: 2, arr: ['30 g', '5 dag', '2 hg', '1 kg'], dim: 'Masse' },
+        { lvl: 2, arr: ['33 cL', '1,5 L', '10 L', '150 L'], dim: 'Capacité' },
+        { lvl: 2, arr: ['15 mL', '33 cL', '75 cL', '2 L'], dim: 'Capacité' },
+        { lvl: 2, arr: ['50 cL', '3 L', '2 daL', '1 hL'], dim: 'Capacité' },
+        { lvl: 2, arr: ['40 cm²', '12 dm²', '4 m²', '50 m²'], dim: 'Aire' },
+        { lvl: 2, arr: ['6 cm²', '50 cm²', '12 m²', '400 m²'], dim: 'Aire' },
+        { lvl: 2, arr: ['15 cm³', '6 dm³', '1 m³', '30 m³'], dim: 'Volume' },
+        { lvl: 2, arr: ['1 cm³', '25 cm³', '4 dm³', '2 m³'], dim: 'Volume' },
 
-        // Niveau 3 : conversions pièges
+        // Niveau 3 : il faut convertir pour comparer
         { lvl: 3, arr: ['1 cL', '100 mL', '1 L', '1 000 L'], dim: 'Capacité' },
         { lvl: 3, arr: ['3 000 mg', '2 500 g', '4 kg', '0,5 t'], dim: 'Masse' },
         { lvl: 3, arr: ['50 cm²', '5 dm²', '0,5 m²', '500 m²'], dim: 'Aire' },
-        { lvl: 3, arr: ['150 mm', '0,2 m', '25 cm', '0,001 km'], dim: 'Longueur' },
+        { lvl: 3, arr: ['150 mm', '0,2 m', '25 cm', '3 dm'], dim: 'Longueur' },
         { lvl: 3, arr: ['0,5 L', '75 cL', '1 dm³', '2 000 mL'], dim: 'Capacité' },
-        { lvl: 3, arr: ['2 000 g', '2,5 kg', '0,01 t', '15 kg'], dim: 'Masse' }
+        { lvl: 3, arr: ['800 g', '1,2 kg', '1 500 g', '0,2 t'], dim: 'Masse' },
+        { lvl: 3, arr: ['4 000 cm', '450 m', '0,5 km', '0,6 km'], dim: 'Longueur' },
+        { lvl: 3, arr: ['700 mL', '75 cL', '0,8 L', '1,2 L'], dim: 'Capacité' },
+        { lvl: 3, arr: ['900 kg', '1,2 t', '1 500 kg', '2 t'], dim: 'Masse' },
+        { lvl: 3, arr: ['250 cm²', '3 dm²', '3 500 cm²', '0,4 m²'], dim: 'Aire' },
+        { lvl: 3, arr: ['500 cm³', '0,8 dm³', '1 200 cm³', '2 dm³'], dim: 'Volume' },
+        { lvl: 3, arr: ['98 cm', '1,05 m', '1,1 m', '1 200 mm'], dim: 'Longueur' },
+        { lvl: 3, arr: ['0,25 kg', '300 g', '0,4 kg', '450 g'], dim: 'Masse' }
     ];
 
     let quizData = [];
@@ -1354,7 +1462,10 @@
     }
     // ce que tirerSerie note une fois la question choisie
     function noterDansLaSerie(q, type, level) {
-      if (!serieEnCours || q.isProblem || q.isEstimation) return;
+      if (!serieEnCours) return;
+      // lot 7b : les objets des ordres de grandeur déjà posés dans la série
+      for (const o of q.objetsVus || []) serieEnCours.objets[o] = (serieEnCours.objets[o] || 0) + 1;
+      if (q.isProblem || q.isEstimation) return;
       const s = serieEnCours, k = type + ':' + cleDePaire(SCHEMAS[type], q.sourceUnit, q.targetUnit);
       s.paires[k] = (s.paires[k] || 0) + 1;
     }
@@ -1555,231 +1666,175 @@
 
     /* =========================================
        LE GÉNÉRATEUR DES ORDRES DE GRANDEUR
+       Lot 7b (28/11/2026) : des niveaux purs (chaque niveau ne pose que ses objets, ses ponts, ses listes) ;
+       1 : objets familiers, fausses à × 100 ou × 1 000 · 2 : objets moins familiers, fausses à × 10 ·
+       3 : l'objet dit dans une autre unité (« un nouveau-né : 3 500 g »), fausses à × 10, jamais « 0,0… ».
+       Dans une série : un objet une seule fois (toutes cases confondues), vrai/faux 5 contre 5,
+       la bonne réponse autant en A, B et C, jamais deux fois la même liste à classer.
        ========================================= */
     const TOUTES_DIMS = ['len', 'mass', 'cap', 'area', 'vol'];
-    function convertTricky(val, unit) {
-        const v = versChaine(val);
-        if (unit === 'g') return { val: decaler(v, -3), unit: 'kg' };
-        if (unit === 'kg') return { val: decaler(v, 3), unit: 'g' };
-        if (unit === 't') return { val: decaler(v, 3), unit: 'kg' };
-        if (unit === 'mm') return { val: decaler(v, -1), unit: 'cm' };
-        if (unit === 'cm') return { val: decaler(v, -2), unit: 'm' };
-        // lot 4 : 10 m et plus restent en m, 10 L et plus restent en L (personne ne dit « 10 000 cm » ni « 5 000 cL »)
-        if (unit === 'm' && Number(val) < 10) return { val: decaler(v, 2), unit: 'cm' };
-        if (unit === 'km') return { val: decaler(v, 3), unit: 'm' };
-        if (unit === 'mL') return { val: decaler(v, -1), unit: 'cL' };
-        if (unit === 'cL') return { val: decaler(v, 1), unit: 'mL' };
-        if (unit === 'L' && Number(val) < 10) return { val: decaler(v, 2), unit: 'cL' };
-        return { val: normaliser(v), unit: unit };
-    }
     // « La masse d'un œuf » → « La masse d'un œuf est d'environ »
     function debutDePhrase(n) { return `${majuscule(n)} est d'environ`; }
-    // les choix A, B, C dans un ordre tiré au hasard ; le bon choix est le premier de la liste reçue
-    function melangerChoix(choices) {
-        let finalChoices = []; let correctIndex = 0;
-        let indices = choices.map((c, i) => i); shuffle(indices);
-        for (let i = 0; i < indices.length; i++) { finalChoices.push(choices[indices[i]]); if (indices[i] === 0) correctIndex = i; }
-        return { choices: finalChoices, correctIndex };
+    // la mesure que voit l'élève : au niveau 3, l'objet est dit dans son autre unité
+    function montree(it, level) { return level === 3 && it.autre ? { val: normaliser(it.autre.val), unit: it.autre.unit } : { val: versChaine(it.val), unit: it.unit }; }
+    const grandeurDe = (m) => Number(valeurDe(m.val, m.unit).replace(',', '.'));
+    const ecart = (a, b) => Math.max(grandeurDe(a), grandeurDe(b)) / Math.min(grandeurDe(a), grandeurDe(b));
+    // une mesure fausse lisible : jamais 0, jamais « 0,0… »
+    const lisible = (v) => v !== '0' && !/^0,0/.test(v);
+    const cleObjet = (it) => it.items[0].n;
+    const foisVu = (it) => (serieEnCours && serieEnCours.objets[cleObjet(it)]) || 0;
+    // un objet du niveau, pas encore vu dans la série (sinon parmi les moins vus) ; [grandeur, objet] ou null
+    function objetDuNiveau(dims, level, filtre) {
+      const c = [];
+      for (const d of dims) for (const it of EST_DB[d]) if (it.lvl === level && (!filtre || filtre(it, d))) c.push([d, it]);
+      if (!c.length) return null;
+      const min = Math.min(...c.map(([, it]) => foisVu(it)));
+      return pick(c.filter(([, it]) => foisVu(it) === min));
     }
-    // des mesures fausses toutes différentes entre elles et de la bonne (on compare les grandeurs, pas l'écriture)
-    function distracteurs(bonne, candidats, n) {
-        const vus = new Set([valeurDe(bonne.val, bonne.unit)]);
-        const r = [];
-        for (const c of shuffle([...candidats])) {
-            const k = valeurDe(c.val, c.unit);
-            if (vus.has(k) || c.val === '0') continue;
-            vus.add(k); r.push(c);
-            if (r.length === n) break;
-        }
-        return r;
+    // la pioche d'une case : distribuée d'un coup pour toute la série, tous niveaux cochés ensemble (comme les sortes des conversions, lot 6)
+    function piocher(type, quoi, fabrique) {
+      if (!serieEnCours) return fabrique(1)[0];
+      const s = serieEnCours, k = type + '|' + quoi;
+      if (s.courante[k] !== undefined) return s.courante[k];
+      const p = s.pioches[k] || (s.pioches[k] = []);
+      if (!p.length) {
+        const n = Object.keys(s.attendus).filter(c => c.startsWith(type + '|')).reduce((t, c) => t + s.attendus[c], 0);
+        p.push(...fabrique(Math.max(n || 3, 1)));
+      }
+      return s.courante[k] = p.shift();
     }
+    // vrai/faux : autant de vrais que de faux (un de plus, au hasard, si le nombre est impair)
+    const lesVraiFaux = (n) => { const v = []; for (let i = 0; i < n; i++) v.push(i % 2 === 0); if (n % 2 && rand(1, 2) === 1) v[n - 1] = false; return shuffle(v); };
+    // la place de la bonne réponse : A, B et C autant de fois (à un près)
+    const lesPlaces = (n) => { let v = []; while (v.length < n) v = v.concat(shuffle([0, 1, 2])); return shuffle(v.slice(0, n)); };
+    // les choix : la bonne réponse à sa place, les fausses autour dans un ordre tiré au hasard
+    function placerChoix(bonne, fausses, place) {
+      const choices = shuffle([...fausses]), i = Math.min(place, choices.length);
+      choices.splice(i, 0, bonne);
+      return { choices, correctIndex: i };
+    }
+    // les fausses mesures : × 100 ou × 1 000 au niveau 1, × 10 ensuite (× 100 seulement si × 10 et ÷ 10 ne se lisent pas)
+    function mesuresFausses(juste, level) {
+      const autour = (ks) => ks.map(k => ({ val: decaler(juste.val, k), unit: juste.unit })).filter(m => lisible(m.val));
+      if (level === 1) return shuffle(autour([2, 3, -2, -3]));
+      return shuffle(autour([1, -1])).concat(shuffle(autour([2, -2])));
+    }
+    const VERBES = { len: 'mesure ', mass: 'pèse ', cap: 'contient ', area: "a une aire d'", vol: "a un volume d'" };
+    const NOMS_GRANDEURS = { len: "Une longueur", mass: "Une masse", cap: "Une capacité", area: "Une aire", vol: "Un volume" };
 
     function buildEstimationLogic(level, qTypeStr, allowedDims) {
         const dims = allowedDims && allowedDims.length ? allowedDims : TOUTES_DIMS;
-        let qType = 1;
-        if(qTypeStr === 'est_val') qType = 2;
-        if(qTypeStr === 'est_obj') qType = 3;
-        if(qTypeStr === 'est_tf') qType = 4;
-        if(qTypeStr === 'est_action') qType = 5;
-        if(qTypeStr === 'est_grandeur') qType = 6;
-        if(qTypeStr === 'est_pont') qType = 7;
-        if(qTypeStr === 'est_assoc') qType = 8;
-        if(qTypeStr === 'est_trou') qType = 9;
-        if(qTypeStr === 'est_tri') qType = 10;
+        const place = () => piocher(qTypeStr, 'place', lesPlaces);
+        const fini = (q, objets) => ({ isProblem: false, isEstimation: true, phase: 0, ...q, objetsVus: objets ? objets.map(cleObjet) : [] });
 
-        if (qType === 5) {
-            let actionsList = ACTIONS_DB.filter(a => a.lvl <= level);
-            if(actionsList.length === 0) actionsList = ACTIONS_DB;
-            let act = pick(actionsList);
-            return { isProblem: false, isEstimation: true, qType: 5, problemText: act.q, choices: [], correctIndex: 0, correctionText: act.c, phase: 0, textId: act.q, emoji: "🕵️" };
+        if (qTypeStr === 'est_action') {
+            const act = pick(ACTIONS_DB.filter(a => a.lvl === level));
+            return fini({ qType: 5, problemText: act.q, choices: [], correctIndex: 0, correctionText: act.c, textId: act.q, emoji: "🕵️" });
         }
 
-        if (qType === 6) {
-            let dim = pick(TOUTES_DIMS);
-            let item = pick(EST_DB[dim]);
-            let pickedQItem = pick(item.items);
-            let qObject = pickedQItem.n;
-            const NOMS = { len: "Une longueur", mass: "Une masse", cap: "Une capacité", area: "Une aire", vol: "Un volume" };
-            let correctG = NOMS[dim];
-            // « volume » et « capacité » jamais ensemble : les deux pourraient être justes
+        if (qTypeStr === 'est_pont') {
+            const pont = pick(PONTS_DB.filter(p => p.lvl === level));
+            const m = placerChoix(pont.c, [pont.w1, pont.w2], place());
+            const rappel = `L'équivalence est : <strong>${pont.c}</strong>.`;
+            return fini({ qType: 7, problemText: pont.q, choices: m.choices, correctIndex: m.correctIndex, correctionText: rappel, textId: pont.q, emoji: pont.e, rappel });
+        }
+
+        if (qTypeStr === 'est_tri') {
+            const liste = pick(TRI_DB.filter(t => t.lvl === level));
+            const ordre = [...liste.arr], mesures = shuffle([...liste.arr]);
+            const problemText = `Classe ces mesures de la plus petite à la plus grande :<br><br><span style='color:var(--accent); font-size:1.1em;'>${mesures.join(' &nbsp; | &nbsp; ')}</span>`;
+            // la clé : la liste rangée (la même liste dans un autre ordre est la même question)
+            return fini({ qType: 10, problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${ordre.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, textId: 'classer:' + ordre.join('|'), emoji: "📶", mesures, ordre });
+        }
+
+        if (qTypeStr === 'est_grandeur') {
+            // toutes les grandeurs (c'est la question) ; « volume » et « capacité » jamais ensemble : les deux pourraient être justes
+            const [dim, it] = objetDuNiveau(TOUTES_DIMS, level);
+            const objet = it.items[0];
             const voisin = d => d === 'cap' ? 'vol' : (d === 'vol' ? 'cap' : null);
-            const pris = [dim];
+            const autres = [];
             for (const d of shuffle(TOUTES_DIMS.filter(d => d !== dim))) {
-                if (pris.length === 3) break;
-                if (!pris.some(p => voisin(p) === d)) pris.push(d);
+                if (autres.length === 2) break;
+                if (voisin(dim) !== d && !autres.some(p => voisin(p) === d)) autres.push(d);
             }
-            const m = melangerChoix(pris.map(d => NOMS[d]));
-            // lot 4 : la question ne nomme plus la grandeur (« la masse d'un œuf » donnait la réponse)
-            let problemText = pickedQItem.pour ? `Pour savoir <strong>${pickedQItem.pour}</strong>, quelle grandeur mesure-t-on ?` : `Quelle grandeur mesure-t-on pour : <strong>${qObject}</strong> ?`;
-            return { isProblem: false, isEstimation: true, qType: 6, problemText: problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText: `On cherche à mesurer ${correctG.toLowerCase()}.`, phase: 0, textId: problemText, emoji: pickedQItem.e, sujet: qObject, rappel: `On mesure ${correctG.toLowerCase()}.` };
+            const m = placerChoix(NOMS_GRANDEURS[dim], autres.map(d => NOMS_GRANDEURS[d]), place());
+            const problemText = `Pour savoir <strong>${objet.pour}</strong>, quelle grandeur mesure-t-on ?`;
+            const g = NOMS_GRANDEURS[dim].toLowerCase();
+            return fini({ qType: 6, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText: `On cherche à mesurer ${g}.`, textId: problemText, emoji: objet.e, sujet: objet.n, rappel: `On mesure ${g}.` }, [it]);
         }
 
-        if (qType === 7) {
-            let pontsList = PONTS_DB.filter(p => p.lvl <= level);
-            if(pontsList.length === 0) pontsList = PONTS_DB;
-            let pont = pick(pontsList);
-            const m = melangerChoix([pont.c, pont.w1, pont.w2]);
-            return { isProblem: false, isEstimation: true, qType: 7, problemText: pont.q, choices: m.choices, correctIndex: m.correctIndex, correctionText: `L'équivalence est : <strong>${pont.c}</strong>.`, phase: 0, textId: pont.q, emoji: pont.e, rappel: `L'équivalence est : <strong>${pont.c}</strong>.` };
-        }
-
-        if (qType === 8) {
-            let objects = [], values = [];
-            const vues = new Set();
-            const ajouter = (it, v, u) => { objects.push(pick(it.items).n); values.push(mesure(v, u)); vues.add(valeurDe(v, u)); };
-            if (level === 1) {
-                shuffle([...TOUTES_DIMS]).slice(0, 3).forEach(dim => {
-                    let it = pick(EST_DB[dim].filter(i => i.lvl === 1));
-                    if (!it) it = pick(EST_DB[dim]);
-                    ajouter(it, versChaine(it.val), it.unit);
-                });
-            } else {
-                let dim = pick(dims);
-                let pool = shuffle(EST_DB[dim].filter(i => level === 3 || i.lvl <= 2));
-                if (pool.length < 3) pool = shuffle([...EST_DB[dim]]);
-                // lot 4 : trois mesures au moins 3 fois plus grandes l'une que l'autre (15 g et 20 g ne se départagent pas)
-                const nb = (it) => Number(valeurDe(it.val, it.unit).replace(',', '.'));
-                const pris = [];
-                const assezLoin = (it) => pris.every(x => Math.max(nb(x), nb(it)) >= 3 * Math.min(nb(x), nb(it)));
+        if (qTypeStr === 'est_assoc') {
+            // trois objets de la même grandeur et du même niveau, au moins 3 fois plus grands l'un que l'autre ; les moins vus d'abord
+            let pris = [], dim = null;
+            const fraiches = d => EST_DB[d].filter(it => it.lvl === level && foisVu(it) === 0).length;
+            for (const d of [...shuffle([...dims]).sort((a, b) => fraiches(b) - fraiches(a)), ...shuffle(TOUTES_DIMS.filter(d => !dims.includes(d)))]) {
+                pris = [];
+                const pool = shuffle(EST_DB[d].filter(it => it.lvl === level)).sort((a, b) => foisVu(a) - foisVu(b));
                 for (const it of pool) {
-                    if (objects.length === 3) break;
-                    if (vues.has(valeurDe(it.val, it.unit))) continue;   // deux objets de même mesure : association ambiguë
-                    if (!assezLoin(it)) continue;
-                    pris.push(it);
-                    if (level === 3 && rand(1, 2) === 1) { const conv = convertTricky(it.val, it.unit); ajouter(it, conv.val, conv.unit); }
-                    else ajouter(it, versChaine(it.val), it.unit);
+                    if (pris.length === 3) break;
+                    if (pris.every(x => ecart(montree(x, level), montree(it, level)) >= 3)) pris.push(it);
                 }
+                if (pris.length === 3) { dim = d; break; }
             }
-            let shuffledVals = shuffle([...values]);
-            let letters = ["A", "B", "C"];
+            const objects = pris.map(it => it.items[0].n), values = pris.map(it => { const m = montree(it, level); return mesure(m.val, m.unit); });
+            const shuffledVals = shuffle([...values]);
+            const letters = ["A", "B", "C"];
             // les valeurs A, B, C restent sur la ligne de leur lettre (au téléphone, la colonne ne se coupe plus)
-            let htmlStr = `Associe chaque élément à la bonne valeur :<br><br>
+            const htmlStr = `Associe chaque élément à la bonne valeur :<br><br>
                <div class="assoc-cols" style="display:flex; justify-content:center; gap: 50px; font-size:0.9em; text-align:left;">
                  <div>1) ${objects[0]}<br>2) ${objects[1]}<br>3) ${objects[2]}</div>
                  <div class="assoc-vals">A)${NBSP}${shuffledVals[0]}<br>B)${NBSP}${shuffledVals[1]}<br>C)${NBSP}${shuffledVals[2]}</div>
                </div>`;
-            let correctStr = `1 → ${letters[shuffledVals.indexOf(values[0])]} | 2 → ${letters[shuffledVals.indexOf(values[1])]} | 3 → ${letters[shuffledVals.indexOf(values[2])]}`;
-            return { isProblem: false, isEstimation: true, qType: 8, problemText: htmlStr, choices: [], correctIndex: 0, correctionText: `La bonne combinaison : <strong>${correctStr}</strong>.`, phase: 0, textId: objects.join(""), emoji: "🔗",
-                     objets: objects, valeurs: shuffledVals, paires: values.map(v => shuffledVals.indexOf(v)) };
+            const correctStr = values.map((v, k) => `${k + 1} → ${letters[shuffledVals.indexOf(v)]}`).join(' | ');
+            return fini({ qType: 8, problemText: htmlStr, choices: [], correctIndex: 0, correctionText: `La bonne combinaison : <strong>${correctStr}</strong>.`, textId: objects.join(""), emoji: "🔗",
+                          objets: objects, valeurs: shuffledVals, paires: values.map(v => shuffledVals.indexOf(v)) }, pris);
         }
 
-        if (qType === 9) {
-            let dim = pick(dims);
-            let db = EST_DB[dim].filter(item => item.lvl <= level);
-            if(db.length === 0) db = EST_DB[dim];
-            let targetItem = pick(db);
-            let pickedQItem = pick(targetItem.items);
-            let displayUnit = targetItem.unit;
-            let displayVal = versChaine(targetItem.val);
-            if (level === 3) {
-                let conv = convertTricky(targetItem.val, targetItem.unit);
-                displayUnit = conv.unit; displayVal = conv.val;
+        // les autres cases : un objet du niveau, dans les grandeurs des conversions cochées (sinon toutes)
+        const pourUnite = (it, d) => it.unite !== false && UNITES_USUELLES[d].includes(it.unit);
+        const filtre = qTypeStr === 'est_unit' ? pourUnite : null;
+        const tire = objetDuNiveau(dims, level, filtre) || objetDuNiveau(TOUTES_DIMS, level, filtre);
+        const [dim, it] = tire;
+        const objet = it.items[0];
+        const juste = montree(it, level);
+        const rappel = `Rappel : ${it.repere}.`;
+        const base = { correctionText: rappel, emoji: objet.e, sujet: objet.n, rappel };
+
+        if (qTypeStr === 'est_unit') {
+            const problemText = `Pour <strong>${objet.n}</strong>, quelle est l'unité la plus adaptée ?`;
+            const m = placerChoix(it.unit, shuffle(UNITES_USUELLES[dim].filter(u => u !== it.unit)).slice(0, 2), place());
+            return fini({ ...base, qType: 1, problemText, choices: m.choices, correctIndex: m.correctIndex, textId: problemText, friseHtml: generateFriseHTML(dim) }, [it]);
+        }
+        if (qTypeStr === 'est_val') {
+            const problemText = `<strong>${debutDePhrase(objet.n)}</strong> :`;
+            const m = placerChoix(mesure(juste.val, juste.unit), mesuresFausses(juste, level).slice(0, 2).map(f => mesure(f.val, f.unit)), place());
+            return fini({ ...base, qType: 2, problemText, choices: m.choices, correctIndex: m.correctIndex, textId: problemText }, [it]);
+        }
+        if (qTypeStr === 'est_obj') {
+            // deux autres objets de la même grandeur et du même niveau, très loin de la mesure (10 fois au moins, sinon 4, sinon 3)
+            const loin = [];
+            for (const k of [10, 4, 3]) {
+                for (const o of shuffle(EST_DB[dim].filter(o => o.lvl === level && o !== it))) {
+                    if (loin.length === 2) break;
+                    if (!loin.includes(o) && ecart(montree(o, level), juste) >= k) loin.push(o);
+                }
+                if (loin.length === 2) break;
             }
-            let problemText = `Complète la phrase : <br><br><strong>${debutDePhrase(pickedQItem.n)}</strong> ....... <strong>${displayUnit}</strong>.`;
-            return { isProblem: false, isEstimation: true, qType: 9, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${ecrire(displayVal)}</strong>.`, phase: 0, textId: problemText, emoji: pickedQItem.e,
-                     sujet: pickedQItem.n, phrase: debutDePhrase(pickedQItem.n), reponse: normaliser(displayVal), uniteReponse: displayUnit };
+            // (chaque objet a au moins deux voisins de son niveau à × 3 : un test du lot 7b le vérifie)
+            const problemText = `Qu'est-ce qui ${VERBES[dim]}environ <strong>${mesure(juste.val, juste.unit)}</strong> ?`;
+            const m = placerChoix(majuscule(objet.c), loin.map(o => majuscule(o.items[0].c)), place());
+            return fini({ ...base, qType: 3, problemText, choices: m.choices, correctIndex: m.correctIndex, textId: problemText, emoji: null, sujet: mesure(juste.val, juste.unit) }, [it]);
         }
-
-        if (qType === 10) {
-            let db = TRI_DB.filter(item => item.lvl <= level);
-            if(db.length === 0) db = TRI_DB;
-            let targetItem = pick(db);
-            let sorted = [...targetItem.arr];
-            let shuf = shuffle([...targetItem.arr]);
-            let problemText = `Classe ces mesures de la plus petite à la plus grande :<br><br><span style='color:var(--accent); font-size:1.1em;'>${shuf.join(' &nbsp; | &nbsp; ')}</span>`;
-            return { isProblem: false, isEstimation: true, qType: 10, problemText: problemText, choices: [], correctIndex: 0, correctionText: `Le bon ordre : <strong>${sorted.join(' &nbsp;&lt;&nbsp; ')}</strong>.`, phase: 0, textId: problemText, emoji: "📶",
-                     mesures: shuf, ordre: sorted };
+        if (qTypeStr === 'est_tf') {
+            const vrai = piocher(qTypeStr, 'vf', lesVraiFaux);
+            const affiche = vrai ? juste : mesuresFausses(juste, level)[0];   // × 10 ou ÷ 10 dès que l'un des deux se lit (niveaux 2 et 3)
+            const problemText = `<strong>${debutDePhrase(objet.n)} ${mesure(affiche.val, affiche.unit)}</strong>.`;
+            return fini({ ...base, qType: 4, problemText, choices: ["Vrai", "Faux"], correctIndex: vrai ? 0 : 1, correctionText: (vrai ? "C'est vrai ! " : "C'est faux ! ") + rappel, textId: problemText }, [it]);
         }
-
-        let dim = pick(dims);
-        let db = EST_DB[dim].filter(item => item.lvl <= level);
-        // « Quelle unité ? » : seulement les objets dont l'unité est vraiment la plus adaptée
-        if (qType === 1) db = db.filter(item => item.unite !== false && UNITES_USUELLES[dim].includes(item.unit));
-        if(db.length === 0) db = EST_DB[dim].filter(item => qType !== 1 || (item.unite !== false && UNITES_USUELLES[dim].includes(item.unit)));
-        let targetItem = pick(db);
-
-        let pickedQItem = pick(targetItem.items);
-        let qObject = pickedQItem.n;
-        let emoji = pickedQItem.e;
-        const bonne = { val: versChaine(targetItem.val), unit: targetItem.unit };
-
-        let problemText = "";
-        let correctionText = `Rappel : ${targetItem.repere}.`;
-        let choices = [];
-        let friseHtml = "";
-
-        if (qType === 1) {
-            problemText = `Pour <strong>${qObject}</strong>, quelle est l'unité la plus adaptée ?`;
-            let wrongUnits = shuffle(UNITES_USUELLES[dim].filter(u => u !== targetItem.unit)).slice(0, 2);
-            choices = [targetItem.unit, wrongUnits[0], wrongUnits[1]];
-            friseHtml = generateFriseHTML(dim);
-        }
-        else if (qType === 2) {
-            problemText = `<strong>${debutDePhrase(qObject)}</strong> :`;
-            let juste = bonne, pool;
-            if (level === 1 || level === 2) {
-                const v = Number(bonne.val.replace(',', '.'));
-                pool = [1, 2, 3].map(k => ({ val: decaler(bonne.val, k), unit: bonne.unit }));
-                if (v >= 10) pool.push({ val: decaler(bonne.val, -1), unit: bonne.unit });
-                if (v >= 100) pool.push({ val: decaler(bonne.val, -2), unit: bonne.unit });
-            } else {
-                juste = convertTricky(targetItem.val, targetItem.unit);
-                pool = [
-                    { val: decaler(bonne.val, 1), unit: bonne.unit },
-                    { val: decaler(juste.val, 2), unit: juste.unit },
-                    { val: decaler(bonne.val, -1), unit: bonne.unit },
-                    { val: decaler(juste.val, -1), unit: juste.unit },
-                    { val: decaler(bonne.val, 2), unit: bonne.unit }
-                ];
-            }
-            // pas de nombre trop petit pour être lu (« 0,15 cm » oui, « 0,015 cm » non)
-            pool = pool.filter(c => !/^0,0/.test(c.val));
-            const faux = distracteurs(juste, pool, 2);
-            choices = [mesure(juste.val, juste.unit), ...faux.map(c => mesure(c.val, c.unit))];
-        }
-        else if (qType === 3) {
-            problemText = `Qu'est-ce qui a une mesure d'environ <strong>${mesure(bonne.val, bonne.unit)}</strong> ?`;
-            let wrongItems = shuffle(EST_DB[dim].filter(i => valeurDe(i.val, i.unit) !== valeurDe(targetItem.val, targetItem.unit))).slice(0, 2);
-            choices = [majuscule(qObject), majuscule(pick(wrongItems[0].items).n), majuscule(pick(wrongItems[1].items).n)];
-            emoji = null;
-        }
-        else if (qType === 4) {
-            let isTrue = rand(1, 2) === 1;
-            let affiche = bonne;
-            if (!isTrue) {
-                // faux : au moins 10 fois trop grand ou trop petit (jamais « 2 fois », qui reste « environ »)
-                if (level === 1) affiche = { val: decaler(bonne.val, pick([2, 3])), unit: bonne.unit };
-                else if (level === 2) affiche = { val: decaler(bonne.val, pick([1, -1])), unit: bonne.unit };
-                else affiche = { val: bonne.val, unit: pick(UNITES_PIEGES[dim].filter(u => u !== bonne.unit)) };
-            }
-            problemText = `<strong>${debutDePhrase(qObject)} ${mesure(affiche.val, affiche.unit)}</strong>.`;
-            const m = { choices: ["Vrai", "Faux"], correctIndex: isTrue ? 0 : 1 };
-            const rappel = correctionText;
-            correctionText = (isTrue ? "C'est vrai ! " : "C'est faux ! ") + correctionText;
-            return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji, sujet: qObject, rappel };
-        }
-
-        const m = melangerChoix(choices);
-        return { isProblem: false, isEstimation: true, qType, problemText, choices: m.choices, correctIndex: m.correctIndex, correctionText, phase: 0, textId: problemText, friseHtml, emoji, sujet: qObject, rappel: correctionText };
+        // est_trou
+        const problemText = `Complète la phrase : <br><br><strong>${debutDePhrase(objet.n)}</strong> ....... <strong>${juste.unit}</strong>.`;
+        return fini({ ...base, qType: 9, problemText, choices: [], correctIndex: 0, correctionText: `Il fallait trouver la valeur : <strong>${ecrire(juste.val)}</strong>.`, textId: problemText,
+                      phrase: debutDePhrase(objet.n), reponse: juste.val, uniteReponse: juste.unit }, [it]);
     }
 
     /* =========================================
@@ -1813,7 +1868,7 @@
         const lesTypes = repartir(types, count), lesNiveaux = repartir(levels, count);
         const serie = [], vus = new Set();
         // la recette de la série (lot 6) : combien de questions chaque case aura à chaque niveau
-        serieEnCours = { pioches: {}, courante: {}, paires: {}, attendus: {} };
+        serieEnCours = { pioches: {}, courante: {}, paires: {}, attendus: {}, objets: {} };
         for (let i = 0; i < count; i++) { const cle = lesTypes[i] + '|' + lesNiveaux[i]; serieEnCours.attendus[cle] = (serieEnCours.attendus[cle] || 0) + 1; }
         try {
           for (let i = 0; i < count; i++) {
@@ -1865,7 +1920,7 @@
     const CASES_LIEN = {
       length: 'longueurs', mass: 'masses', massT: 'tonnes', volL: 'capacites', area: 'aires', volM3: 'volumes', cross: 'litres-m3',
       prob_add: 'additions', prob_sub: 'soustractions', prob_mult: 'multiplications', prob_div: 'divisions', prob_frac: 'fractions', prob_geom: 'perimetres-aires',
-      est_grandeur: 'grandeur', est_unit: 'unite', est_val: 'ordre', est_tf: 'vrai-faux', est_action: 'action', est_pont: 'ponts', est_assoc: 'associer', est_trou: 'trous', est_tri: 'classer'
+      est_grandeur: 'grandeur', est_unit: 'unite', est_obj: 'objet', est_val: 'ordre', est_tf: 'vrai-faux', est_action: 'action', est_pont: 'ponts', est_assoc: 'associer', est_trou: 'trous', est_tri: 'classer'
     };
     const NIVEAUX_LIEN = ['1', '2', '3'], QUESTIONS_LIEN = ['5', '10', '15', '20'];
     // lot 3 : « mode=diapo|entrainement » et « aide=demande|debut|sans », listes fermées
@@ -2483,7 +2538,7 @@
       prob_add: "Problème d'addition", prob_sub: 'Problème de soustraction', prob_mult: 'Problème de multiplication',
       prob_div: 'Problème de division', prob_frac: 'Problème de fraction', prob_geom: "Problème de périmètre ou d'aire",
       est_grandeur: 'Quelle grandeur ?', est_unit: 'Quelle unité ?', est_val: 'Ordre de valeur', est_tf: 'Vrai ou faux',
-      est_pont: 'Ponts et symboles', est_assoc: 'Associer', est_trou: 'Texte à trous', est_tri: 'Classer'
+      est_pont: 'Ponts et symboles', est_assoc: 'Associer', est_trou: 'Texte à trous', est_tri: 'Classer', est_obj: 'Quel objet ?'
     };
     // une ligne du bilan, en texte
     function resumeDe(q) {
