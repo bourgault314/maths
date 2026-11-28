@@ -4609,7 +4609,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   // reglages_anciens_repris). Dans ce fichier, l'état de la fenêtre garde son
   // nom d'avant (`palier`, `elevePalier`) : c'est le numéro de l'étage.
   const PALIERS_CALCUL = [[1, "CP", "Jusqu’au CP"], [2, "CE1", "Jusqu’au CE1"], [3, "CE2", "Jusqu’au CE2"], [4, "CM1", "Jusqu’au CM1"], [5, "CM2", "Jusqu’au CM2"],
-    [6, "Vers la 6e (tout)", "Jusqu’à la 6e"]];
+    [6, "La 6e (tout)", "Jusqu’à la 6e"]];
   const minutesValable = n => (MINUTES_CALCUL.includes(n) ? n : 10);
   const palierValable = n => (Number.isInteger(n) && n >= 1 && n <= PALIERS_CALCUL.length ? n : PALIERS_CALCUL.length);
 
@@ -6909,9 +6909,9 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
     return fiche ? fiche.nom : id;
   }
 
-  // « Le CP », « Le CE1 », … « Vers la 6e » : les classes ne sont écrites que
+  // « Le CP », « Le CE1 », … « La 6e » : les classes ne sont écrites que
   // là où le nom ne les dit pas (plus aucun depuis le lot K1b : un palier par
-  // classe ; le dernier, « Vers la 6e », ne dit pas « choix pédagogiques »).
+  // classe ; « Vers la 6e » est devenu « La 6e » au lot « la 6e complète »).
   function nomPalierCalcul(numero) {
     const palier = CALCUL_CORE ? CALCUL_CORE.PALIERS.find(p => p.n === numero) : null;
     if (!palier) return `Palier ${numero}`;

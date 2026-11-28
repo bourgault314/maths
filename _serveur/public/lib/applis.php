@@ -290,11 +290,15 @@ const CATALOGUE_APPLIS = [
         // raté à un retour (0 à 60) est rangée dans `x`, × 4 : `x` va de 0 à
         // 243 (une liste `o` par module aurait mis le pire cas à 2 027 clés,
         // au-dessus des 2 000). Pas de classe de l'élève, pas de réglage neuf.
+        // Lot « la 6e complète » (27/11/2026), version 15 : aucune clé de plus
+        // — D16 (« Où va la virgule ? ») entre dans le motif des modules, F11
+        // a une case de plus par liste. Le pire cas passe à 1 980 clés et
+        // 36 323 octets (une ligne de module de plus : 26 clés).
         'cles' => ['version', 'epoque', 'modules', 'vu', 'b', 'e', 'a', 'x', 'r', 'q', 'pe', 'd', 's', 'ar', 'g', 'c',
             'seance', 'jour', 'etape', 'n', 'i', 'p', 'j', 'parts', 'seances', 'journal', 'calculs', 'justes', 'nouveautes', 'prouvees',
             'rouges', 'minutes', 'numero', 'seuls', 'seulsJustes', 'tests', 'testsRates', 'jours', 'ceintures', 'paliers', 'quarts'],
         'mots' => [],
-        'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5)$/', '/^\d{1,2}$/'],
+        'motifs' => ['/^(?:A1|A10|A11|A2|A3|A4|A5|A6|A7|A8|A9|M4|M1|M2|M3|M5|M6|M13|M7|M8|M9|M10|M11|M12|C1|C3|C4|D1|D2|D3|D4|D5|D6|D7|D8|D9|F2|F1|F3|F4|F5|F6|F8|F9|F11|D10|D11|D12|D13|D14|D15|F7|F10|F12|F13|P1|P2|P3|P4|R1|R2|R3|R4|R5|R6|X1|X2|X3|X4|X5|X6|X7|C2|C5|D16)$/', '/^\d{1,2}$/'],
         // « Revenir à… » nomme une version par ce compte : les séances finies
         // (une liste de dates, 60 au plus).
         'compteur' => 'seances',
@@ -376,7 +380,12 @@ const CATALOGUE_APPLIS = [
         // couperait `x` à 3 (la sorte d'un calcul raté à un retour y est
         // rangée, × 4) : relue puis renvoyée, sa progression l'effacerait. (Le moteur de la
         // version 14 relit une ligne de version 13 sans rien perdre.)
-        'version_min' => 14,
+        // Lot « la 6e complète » (27/11/2026) : 15. « Entier × fraction »
+        // (F11) gagne un niveau au bout et « Où va la virgule ? » (D16) est
+        // un module neuf : une page de version 14 couperait la ligne de F11 à
+        // deux cases et jetterait D16. (Le moteur de la version 15 relit une
+        // ligne de version 14 sans rien perdre.)
+        'version_min' => 15,
         // Lot K1 (relecture de Codex du 22/11, B1) : la LECTURE aussi est
         // protégée. Une page dit sa version en lisant (« version » dans le
         // corps) ; le serveur ne lui sert pas une progression d'une version

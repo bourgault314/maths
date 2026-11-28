@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261127-1">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261127-2">
 <script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
 </head>
 <body>
@@ -230,6 +230,9 @@
             <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
             <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
             <button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button>
+            <!-- Lot de la sixième complète (planche 2) : une réponse à
+                 choisir parmi trois, à la place du pavé, qui garde sa place. -->
+            <div id="choix" class="dc-choix" role="radiogroup" aria-label="Choisis la bonne réponse" hidden></div>
           </div>
           <div class="actions">
             <button id="validate" class="primary" type="button">Valider</button>
@@ -302,9 +305,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261127-1"></script>
-  <script src="./defi_calcul_mon_parcours.js?v=20261127-1"></script>
-  <script src="./defi_calcul_aides.js?v=20261125-2"></script>
+  <script src="./defi_calcul_core.js?v=20261127-2"></script>
+  <script src="./defi_calcul_mon_parcours.js?v=20261127-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261127-2"></script>
   <script>
     (() => {
       "use strict";
@@ -2125,6 +2128,17 @@
       // Le nom d'une étoile, avec sa majuscule (« Compléments à 100 »,
       // « Retirer 9 ») : comme sur les planches.
       const nomCompetence = (id, n) => { const nom = CORE.nomCompetence(id, n); return nom.charAt(0).toUpperCase() + nom.slice(1); };
+      // Lot « la 6e complète » : un texte qui porte une fraction (« 0,1 et
+      // 1/10 : les produits à connaître », « Demis et quarts, avec 3/4 »)
+      // l'écrit comme sur le cahier, jamais avec une barre oblique.
+      // (Seule la fraction est dessinée : le reste du texte passe à la ligne
+      // comme avant.)
+      function ecrireAvecFractions(element, texte) {
+        const t = soude(texte);
+        if (!/\d\/\d/.test(t)) { element.textContent = t; return element; }
+        element.replaceChildren(...t.split(/(\d+\/\d+)/).flatMap((morceau, i) => (i % 2 ? AIDES.noeudsCalcul(morceau, {insecable}) : morceau ? [document.createTextNode(morceau)] : [])));
+        return element;
+      }
 
       // Correctif F4 (point 10) : relue AVEC la version de la progression.
       function ligneDe(id) {
@@ -2364,7 +2378,7 @@
         $("carte-tout").textContent = fin && suite.toutGagne ? soude(`Tout est gagné. ${texteRetour(suite.prochainRetour)}`) : "";
         if (!fin) {
           if (suite.type === "paquet") petit.textContent = s.obligatoire ? texteAvant(s.obligatoire) : "Mes calculs du jour";
-          else if (suite.type === "etoile") petit.textContent = soude(`${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
+          else if (suite.type === "etoile") ecrireAvecFractions(petit, `${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
           bouton.replaceChildren(document.createTextNode("Continuer"), ...(petit.textContent ? [petit] : []));
         }
       }
@@ -2427,7 +2441,7 @@
           if (petit) {
             const p = document.createElement("span");
             p.className = "petit";
-            p.textContent = soude(petit);
+            ecrireAvecFractions(p, petit);
             bloc.append(p);
           }
           choix.append(bloc);
@@ -2442,7 +2456,7 @@
         const e = etatEtoile(id, n);
         state.panneau = {module: id, niveau: n, depuis};
         const titre = $("panneau-titre");
-        titre.replaceChildren(dessinEtoile(e.etat, 38), document.createTextNode(soude(nomCompetence(id, n))));
+        titre.replaceChildren(dessinEtoile(e.etat, 38), ecrireAvecFractions(document.createElement("span"), nomCompetence(id, n)));
         const corps = [];
         const exemple = exempleDe(id, n);
         if (exemple) {
@@ -2782,8 +2796,111 @@
         return true;
       }
 
+      // Lot « la 6e complète » (choix de Gwenaël du 26/11, planche 2) : une
+      // réponse À CHOISIR parmi trois (« Où va la virgule ? »). Trois grandes
+      // cases à la place du pavé — le pavé garde sa place, invisible : rien
+      // ne bouge d'un calcul à l'autre ; la case touchée s'entoure d'un trait
+      // bleu épais ; « Valider » et « Je ne sais pas » comme partout. La
+      // valeur choisie passe par `state.answer`, comme une réponse tapée ; le
+      // moteur ne la dit juste que si elle est l'une des trois (estJuste).
+      // La correction : la bonne case en vert avec ✓, la case choisie fausse
+      // en tirets rouges avec ✗ (lisible en noir et blanc).
+      function choixDuMoment() {
+        const serie = state.serie;
+        if (!serie || !state.running) return null;
+        const avec = attendu => (attendu && Array.isArray(attendu.choix) ? {liste: attendu.choix, bonne: attendu.reponse} : null);
+        if (estTemps(serie)) {
+          const nom = serie.temps[serie.index];
+          if (nom === "ecris") return avec(serie.apprends.ecris.etapes[serie.etape]);
+          if (nom === "represente") return avec(serie.apprends.represente);
+          return null;
+        }
+        const question = serie.questions && serie.questions[serie.index];
+        return question && !question.exemple ? avec(question.calcul) : null;
+      }
+      function majChoix(status = "") {
+        const boite = $("choix");
+        const choix = choixDuMoment();
+        boite.parentElement.classList.toggle("est-choix", Boolean(choix));
+        $("question-card").classList.toggle("a-choix", Boolean(choix));
+        if (!choix) {
+          boite.hidden = true;
+          if (boite.childElementCount) { boite.replaceChildren(); delete boite.dataset.cles; }
+          return;
+        }
+        boite.hidden = false;
+        if (!state.answer && !status) state.choixTape = null;
+        const textes = choix.liste.map(v => insecable(CORE.formaterNombre(v)));
+        if (boite.dataset.cles !== textes.join("|")) {
+          boite.replaceChildren(...choix.liste.map((v, i) => {
+            const bouton = document.createElement("button");
+            bouton.type = "button";
+            bouton.className = "dc-choix-case";
+            bouton.setAttribute("role", "radio");
+            bouton.dataset.choix = String(i);
+            bouton.textContent = textes[i];
+            brancherAuToucher(bouton, () => choisirValeur(v));
+            return bouton;
+          }));
+          boite.dataset.cles = textes.join("|");
+        }
+        const choisie = state.answer ? CORE.lireReponse(state.answer) : null;
+        const tapee = state.choixTape ? CORE.lireReponse(state.choixTape) : null;
+        const fini = Boolean(status) && status !== "is-invalid";
+        [...boite.children].forEach((bouton, i) => {
+          const v = choix.liste[i];
+          const estChoisie = choisie !== null && CORE.memeNombre(v, choisie);
+          let etat = "";
+          if (status === "is-corrected") etat = CORE.memeNombre(v, choix.bonne) ? "est-juste" : tapee !== null && CORE.memeNombre(v, tapee) ? "est-faux" : "";
+          else if (status === "is-correct") etat = estChoisie ? "est-juste" : "";
+          else if (status === "is-wrong" || status === "is-invalid") etat = estChoisie ? "est-faux" : "";
+          else etat = estChoisie ? "est-choisie" : "";
+          bouton.className = `dc-choix-case${etat ? ` ${etat}` : ""}`;
+          bouton.setAttribute("aria-checked", estChoisie ? "true" : "false");
+          bouton.setAttribute("aria-label", `${textes[i]}${etat === "est-juste" ? ", juste" : etat === "est-faux" ? ", pas juste" : ""}`);
+          bouton.disabled = fini || state.waitingForContinue;
+        });
+      }
+      function choisirValeur(valeur) {
+        if (!state.running || state.waitingForContinue || !choixDuMoment()) return;
+        state.effacerAuProchain = false;
+        state.answer = CORE.formaterNombre(valeur);
+        state.choixTape = state.answer;
+        renderInlineAnswer();
+        clearAnswerError();
+      }
+      // Les flèches du clavier passent d'une case à l'autre.
+      function choisirVoisine(sens) {
+        const choix = choixDuMoment();
+        if (!choix) return;
+        const actuelle = state.answer ? choix.liste.findIndex(v => CORE.memeNombre(v, CORE.lireReponse(state.answer))) : -1;
+        const suivante = actuelle < 0 ? (sens > 0 ? 0 : choix.liste.length - 1) : Math.max(0, Math.min(choix.liste.length - 1, actuelle + sens));
+        choisirValeur(choix.liste[suivante]);
+        const bouton = $("choix").children[suivante];
+        if (bouton) bouton.focus?.({preventScroll: true});
+      }
+      // Le calcul à choisir, comme sur la planche 2 : « 3,8 × 2,9 » en grand,
+      // « est proche de… » dessous ; « 37 × 29 = 1 073, donc » au-dessus de
+      // « 3,7 × 2,9 = » en grand. Pas de case : la réponse est dans les
+      // trois cases.
+      function noeudsChoix(texte) {
+        const t = String(texte);
+        const ligne = (contenu, classe) => {
+          const span = document.createElement("span");
+          span.className = classe;
+          span.append(...AIDES.noeudsCalcul(contenu, {insecable, signes: true}));
+          return span;
+        };
+        const proche = t.indexOf(" est proche de ");
+        if (proche > 0) return [ligne(t.slice(0, proche), "dc-choix-calcul"), ligne("est proche de…", "dc-choix-ligne")];
+        const donc = t.indexOf(", donc ");
+        if (donc > 0) return [ligne(`${t.slice(0, donc)}, donc`, "dc-choix-ligne"), ligne(t.slice(donc + 7).replace(` ${CORE.CASE}`, ""), "dc-choix-calcul")];
+        return null;
+      }
+
       function renderInlineAnswer(status = "") {
         const slot = $("inline-answer");
+        majChoix(status);
         fixerLargeurCases();
         if (saisieFraction()) {
           const morceaux = CORE.morceauxFraction(state.answer);
@@ -2867,8 +2984,11 @@
         // une ligne (« 1 000 − 470 = 530 »).
         const longueur = String(texte).length;
         const taille = longueur > 13 ? "dc-tres-long" : longueur > 9 ? "dc-long" : "";
-        expression.className = ["expression", classe, taille].filter(Boolean).join(" ");
-        expression.replaceChildren(...avecCase(texte));
+        // (Lot « la 6e complète » : un calcul à choisir s'écrit sur deux
+        // lignes, sans case.)
+        const aChoisir = choixDuMoment() ? noeudsChoix(texte) : null;
+        expression.className = ["expression", classe, aChoisir ? "dc-choix-expression" : taille].filter(Boolean).join(" ");
+        expression.replaceChildren(...(aChoisir || avecCase(texte)));
         renderInlineAnswer();
       }
 
@@ -2908,9 +3028,11 @@
           state.partie = "den";
           renderInlineAnswer("is-invalid");
           $("answer-feedback").textContent = "Le dénominateur ne peut pas être 0.";
-        } else $("answer-feedback").textContent = $("question-card").classList.contains("no-skip")
-          ? "Tape une réponse."
-          : "Tape une réponse, ou « Je ne sais pas ».";
+        } else $("answer-feedback").textContent = choixDuMoment()
+          ? ($("question-card").classList.contains("no-skip") ? "Touche une réponse." : "Touche une réponse, ou « Je ne sais pas ».")
+          : $("question-card").classList.contains("no-skip")
+            ? "Tape une réponse."
+            : "Tape une réponse, ou « Je ne sais pas ».";
         $("expression").focus?.({preventScroll: true});
       }
 
@@ -3469,6 +3591,8 @@
         } else {
           serie.etape = Math.min(serie.etape, serie.apprends.ecris.etapes.length - 1);
           renderEtapes({revelees: true});
+          // (Lot « la 6e complète » : une étape à choisir montre la bonne case.)
+          majChoix("is-corrected");
         }
         carte.classList.remove("sans-retour", "ecrit");
         if (aEtapes(nom)) { figerDessin(); carte.classList.add("ecrit-fini"); }
@@ -3617,6 +3741,7 @@
           renderInlineAnswer("is-correct");
           if (ecris) {
             renderEtapes({revelees: true});
+            majChoix("is-correct");
             majDessinEcris(serie.apprends.ecris.etapes.length);
             figerDessin();
             $("question-card").classList.add("ecrit-fini");
@@ -3690,7 +3815,7 @@
         bouton.className = "primary ck-continuer";
         const petit = document.createElement("small");
         if (suite.type === "paquet") petit.textContent = soude(`Mes calculs du jour : encore ${s.paquet + s.encore}`);
-        else if (suite.type === "etoile") petit.textContent = soude(`${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
+        else if (suite.type === "etoile") ecrireAvecFractions(petit, `${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
         bouton.append(document.createTextNode("Continuer"), ...(petit.textContent ? [petit] : []));
         bouton.addEventListener("click", continuerSeance);
         return bouton;
@@ -3758,7 +3883,8 @@
         // l'écran suivant, « Ma carte à apprendre ».
         const surCarte = Boolean(coeur) && carte;
         if (surCarte) {
-          $("retenir-phrase").textContent = soude(coeur.titre);
+          if (/\d\/\d/.test(coeur.titre)) AIDES.ecrireTexte($("retenir-phrase"), coeur.titre, {insecable});
+          else $("retenir-phrase").textContent = soude(coeur.titre);
           const laCarte = carteParCoeur(coeur);
           laCarte.querySelector(".dc-coeur-titre:not(.dc-coeur-sous)").remove();
           $("retenir-image").replaceChildren(laCarte);
@@ -3817,7 +3943,10 @@
         carte.className = "dc-coeur";
         const titre = document.createElement("p");
         titre.className = "dc-coeur-titre";
-        titre.textContent = soude(coeur.titre);
+        // (Lot « la 6e complète » : « 0,1 et 1/10 » — une fraction s'écrit
+        // comme sur le cahier, jamais avec une barre oblique.)
+        if (/\d\/\d/.test(coeur.titre)) AIDES.ecrireTexte(titre, coeur.titre, {insecable});
+        else titre.textContent = soude(coeur.titre);
         carte.append(titre);
         const deuxParties = coeur.blocs.some(bloc => bloc.partie === "retrouve");
         let partie = null;
@@ -4287,6 +4416,12 @@
           montrerOutil(question, {nouveau});
           if (serie.genre === "apprends") majMomentApprends(question);
         }
+        // Lot « la 6e complète » (planche 2) : la première réponse à choisir
+        // d'une série est annoncée (Je tente, Mes calculs du jour aussi).
+        if (Array.isArray(question.calcul.choix) && $("annonce").hidden && !serie.questions.slice(0, serie.index).some(q => q.calcul && Array.isArray(q.calcul.choix))) {
+          $("annonce").textContent = "Nouveau : je choisis la bonne réponse.";
+          $("annonce").hidden = false;
+        }
         // Lot C3 (correctif) : « À toi » sans dessin, après un exemple qui en
         // avait un, garde les tailles d'un écran avec dessin (le pavé, le
         // calcul) ; la place du dessin reste vide, le pavé ne monte pas.
@@ -4622,8 +4757,13 @@
           // Lot 7-0 : le dessin à étapes écrit ses réponses, ligne par ligne.
           if (question.dessinEtapes) renderEtapesQuestion(question, {revelees: true});
           else renderInlineAnswer("is-corrected");
-          const image = cause ? cause.image : CORE.imageDe(question.calcul);
-          if (cause) AIDES.ecrireTexte(feedback, cause.texte);
+          // Lot « la 6e complète » (planche 2) : une réponse à choisir — les
+          // trois cases disent la bonne (✓) et la fausse (✗) ; dessous, la
+          // phrase de la méthode, sans dessin.
+          const aChoisir = Array.isArray(question.calcul.choix);
+          const image = aChoisir ? null : cause ? cause.image : CORE.imageDe(question.calcul);
+          if (aChoisir) AIDES.ecrireTexte(feedback, cause ? cause.texte : CORE.phraseDe(question.calcul).replace(/^Regarde\s*:\s*/, ""));
+          else if (cause) AIDES.ecrireTexte(feedback, cause.texte);
           else {
             // Lot 1 (planche 6) : « Je ne sais pas » — l'image revient.
             const phrase = soude(passe
@@ -4746,6 +4886,8 @@
 
       function next(passe) {
         if (!state.running || !state.serie) return;
+        // (Lot « la 6e complète » : « Je ne sais pas » — la case touchée ne compte pas.)
+        if (passe && !state.waitingForContinue) state.choixTape = null;
         if (estTemps(state.serie)) { if (!passe) repondreTemps(); }
         else repondreSerie(passe);
       }
@@ -4884,7 +5026,7 @@
         $("result-icon").textContent = icone;
         $("result-icon").hidden = !icone;
         $("result-title").textContent = soude(titre || "");
-        $("result-score").textContent = soude(score || "");
+        ecrireAvecFractions($("result-score"), score || "");
         $("result-score").hidden = !score;
         state.titreResultat = "result-title";
       }
@@ -5001,7 +5143,7 @@
           if (etoile) {
             const ensuite = document.createElement("p");
             ensuite.className = "ck-ensuite";
-            ensuite.textContent = soude(`Ensuite : ${nomCompetence(c.module, c.niveau)}${facile ? " (plus\u00a0facile)" : ""}`);
+            ecrireAvecFractions(ensuite, `Ensuite : ${nomCompetence(c.module, c.niveau)}${facile ? " (plus\u00a0facile)" : ""}`);
             morceaux.push(ensuite);
           }
           $("result-suite").replaceChildren(...morceaux);
@@ -5022,7 +5164,7 @@
           const ligne = document.createElement("div");
           ligne.className = "ck-ligne-partie";
           const nom = document.createElement("b");
-          nom.textContent = soude(nomCompetence(id, n));
+          ecrireAvecFractions(nom, nomCompetence(id, n));
           const texte = document.createElement("span");
           texte.textContent = soude(TEXTE_PARTIE);
           const e = etatEtoile(id, n);
@@ -5095,7 +5237,7 @@
           marque.setAttribute("aria-hidden", "true");
           marque.textContent = etape.etat === "fait" ? "✓" : etape.etat === "demain" ? "→" : "·";
           const nom = document.createElement("b");
-          nom.textContent = soude(etape.nom);
+          ecrireAvecFractions(nom, etape.nom);
           const quand = document.createElement("small");
           quand.textContent = etape.etat === "fait" ? "fait" : etape.etat === "demain" ? "demain" : "ensuite";
           bout.append(marque, nom, quand);
@@ -5337,6 +5479,12 @@
         const carte = $("question-card");
         const gesteFait = carte.classList.contains("manip-entraine") && state.manip && state.manip.fini;
         const manip = (carte.classList.contains("aide-perles") || carte.classList.contains("aide-glisse")) && !gesteFait;
+        // Lot « la 6e complète » : une réponse à choisir — les flèches passent
+        // d'une case à l'autre ; les chiffres ne tapent rien.
+        if (!manip && choixDuMoment()) {
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") { choisirVoisine(event.key === "ArrowRight" ? 1 : -1); event.preventDefault(); return; }
+          if (/^\d$/.test(event.key) || [",", ".", "Backspace", "Delete", "Escape"].includes(event.key)) { event.preventDefault(); return; }
+        }
         // Lot 6 : la fraction à deux cases — « / », Tab, ↓ : le dénominateur ;
         // ↑ (ou Maj+Tab) : le numérateur.
         if (!manip && saisieFraction() && (event.key === "/" || event.key === "Tab" || event.key === "ArrowDown" || event.key === "ArrowUp")) {
@@ -5426,6 +5574,13 @@
             // puis À retenir. Rien n'est enregistré. Depuis le lot 2, l'élève
             // n'en voit que le premier (on te montre) et J'écris (voir
             // « ecrire ») ; ces écrans gardent leur mise en page.
+            // Lot « la 6e complète » : « Je tente » d'une étoile, tout de suite
+            // (la réponse à choisir de « Où va la virgule ? », au navigateur).
+            tenter: (id, n) => {
+              if (!CORE.niveauDe(`${id}-${n}`)) return false;
+              lancerTentative(id, n);
+              return true;
+            },
             apprendre: (id, n) => {
               if (!CORE.niveauDe(`${id}-${n}`)) return false;
               state.seance = {gagnees: [], etape: {type: "apprends", module: id, niveau: n, numero: 2, total: 4}};

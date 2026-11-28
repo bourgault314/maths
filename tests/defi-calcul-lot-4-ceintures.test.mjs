@@ -124,5 +124,5 @@ test("compter : un palier se compte sur ce qui est construit", () => {
   // Les comptes : palier 3 sur ses compétences construites, pas sur toutes.
   const compte = P.compter(sansTestDePalier(P.creerParcours()), {modules: CARTE.modules.filter(f => f.construit), ordre: CARTE.ordre});
   assert.deepEqual(compte.paliers.map(p => p.total), [1, 2, 3, 4, 5, 6].map(n => duPalier(n).length));
-  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 12], "lot K1b : six étages");
+  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 22], "lot K1b : six étages");
 });

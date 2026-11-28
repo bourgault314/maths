@@ -50,9 +50,9 @@ test("lot 7d : 8 compétences construites ; les 125 de la carte le sont ; M11 au
   });
   const carte = CORE.carte();
   // (Lot 6 « programmes 2 » : 127 — F9-1 aux bases, F6-2 au CM1.)
-  assert.equal(carte.modules.filter(m => m.construit && m.niveaux).reduce((s, m) => s + m.niveaux, 0), 141); // (lot K1b : neuf de plus, 132 avant)
-  assert.equal(P.parcoursConstruit(carte).length, 141);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => P.parcoursConstruit(carte).filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]);
+  assert.equal(carte.modules.filter(m => m.construit && m.niveaux).reduce((s, m) => s + m.niveaux, 0), 163); // (lot « la 6e complète » : 151 construits et les 12 niveaux encore réservés des modules ouverts — D10 1, D11 2, D12 1, D14 2, F10 2, P1 2, P2 2) // (lot K1b : neuf de plus, 132 avant)
+  assert.equal(P.parcoursConstruit(carte).length, 151);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => P.parcoursConstruit(carte).filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 22]);
   // M11 : juste avant « Diviser en décomposant » (un module et son voisin se suivent).
   const o = [...CORE.ORDRE];
   assert.ok(o.indexOf("M11-1") < o.indexOf("M12-1") && o.indexOf("M12-1") < o.indexOf("M11-2") && o.indexOf("M11-2") < o.indexOf("F9-2"));
@@ -246,7 +246,7 @@ test("lot 7d : les erreurs connues, chacune la sienne", () => {
   // (Lot 6 « fraction à deux cases » : 3 de plus, la fraction cherchée — 174.
   // Lot 6 « programmes 2 » : « × 0 : le nombre recopié », dans la liste des
   // faits de M4 — 175.)
-  assert.equal(CORE.MODULES.filter(m => m.construit).reduce((s, m) => s + m.erreurs.length, 0), 175);
+  assert.equal(CORE.MODULES.filter(m => m.construit).reduce((s, m) => s + m.erreurs.length, 0), 199); // (lot « la 6e complète » : 24 de plus — D10 3, D11 3, D12 2, D14 2, D16 2, F10 2, F11-3 3, P1 3, P2 4)
 });
 
 test("lot 7d : À retenir reprend le calcul de On te montre, une égalité par ligne ; pas de 69", () => {
@@ -264,12 +264,12 @@ test("lot 7d : À retenir reprend le calcul de On te montre, une égalité par l
 
 test("lot 7d : la page — adresses de cache, copie du moteur pour la page prof, VERSION, À retenir coupe aussi devant « ( »", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261127-2/);
   assert.ok(page.includes("(?=[A-ZÀ-ÖØ-Þ\\d(]|(?:double|moitié) de )"));
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
   assert.ok(coeur.equals(copie), "la copie de la page prof est identique, octet pour octet");
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 6 « programmes », « fraction à deux cases » et « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

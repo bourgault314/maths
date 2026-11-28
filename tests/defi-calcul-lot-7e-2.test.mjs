@@ -92,6 +92,8 @@ const INVENTAIRE = Object.freeze({
   // et M1-8 — les doubles de 11 à 20, les moitiés de 22 à 40 —, ont chacune leur carte.)
   "A1-1": "un", "A1-2": "un", "M1-1": "un", "M1-2": "un", "M1-7": "un", "M1-8": "un", "M4-1": "un", "M4-2": "un",
   "M1-5": "deux", "M1-6": "deux", "M5-1": "deux", "F2-1": "deux", "F2-2": "deux", "F1-1": "deux", "F1-2": "deux", "F1-3": "deux",
+  // (Lot « la 6e complète » : « 0,1 et 1/10 », la liste des exemples de réussite de 6e, p. 4 — tout est socle.)
+  "D10-2": "un",
   // Lot 7b : la moitié des impairs jusqu'à 15 — tout est socle (calcul mental CM2, p. 16).
   "D8-1": "un"
 });
@@ -279,7 +281,7 @@ test("5. « Fractions au-delà de 1 » au CM1 : sommes et différences au-delà 
   assert.equal(espaces(CORE.nouveauteDe(pile.find(c => c.lu.cotes[0][0].d === 5)).texte), "Nouveau : j’arrive pile sur 1 : 5 cinquièmes font une unité.");
   // Les comptes : palier 2 a une compétence de plus, palier 3 une de moins.
   const compte = P.compter(sansTestDePalier(P.creerParcours()), CARTE);
-  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 12]); // (lot K1b : six étages ; [44, 33, 43, 12] avant) // (lot 7c : F4-2 au CM2 ; lot 6 « programmes 2 » : F9-1, F6-2)
+  assert.deepEqual(compte.paliers.map(p => p.total), [14, 20, 19, 33, 43, 22]); // (lot K1b : six étages ; [44, 33, 43, 12] avant) // (lot 7c : F4-2 au CM2 ; lot 6 « programmes 2 » : F9-1, F6-2)
 });
 
 // ----------------------------------------------------- 6. retester au lieu d'imposer J'apprends
@@ -317,9 +319,9 @@ function avantM12() {
 
 test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache) ; le manifeste du serveur nomme le lot", async () => {
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261127-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261127-2/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est

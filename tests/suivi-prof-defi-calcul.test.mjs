@@ -212,7 +212,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.equal(o.nomPalierCalcul(1), "Le CP");
   assert.equal(o.nomPalierCalcul(3), "Le CE2");
   assert.equal(o.nomPalierCalcul(4), "Le CM1", "les classes ne sont pas répétées quand le nom les dit");
-  assert.equal(o.nomPalierCalcul(6), "Vers la 6e");
+  assert.equal(o.nomPalierCalcul(6), "La 6e");
   assert.equal(o.nomCauseCalcul("A5", 1), "retour oublié");
   assert.equal(o.nomCauseCalcul("A5", 9), "", "une cause inconnue de la fiche : rien");
   assert.equal(o.nomCourtPalier(3), "CE2");
@@ -224,7 +224,7 @@ test("les noms viennent du noyau : compétence, module, palier, cause ; « ouvri
   assert.deepEqual([lien.target, lien.rel], ["_blank", "noopener"]);
 });
 
-test("exempleErreur : un calcul regénéré pour chacune des 175 causes des 45 modules construits (17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d, 3 du lot 6 « fraction à deux cases », 1 du lot 6 « programmes 2 »), jamais un calcul d'élève", () => {
+test("exempleErreur : un calcul regénéré pour chacune des 199 causes des 53 modules construits (lot « la 6e complète » : 24 de plus ; 17 des pilotes, 14 des modules lot 1, 24 des modules lot 2, 15 des modules lot 3, 16 des modules lot 4, 13 des modules lot 5, 15 des modules lot 6, 9 des modules lot 6b, 9 du lot 7a, 12 du lot 7b, 12 du lot 7c, 15 du lot 7d, 3 du lot 6 « fraction à deux cases », 1 du lot 6 « programmes 2 »), jamais un calcul d'élève", () => {
   const o = outils([]);
   let trouves = 0;
   CALCUL_CORE.MODULES.filter(m => m.construit).forEach(fiche => {
@@ -239,7 +239,14 @@ test("exempleErreur : un calcul regénéré pour chacune des 175 causes des 45 m
       trouves += 1;
     });
   });
-  assert.equal(trouves, 175);
+  assert.equal(trouves, 199);
+  // Lot « la 6e complète » : « Où va la virgule ? », la réponse fausse est une des deux autres
+  // valeurs proposées ; F11-3 a ses trois causes, sur ses calculs.
+  [1, 2].forEach(cause => {
+    const e = o.exempleErreur("D16", cause);
+    assert.match(e.texte, /est proche de □|donc .* = □/);
+  });
+  [7, 8, 9].forEach(cause => assert.match(o.exempleErreur("F11", cause).texte, /\d+\/\d+ × \d+ = □|\d+ × \d+\/\d+ = □/, `F11 cause ${cause}`));
   // Lot 6 « programmes 2 » : « × 0 : le nombre recopié » (7 × 0 → 7).
   assert.match(o.exempleErreur("M4", 4, 1).texte, / × 0 = □|0 × /);
   // Lot 6 « fraction à deux cases » : la réponse fausse s'écrit en fraction

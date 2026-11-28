@@ -45,7 +45,7 @@ const reussir = (p, cle) => { const jour = etoile(p, cle).e; const r = retour(p,
 // ------------------------------------------------------------------ les seuils
 
 test("les seuils : version 14, boîte d'entrée 2, boîte 4 pour une étoile gagnée du premier coup, la règle B ; ni classe ni « Tente toute la ceinture »", () => {
-  assert.equal(P.VERSION, 14);
+  assert.equal(P.VERSION, 15); // (lot « la 6e complète » : 15 ; les seuils ne changent pas)
   assert.deepEqual(P.SEUILS.revision, {boites: 7, delais: [1, 1, 3, 7, 14, 30, 60], entree: 2, duPremierCoup: 4, su: 4});
   assert.equal(P.SEUILS.revision.delais[P.SEUILS.revision.duPremierCoup - 1], 7, "la boîte 4 : 7 jours");
   assert.equal(P.SEUILS.retour.ratesDeSuite, 2, "la règle B");

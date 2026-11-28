@@ -43,7 +43,7 @@ const JOUR = "2026-11-26";
 const SORTIE = process.env.SORTIE ? path.resolve(process.env.SORTIE) : null;
 const TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".png": "image/png", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".ico": "image/x-icon", ".webp": "image/webp", ".json": "application/json"};
-const ETOILES = [14, 20, 19, 33, 43, 12];
+const ETOILES = [14, 20, 19, 33, 43, 22];
 const NOMS = ["blanche-jaune", "jaune", "jaune-orange", "orange", "verte", "bleue"];
 
 function servir() {

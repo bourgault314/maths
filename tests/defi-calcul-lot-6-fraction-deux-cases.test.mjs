@@ -121,7 +121,8 @@ test("les erreurs reconnues : la fraction à l'envers (6/5), le nombre recopié 
   ["1/6", "7/8"].forEach(t => assert.equal(cause(t), null, t));
   assert.equal(cause("10/12"), null, "juste : pas de cause");
   const fiche = CORE.moduleDe("F11");
-  assert.deepEqual(fiche.erreurs.map(e => [e.c, espaces(e.nom)]).slice(3), [[4, "la fraction à l’envers"], [5, "le nombre de droite recopié"], [6, "multiplié au lieu de partager"]]);
+  // (Lot « la 6e complète » : les causes 7 à 9 sont celles de F11-3.)
+  assert.deepEqual(fiche.erreurs.map(e => [e.c, espaces(e.nom)]).slice(3, 6), [[4, "la fraction à l’envers"], [5, "le nombre de droite recopié"], [6, "multiplié au lieu de partager"]]);
   // « 15/3 = □ » ne change pas : 45 n'a pas de cause (rien de nouveau pour l'élève).
   const quotient = tous("F11-2").find(x => espaces(x.texte) === "15/3 = □");
   assert.equal(CORE.diagnostiquer(quotient, 45), null);
@@ -192,9 +193,9 @@ test("le dessin d'un calcul : « □/□ » demande ses deux cases à part, « n
 test("la page : deux cases, la case touchée, Valider descend dans la case vide, le clavier ; cache, copie prof, VERSION", async () => {
   const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
-  assert.match(page, /defi_calcul\.css\?v=20261127-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261127-2/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
   assert.match(page, /function completerFraction\(\)/);
@@ -216,5 +217,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });

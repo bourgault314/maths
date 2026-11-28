@@ -52,7 +52,7 @@ test("page élève : chaque lecture de la séance passe les réglages au moteur"
   assert.match(page, /\$\("notice-minutes"\)\.textContent = `\$\{reglagesSeance\(\)\.minutes\}\\u00a0minutes`;/);
   // Plus rien du lot F1.
   ["nouveautesReglees", "nouveautesDeLaClasse", "notice-nouveautes", "DETAIL_NOUVEAU_RANG", "chose nouvelle"].forEach(mot => assert.ok(!page.includes(mot), mot));
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-1/, "le moteur change d'adresse");
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-2/, "le moteur change d'adresse");
 });
 
 test("page élève : la carte n'a d'étage ouvert que jusqu'au réglage du professeur (lot K1)", async () => {
@@ -81,7 +81,7 @@ test("page prof : « Régler Défi calcul » — la durée et le palier pour la 
   assert.match(page, /"Au-delà, ni test ni leçon\. Ce qui est déjà appris continue de revenir\."/);
   assert.match(page, /el\("h3", "", "Autrement pour quelques élèves"\), el\("p", "aide", "Le choix de l’élève l’emporte sur celui de la classe\."\)/);
   // (Lot K1b : six étages, un par classe ; le réglage part sous le nom « etage ».)
-  assert.match(page, /const PALIERS_CALCUL = \[\[1, "CP", "Jusqu’au CP"\], \[2, "CE1", "Jusqu’au CE1"\], \[3, "CE2", "Jusqu’au CE2"\], \[4, "CM1", "Jusqu’au CM1"\], \[5, "CM2", "Jusqu’au CM2"\],\s+\[6, "Vers la 6e \(tout\)", "Jusqu’à la 6e"\]\];/);
+  assert.match(page, /const PALIERS_CALCUL = \[\[1, "CP", "Jusqu’au CP"\], \[2, "CE1", "Jusqu’au CE1"\], \[3, "CE2", "Jusqu’au CE2"\], \[4, "CM1", "Jusqu’au CM1"\], \[5, "CM2", "Jusqu’au CM2"\],\s+\[6, "La 6e \(tout\)", "Jusqu’à la 6e"\]\];/);
   assert.match(page, /const palier = palierValable\(r\.etage\);/);
   assert.doesNotMatch(page, /r\.palier\b|propre\.palier\b|pourLAppli\.palier\b/, "plus rien ne part ni ne se lit sous l'ancien nom");
   // Une ligne par valeur différente de celle de la classe.
@@ -116,9 +116,10 @@ test("serveur : une page d'avant le lot 1 (version 6) ne réécrit pas la progre
   // de `ok`, `f`, `t`, `l`).
   // Lot K1b « les bases en trois classes » : 13 (six étages, neuf étoiles de plus).
   // Lot P1 « tout ouvert » : 14 (la sorte d'un calcul raté rangée dans `x`).
-  assert.match(moteur, /const VERSION = 14;/);
+  // Lot « la 6e complète » : 15 (F11 a un niveau de plus, D16 arrive).
+  assert.match(moteur, /const VERSION = 15;/);
   const bloc = applis.slice(applis.indexOf("'defi-calcul' => ["), applis.indexOf("'automatismes' => ["));
-  assert.match(bloc, /'version_min' => 14,/);
+  assert.match(bloc, /'version_min' => 15,/);
   assert.equal((applis.match(/'version_min' =>/g) || []).length, 4, "Défi calcul, Défi tables, Coffres, SPLAT!");
   assert.match(api, /\$versionMin = CATALOGUE_APPLIS\[\$appli\]\['version_min'\] \?\? null;[\s\S]{0,200}if \(!is_int\(\$version\) \|\| \$version < \$versionMin\) \{\s*erreur\("Page ancienne : recharge la page\.", 400\);/);
   assert.ok(api.indexOf("$versionMin") > api.indexOf("if (!empty($corps['lire']))"));

@@ -157,7 +157,8 @@ test("6. « Je tente » raté : « Continuer » d'abord, « J'apprends » à cô
   assert.ok(bilan.includes('basDeBilan(fin, ["Continuer", "primary", continuerSeance], ["J’apprends", "secondary", apprendre])'));
   assert.ok(bilan.includes('const facile = etoile && c.raison === "plusFacile";'));
   assert.ok(bilan.includes('if (facile) carteR.append(phrase(soude("On cherche par où commencer : «\\u00a0Continuer\\u00a0» te propose plus facile.")));'), "les guillemets soudés à « Continuer »");
-  assert.ok(bilan.includes('ensuite.textContent = soude(`Ensuite : ${nomCompetence(c.module, c.niveau)}${facile ? " (plus\\u00a0facile)" : ""}`);'), "« (plus facile) » jamais coupé");
+  // (Lot « la 6e complète » : le nom s'écrit avec ses fractions ; ecrireAvecFractions soude le texte.)
+  assert.ok(bilan.includes('ecrireAvecFractions(ensuite, `Ensuite : ${nomCompetence(c.module, c.niveau)}${facile ? " (plus\\u00a0facile)" : ""}`);'), "« (plus facile) » jamais coupé");
   assert.ok(bilan.includes("const etoile = !fin && c.type === \"etoile\";"), "rien de plus quand la séance est finie");
   // Les erreurs de « Je tente » : rien pendant le test, corrigées au bilan.
   const suite = corps("suiteDuBilan");
@@ -269,9 +270,9 @@ test("10. Mes calculs du jour : la sorte numérotée par le noyau et donnée au 
 });
 
 test("11. les adresses de cache neuves ; les copies du professeur, octet pour octet", () => {
-  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-1">/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261127-1"><\/script>/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-1"><\/script>/);
+  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-2">/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261127-2"><\/script>/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-2"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261126-2", "defi_calcul_mon_parcours.js?v=20261126-2", "defi_calcul.css?v=20261126-2"]) {
     assert.ok(!PAGE.includes(vieux), `${vieux} : l'ancienne adresse est partie`);
   }

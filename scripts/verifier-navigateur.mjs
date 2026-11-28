@@ -115,6 +115,8 @@ export const RECETTES = [
   // pour « Continuer » sur les six onglets à l'ordinateur), « Plus facile », « dans une semaine », le bilan raté,
   // « Mes N erreurs », la fin de séance, « Ceinture … ! », un 2e calcul de la même sorte ; aux cinq formats.
   { fichier: "tests/defi-calcul-lot-P1-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  // Lot « la 6e complète » (28/11/2026) : la réponse à choisir, Mes calculs du jour, le bilan, les leçons neuves, l'étage « La 6e ».
+  { fichier: "tests/defi-calcul-lot-6e-complete-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],
