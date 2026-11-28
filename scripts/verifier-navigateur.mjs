@@ -125,6 +125,7 @@ export const RECETTES = [
   // rien n'est joué, la recette le dit).
   { fichier: "tests/defi-calcul-lot-K2-ecrans.cjs", appli: "suivi", besoin: ["playwright"],
     garde: [...DEFI_CALCUL, "_serveur/public/prof/", "_serveur/public/api/prof.php", "_serveur/public/lib/versions.php"] },
+  { fichier: "tests/defi-calcul-lot-accueil-carte-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

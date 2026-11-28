@@ -142,15 +142,18 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
   for (const [largeur, hauteur] of FORMATS) {
     for (const connecte of [true, false]) {
       const qui = connecte ? "élève" : "visiteur";
-      await cas(`${largeur}x${hauteur} ${qui} : l'accueil, la carte (4 étages), « Comment ça marche ? » (lot K1)`, async () => {
+      await cas(`${largeur}x${hauteur} ${qui} : la carte d'arrivée (6 étages), « Comment ça marche ? » (lot K1)`, async () => {
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: NOAH(), connecte});
         await tient(s.page, largeur, hauteur);
         await photo(s.page, `${largeur}x${hauteur}-${qui}-accueil`);
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page);
-        if (connecte) assert.equal(await ligneSous(s.page, "ecran-carte"), true, "la ligne de suivi sous « ← Accueil · La carte »");
+        // (Lot « l'accueil, c'est la carte » : la carte est l'accueil — la ligne de
+        // suivi reste en haut du cadre, plus sous un titre « La carte ».)
+        if (connecte) assert.equal(await ligneSous(s.page, "ecran-carte"), false, "la ligne de suivi en haut du cadre, comme sur l'accueil");
         const onglets = await s.page.locator("#carte-etages > *").count();
-        assert.equal(onglets, 4, "4 étages");
+        // (Lot K1b : six étages ; ce nombre était resté à 4.)
+        assert.equal(onglets, 6, "6 étages");
         for (let n = 1; n <= onglets; n += 1) {
           await s.page.locator(`#carte-etages > :nth-child(${n})`).click();
           await pause(s.page, 200);
@@ -158,7 +161,7 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
           await tient(s.page, largeur, hauteur);
           await photo(s.page, `${largeur}x${hauteur}-${qui}-carte-${n}`);
         }
-        await s.page.click("#carte-back");
+        // (Lot « l'accueil, c'est la carte » : la carte est l'accueil, plus de « ← Accueil ».)
         await pause(s.page);
         await s.page.click("#acc-notice-bouton");
         await pause(s.page);
@@ -175,7 +178,7 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
     // (Lot K1 : le bilan ne liste plus chaque calcul ; il dit les étoiles parties, planche K1-4.)
     await cas(`${largeur}x${hauteur} : le bilan de Mes calculs du jour — deux étoiles parties, leurs boutons (lot K1)`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: LEA()});
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 600);
       for (let i = 0; i < 25; i += 1) {
         const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
@@ -198,7 +201,7 @@ const ligneSous = (page, ecran) => page.evaluate(id => {
 
   await cas("1366x657 : réponses tapées au clavier — le calcul a le focus, sans trait autour", async () => {
     const s = await ouvrir(nav, base, {largeur: 1366, hauteur: 657, parcours: MAYA()});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await pause(s.page, 600);
     for (let i = 0; i < 2; i += 1) {
       // (Lot C3 : un exemple résolu se passe par Entrée — son bouton « À toi → » a le focus.)

@@ -345,7 +345,7 @@ async function repondreJuste(page, attendu) {
 
     await cas(`${f} : la carte — l'étage « La 6e », 22 étoiles en six lignes ; le cadre garde sa hauteur`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: sixiemeAvant()});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 800);
       const n = await s.page.evaluate(() => document.querySelectorAll("#carte-etages .ck-onglet").length);
       const hauteurs = [];

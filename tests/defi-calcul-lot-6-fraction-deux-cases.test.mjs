@@ -200,7 +200,7 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261128-1/);
   assert.match(page, /defi_calcul_aides\.js\?v=20261128-1/);
-  assert.match(page, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261128-1/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
   assert.match(page, /function completerFraction\(\)/);

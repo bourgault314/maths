@@ -213,7 +213,7 @@ const boite = (page, sel) => page.evaluate(q => { const e = document.querySelect
       for (const [nom, etage, motifs] of [
         ["cm2", 3, [/^Compléter à l’unité/, /^Additionner sans échange de dixièmes/, /^Soustraire sans échange de dixièmes/]]]) {
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursJusqua(etage)});
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 800);
         assert.equal(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.carte().courant), etage, `${nom} : l'étage ${etage}`);
         const vues = await etoilesSurLaCarte(s.page);

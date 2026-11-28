@@ -92,7 +92,7 @@ async function ouvrir(nav, base, {largeur = 390, hauteur = 844, jour = MERCREDI,
     return rendre({ok: true, revision: serveur.revision});
   });
   await page.goto(base + PAGE);
-  await page.waitForSelector("#acc-commencer", {state: "visible"});
+  await page.waitForSelector("#carte-continuer", {state: "visible"});
   await page.waitForTimeout(500);
   if (plein) {
     await page.click("[data-fullscreen-toggle]");
@@ -118,7 +118,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("journal : Mes calculs du jour joués sur la page arrivent au serveur, avec leur temps", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     // Attendre que la série ait démarré : sinon calcul() rend null et la boucle
     // sort sans rien jouer (course vue par Code, aussi sur main).
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 8000});
@@ -152,7 +152,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("arrêter au milieu : le temps de l'étape compte quand même", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     const c = await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul());
     await s.page.evaluate(() => { window.__decalage += 30000; });
@@ -180,7 +180,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("recharger au milieu d'une étape : le temps est gardé, dans l'appareil et au serveur", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     // 40 s de réflexion, puis la réponse au 1er calcul.
     await s.page.evaluate(() => { window.__decalage += 40000; });
@@ -188,7 +188,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     await s.page.waitForTimeout(300);
     assert.equal((await lireJ(s.page))[4], 0, "rien n'est encore versé : l'étape n'est pas finie");
     await s.page.reload();
-    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
+    await s.page.waitForSelector("#carte-continuer", {state: "visible"});
     await s.page.waitForTimeout(800);
     const j = await lireJ(s.page);
     assert.equal(j[0], 1, "le calcul fait est là, la séance toujours ouverte");
@@ -203,7 +203,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
   await cas("« Arrêter la séance » sur un bilan : le temps passé sur le bilan compte", async () => {
     // Une séance : Mes calculs du jour, puis la carte (lot K1).
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     for (let i = 0; i < 6; i += 1) {
       if (!(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul()))) break;
@@ -219,7 +219,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
     await s.page.evaluate(() => { window.__decalage += 50000; });
     const envois = s.serveur.envois.length;
     await s.page.click("#result button.arreter");
-    await s.page.waitForSelector("#acc-commencer", {state: "visible"});
+    await s.page.waitForSelector("#carte-continuer", {state: "visible"});
     const apres = await lireJ(s.page);
     assert.ok(apres[4] - avant[4] >= 50 && apres[4] - avant[4] < 55, `le bilan compte (+${apres[4] - avant[4]} s)`);
     await s.page.waitForTimeout(1500);
@@ -230,7 +230,7 @@ const boite = (page, s) => page.evaluate(sel => { const b = document.querySelect
 
   await cas("onglet caché puis page fermée : le temps compte une fois ; caché, il ne compte pas", async () => {
     const s = await ouvrir(nav, base);
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await s.page.waitForFunction(() => window.__MATHSGO_DEFI_CALCUL_TEST__.calcul(), null, {timeout: 5000});
     const visibilite = etat => s.page.evaluate(v => {
       Object.defineProperty(document, "visibilityState", {configurable: true, get: () => v});

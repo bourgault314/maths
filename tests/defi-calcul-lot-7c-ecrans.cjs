@@ -286,7 +286,7 @@ async function jouerBandes(s, m, cle) {
         ["cm1", 2, [/Dénominateurs multiples/]],
         ["cm2", 3, [/Fraction d’une quantité/]]]) {
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: parcoursJusqua(etage)});
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 800);
         assert.equal(await s.page.evaluate(() => window.__MATHSGO_DEFI_CALCUL_TEST__.carte().courant), etage, `${nom} : l'étage ${etage}`);
         const vues = await etoilesSurLaCarte(s.page);

@@ -201,23 +201,25 @@ async function cas(nom, f) {
       const f = `${largeur}x${hauteur}${plein ? "-plein" : ""}`;
       const o = {largeur, hauteur, plein};
 
-      await cas(`${f} : l'accueil (Léa, 17 étoiles ; puis tout gagné)`, async () => {
+      // (Lot « l'accueil, c'est la carte », 28/11/2026 : l'accueil est la carte ;
+      // ses écrans neufs sont joués par defi-calcul-lot-accueil-carte-ecrans.cjs.)
+      await cas(`${f} : l'arrivée sur la carte (Léa, 17 étoiles ; puis tout gagné)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
-        assert.equal(await texte(s.page, "#acc-compte"), "Ceinture jaune · 3 étoiles sur 20");
+        assert.match(await texte(s.page, "#carte-porteur"), /^Ceinture jaune 3 étoiles sur 20/);
         // (Lot P1, planche P1-4 : « Aujourd’hui : la ligne … ».)
-        assert.match(await texte(s.page, "#acc-but"), /^Aujourd’hui : la ligne .+ Avant : tes \d+ calculs du jour\.$/);
-        assert.equal(await texte(s.page, "#acc-commencer"), "Commencer");
-        assert.equal(await texte(s.page, "#acc-bas"), "10 minutes La carte Comment ça marche ?");
-        assert.ok(await s.page.isVisible("#acc-ceinture svg"), "la ceinture est dessinée");
-        await tient(s.page, largeur, hauteur, "accueil");
+        assert.match(await texte(s.page, "#acc-but"), /^Aujourd’hui : la ligne .+$/);
+        assert.match(await texte(s.page, "#carte-continuer"), /^Commencer · 10 minutes Avant : tes \d+ calculs du jour\.$/);
+        assert.equal(await s.page.isVisible("#acc-pied"), false, "pas de ligne de liens pour l'élève");
+        assert.ok(await s.page.isVisible("#acc-notice-bouton"), "le « ? »");
+        await tient(s.page, largeur, hauteur, "arrivée");
         await photo(s.page, `${f}-accueil`);
         assert.deepEqual(s.erreurs, []);
         await s.ctx.close();
         const t = await ouvrir(nav, base, Object.assign({parcours: toutGagne, reglages: {"defi-calcul": {etage: 1}}}, o));
-        assert.ok(await t.page.isVisible("#acc-tout"), "« Tout est gagné. »");
-        assert.match(await texte(t.page, "#acc-tout"), /^Tout est gagné\. Tes étoiles reviennent dans 7 jours, pour voir si elles tiennent\. Je m’entraîne encore La carte S’entraîner ne fait perdre aucune étoile\.$/);
-        assert.equal(await t.page.isVisible("#acc-commencer"), false);
-        await tient(t.page, largeur, hauteur, "accueil, tout gagné");
+        assert.ok(await t.page.isVisible("#carte-tout"), "« Tout est gagné. »");
+        assert.equal(await texte(t.page, "#carte-tout"), "Tout est gagné. Tes étoiles reviennent dans 7 jours, pour voir si elles tiennent.");
+        assert.equal(await t.page.isVisible("#carte-continuer"), false);
+        await tient(t.page, largeur, hauteur, "arrivée, tout gagné");
         await photo(t.page, `${f}-accueil-tout-gagne`);
         assert.deepEqual(t.erreurs, []);
         await t.ctx.close();
@@ -225,7 +227,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : la carte (Léa, les bases) ; le panneau par-dessus, le défilement gardé`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: lea}, o));
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 300);
         assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-etages > *").length), 6, "6 étages");
         assert.match(await texte(s.page, "#carte-porteur"), /Ceinture jaune.*3 étoiles sur 20/);
@@ -277,7 +279,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : la carte du CM2, neuve (lot P1 : sans « Tente toute la ceinture »)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: cm2}, o));
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 300);
         const c = await T(s.page, "carte");
         assert.equal(c.courant, 5, "l'étage du CM2");
@@ -290,7 +292,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : « Je tente » (élève neuf) — les ronds, gagné ; raté : « Continuer », « J’apprends » (lot P1)`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: neuf}, o));
-        await s.page.click("#acc-commencer");
+        await s.page.click("#carte-continuer");
         await pause(s.page, 2500);
         assert.equal(await T(s.page, "genre"), "tente", "la première étape : Je tente");
         // (Le fil, sous la ligne de suivi, n'écrit que l'étape : « Ma séance » est caché, comme depuis le lot 3b.)
@@ -315,7 +317,7 @@ async function cas(nom, f) {
         await s.ctx.close();
         // Raté : deux faux.
         const r = await ouvrir(nav, base, Object.assign({parcours: neuf}, o));
-        await r.page.click("#acc-commencer");
+        await r.page.click("#carte-continuer");
         await pause(r.page, 2500);
         await repondre(r.page, false); await repondre(r.page, false);
         await pause(r.page, 600);
@@ -331,7 +333,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : Mes calculs du jour (Léa, ratée hier) — deux faux, l'étoile part ; le bilan`, async () => {
         const s = await ouvrir(nav, base, Object.assign({parcours: leaRatee}, o));
-        await s.page.click("#acc-commencer");
+        await s.page.click("#carte-continuer");
         await pause(s.page, 2500);
         assert.equal(await T(s.page, "genre"), "jour");
         await tient(s.page, largeur, hauteur, "Mes calculs du jour");
@@ -354,7 +356,7 @@ async function cas(nom, f) {
 
       await cas(`${f} : le professeur — « Ceinture blanche-jaune · CP », les trois boutons, rien d'enregistré`, async () => {
         const s = await ouvrir(nav, base, Object.assign({prof: true}, o));
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 300);
         assert.match(await texte(s.page, "#carte-porteur"), /Ceinture blanche-jaune · CP/);
         assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-lignes .ck-case.fermee").length), 0, "toutes les étoiles ouvertes");
@@ -386,7 +388,7 @@ async function cas(nom, f) {
   // K1) : le cadre attend le serveur, puis ne bouge plus ; entier, l'accueil
   // centré dans le cadre.
   for (const [largeur, hauteur, plein] of [[1366, 657, false], [1440, 900, false], [1366, 768, true]]) {
-    await cas(`${largeur}x${hauteur}${plein ? "-plein" : ""} : le chargement — le cadre attend le serveur, puis ne bouge plus ; l'accueil centré`, async () => {
+    await cas(`${largeur}x${hauteur}${plein ? "-plein" : ""} : le chargement — le cadre attend le serveur, puis ne bouge plus ; la carte entière`, async () => {
       const ctx = await nav.newContext({viewport: {width: largeur, height: hauteur}, deviceScaleFactor: 1, timezoneId: "Indian/Reunion", locale: "fr-FR"});
       const page = await ctx.newPage();
       await page.clock.install({time: new Date(`${JOUR}T17:00:00+04:00`)});
@@ -407,7 +409,8 @@ async function cas(nom, f) {
       assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector(".shell")).visibility), "hidden", "le cadre attend le serveur");
       for (let i = 0; i < 40 && await page.evaluate(() => document.body.classList.contains("accueil-en-attente")); i += 1) { await page.clock.runFor(100); await page.waitForTimeout(40); }
       if (plein) { await page.click("[data-fullscreen-toggle]"); await pause(page, 400); }
-      const releve = () => page.evaluate(() => JSON.stringify(["--echelle", ".panel", "#acc-ceinture", "#acc-commencer", "#acc-bas"].map(s => {
+      // (Lot « l'accueil, c'est la carte » : la carte d'arrivée, rangée en haut du cadre.)
+      const releve = () => page.evaluate(() => JSON.stringify(["--echelle", ".panel", "#carte-porteur", "#carte-etages", "#carte-continuer"].map(s => {
         if (s.startsWith("--")) return getComputedStyle(document.documentElement).getPropertyValue(s);
         const b = document.querySelector(s).getBoundingClientRect(); return [Math.round(b.top), Math.round(b.bottom)];
       })));
@@ -416,11 +419,10 @@ async function cas(nom, f) {
       assert.equal(new Set(releves).size, 1, `rien ne bouge (${releves.join(" / ")})`);
       const m = await page.evaluate(() => {
         const b = s => document.querySelector(s).getBoundingClientRect();
-        return {cadre: b(".panel").bottom, haut: b(".topbar").bottom, acc: [b(".acc").top, b(".acc").bottom], z: Number(getComputedStyle(document.documentElement).getPropertyValue("--echelle")) || 1};
+        return {cadre: b(".panel").bottom, bouton: b("#carte-continuer").bottom};
       });
       assert.ok(m.cadre <= hauteur + 0.5, `cadre entier (${Math.round(m.cadre)} / ${hauteur})`);
-      const dessus = (m.acc[0] - m.haut) / m.z, dessous = (m.cadre - m.acc[1]) / m.z;
-      assert.ok(Math.abs(dessus - dessous) < 30, `centré (${Math.round(dessus)} au-dessus, ${Math.round(dessous)} au-dessous)`);
+      assert.ok(m.bouton <= m.cadre, "« Commencer » dans le cadre");
       assert.deepEqual(erreurs, []);
       await ctx.close();
     });
@@ -431,7 +433,7 @@ async function cas(nom, f) {
   await cas("390x844 : une séance entière, jusqu'à « Séance terminée »", async () => {
     const [largeur, hauteur] = [390, 844];
     const s = await ouvrir(nav, base, {largeur, hauteur, parcours: neuf});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await pause(s.page, 2500);
     let tours = 0;
     while (tours < 120) {
