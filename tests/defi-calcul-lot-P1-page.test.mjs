@@ -271,7 +271,7 @@ test("10. Mes calculs du jour : la sorte numérotée par le noyau et donnée au 
 
 test("11. les adresses de cache neuves ; les copies du professeur, octet pour octet", () => {
   assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-2">/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261127-2"><\/script>/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261128-1"><\/script>/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-2"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261126-2", "defi_calcul_mon_parcours.js?v=20261126-2", "defi_calcul.css?v=20261126-2"]) {
     assert.ok(!PAGE.includes(vieux), `${vieux} : l'ancienne adresse est partie`);

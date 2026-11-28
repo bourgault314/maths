@@ -33,6 +33,9 @@ function resoudre(texte) {
   // (Lot 6 « fraction à deux cases » : « 6 × □/□ = 5 » → 5/6, une fraction.)
   const cases = /^(\d+) × □\/□ = (\d+)$|^□\/□ × (\d+) = (\d+)$/.exec(texte);
   if (cases) return cases[1] ? Number(cases[2]) / Number(cases[1]) : Number(cases[4]) / Number(cases[3]);
+  // (Lot « les fractions de 6e » : « 3 ÷ 7 = □/□ » → 3/7.)
+  const division = /^(\d+) ÷ (\d+) = □\/□$/.exec(texte);
+  if (division) return Number(division[1]) / Number(division[2]);
   const m = texte.replace(/[\u202f\u00a0]/g, "");
   const nb = "([\\d,]+)";
   const motif = forme => new RegExp(`^${forme.replace(/[+]/g, "\\+").replace(/N/g, nb)}$`);
@@ -3330,6 +3333,14 @@ function verifierDessin6b(c, aide, image, ou) {
       assert.equal(avecEspaces(image.resultat.texte), `${c.f1.n}/${r}`);
       assert.ok(!avecEspaces(AIDES.decrireNumeration(aide)).includes(r), `${ou} : le lecteur d'écran`);
     }
+  } else if (aide.outil === "fois-fraction") {
+    // Lot « les fractions de 6e » : les cinquièmes en dixièmes, les flèches
+    // « × 2 en haut et en bas » (÷ 2 à l'envers) ; la case cherchée et le
+    // décimal cachés sur l'aide, écrits sur la correction.
+    assert.ok(c.f1 && (c.f1.d === 5 || c.reponse === 5), `${ou} : les flèches, pour les cinquièmes seulement`);
+    assert.ok(!aide.montre && image.montre, `${ou} : la case à trouver, puis écrite`);
+    if (aide.apres) assert.ok(aide.apres.cache && !image.apres.cache && image.apres.texte === r, `${ou} : le décimal caché, puis ${r}`);
+    else assert.ok(textesSvg(svgImage).map(avecEspaces).includes(r), `${ou} : la correction écrit ${r}`);
   } else if (aide.outil === "carre") {
     const v = aide.unites + aide.dixiemes / 10 + aide.centiemes / 100;
     assert.ok(Math.abs(v - (c.forme === "centiemes" ? c.f1.a / c.f1.d : c.reponse)) < 1e-9, `${ou} : le carré colorie ${v}`);
@@ -3345,7 +3356,9 @@ function verifierDessin6b(c, aide, image, ou) {
   }
   // (Une graduation entière « 1 » n'est pas « 1 quart ».)
   const entieres = aide.outil === "barre-droite" ? aide.nombres.filter(x => x.k % aide.d === 0).map(x => x.texte) : [];
-  const lus = textesSvg(svg).filter(t => { const i = entieres.indexOf(t); if (i < 0) return true; entieres.splice(i, 1); return false; });
+  // (Lot « les fractions de 6e » : « × 2 » sur les flèches, c'est la méthode
+  // — 1/5 = □/10 : la réponse 2 l'est par hasard.)
+  const lus = textesSvg(svg).filter(t => !/^[×÷][\s\u00a0]\d+$/.test(avecEspaces(t))).filter(t => { const i = entieres.indexOf(t); if (i < 0) return true; entieres.splice(i, 1); return false; });
   sansReponse6b(lus.join(" | "), c, `${ou} : le dessin`);
 }
 // Jouer les bandes de F1 : chaque geste attendu, un faux refusé ; à la
@@ -3366,7 +3379,10 @@ function verifierBandes6b(m, c, ou) {
   assert.ok(etat.fini);
   assert.ok(Math.abs(AIDES.longueurBandes(etat.pieces) - c.reponse) < 1e-9, `${ou} : les bandes arrivent à la réponse`);
   assert.equal(etat.pieces.filter(p => p.d === 1).length, m.grad === 10 ? 0 : Math.floor(c.reponse), `${ou} : chaque unité pleine fondue en « 1 »`);
-  assert.equal(avecEspaces(m.traces[0].texte), `${avecEspaces(m.texte)} = ${ecrite(c.reponse)}`);
+  // (Lot « les fractions de 6e » : les cinquièmes passent par les dixièmes.)
+  const cinquiemes = /^(\d+)\/5$/.exec(avecEspaces(m.texte));
+  const dixiemes = cinquiemes ? ` = ${2 * Number(cinquiemes[1])}/10` : "";
+  assert.equal(avecEspaces(m.traces[0].texte), `${avecEspaces(m.texte)}${dixiemes} = ${ecrite(c.reponse)}`);
   m.etapes.forEach(e => sansReponse6b(e.consigne, c, `${ou} : « ${e.consigne} »`));
 }
 // Jouer les billes : un toucher hors du tas est refusé ; un toucher sur le
@@ -3415,7 +3431,8 @@ function verifierApprendsLot6b(fiche, niveau, cle) {
   const sans = avecEspaces(a.textes[0]).replace(/ = □.*$/, "").replace(/, c’est □.*$/, "");
   assert.ok(avecEspaces(a.bilan).includes(sans) && avecEspaces(a.bilan).includes(avecEspaces(rep)), `${cle} : « ${a.bilan} » cite ${sans} et ${rep}`);
   assert.equal(Boolean(a.manipule), cle !== "F3-3", `${cle} : un outil à manipuler`);
-  assert.equal(a.represente.outil, {"F1-1": "carre", "F1-2": "bandes-droite", "F1-3": "bandes-droite"}[cle] || "tout-parts");
+  // (Lot « les fractions de 6e » : F1-3, les flèches « × 2 en haut et en bas ».)
+  assert.equal(a.represente.outil, {"F1-1": "carre", "F1-2": "bandes-droite", "F1-3": "fois-fraction"}[cle] || "tout-parts");
   assert.equal(a.manipule ? a.manipule.outil : null, {"F1-1": "bandes", "F1-2": "bandes", "F1-3": "bandes", "F3-1": "billes", "F3-2": "billes"}[cle] || null);
   const dessins = a.ecris.dessins.map(AIDES.dessinerImage);
   const taille = svg => svg.match(/viewBox="([^"]+)"/)[1];
@@ -3524,7 +3541,8 @@ test("modules lot 6b : les erreurs connues, reconnues avec leur phrase, sans la 
         if (!d) return;
         assert.doesNotMatch(d.texte, /NaN|undefined|null|-1\b/, `${c.texte} → ${reponse}`);
         sansReponse6b(d.texte, c, `${c.texte} → ${reponse}`);
-        assert.ok(d.image && ["bandes-droite", "barre-droite", "numeration", "carre", "tout-parts"].includes(d.image.outil), `${c.texte} → ${reponse} : l'image de la correction`);
+        // (Lot « les fractions de 6e » : les flèches des cinquièmes.)
+        assert.ok(d.image && ["bandes-droite", "barre-droite", "numeration", "carre", "tout-parts", "fois-fraction"].includes(d.image.outil), `${c.texte} → ${reponse} : l'image de la correction`);
       });
     });
   }));
@@ -3585,10 +3603,10 @@ test("modules lot 6b : les dessins, les bandes de F1 et les billes de F3 — la 
   // F1-1, J'écris 0,7 = 7/□ (lot 3a : des dixièmes) : « 7/? », puis « 7/10 » en vert.
   const tab = CORE.niveauDe("F1-1").niveau.apprends.ecris.dessins;
   assert.deepEqual(tab.map(d => [avecEspaces(d.resultat.texte), Boolean(d.resultat.trouve)]), [["7/?", false], ["7/?", false], ["7/10", true]]);
-  // F1-3, J'écris 0,4 = □/5 : 0,2 s'écrit sous sa graduation, puis l'accolade.
+  // F1-3 (lot « les fractions de 6e ») : J'écris sur 7/5 — 7/5 = 14/10, puis
+  // 1,4 ; les flèches « × 2 » se remplissent.
   const f13 = CORE.niveauDe("F1-3").niveau.apprends.ecris.dessins;
-  // Lot 3a : J'écris sur 3/5 (1/5 = 0,2, puis 3/5 = 0,6).
-  assert.deepEqual(f13.map(d => [d.nombres.map(n => n.texte).join(" "), d.bas.texte]), [["0 1", "?"], ["0 0,2 1", "?"], ["0 0,2 1", "0,6"]]);
+  assert.deepEqual(f13.map(d => [d.montre, d.apres.cache, d.apres.texte]), [[false, true, "?"], [true, true, "?"], [true, false, "1,4"]]);
 });
 
 test("lot « couverture » : une deuxième façon sous « À retenir », sur A1-2 (le presque-double) et A3-2 (les dizaines) seulement", async () => {
@@ -3798,15 +3816,19 @@ function verifierOutilLot7c(c) {
     if (!nombresDuTexte(c.texte).includes(c.reponse)) sansLaReponse(AIDES.dessinerImage(aide), c.reponse, `${c.texte} (aide)`);
     return;
   }
-  if (c.module === "F11" && c.forme.startsWith("fraction")) {
-    // « 6 × □/6 = 5 » : les 6 parts égales de 5, chacune « ?/6 » ; la
-    // correction écrit 5/6 dans chacune.
-    assert.equal(aide.outil, "barre-droite");
+  if (c.module === "F11" && c.niveau === 2) {
+    // Lot « les fractions de 6e » : « Fraction et quotient », le tout
+    // partagé en d parts égales — 6 × □ = 5 : le tout 5, une part « ? »,
+    // la correction 5/6 ; 7 × 3/7 : une part 3/7, le tout « ? », la
+    // correction 3.
     const {a, d} = c.f11;
-    assert.deepEqual(aide.haut.map(h => h.texte), Array(d).fill(`?/${d}`), c.texte);
-    assert.deepEqual(image.haut.map(h => h.texte), Array(d).fill(`${a}/${d}`), c.texte);
-    assert.equal(aide.pris, a * d, c.texte);
-    assert.equal(m, null, c.texte);
+    assert.equal(aide.outil, "tout-parts", c.texte);
+    assert.equal(aide.d, d, c.texte);
+    assert.equal(aide.trouve, null, c.texte);
+    assert.equal(image.trouve.texte, c.ecrite || CORE.formaterNombre(c.reponse), c.texte);
+    if (c.forme.startsWith("produit")) assert.ok(aide.toutCherche && aide.part.texte === `${a}/${d}`, c.texte);
+    else assert.equal(aide.tout, CORE.formaterNombre(a), c.texte);
+    assert.equal(m, null, `${c.texte} : pas de bandes en 6e`);
     return;
   }
   verifierBarre(c, aide, image, c.texte);
@@ -3817,7 +3839,8 @@ function verifierOutilLot7c(c) {
 function verifierApprendsLot7c(fiche, niveau, cle) {
   const a = niveau.apprends;
   // (Lot C4d : « au-delà de 20 », une unité en 21 parts — les flèches.)
-  const outil = cle === "F9-3" ? "fois-fraction" : {F4: "tout-parts", F9: "barre-droite", F11: "barre-droite"}[fiche.id];
+  // (Lot « les fractions de 6e » : « Fraction et quotient », le tout partagé.)
+  const outil = cle === "F9-3" ? "fois-fraction" : cle === "F11-2" ? "tout-parts" : {F4: "tout-parts", F9: "barre-droite", F11: "barre-droite"}[fiche.id];
   assert.equal(a.represente.outil, outil, cle);
   assert.equal(a.image.outil, a.manipule && fiche.id === "F4" ? "tout-parts" : outil, cle);
   assert.equal(a.manipule ? a.manipule.outil : null, {"F4-1": "billes", "F9-1": "bandes", "F9-2": "bandes", "F11-1": "bandes"}[cle] || null, cle);

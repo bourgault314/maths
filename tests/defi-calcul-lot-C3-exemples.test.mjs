@@ -57,7 +57,8 @@ test("chaque écriture jamais montrée a son exemple résolu, avec une phrase fa
         assert.ok(phrase, `${cle} ${c.texte} : une phrase`);
         assert.doesNotMatch(phrase, /undefined|NaN|null|\$\{|dernier chiffre/, `${cle} ${c.texte} : ${phrase}`);
         // La phrase est faite sur le calcul : elle dit sa réponse.
-        assert.ok(espaces(phrase).includes(espaces(CORE.formaterNombre(c.reponse))), `${cle} ${c.texte} : ${phrase}`);
+        // (Lot « les fractions de 6e » : une réponse en fraction, « 3 ÷ 7 = □/□ » → 3/7.)
+        assert.ok(espaces(phrase).includes(c.ecrite || espaces(CORE.formaterNombre(c.reponse))), `${cle} ${c.texte} : ${phrase}`);
         assert.match(phrase, /\.$/, `${cle} : une phrase finie`);
         // Aucun mot genré, rien d'un autre calcul.
         assert.doesNotMatch(espaces(phrase), /\b(il|elle|lui|celui|celle|venu|venue)\b(?! (manque|reste|faut|y a))/, `${cle} : ${phrase}`);
@@ -229,12 +230,12 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // L'annonce : « Nouveau : … » sur l'exemple, « À toi : … » ensuite.
   assert.match(pose, /question\.annonceAToi = String\(annonce\)\.replace\(\/\^Nouveau\/, "À toi"\);/);
   // Les adresses de cache, les copies pour la page prof, le manifeste.
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261128-1/);
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
   assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$|^lot defi-calcul-lot-P1$|^lot defi-calcul-lot-6e-complete$/m);
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$|^lot defi-calcul-lot-P1$|^lot defi-calcul-lot-6e-complete$|^lot defi-calcul-lot-fractions-6e$/m);
 });
 
 test("les leçons : un exemple moyen, J'écris au moins aussi dur ; « Fraction et quotient » dit la division", () => {
@@ -309,5 +310,5 @@ test("le dessin révélé de chaque exemple se dessine : aucune case de largeur 
   const neuf = vivier("C3-1").find(c => c.forme === "difference-quotient" && c.donnees.k === 9);
   assert.ok(neuf);
   assert.doesNotMatch(AIDES.dessinerImage(CORE.imageDe(neuf)), /width="-/);
-  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(lire("../outils/calcul_mental/defi_calcul_modules.html"), /defi_calcul_aides\.js\?v=20261128-1/);
 });

@@ -78,12 +78,14 @@ test("la page du professeur écrit une réponse fausse en fraction (« 6 × ?/? 
 test("« Fraction et quotient » : trois sortes, la fraction cherchée jamais décimale, 4 calculs sur 10", () => {
   assert.deepEqual(CORE.sortesDe("F11-2").map(s => espaces(s.nom)), ["b × a/b", "la fraction, c’est une division", "la fraction cherchée"]);
   const liste = cherchees();
-  assert.equal(liste.length, 16, "8 fractions, deux écritures");
+  // (Lot « les fractions de 6e », 28/11 : le dessin n'est plus la barre à
+  // 30 parts ; les dénominateurs 11 et 12 entrent, a jusqu'à 20.)
+  assert.equal(liste.length, 146, "73 fractions, deux écritures");
   liste.forEach(c => {
     const t = espaces(c.texte);
     const {a, d} = c.f11;
     assert.match(t, c.forme === "fraction" ? new RegExp(`^${d} × □/□ = ${a}$`) : new RegExp(`^□/□ × ${d} = ${a}$`), t);
-    assert.ok([3, 6, 7, 9].includes(d) && a >= 2 && a <= 6 && pgcd(a, d) === 1 && a * d <= 30, `${t} : jamais un quotient décimal`);
+    assert.ok([3, 6, 7, 9, 11, 12].includes(d) && a >= 2 && a <= 20 && pgcd(a, d) === 1, `${t} : jamais un quotient décimal`);
     assert.equal(c.ecrite, `${a}/${d}`);
     assert.ok(CORE.memeNombre(c.reponse, a / d));
     assert.equal(CORE.sorteDe(c), 2);
@@ -132,11 +134,12 @@ test("les erreurs reconnues : la fraction à l'envers (6/5), le nombre recopié 
 test("l'annonce et le dessin : les d parts de a, « ?/d », puis « a/d »", () => {
   const c = calcul("6 × □/□ = 5");
   assert.equal(espaces(CORE.annonceDe(c)), "Nouveau : la fraction cherchée, c’est le nombre qui, multiplié par 6, donne 5.");
+  // (Lot « les fractions de 6e » : le tout partagé en 6 parts égales ; la
+  // part cherchée, puis « 5/6 ».)
   const aide = CORE.aideDe(c);
-  assert.equal(aide.outil, "barre-droite");
-  assert.equal(aide.haut.length, 6);
-  assert.ok(aide.haut.every(h => h.texte === "?/6" && h.a - h.de === 5));
-  assert.ok(CORE.imageDe(c).haut.every(h => h.texte === "5/6"));
+  assert.equal(aide.outil, "tout-parts");
+  assert.deepEqual([aide.tout, aide.d, aide.trouve], ["5", 6, null]);
+  assert.equal(CORE.imageDe(c).trouve.texte, "5/6");
   assert.ok(!/5\/6|5 sixièmes/.test(AIDES.dessinerImage(aide)), "l'aide ne donne pas la réponse");
 });
 
@@ -147,10 +150,11 @@ test("J'écris de la leçon (choix de Gwenaël) : « 3 × □/3 = 2 », puis la 
   assert.deepEqual(lecon.ecris.etapes.map(e => [espaces(e.texte), e.reponse, e.ecrite || null]), [["3 × □/3 = 2", 2, null], ["3 × □/□ = 2", 2 / 3, "2/3"]]);
   assert.equal(lecon.ecris.ecrite, "2/3");
   // Le dessin : « ?/3 », puis « 2/3 » trouvé dès le numérateur.
-  assert.ok(lecon.ecris.dessins[0].haut.every(h => h.texte === "?/3" && !h.trouve));
-  assert.ok(lecon.ecris.dessins[1].haut.every(h => h.texte === "2/3" && h.trouve));
-  assert.ok(lecon.ecris.solution.image.haut.every(h => h.texte === "2/3" && !h.trouve));
-  assert.equal(espaces(lecon.ecris.solution.phrase), "Regarde : 3 × 2/3 = 2.");
+  // (Lot « les fractions de 6e » : le tout, 2, partagé en 3 parts égales.)
+  assert.equal(lecon.ecris.dessins[0].trouve, null);
+  assert.deepEqual(lecon.ecris.dessins[1].trouve, {texte: "2/3", vert: true});
+  assert.deepEqual(lecon.ecris.solution.image.trouve, {texte: "2/3", vert: false});
+  assert.equal(espaces(lecon.ecris.solution.phrase), "2 partagé en 3 parts égales : une part, c’est 2/3. 3 × 2/3 = 2.");
   // J'écris tiré : toujours une fraction cherchée, jamais celle de la leçon.
   for (let g = 1; g <= 60; g += 1) {
     const {calcul: tire, ecris} = CORE.ecrisTire("F11-2", {graine: g * 977});
@@ -158,14 +162,15 @@ test("J'écris de la leçon (choix de Gwenaël) : « 3 × □/3 = 2 », puis la 
     assert.notEqual(espaces(tire.texte), "3 × □/□ = 2");
     assert.equal(ecris.etapes[1].ecrite, tire.ecrite);
   }
-  // Le bilan ne change pas.
-  assert.equal(espaces(lecon.bilan), "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.");
+  // (Lot « les fractions de 6e » : le bilan dit la division.)
+  assert.equal(espaces(lecon.bilan), "3/7, c’est 3 ÷ 7, le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 3.");
 });
 
 test("les cases : 2 chiffres chacune ; la case ordinaire du niveau ne compte pas les fractions", () => {
   assert.equal(CORE.chiffresFraction("F11-2"), 2);
   assert.equal(CORE.chiffresFraction("F11-2", ["123/4"]), 3);
-  assert.deepEqual(CORE.modelesReponse("F11-2"), ["0"], "les réponses entières de « 15/3 = □ », « 3 × 5/3 = □ »");
+  // (Lot « les fractions de 6e » : jusqu'à 40, « 11 × 25/11 = □ ».)
+  assert.deepEqual(CORE.modelesReponse("F11-2"), ["00", "0"], "les réponses entières de « 56/8 = □ », « 11 × 25/11 = □ »");
 });
 
 test("le dessin d'un calcul : « □/□ » demande ses deux cases à part, « num » puis « den »", () => {
@@ -193,8 +198,8 @@ test("le dessin d'un calcul : « □/□ » demande ses deux cases à part, « n
 test("la page : deux cases, la case touchée, Valider descend dans la case vide, le clavier ; cache, copie prof, VERSION", async () => {
   const lire = chemin => readFile(new URL(chemin, import.meta.url), "utf8");
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261128-1/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261128-1/);
   assert.match(page, /defi_calcul\.css\?v=20261127-2/);
   assert.match(page, /function caseReponse\(partie\)/);
   assert.match(page, /slot\.id = partie \? `inline-answer-\$\{partie\}` : "inline-answer"/);
@@ -217,5 +222,5 @@ test("la page : deux cases, la case touchée, Valider descend dans la case vide,
   assert.match(prof, /CALCUL_CORE\.ecrireReponse \? CALCUL_CORE\.ecrireReponse\(calcul, reponse\)/);
   assert.match(prof, /CALCUL_CORE\.aFractionACases\(calcul\.texte\)/);
   const version = await lire("../_serveur/public/VERSION");
-  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete|fractions-6e)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lot 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });
