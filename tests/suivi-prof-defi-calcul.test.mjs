@@ -573,3 +573,18 @@ test("lot K2, correctif — une série ouverte quand le professeur remet l'élè
   assert.match(modules, /function finish\(\) \{\s*if \(!state\.running\) return;\s*const serie = state\.serie;\s*if \(serie && serie\.perimee\) \{ quitterSerie\(\); return; \}/);
   assert.match(modules, /if \(serie\.genre === "jour" && !serie\.perimee\) \{\s*const mouvement = noterRetour\(/);
 });
+
+// Correctif « grille alignée » (28/11/2026, vu par Gwenaël sur la vraie page) :
+// la feuille de style commune étire le tableau sur toute la largeur ; la case
+// restait collée à gauche de sa colonne pendant que le nombre « Gagnée par »
+// dessous était centré (jusqu'à 16 px de décalage au CP). La case est centrée
+// dans sa colonne, et la colonne garde 2 px de chaque côté (au téléphone, où le
+// tableau ne s'étire pas, les cases ne se touchent pas).
+test("grille : la case est centrée dans sa colonne, comme le nombre « Gagnée par »", () => {
+  const page = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../_serveur/public/prof/index.php"), "utf8");
+  const regle = page.match(/\.dc-g-case \{[^}]*\}/);
+  assert.ok(regle, "la règle .dc-g-case existe");
+  assert.match(regle[0], /margin: 3px auto;/, "la case est centrée (margin auto)");
+  assert.match(page, /\.dc-grille td \{ padding: 0 2px; \}/, "2 px de chaque côté de la case");
+  assert.match(page, /\.dc-g-n \{[^}]*text-align: center;/, "le nombre « Gagnée par » reste centré");
+});

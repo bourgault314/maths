@@ -1123,7 +1123,11 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
      grille défile de côté. */
   .dc-grille { overflow-x: auto; margin-top: 6px; }
   .dc-grille table { border-collapse: separate; border-spacing: 0; }
-  .dc-grille th, .dc-grille td { padding: 0; }
+  /* Correctif « grille alignée » (28/11) : la case est centrée dans sa colonne,
+     comme le nombre de « Gagnée par » dessous (la feuille de style commune
+     étire le tableau sur toute la largeur : la case restait à gauche). */
+  .dc-grille th { padding: 0; }
+  .dc-grille td { padding: 0 2px; }
   .dc-g-nom { position: sticky; left: 0; z-index: 1; background: var(--paper); text-align: left; padding-right: 10px !important; white-space: nowrap; height: 24px; }
   .dc-g-nom .lc-lien { font-weight: 700; font-size: .9rem; }
   .dc-g-total { font-weight: 700; color: var(--ink); font-size: .9rem; }
@@ -1133,7 +1137,7 @@ $coursCatalogue = json_encode(cours_pour_le_prof(), JSON_UNESCAPED_UNICODE | JSO
   .dc-g-sep { width: 9px; min-width: 9px; }
   .dc-g-bas td { border-top: 1px solid var(--line); }
   .dc-g-n { height: 22px; text-align: center; font-size: .72rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
-  .dc-g-case { display: block; width: 18px; height: 18px; margin: 3px 2px; padding: 0; min-height: 0; box-sizing: border-box;
+  .dc-g-case { display: block; width: 18px; height: 18px; margin: 3px auto; padding: 0; min-height: 0; box-sizing: border-box;
                border: 0; border-radius: 4px; font: 700 12px/14px var(--sans); text-align: center; color: var(--ink); cursor: pointer; }
   i.dc-g-case { display: inline-block; margin: 0; cursor: default; font-style: normal; }
   /* Dans la fenêtre de l'élève (ses étoiles), les cases sont plus petites. */
