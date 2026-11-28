@@ -77,7 +77,9 @@ function fautive(b) {
 test("fractions du CM2 et de la 6e : la règle du CM1 (12 parts par unité, les blocs), partout", () => {
   let blocs = 0;
   let fleches = 0;
-  ["F9-3", "F11-1", "F11-2", "F6-3", "F6-4"].forEach(cle => {
+  // (Lot « les fractions de 6e » : « Fraction et quotient » n'a plus de
+  // barre graduée — le tout partagé en 12 parts au plus.)
+  ["F9-3", "F11-1", "F6-3", "F6-4"].forEach(cle => {
     TIRAGES[cle].forEach(c => {
       const aide = CORE.aideDe(c);
       [aide, CORE.imageDe(c)].forEach(image => barres(image).forEach(b => {
@@ -99,7 +101,7 @@ test("fractions du CM2 et de la 6e : la règle du CM1 (12 parts par unité, les 
   const trouve = (cle, texte) => TIRAGES[cle].find(c => espaces(c.texte) === texte);
   assert.equal(CORE.aideDe(trouve("F9-3", "8/21 + 3/7 = □/21")).outil, "fois-fraction");
   assert.equal(CORE.aideDe(trouve("F11-1", "2 × 6/5 = □/5")).entiers, 1);
-  assert.equal(CORE.aideDe(trouve("F11-2", "27/9 = □")).entiers, 2);
+  assert.equal(CORE.aideDe(trouve("F11-2", "27/9 = □")).outil, "tout-parts");
   const huitiemes = CORE.aideDe(trouve("F11-1", "4 × 5/8 = □/8"));
   assert.equal(huitiemes.entiers || 0, 0, "4 × 5/8 : les 5/8 coupent chaque unité, la barre garde ses 24 parts");
   assert.equal(huitiemes.d, 8);
@@ -338,7 +340,7 @@ test("les données ne changent pas : version 11 (12 au lot K1 « la carte »), c
   TIRAGES["D7-3"].forEach(c => assert.match(c.cle, /^D7-3-\d+(d\d)?-\d+(d\d)?$/, c.cle));
   assert.ok(await lire("../_serveur/public/prof/defi_calcul_core.js") === await lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
   const html = await lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(html, /defi_calcul_core\.js\?v=20261127-2/);
-  assert.match(html, /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(html, /defi_calcul_core\.js\?v=20261128-1/);
+  assert.match(html, /defi_calcul_aides\.js\?v=20261128-1/);
   assert.match(await lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot \S+$/m);
 });

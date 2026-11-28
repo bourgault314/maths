@@ -11243,8 +11243,41 @@
   const f1AuTableau = calcul => (calcul.forme === "decimal" ? calcul.f1.d === 1000
     : calcul.forme === "numerateur" ? calcul.f1.d >= 100 || calcul.f1.fois
       : calcul.forme === "denominateur" && Boolean(F1_PUISSANCES[calcul.reponse]));
+  // Lot « les fractions de 6e » (28/11/2026, idée de Gwenaël) : les
+  // cinquièmes passent en dixièmes, « × 2 en haut et en bas », puis le
+  // décimal se lit — 3/5 = 6/10 = 0,6 ; à l'envers, 1,4 = 14/10 = 7/5
+  // (÷ 2). Comme « Demis, quarts, millième » (3/4 = 75/100 = 0,75), comme
+  // la carte « par cœur » des cinquièmes. Les flèches des fractions égales
+  // (choix du 25/11). `etape` : J'écris — 0 rien, 1 la fraction en
+  // dixièmes trouvée, 2 tout.
+  const f1EnCinquiemes = calcul => calcul.module === "F1" && Boolean(calcul.f1)
+    && (calcul.forme === "denominateur" ? calcul.reponse === 5 : calcul.f1.d === 5);
+  function f1Fleches(calcul, {revele = false, etape = revele ? 2 : 0} = {}) {
+    const {a, v, n} = calcul.f1;
+    const vu = revele || etape >= 1;
+    const vert = !revele;
+    const base = {outil: "fois-fraction", haut: true, bas: true, trouveHaut: false, trouveBas: false};
+    if (calcul.forme === "decimal") {
+      return Object.freeze(Object.assign(base, {op: "×", k: 2, gauche: Object.freeze([a, 5]), droite: Object.freeze([2 * a, 10]),
+        cache: "dn", montre: vu, trouve: vu && vert,
+        // (`place` : la largeur du décimal, toujours la même — le dessin ne
+        // change pas de taille quand il s'écrit.)
+        apres: Object.freeze({texte: revele || etape >= 2 ? f(calcul.reponse) : "?", place: String(f(calcul.reponse)).length, cache: !(revele || etape >= 2), trouve: etape >= 2 && vert})}));
+    }
+    if (calcul.forme === "centiemes") {
+      const D = calcul.f1.D;
+      return Object.freeze(Object.assign(base, {op: "×", k: D / 5, gauche: Object.freeze([a, 5]), droite: Object.freeze([a * D / 5, D]),
+        cache: "dn", montre: vu, trouve: vu && vert}));
+    }
+    // « 1,4 = □/5 » : 14/10, ÷ 2 ; « 0,6 = 3/□ » : 6/10, ÷ 2.
+    const dixiemes = Math.round(v * 10);
+    const numerateur = calcul.forme === "numerateur";
+    return Object.freeze(Object.assign(base, {op: "÷", k: 2, avant: `${f(v)} =`, gauche: Object.freeze([dixiemes, 10]),
+      droite: Object.freeze([numerateur ? calcul.reponse : n, 5]), cache: numerateur ? "dn" : "dd", montre: vu, trouve: vu && vert}));
+  }
   function f1Dessin(calcul, revele) {
     const {a, d} = calcul.f1;
+    if (f1EnCinquiemes(calcul)) return f1Fleches(calcul, {revele});
     if (f1AuTableau(calcul)) return f1Tableau(calcul, revele);
     if (calcul.forme === "centiemes") return d1Carre(exact(a / d));
     if (calcul.forme === "numerateur" || calcul.forme === "denominateur") return f1Barre(calcul, revele);
@@ -11254,7 +11287,16 @@
   }
   const f1Aide = calcul => Object.freeze(f1Dessin(calcul, false));
   const f1Image = calcul => Object.freeze(f1Dessin(calcul, true));
-  const f1Phrase = calcul => fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  const f1Phrase = calcul => {
+    if (f1EnCinquiemes(calcul)) {
+      const {a, v, n, D} = calcul.f1;
+      if (calcul.forme === "decimal") return fr(`${a}/5 = ${2 * a}/10 = ${f(calcul.reponse)} : × 2 en haut et en bas.`);
+      if (calcul.forme === "centiemes") return fr(`${a}/5 = ${f(calcul.reponse)}/${f(D)} : × ${f(D / 5)} en haut et en bas.`);
+      const num = calcul.forme === "numerateur" ? calcul.reponse : n;
+      return fr(`${f(v)} = ${Math.round(v * 10)}/10 = ${num}/5 : ÷ 2 en haut et en bas.`);
+    }
+    return fr(`Regarde : ${sansEspace(calcul.texte).replace(CASE, f(calcul.reponse))}.`);
+  };
 
   // Les bandes à poser (Je manipule, et l'entraînement après deux
   // erreurs) : un toucher par bande (« Pose 3 fois 1/4 »), puis chaque
@@ -11265,7 +11307,7 @@
     if (calcul.forme !== "decimal") return null;
     const {a, d} = calcul.f1;
     const calc = `${a}/${f(d)}`;
-    const trace = Object.freeze({attente: `${calc} = …`, texte: `${calc} = ${f(calcul.reponse)}`});
+    const trace = Object.freeze({attente: `${calc} = …`, texte: d === 5 ? `${calc} = ${2 * a}/10 = ${f(calcul.reponse)}` : `${calc} = ${f(calcul.reponse)}`});
     if (d === 100) {
       return Object.freeze(Object.assign(d1Carre(calcul.reponse), {
         texte: calc, consigne: fr("Colorie 1 centième : un petit carré, c’est un centième."), refus: null,
@@ -11274,12 +11316,17 @@
     }
     if (d === 1000) return null;
     const unites = d === 10 ? 0 : Math.floor(a / d);
+    // (Lot « les fractions de 6e » : les cinquièmes se posent sur une droite
+    // graduée en dixièmes — chaque bande couvre 2 dixièmes ; sur une unité
+    // seulement : au-delà, les dixièmes écrits sous la droite se
+    // chevaucheraient au téléphone, elle reste en cinquièmes.)
+    const grad = d === 5 && a < 5 ? 10 : d;
     const etapes = [];
     for (let k = 0; k < a; k += 1) etapes.push({geste: "poser", d, n: 1, consigne: `Pose ${a} fois 1/${d} : où arrive la bande ?`});
     for (let k = 0; k < unites; k += 1) etapes.push({geste: "fondre", piece: k, n: d, d: 1, consigne: "Une unité est faite : touche le paquet."});
     if (etapes.length > FRAC_GESTES_MAX) return null;
     return Object.freeze({
-      outil: "bandes", a: Math.max(1, Math.ceil(a / d - 1e-9)), grad: d, texte: calc, decimaux: true, arrivee: a,
+      outil: "bandes", a: Math.max(1, Math.ceil(a / d - 1e-9)), grad, texte: calc, decimaux: true, arrivee: a * grad / d,
       depart: Object.freeze([]),
       etapes: Object.freeze(etapes.map(e => Object.freeze(Object.assign({}, e, {consigne: fr(e.consigne)})))),
       reserve: Object.freeze([d]),
@@ -11302,6 +11349,7 @@
       test: sauf((calcul, reponse) => calcul.donnees.colle > 0 && memeNombre(reponse, calcul.donnees.colle)),
       retour: (calcul, reponse) => {
         const {a, d} = calcul.f1;
+        if (d === 5) return fr(`${f(reponse)} : la barre de fraction n’est pas une virgule. ${a}/5 : je l’écris en dixièmes, × 2 en haut et en bas.`);
         return fr(`${f(reponse)} : la barre de fraction n’est pas une virgule. ${a}/${d}, c’est ${enParts(a, d)} : ${a} fois 1/${d}.`);
       },
       gras: 0
@@ -11323,6 +11371,7 @@
       test: sauf((calcul, reponse) => calcul.donnees.den > 0 && memeNombre(reponse, calcul.donnees.den)),
       retour: (calcul, reponse) => {
         const {a, d} = calcul.f1;
+        if (d === 5) return fr(`${f(reponse)} : tu as écrit le dénominateur après la virgule. ${a}/5 : je l’écris en dixièmes, × 2 en haut et en bas.`);
         return fr(`${f(reponse)} : tu as écrit le dénominateur après la virgule. ${a}/${d}, c’est ${enParts(a, d)}.`);
       },
       gras: 0
@@ -11368,6 +11417,11 @@
     });
   }
 
+  // (Lot « les fractions de 6e » : À retenir montre le calcul de On te
+  // montre, 2/5 = 4/10 = 0,4, avec les flèches.)
+  const f1CinquiemesLecon = apprends => Object.freeze(Object.assign({}, apprends, {
+    image: f1Fleches(pourApprendre(f1(3, "2/5 = □")), {revele: true})
+  }));
   const F1 = {
     id: "F1", nom: "Fractions usuelles et décimaux", exemple: "1/10 =\u00a0?",
     famille: "F", construit: true, virgule: true,
@@ -11422,24 +11476,23 @@
         n: 3, titre: "cinquièmes", nom: "Cinquièmes\u00a0: en décimal", palier: 6, type: "F",
         composer: vivierNiveau(F1_VIVIERS[3], [4, 3, 2, 2]),
         imposes: [f1(3, "3/5 = □"), f1(3, "1/5 = □/10")],
-        apprends: f1Apprends({
+        // Lot « les fractions de 6e » (28/11/2026, idée de Gwenaël) : les
+        // cinquièmes passent en dixièmes — « × 2 en haut et en bas », puis
+        // le décimal se lit (3/5 = 6/10 = 0,6), comme la carte « par cœur »
+        // et comme « Demis, quarts, millième » (3/4 = 75/100 = 0,75).
+        // On te montre : les bandes de 1/5 sur une droite graduée en
+        // dixièmes (chaque bande couvre 2 dixièmes) ; puis « 3/5 = □/10 »
+        // avec les flèches ; J'écris « 7/5 = □ » en deux lignes.
+        apprends: f1CinquiemesLecon(f1Apprends({
           manipule: pourApprendre(f1(3, "2/5 = □")),
-          represente: pourApprendre(f1(3, "6/5 = □")),
-          ecris: pourApprendre(f1(3, "3/5 = □")),
-          consigne: "5 cinquièmes font une unité.",
-          consigneEcris: "3/5 = 3 × 1/5",
-          etapes: [["1/5 = ?", 0.2], ["3/5 = ?", 0.6]],
-          // La barre de 3/5 (lot 3a) : la 1re étape écrit 0,2 sous la
-          // première graduation, la 2e remplit l'accolade (0,6).
-          dessins: (k, revele) => {
-            const fini = revele || k >= 2;
-            const nombres = [{k: 0, texte: "0"}, ...(revele || k >= 1 ? [{k: 1, texte: "0,2", trouve: !revele}] : []), {k: 5, texte: "1"}];
-            return {outil: "barre-droite", a: 1, d: 5, pris: 3, retire: 0, haut: Object.freeze([]), cache: null,
-              bas: Object.freeze(Object.assign({de: 0, a: 3, texte: fini ? "0,6" : "?", cherche: !revele}, k >= 2 && !revele ? {trouve: true} : {})),
-              nombres: Object.freeze(nombres.map(Object.freeze))};
-          },
-          bilan: "1/5 = 0,2. 2/5 = 0,4."
-        })
+          represente: pourApprendre(f1(3, "3/5 = □/10")),
+          ecris: pourApprendre(f1(3, "7/5 = □")),
+          consigne: "Chaque cinquième, c’est 2 dixièmes.",
+          consigneEcris: "7/5 = ?",
+          etapes: [["7/5 = ?/10", 14], ["7/5 = ?", 1.4]],
+          dessins: (k, revele) => f1Fleches(pourApprendre(f1(3, "7/5 = □")), {revele, etape: k}),
+          bilan: "1/5 = 2/10 = 0,2. 2/5 = 4/10 = 0,4."
+        }))
       }
     ]
   };
@@ -12352,7 +12405,7 @@
   // neuvièmes, jamais un quotient décimal). Les quotients décimaux (3/4 =
   // 0,75) sont dans F1. Le calcul s'écrit avec « × » ; il se lit comme
   // l'addition répétée (« 5/4 + 5/4 + 5/4 »), pour la barre.
-  const F11_CODES = Object.freeze({produit: 1, "produit-gauche": 2, fraction: 3, "fraction-gauche": 4, quotient: 5});
+  const F11_CODES = Object.freeze({produit: 1, "produit-gauche": 2, fraction: 3, "fraction-gauche": 4, quotient: 5, division: 6});
   function f11Calcul(niveau, forme, k, a, d) {
     const repete = Array.from({length: k}, () => `${a}/${d}`).join(" + ");
     const produit = k * a;
@@ -12361,6 +12414,12 @@
     if (niveau === 1) {
       texte = `${k} × ${a}/${d} = ${CASE}/${d}`;
       lu = lireFraction(`${repete} = ${CASE}/${d}`);
+    } else if (forme === "division") {
+      // Lot « les fractions de 6e » : « 3 ÷ 7 = □/□ » — le quotient de 3
+      // par 7 s'écrit avec une fraction (exemples de réussite de 6e, p. 6 ;
+      // Singapour, 5e année ; NCETM 1.3, ex. 4).
+      texte = `${a} ÷ ${d} = ${FRACTION_A_CASES}`;
+      lu = lireFraction(`${a}/${d} = ${CASE}/${d}`);
     } else if (forme === "quotient") {
       // « 12/4 = □ » : k = 1, a = le numérateur (12), d = 4 ; réponse 3.
       texte = `${a}/${d} = ${CASE}`;
@@ -12373,7 +12432,7 @@
       texte = forme === "fraction" ? `${d} × ${FRACTION_A_CASES} = ${a}` : `${FRACTION_A_CASES} × ${d} = ${a}`;
       lu = lireFraction(`${a}/${d} = ${CASE}/${d}`);
     }
-    const cherchee = forme.startsWith("fraction");
+    const cherchee = forme.startsWith("fraction") || forme === "division";
     const reponse = forme === "quotient" || cherchee ? a / d : niveau === 1 || texte.endsWith(`${CASE}/${d}`) ? produit : a;
     const c = {texte, reponse, forme, module: "F11", niveau, cle: `F11-${niveau}-${F11_CODES[forme]}-${k}-${a}-${d}`, lu,
       f11: Object.freeze({k, a, d})};
@@ -12386,8 +12445,10 @@
       : texte.endsWith(`${CASE}/${d}`)
       ? {plus: pas(k + a), recopie: pas(a), parts: -1, quotient: -1}
       : forme.startsWith("produit") ? {plus: -1, recopie: -1, parts: pas(produit), quotient: -1}
-        : {plus: -1, recopie: -1, parts: -1, quotient: -1, envers: d / a, seul: a, fois: a * d};
+        : forme === "division" ? {plus: -1, recopie: -1, parts: -1, quotient: -1, envers: d / a}
+          : {plus: -1, recopie: -1, parts: -1, quotient: -1, envers: d / a, seul: a, fois: a * d};
     const calcul = finirCalcul(c, donnees);
+    if (forme === "division") return Object.freeze(Object.assign({}, calcul, {annonce: `le quotient de ${a} par ${d} s’écrit avec une fraction`}));
     if (cherchee) return Object.freeze(Object.assign({}, calcul, {annonce: `la fraction cherchée, c’est le nombre qui, multiplié par ${d}, donne ${a}`}));
     if (forme === "quotient") return Object.freeze(Object.assign({}, calcul, {annonce: `la fraction, c’est une division\u00a0: ${a}/${d} = ${a} ÷ ${d}`}));
     return calcul;
@@ -12404,25 +12465,28 @@
       // (Deux familles, une seule écriture : voir `vivierFamilles`.)
       return Object.freeze({petites, grandes});
     }
+    // Lot « les fractions de 6e » (28/11/2026, remarque de Gwenaël : « les
+    // questions sont toujours pareilles ») : le dessin n'est plus la barre
+    // en d-ièmes (30 parts au plus, d'où 6/3, 27/9, 3 × □ = 2 dans chaque
+    // série) mais le tout partagé en d parts égales (12 au plus, sa règle
+    // des 12 parts) : les numérateurs peuvent grandir (9 × 20/9 = 20), les
+    // quotients viennent des tables (56/8), et « 3 ÷ 7 = □/□ » entre.
     const paires = [];
-    // (Six unités au plus sur la barre : a jusqu'à 6.)
-    entre(2, 9).forEach(d => entre(2, 6).filter(a => pgcd(a, d) === 1 && a % d).forEach(a => { if (a * d <= FRAC_BARRE_MAX) paires.push([a, d]); }));
-    // La fraction cherchée (lot 6, fraction à deux cases) : d × □ = a, la
-    // réponse a/d n'est jamais un nombre décimal (d = 3, 6, 7 ou 9), plus
-    // petite ou plus grande que 1 (3 × □ = 4) ; 30 parts au plus sur la
-    // barre, a de 2 à 6 (comme tout F11 : 3 × □ = 1, l'unité partagée, est
-    // l'affaire des fractions unitaires).
+    entre(2, 12).forEach(d => entre(2, 40).filter(a => pgcd(a, d) === 1).forEach(a => paires.push([a, d])));
+    // La fraction cherchée et la division : la réponse a/d n'est jamais un
+    // nombre décimal (d = 3, 6, 7, 9, 11, 12).
     const cherchees = [];
-    [3, 6, 7, 9].forEach(d => entre(2, 6).filter(a => pgcd(a, d) === 1 && a * d <= FRAC_BARRE_MAX).forEach(a => cherchees.push([a, d])));
-    // La fraction, c'est une division : (q × d)/d, le quotient q de 2 à 6,
-    // 30 parts au plus sur la barre, d de 3 à 9 sauf 4 (les demis, les
-    // quarts et les dixièmes sont dans F1, F2, F5), jamais q = d.
+    [3, 6, 7, 9, 11, 12].forEach(d => entre(2, 20).filter(a => pgcd(a, d) === 1).forEach(a => cherchees.push([a, d])));
+    // La fraction, c'est une division : (q × d)/d, d de 3 à 9 sauf 4 (les
+    // demis, les quarts et les dixièmes sont dans F1, F2, F5), q de 2 à 10,
+    // jamais q = d.
     const quotients = [];
-    entre(3, 9).forEach(d => entre(2, 6).filter(q => q !== d && q * d <= FRAC_BARRE_MAX).forEach(q => { if (d !== 4) quotients.push(f11Calcul(2, "quotient", 1, q * d, d)); }));
+    entre(3, 9).filter(d => d !== 4).forEach(d => entre(2, 10).filter(q => q !== d).forEach(q => quotients.push(f11Calcul(2, "quotient", 1, q * d, d))));
     return Object.freeze({
       produit: paires.map(([a, d]) => f11Calcul(2, "produit", d, a, d)),
       "produit-gauche": paires.map(([a, d]) => f11Calcul(2, "produit-gauche", d, a, d)),
       quotient: quotients,
+      division: cherchees.map(([a, d]) => f11Calcul(2, "division", d, a, d)),
       fraction: cherchees.map(([a, d]) => f11Calcul(2, "fraction", d, a, d)),
       "fraction-gauche": cherchees.map(([a, d]) => f11Calcul(2, "fraction-gauche", d, a, d))
     });
@@ -12431,6 +12495,20 @@
   const f11 = (niveau, texte) => trouverDans(F11_VIVIERS, "F11", niveau, texte);
   // Le dessin : la barre, k fois la fraction ; F11-2 « la fraction
   // cherchée » : les d parts égales du tout, chacune « ?/d ».
+  // Lot « les fractions de 6e » : « Fraction et quotient » — le tout
+  // partagé en d parts égales (le schéma de « Fraction d'une quantité », le
+  // sens quotient de 6e : 3/7, c'est le septième de 3). 7 × 3/7 : le tout
+  // est cherché, une part vaut 3/7 ; 21/7 : une part de 21 ; 3 × □ = 2 et
+  // 3 ÷ 7 : une part de 2, de 3, en fraction.
+  function f11Partage(calcul, {revele = false, vert = false} = {}) {
+    const {a, d} = calcul.f11;
+    const trouve = texte => (revele || vert ? Object.freeze({texte, vert}) : null);
+    if (calcul.forme === "produit" || calcul.forme === "produit-gauche") {
+      return Object.freeze({outil: "tout-parts", grand: true, tout: f(a), d, toutCherche: true, part: Object.freeze({texte: `${a}/${d}`, vert: false}), trouve: trouve(f(a))});
+    }
+    return Object.freeze({outil: "tout-parts", grand: true, tout: f(a), d, trouve: trouve(calcul.forme === "quotient" ? f(calcul.reponse) : `${a}/${d}`)});
+  }
+  const f11EnPartage = calcul => (calcul.deNiveau || calcul.niveau) === 2;
   function f11Barre(calcul, revele) {
     const {k, a, d} = calcul.f11;
     if (!calcul.forme.startsWith("fraction")) return fracBarre(calcul, {revele});
@@ -12438,9 +12516,19 @@
     // (k = d : la barre va de 0 à a, en d-ièmes ; d crochets de a parts.)
     return {outil: "barre-droite", a, d, gros: 0, pris: k * a, retire: 0, haut: Object.freeze(haut), cache: null, bas: null};
   }
-  const f11Aide = calcul => blocsSi(calcul, Object.freeze(f11Barre(calcul, false)));
-  const f11Image = calcul => blocsSi(calcul, Object.freeze(f11Barre(calcul, true)));
-  const f11Phrase = calcul => fr(`Regarde : ${aFractionACases(calcul.texte) ? calcul.texte.replace(FRACTION_A_CASES, calcul.ecrite) : calcul.texte.replace(CASE, f(calcul.reponse))}.`);
+  const f11Aide = calcul => (f11EnPartage(calcul) ? f11Partage(calcul) : blocsSi(calcul, Object.freeze(f11Barre(calcul, false))));
+  const f11Image = calcul => (f11EnPartage(calcul) ? f11Partage(calcul, {revele: true}) : blocsSi(calcul, Object.freeze(f11Barre(calcul, true))));
+  // Lot « les fractions de 6e » : la phrase dit le partage (le sens
+  // quotient de 6e) — « Fraction et quotient ».
+  function f11PhrasePartage(calcul) {
+    const {a, d} = calcul.f11;
+    if (calcul.forme === "produit" || calcul.forme === "produit-gauche") return fr(`${a}/${d}, c’est ${f(a)} ÷ ${d} : ${d} parts de ${a}/${d} refont ${f(a)}. ${sansEspace(calcul.texte).replace(CASE, f(a))}.`);
+    if (calcul.forme === "quotient") return fr(`La fraction, c’est une division : ${f(a)}/${d} = ${f(a)} ÷ ${d} = ${f(calcul.reponse)}.`);
+    if (calcul.forme === "division") return fr(`La fraction, c’est une division : ${f(a)} ÷ ${d} = ${a}/${d}.`);
+    return fr(`${f(a)} partagé en\u00a0${d} parts égales : une part, c’est ${a}/${d}. ${calcul.texte.replace(FRACTION_A_CASES, calcul.ecrite)}.`);
+  }
+  const f11Phrase = calcul => (f11EnPartage(calcul) ? f11PhrasePartage(calcul)
+    : fr(`Regarde : ${aFractionACases(calcul.texte) ? calcul.texte.replace(FRACTION_A_CASES, calcul.ecrite) : calcul.texte.replace(CASE, f(calcul.reponse))}.`));
   // Les bandes (F11-1) : on pose k fois la fraction (« Pose 3 fois 5/4 »).
   function f11Manipulation(calcul) {
     if (calcul.niveau === 2) return null;
@@ -12455,7 +12543,7 @@
       traces: Object.freeze([Object.freeze({apres: plan.etapes.length, attente: `${texte} = …`, texte: `${texte} = ${Array.from({length: k}, () => `${a}/${d}`).join(" + ")} = ${k * a}/${d}`})])
     }));
   }
-  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, quotient: 2, fraction: 3, "fraction-gauche": 4});
+  const F11_RANGS = Object.freeze({produit: 0, "produit-gauche": 1, quotient: 2, division: 3, fraction: 4, "fraction-gauche": 5});
   const f11Difficulte = calcul => (calcul.niveau === 1 && calcul.f11.a > calcul.f11.d ? 5000 : 0) + F11_RANGS[calcul.forme] * 1000 + calcul.f11.d * 20 + calcul.f11.a;
   const partage = (a, d) => `${a}\u00a0÷\u00a0${d}\u00a0=\u00a0${a}/${d}`;
   const F11_ERREURS = Object.freeze([
@@ -12544,7 +12632,8 @@
     const {a, d} = calcul.f11;
     const premiere = calcul.forme === "fraction" ? `${d} × ${CASE}/${d} = ${a}` : `${CASE}/${d} × ${d} = ${a}`;
     const aide = f11Aide(calcul);
-    const trouvee = Object.freeze(Object.assign({}, f11Image(calcul), {haut: Object.freeze(f11Image(calcul).haut.map(h => Object.freeze(Object.assign({}, h, {trouve: true}))))}));
+    const trouvee = f11EnPartage(calcul) ? f11Partage(calcul, {vert: true})
+      : Object.freeze(Object.assign({}, f11Image(calcul), {haut: Object.freeze(f11Image(calcul).haut.map(h => Object.freeze(Object.assign({}, h, {trouve: true}))))}));
     return ecrisAvecDessins({
       consigne: fr(calcul.texte.replace(FRACTION_A_CASES, "?")),
       etapes: Object.freeze([
@@ -12561,7 +12650,7 @@
       exemple: Object.freeze({texte: premier.texte.replace(` = ${CASE}/${premier.f11.d}`, "").replace(` = ${CASE}`, ""), reponse: premier.reponse}),
       manipule: manipule ? f11Manipulation(manipule) : null,
       represente: Object.freeze({
-        outil: "barre-droite", consigne: fr(consigne),
+        outil: f11Aide(represente).outil, consigne: fr(consigne),
         texte: represente.texte, reponse: represente.reponse,
         image: f11Aide(represente),
         solution: Object.freeze({image: f11Image(represente), phrase: f11Phrase(represente)})
@@ -12596,14 +12685,16 @@
       {
         n: 2, titre: "fraction et quotient", nom: "Fraction et quotient", palier: 6, type: "P",
         // (Lot 6 : b × a/b 3 sur 10, la division 3, la fraction cherchée 4.)
-        composer: vivierNiveau(F11_VIVIERS[2], [2, 1, 3, 2, 2]),
+        // (Lot « les fractions de 6e » : b × a/b 3 sur 10, la division 3
+        // — 21/7 et 3 ÷ 7 —, la fraction cherchée 4.)
+        composer: vivierNiveau(F11_VIVIERS[2], [2, 1, 2, 1, 2, 2]),
         imposes: [f11(2, `3 × 5/3 = ${CASE}`), f11(2, `15/3 = ${CASE}`), f11(2, `6 × ${FRACTION_A_CASES} = 5`)],
         apprends: blocsLecon(f11Apprends({
           represente: pourApprendre(f11(2, `7 × 3/7 = ${CASE}`)),
           // (Lot 6, choix de Gwenaël : J'écris sur la fraction cherchée.)
           ecris: pourApprendre(f11(2, `3 × ${FRACTION_A_CASES} = 2`)),
-          consigne: "7 fois 3 septièmes.",
-          bilan: "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.",
+          consigne: "Le tout, partagé en 7 parts égales : une part, c’est 3/7.",
+          bilan: "3/7, c’est 3 ÷ 7, le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 3.",
           // Lot C3 (audit de cohérence : « 6/3 = ? », le nom du niveau, n'était
           // montré nulle part) : la fraction, c'est une division.
           autre: {phrase: "La fraction, c’est une division\u00a0:", calcul: "6/3 = 6 ÷ 3 = 2"}
@@ -14226,7 +14317,7 @@
     "F9-2": parFormes(["addition", "somme"], ["soustraction", "difference"]),
     "F9-3": parFormes(["addition", "somme"], ["soustraction", "difference"], ["trois fractions", "trois"], ["nombres mixtes", "mixtes"]),
     "F11-1": [["plus petite que 1", c => Boolean(c.f11 && c.f11.a < c.f11.d)], ["plus grande que 1", toutes]],
-    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
+    "F11-2": parFormes(["b × a/b", "produit", "produit-gauche"], ["la fraction, c’est une division", "quotient", "division"], ["la fraction cherchée", "fraction", "fraction-gauche"]),
     // Lot 7d : M11, A9, C4, M9 (les familles du rapport de Codex du 14/11).
     "M11-1": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
     "M11-2": parFormes(["le reste", "reste"], ["le reste nul", "reste-nul"], ["le quotient", "quotient"]),
@@ -14356,7 +14447,7 @@
         `10 × 0,01 = 0,1`, `1/10 = 10 × 1/100`, `100 × 0,001 = 0,1`, `1/100 = 10 × 1/${nb(1000)}`, `0,1 × 0,1 = 0,01`], colonnes: 2}])},
     "F1-3": {titre: "Cinquièmes", blocs: [
       ...coeurDe([{liste: ["1/5 = 2/10 = 20/100 = 0,2"], colonnes: 1}]),
-      ...retrouveDe([{chemin: "6/5 = 6 × 1/5 = 12/10 = 1,2", liste: [2, 3, 4, 6, 7, 8, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2}])]}
+      ...retrouveDe([{chemin: "6/5 = 12/10 = 1,2", liste: [2, 3, 4, 6, 7, 8, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2}])]}
   });
   // Lot 3b (demande de Gwenaël du 13/11/2026) : le petit schéma d'À retenir
   // d'un niveau « par cœur », au-dessus de sa carte — le dessin du calcul
@@ -15810,8 +15901,9 @@
       const R = calcul.reponse;
       const parts = n => (nomParts(d) ? enParts(n, d) : RANGS_DECIMAUX[Math.round(Math.log10(d))] ? enRang(n, Math.round(Math.log10(d))) : `${exC3(n)}/${exC3(d)}`);
       if (Number.isInteger(v)) return `1 unité, c’est ${parts(d)}${v === 1 ? "" : ` : ${enUnitesC3(v, "unité")}, c’est ${parts(R)}`}. ${resoluC3(calcul)}.`;
-      if (d === 5 && R === 1) return `1/5 = 0,2 : ${resoluC3(calcul)}.`;
-      if (d === 5) return `1/5 = 0,2 : ${exC3(v)}, c’est ${exC3(R)} fois 0,2. ${resoluC3(calcul)}.`;
+      // (Lot « les fractions de 6e » : en dixièmes, puis ÷ 2 en haut et en
+      // bas — 1,4 = 14/10 = 7/5.)
+      if (d === 5) return `${exC3(v)} = ${exC3(Math.round(v * 10))}/10 = ${exC3(R)}/5 (÷ 2 en haut et en bas) : ${resoluC3(calcul)}.`;
       if (100 % d === 0) return `${exC3(R)}/${exC3(d)} = ${exC3(R * 100 / d)}/100 = ${exC3(v)} : ${resoluC3(calcul)}.`;
       return `${resoluC3(calcul)} : ${exC3(v)}, c’est ${exC3(R)} ${nomRangs(Math.round(Math.log10(d)))}.`;
     },
@@ -15820,8 +15912,7 @@
       const v = nombres.find(x => x !== null && !Number.isInteger(x));
       const a = nombres.find(x => x !== null && Number.isInteger(x));
       const R = calcul.reponse;
-      if (R === 5 && a === 1) return `1/5 = 0,2 : ${resoluC3(calcul)}.`;
-      if (R === 5) return `1/5 = 0,2 et ${exC3(a)} × 0,2 = ${exC3(v)} : ${resoluC3(calcul)}.`;
+      if (R === 5) return `${exC3(v)} = ${exC3(Math.round(v * 10))}/10 = ${exC3(a)}/5 (÷ 2 en haut et en bas) : ${resoluC3(calcul)}.`;
       if (100 % R === 0) return `${exC3(a)}/${exC3(R)} = ${exC3(a * 100 / R)}/100 = ${exC3(v)} : ${resoluC3(calcul)}.`;
       return `${exC3(v)}, c’est ${exC3(a)} ${RANGS_DECIMAUX[Math.round(Math.log10(R))] ? RANGS_DECIMAUX[Math.round(Math.log10(R))][a >= 2 ? 1 : 0] : ""} : ${resoluC3(calcul)}.`;
     },
@@ -15837,11 +15928,14 @@
     "F1-3|centiemes": calcul => {
       const nombres = nombresC3(calcul.texte);
       const D = nombres[nombres.length - 1];
-      const par = D / 5;
-      const k = D === 10 ? 1 : 2;
-      return `Chaque cinquième, c’est ${enRang(par, k)} : ${enParts(nombres[0], 5)}, c’est ${enRang(calcul.reponse, k)}. ${resoluC3(calcul)}.`;
+      // (Lot « les fractions de 6e » : les flèches, × 2 ou × 20.)
+      return `× ${exC3(D / 5)} en haut et en bas : ${resoluC3(calcul)}.`;
     },
     // --- Fraction et quotient.
+    "F11-2|division": calcul => {
+      const {a, d} = calcul.f11;
+      return `Le quotient de ${exC3(a)} par ${exC3(d)}, c’est le nombre qui, multiplié par ${exC3(d)}, donne ${exC3(a)} : ${exC3(a)} ÷ ${exC3(d)} = ${exC3(a)}/${exC3(d)}.`;
+    },
     "F11-2|quotient": calcul => {
       const [a, b] = nombresC3(calcul.texte);
       return `La fraction, c’est une division : ${exC3(a)}/${exC3(b)} = ${exC3(a)} ÷ ${exC3(b)} = ${exC3(calcul.reponse)}.`;
@@ -16597,20 +16691,14 @@
     return ecrisF1(calcul, avecQuestion(calcul), etapes,
       (k, revele) => (revele || k >= etapes.length - 1 ? carre(exact(a / d)) : k === 1 ? carre(exact(1 / d)) : carre(0)));
   }
-  // 3/5 = □ : 3 × 1/5 (1/5 = 0,2), sur la barre des cinquièmes.
+  // 3/5 = □ : en dixièmes, puis le décimal — 3/5 = 6/10 = 0,6, les
+  // flèches « × 2 en haut et en bas » (lot « les fractions de 6e », idée
+  // de Gwenaël du 28/11 ; comme la leçon).
   function recetteCinquiemes(calcul) {
     const {a, d} = calcul.f1 || {};
     if (calcul.forme !== "decimal" || d !== 5 || !a || a < 2 || !/^\d+\/5 = □$/.test(calcul.texte)) return null;
-    const unites = Math.ceil(a / 5);
-    const r = calcul.reponse;
-    return ecrisF1(calcul, `${a}/5 = ${a} × 1/5`, [["1/5 = ?", 0.2], [avecQuestion(calcul), r]], (k, revele) => {
-      const fini = revele || k >= 2;
-      const nombres = [{k: 0, texte: "0"}, ...(revele || k >= 1 ? [{k: 1, texte: "0,2", trouve: !revele}] : []),
-        ...Array.from({length: unites}, (_, j) => ({k: 5 * (j + 1), texte: String(j + 1)}))];
-      return {outil: "barre-droite", a: unites, d: 5, pris: a, retire: 0, haut: Object.freeze([]), cache: null,
-        bas: Object.freeze(Object.assign({de: 0, a, texte: fini ? f(r) : "?", cherche: !revele}, k >= 2 && !revele ? {trouve: true} : {})),
-        nombres: Object.freeze(nombres.map(Object.freeze))};
-    });
+    return ecrisF1(calcul, avecQuestion(calcul), [[`${a}/5 = ?/10`, 2 * a], [avecQuestion(calcul), calcul.reponse]],
+      (k, revele) => f1Fleches(calcul, {revele, etape: k}));
   }
 
   // Les recettes, niveau par niveau.

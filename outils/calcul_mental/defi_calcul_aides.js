@@ -4038,8 +4038,17 @@
   // d'un trait bleu épais, le « ? » écrit dedans en bleu. Aucun chiffre de
   // la réponse : la correction l'écrit dans la case.
   //   o : {outil: "tout-parts", tout (texte), d, trouve: null | {texte, vert}}
-  const PARTS = Object.freeze({barre: 46, pas: 24, rayon: 9, parRangeeTas: 14, clair: "#dce7f7"});
-  function caseCherchee(x, y, w, h, texte, couleur) {
+  const PARTS = Object.freeze({barre: 46, barreGrande: 64, pas: 24, rayon: 9, parRangeeTas: 14, clair: "#dce7f7"});
+  function caseCherchee(x, y, w, h, texte, couleur, {grand = false} = {}) {
+    // (Lot « les fractions de 6e » : une fraction s'écrit à la française,
+    // numérateur sur la barre — « Fraction et quotient », une part de 2,
+    // c'est 2/3.)
+    const frac = /^(\d+)\/(\d+)$/.exec(String(texte));
+    if (frac) {
+      const t = Math.min(grand ? 20 : 15, (h - 10) / 2.2, (w - 6) / (Math.max(frac[1].length, frac[2].length) * .62 + .4));
+      return `<rect x="${x.toFixed(2)}" y="${y}" width="${w.toFixed(2)}" height="${h}" fill="${PARTS.clair}"/>`
+        + etiquetteSvg(x + w / 2, y + h / 2 - 2, texte, {taille: Number(t.toFixed(1)), encre: couleur});
+    }
     const taille = Math.min(24, (w - 8) / (Math.max(1, String(texte).length) * .6));
     return `<rect x="${x.toFixed(2)}" y="${y}" width="${w.toFixed(2)}" height="${h}" fill="${PARTS.clair}"/>`
       + `<text x="${(x + w / 2).toFixed(2)}" y="${(y + h / 2 + taille * .36).toFixed(2)}" text-anchor="middle" font-size="${taille.toFixed(1)}" font-weight="800" fill="${couleur}">${texte}</text>`;
@@ -4056,26 +4065,38 @@
     // « 25 % de 48 ») se pose même sous une seule part.
     const parts = Math.max(o.d, o.pris || 0);
     const L = FRACTIONS.longueur * o.d / parts;
-    const R = PARTS.barre;
+    // (Lot « les fractions de 6e », choix de Gwenaël : `grand` — des parts
+    // plus hautes, pour qu'une fraction écrite dans une part se lise au
+    // téléphone.)
+    const R = o.grand ? PARTS.barreGrande : PARTS.barre;
+    const g = {grand: Boolean(o.grand)};
     const w = L / o.d;
     const y1 = 4;
     const y2 = y1 + R;
     const pris = o.pris >= 2 || o.accolade ? o.pris : 0;
-    let s = `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="#fff"/>`
-      + `<text x="${G + L / 2}" y="${y1 + R / 2 + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="${encre}">${o.tout}</text>`;
+    // Lot « les fractions de 6e » (« Fraction et quotient », 7 × 3/7) : le
+    // tout est cherché (`toutCherche`) — la barre du haut porte « ? » (ou la
+    // réponse, `trouve`), entourée de bleu ; la première part dit sa valeur.
+    const tc = Boolean(o.toutCherche);
+    const texteTout = tc ? (o.trouve ? o.trouve.texte : "?") : o.tout;
+    const couleurTout = tc ? (o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche) : encre;
+    let s = `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="${tc ? PARTS.clair : "#fff"}"/>`
+      + `<text x="${G + L / 2}" y="${y1 + R / 2 + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="${couleurTout}">${texteTout}</text>`;
     for (let k = o.d; k < parts; k += 1) {
       s += caseCherchee(G + k * w, y2, w, R, o.part ? o.part.texte : "", o.part && o.part.vert ? FRACTIONS.trouve : encre);
       s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6" stroke-dasharray="6 4"/>`;
     }
     for (let k = 0; k < o.d; k += 1) {
       if (pris && k < pris) s += caseCherchee(G + k * w, y2, w, R, o.part ? o.part.texte : "", o.part && o.part.vert ? FRACTIONS.trouve : encre);
-      else if (!pris && k === 0) s += caseCherchee(G, y2, w, R, o.trouve ? o.trouve.texte : "?", o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche);
+      else if (!pris && k === 0 && tc) s += caseCherchee(G, y2, w, R, o.part ? o.part.texte : "", encre, g);
+      else if (!pris && k === 0) s += caseCherchee(G, y2, w, R, o.trouve ? o.trouve.texte : "?", o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche, g);
       else s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="#fff"/>`;
     }
     s += `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
     for (let k = 0; k < o.d; k += 1) s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6"/>`;
     const vert = pris ? Boolean(o.trouve && o.trouve.vert) : Boolean(o.trouve && o.trouve.vert);
-    s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w * (pris || 1) - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
+    if (tc) s += `<rect x="${G + 1.6}" y="${y1 + 1.6}" width="${(L - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
+    else s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w * (pris || 1) - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
     let bas = y2 + R + 4;
     if (pris) {
       const valeur = o.trouve ? o.trouve.texte : "?";
@@ -4085,6 +4106,7 @@
     return `<svg class="dc-fractions dc-tout-parts" viewBox="0 0 ${FRACTIONS.largeur} ${bas}" role="img" aria-label="${decrireToutParts(o)}">${s}</svg>`;
   }
   function decrireToutParts(o) {
+    if (o.toutCherche) return `Schéma en barres. En haut, le tout, à trouver${o.trouve ? ` : ${o.trouve.texte}` : " : ?"}. En dessous, ${o.d} parts égales ; une part : ${o.part ? o.part.texte : "?"}.`;
     if (o.pris >= 2 || o.accolade) {
       const part = o.part ? ` Une part : ${o.part.texte}.` : "";
       return `Schéma en barres. En haut, le tout : ${o.tout}. En dessous, ${o.d} parts égales ; les ${o.pris} premières sont prises.${part} Ensemble : ${o.trouve ? o.trouve.texte : "?"}.`;
@@ -4400,8 +4422,16 @@
   //        inconnue : « ? »), haut, bas (le « × 4 » de la flèche est écrit ;
   //        sinon « × ? »), trouve (la case est trouvée : en vert),
   //        trouveHaut, trouveBas (en vert : J'écris)}
+  // Lot « les fractions de 6e » (28/11/2026) : `avant` (« 1,4 = », écrit à
+  // gauche) et `apres` ({texte, cache, trouve} : « = 0,6 », écrit à droite)
+  // — « 3/5 = 6/10 = 0,6 », les cinquièmes passés en dixièmes.
   function foisFraction(o) {
-    const W = 300, xg = 82, xd = 218, yb = 104, taille = 30;
+    const yb = 104, taille = 30;
+    const largeurTexte = t => String(t).length * taille * .56 + 14;
+    const wa = o.avant ? Math.max(0, String(o.avant).length * taille * .56 - 30) : 0;
+    const vw = o.apres ? Math.max(60, largeurTexte(o.apres.place ? "0".repeat(o.apres.place) : o.apres.texte)) : 0;
+    const wb = o.apres ? vw + 10 : 0;
+    const W = 300 + wa + wb, xg = 82 + wa, xd = 218 + wa, xm = (xg + xd) / 2;
     const vert = "#147447", bleu = "#0755b8", encre = "#143451", orange = "#c86a12";
     const nombre = v => String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
     // Lot 7e (remarque de Gwenaël du 15/11) : « × ? » et la case « ? » ne
@@ -4427,20 +4457,28 @@
       // gauche — « ?/8 = 7/2 », de 7/2 vers ?/8.)
       const xa = o.envers ? xd - 4 : xg + 4, xb = o.envers ? xg + 4 : xd - 4;
       // La pointe suit la tangente au bout de l'arc.
-      const dx = xb - W / 2, dy = y1 - yc, l = Math.hypot(dx, dy);
+      const dx = xb - xm, dy = y1 - yc, l = Math.hypot(dx, dy);
       const ux = dx / l, uy = dy / l, c = Math.cos(.5), sn = Math.sin(.5), L = 13;
       const p1 = [xb - L * (ux * c - uy * sn), y1 - L * (uy * c + ux * sn)];
       const p2 = [xb - L * (ux * c + uy * sn), y1 - L * (uy * c - ux * sn)];
       const pointe = `M ${p1[0].toFixed(1)} ${p1[1].toFixed(1)} L ${xb} ${y1} L ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
       const texte = ecrit ? `${o.op} ${nombre(o.k)}` : `${o.op} ?`;
       const ym = (y1 + yc) / 2;
-      return `<path d="M ${xa} ${y1} Q ${W / 2} ${yc} ${xb} ${y1}" fill="none" stroke="${couleur}" stroke-width="3"/><path d="${pointe}" fill="none" stroke="${couleur}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
-        + `<rect x="${W / 2 - 36}" y="${ym - 14}" width="72" height="28" rx="14" fill="#fff" stroke="${ecrit ? couleur : bleu}" stroke-width="2"/><text x="${W / 2}" y="${ym + 7.5}" text-anchor="middle" font-size="21" font-weight="900" fill="${ecrit ? couleur : bleu}">${texte}</text>`;
+      return `<path d="M ${xa} ${y1} Q ${xm} ${yc} ${xb} ${y1}" fill="none" stroke="${couleur}" stroke-width="3"/><path d="${pointe}" fill="none" stroke="${couleur}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        + `<rect x="${xm - 36}" y="${ym - 14}" width="72" height="28" rx="14" fill="#fff" stroke="${ecrit ? couleur : bleu}" stroke-width="2"/><text x="${xm}" y="${ym + 7.5}" text-anchor="middle" font-size="21" font-weight="900" fill="${ecrit ? couleur : bleu}">${texte}</text>`;
     };
-    let s = fraction(xg, o.gauche, "g") + `<text x="${W / 2}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>` + fraction(xd, o.droite, "d");
+    let s = fraction(xg, o.gauche, "g") + `<text x="${xm}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>` + fraction(xd, o.droite, "d");
     s += fleche(true, o.haut, o.trouveHaut) + fleche(false, o.bas, o.trouveBas);
+    if (o.avant) s += `<text x="${xg - 36}" y="${yb + 10}" text-anchor="end" font-size="${taille}" font-weight="800" fill="${encre}">${o.avant}</text>`;
+    if (o.apres) {
+      const xe = xd + 55, xv = xd + 75 + vw / 2;
+      s += `<text x="${xe}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${encre}">=</text>`;
+      s += o.apres.cache
+        ? `<rect x="${xv - 30}" y="${yb - 17}" width="60" height="36" rx="7" fill="#fff" stroke="${bleu}" stroke-width="2.4" stroke-dasharray="5 4"/><text x="${xv}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${bleu}">?</text>`
+        : `<text x="${xv}" y="${yb + 10}" text-anchor="middle" font-size="${taille}" font-weight="800" fill="${o.apres.trouve ? vert : encre}">${o.apres.texte}</text>`;
+    }
     const lire = ([n, d], cote) => nomFraction(`${cote}n` === o.cache && !o.montre ? "?" : n, `${cote}d` === o.cache && !o.montre ? "?" : d);
-    return `<svg class="dc-fois" viewBox="0 0 ${W} 228" role="img" aria-label="${lire(o.gauche, "g")} égale ${lire(o.droite, "d")} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
+    return `<svg class="dc-fois" viewBox="0 0 ${W} 228" role="img" aria-label="${o.avant ? `${o.avant} ` : ""}${lire(o.gauche, "g")} égale ${lire(o.droite, "d")}${o.apres ? ` égale ${o.apres.cache && !o.montre ? "?" : o.apres.texte}` : ""} : ${o.op === "×" ? "fois" : "divisé par"} ${o.haut || o.bas ? o.k : "le même nombre"} en haut et en bas.">${s}</svg>`;
   }
 
   // L'image d'une aide, quelle qu'elle soit (la page ne connaît que ça).

@@ -74,7 +74,7 @@ test("2. les textes du 26/11 : six ceintures dans « Comment ça marche ? » ; p
 
 test("3. la page charge le noyau, le moteur et la feuille du lot (numéros de cache neufs)", () => {
   assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-2">/);
-  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261127-2"><\/script>/);
+  assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261128-1"><\/script>/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-2"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261125-7", "defi_calcul_mon_parcours.js?v=20261126-1", "defi_calcul.css?v=20261125-7"]) {
     assert.ok(!PAGE.includes(vieux), `${vieux} : l'ancienne adresse est partie`);

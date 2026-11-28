@@ -305,9 +305,9 @@
   </main>
 
   <script src="../../assets/js/code-en-cases.js?v=20261111-2"></script>
-  <script src="./defi_calcul_core.js?v=20261127-2"></script>
+  <script src="./defi_calcul_core.js?v=20261128-1"></script>
   <script src="./defi_calcul_mon_parcours.js?v=20261127-2"></script>
-  <script src="./defi_calcul_aides.js?v=20261127-2"></script>
+  <script src="./defi_calcul_aides.js?v=20261128-1"></script>
   <script>
     (() => {
       "use strict";
@@ -2677,6 +2677,7 @@
       // seulement) ; dans J'apprends, celui de la série.
       function renderTouches(id, texte = "", niveau = null) {
         $("touches").hidden = !CORE.virguleDuTexte(id, texte, niveau);
+        $("touches").style.visibility = "";
       }
 
       // Relecture 2b (11/11/2026, remarque 56) : la case a, dès le début, la
@@ -3569,6 +3570,14 @@
         // La touche « , » suit l'étape qui se joue (une case de numérateur
         // n'en a pas).
         if (!revelees) renderTouches(module, (etapes[serie.etape] || etapes[0]).texte, niveau);
+        // Lot « les fractions de 6e » (7/5 = □/10, puis 7/5 = □) : quand une
+        // étape plus bas aura la touche « , », sa place est gardée dès la
+        // première (invisible) — le dessin et le pavé ne bougent pas quand
+        // elle arrive.
+        if (!revelees && $("touches").hidden && etapes.slice(serie.etape).some(e => CORE.virguleDuTexte(module, e.texte, niveau))) {
+          $("touches").hidden = false;
+          $("touches").style.visibility = "hidden";
+        }
         const expression = $("expression");
         expression.className = "expression dc-lignes";
         expression.replaceChildren(lignes);

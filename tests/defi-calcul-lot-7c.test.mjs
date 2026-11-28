@@ -95,7 +95,8 @@ test("lot 7c : les règles communes avec les voisins, sur tous les calculs", () 
   // (Lot 6 « programmes » : « la fraction, c'est une division », 12/4 = □ :
   // un numérateur multiple du dénominateur, un quotient de 2 à 6.)
   tous("F11-2").forEach(c => (c.forme === "quotient"
-    ? assert.ok(c.f11.a % c.f11.d === 0 && c.reponse >= 2 && c.reponse <= 6 && c.reponse !== c.f11.d, espaces(c.texte))
+    // (Lot « les fractions de 6e » : les quotients des tables, jusqu'à 10.)
+    ? assert.ok(c.f11.a % c.f11.d === 0 && c.reponse >= 2 && c.reponse <= 10 && c.reponse !== c.f11.d, espaces(c.texte))
     : assert.equal(c.f11.k, c.f11.d, espaces(c.texte))));
   // F2 / F9 : F2 garde les demis et les quarts jusqu'à 1 ; F9-2 / F9-3 : le grand dénominateur jusqu'à 20, puis au-delà.
   const deuxFractions = c => ["somme", "difference"].includes(c.forme);
@@ -144,7 +145,14 @@ test("lot 7c : les bornes (rapport de Codex du 14/11)", () => {
   ["2/3 de 12 œufs", "3/10 de 500 g", "2/5 de 60 kg"].forEach(t => assert.ok([...tous("F4-1"), CORE.niveauDe("F4-1").niveau.apprends.calculs.montre, CORE.niveauDe("F4-1").niveau.apprends.calculs.ecris].some(c => espaces(c.texte).startsWith(`${t},`)) || NIVEAUX.some(cle => CORE.niveauDe(cle).niveau.apprends.textes.some(x => espaces(x).startsWith(`${t},`))), t));
   assert.equal(espaces(CORE.niveauDe("F4-2").niveau.apprends.calculs.montre.texte), "3/4 de 10 m, c’est □ m.");
   // F9 : la barre a 30 parts au plus (au-delà, les deux flèches) ; six unités au plus.
-  ["F9-2", "F9-3", "F11-1", "F11-2"].forEach(cle => tous(cle).forEach(c => {
+  // (Lot « les fractions de 6e » : « Fraction et quotient », le tout partagé
+  // en 12 parts au plus.)
+  tous("F11-2").forEach(c => {
+    const aide = CORE.aideDe(c);
+    assert.equal(aide.outil, "tout-parts", espaces(c.texte));
+    assert.ok(aide.d <= 12, `${espaces(c.texte)} : ${aide.d} parts`);
+  });
+  ["F9-2", "F9-3", "F11-1"].forEach(cle => tous(cle).forEach(c => {
     const aide = CORE.aideDe(c);
     if (aide.outil === "fois-fraction") { assert.ok(cle.startsWith("F9"), espaces(c.texte)); return; }
     assert.equal(aide.outil, "barre-droite", espaces(c.texte));
@@ -165,7 +173,8 @@ test("lot 7c : une seule case, au numérateur ; la consigne dit le dénominateur
     // réponse, la fraction et ses deux cases.)
     assert.equal(t.replace("□/□", "□").split("□").length, 2, `${cle} : ${t}`);
     if (cle.startsWith("F9") || cle === "F11-1") assert.match(t, / = (\d+ \+ )?□\/\d+$/, `${cle} : ${t}`);
-    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^\d+\/\d+ = □$|^(\d+ × □\/□|□\/□ × \d+) = \d+$/, t);
+    // (Lot « les fractions de 6e » : et « 3 ÷ 7 = □/□ ».)
+    if (cle === "F11-2") assert.match(t, /^(\d+ × \d+\/\d+|\d+\/\d+ × \d+) = □$|^\d+\/\d+ = □$|^(\d+ × □\/□|□\/□ × \d+) = \d+$|^\d+ ÷ \d+ = □\/□$/, t);
     assert.equal(CORE.virguleDe(c), cle === "F4-2", `${cle} : ${t}`);
   }));
   // Lot 6 « programmes » : « 6 × □/6 = 5 » (réponse : le nombre écrit à
@@ -197,14 +206,13 @@ test("lot 7c : l'aide ne donne jamais la réponse, la correction la montre (tous
       assert.ok(!aide.montre && image.montre, t);
       return;
     }
-    if (c.module === "F11" && c.forme.startsWith("fraction")) {
-      assert.ok(aide.haut.every(h => h.texte === `?/${c.f11.d}`) && image.haut.every(h => h.texte === `${c.f11.a}/${c.f11.d}`), t);
-      return;
-    }
+    // (Lot « les fractions de 6e » : « Fraction et quotient », le tout
+    // partagé — la part ou le tout cherché porte « ? », la correction écrit
+    // la réponse.)
     if (c.module === "F11" && c.niveau === 2) {
-      // 7 × 3/7 = □ : l'entier cherché porte « ? » sur la droite.
-      assert.equal(aide.cache, c.reponse, t);
+      assert.equal(aide.trouve, null, t);
       assert.ok(textesSvg(svg).includes("?"), t);
+      assert.equal(image.trouve.texte, c.ecrite || ecrite(c.reponse), t);
       return;
     }
     // La case est un numérateur : l'accolade dit « ?/D », la correction « r/D ».
@@ -249,7 +257,9 @@ test("lot 7c : J'écris — une recette partagée par la leçon et les calculs t
         }
         ecris.dessins.slice(0, -1).forEach((d, k) => assert.ok(!d.bas || String(d.bas.texte).includes("?"), `${t} : l'accolade garde « ? » au dessin ${k}`));
         // (Lot 6 : la fraction cherchée l'écrit sur ses crochets, « 2/3 ».)
-        assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(x => x.trouve) || (fin.haut || []).some(h => h.trouve && h.texte === calcul.ecrite), `${t} : la dernière étape écrit la réponse`);
+        // (Lot « les fractions de 6e » : « Fraction et quotient », la part trouvée, en vert.)
+        assert.ok((fin.bas && fin.bas.trouve) || Object.values(fin.ecrits || {}).some(x => x.trouve) || (fin.haut || []).some(h => h.trouve && h.texte === calcul.ecrite)
+          || (fin.outil === "tout-parts" && fin.trouve && fin.trouve.vert && fin.trouve.texte === calcul.ecrite), `${t} : la dernière étape écrit la réponse`);
       }
     }
   });
@@ -362,14 +372,16 @@ test("lot 7c : À retenir reprend le calcul de On te montre, une égalité par l
   // (Lot C4d : les flèches « × 3 » dessinées dessous, le calcul seul.)
   assert.equal(bilan("F9-3"), "4/7 − 2/21 = 12/21 − 2/21 = 10/21.");
   assert.equal(bilan("F11-1"), "3 fois 5 quarts, c’est 15 quarts : 3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4.");
-  assert.equal(bilan("F11-2"), "3/7, c’est le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 21/7 = 3.");
+  // (Lot « les fractions de 6e » : la division.)
+  assert.equal(bilan("F11-2"), "3/7, c’est 3 ÷ 7, le nombre qui, multiplié par 7, donne 3 : 7 × 3/7 = 3.");
+  assert.deepEqual(AIDES.bilanEnDeux(bilan("F11-2")), {phrase: "3/7, c’est 3 ÷ 7, le nombre qui, multiplié par 7, donne 3.", calcul: "7 × 3/7 = 3"});
   assert.deepEqual(AIDES.bilanEnDeux(bilan("F11-1")), {phrase: "3 fois 5 quarts, c’est 15 quarts.", calcul: "3 × 5/4 = 5/4 + 5/4 + 5/4 = 15/4"});
 });
 
 test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof, VERSION", async () => {
   const page = await readFile(new URL("../outils/calcul_mental/defi_calcul_modules.html", import.meta.url), "utf8");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261128-1/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261128-1/);
   assert.match(page, /billes: \(\) => \(state\.manip && state\.manip\.outil === "billes" \? \{tours: state\.manip\.tours, fini: state\.manip\.fini, prises: state\.manip\.prises\}/);
   const coeur = await readFile(new URL("../outils/calcul_mental/defi_calcul_core.js", import.meta.url));
   const copie = await readFile(new URL("../_serveur/public/prof/defi_calcul_core.js", import.meta.url));
@@ -381,5 +393,5 @@ test("lot 7c : la page — adresses de cache, copie du moteur pour la page prof,
   assert.match(aides, /if \(bas\) trace\.style\.minHeight = `\$\{Math\.max\(bas, trace\.offsetHeight\)\}px`;/);
   // (Lot K1 : la liste de Mon parcours, qui se calait sur une ligne entière, est partie avec lui.)
   const version = await readFile(new URL("../_serveur/public/VERSION", import.meta.url), "utf8");
-  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
+  assert.match(version, /^lot defi-calcul-lot-(?:7c-fractions|7d-derniers-modules|6-programmes|6-fraction-deux-cases|6-programmes-2|6-programmes-2-correctif|F4-personne-bloque|F4-correctif|C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete|fractions-6e)$|^lot plus-rapide-A$|^lot mon-espace-B1(?:-liens)?$|^lot ma-liste-B2$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots 7d, 6 « programmes », 6 « fraction à deux cases », 6 « programmes 2 » : le cœur change encore ; lot F4 et son correctif : le moteur ; lot C1 : le cœur ; lot C2 : le cœur, la progression en version 11)
 });
