@@ -3663,6 +3663,47 @@
     return ligne.b[index] >= SEUILS.revision.su ? "su" : "route";
   }
 
+  // Lot K2 « le professeur » (28/11/2026) — l'état d'une étoile dans la
+  // GRILLE de la page du professeur (« Où en est chacun »), en sept cases :
+  //   tenu    gagnée, et elle a réussi un retour (retourReussi) ;
+  //   gagnee  gagnée, pas encore de retour réussi ;
+  //   rate    gagnée, ratée à son dernier retour (elle revient le lendemain) ;
+  //   perdue  gagnée un jour, partie au 2e retour raté de suite : à regagner ;
+  //   essai   essayée (« Je tente » raté, ou J'apprends arrêté), pas gagnée ;
+  //   classe  « à voir en classe » (aVoirEnClasse) ;
+  //   vide    rien de fait.
+  // Les états d'avant (etatCompetence : su, route…) restent ceux de la tuile
+  // de Mon espace et de resumeSuivi.
+  function etatGrille(ligne, index) {
+    if (aVoirEnClasse(ligne, index)) return "classe";
+    if (ligne.b[index]) {
+      if (ligne.x[index] & X_RATE) return "rate";
+      return retourReussi(ligne, index) ? "tenu" : "gagnee";
+    }
+    if (ligne.d[index]) return "perdue";
+    if (ligne.r[index] || ligne.ar[index]) return "essai";
+    return "vide";
+  }
+
+  // « A réussi un retour » : l'étoile est montée au-dessus de sa boîte
+  // d'entrée. Gagnée du premier coup à « Je tente », elle est entrée en
+  // boîte 4 (SEUILS.revision.duPremierCoup) et sa date « solide » `s` est
+  // celle du gain `d` : il faut la boîte 5. Sinon (J'apprends, « Je tente »
+  // après un raté, regagnée après une perte) elle est entrée en boîte 2
+  // (SEUILS.revision.entree) : il faut la boîte 3. (La passe 1 de K2 disait
+  // « dès la boîte 2 » : c'est la boîte d'entrée elle-même, corrigé.) Une
+  // étoile perdue puis regagnée (`pe`) est rentrée en boîte 2, même si sa
+  // première fois était du premier coup. Un retour raté la fait descendre
+  // d'une boîte : un retour réussi après un raté la ramène à sa boîte
+  // d'entrée, sans compter comme « tenu » — c'est voulu, elle n'a pas encore
+  // tenu dans le temps.
+  function retourReussi(ligne, index) {
+    const boite = ligne.b[index];
+    if (!boite) return false;
+    const duPremierCoup = Boolean(ligne.s[index]) && ligne.s[index] === ligne.d[index] && !ligne.pe[index];
+    return boite > (duPremierCoup ? SEUILS.revision.duPremierCoup : SEUILS.revision.entree);
+  }
+
   function resumeProf(brut, carte, aujourdhui = jourLocal()) {
     const parcours = normaliserParcours(brut, {aujourdhui});
     const lisible = Boolean(brut && typeof brut === "object") && !tropRecente(brut);
@@ -3694,7 +3735,22 @@
         sues: ligne.s.slice(),
         // Lot K1 (pour la page du professeur du lot K2) : combien de fois
         // chaque étoile a été perdue.
-        perdues: ligne.pe.slice()
+        perdues: ligne.pe.slice(),
+        // Lot K2 « le professeur » : ce que la page lit, étoile par étoile.
+        // `tentes` : les « Je tente » ratés (0 à 2) ; `tenteLe` : le jour du
+        // dernier, tant que l'étoile n'est pas gagnée (null sinon) ;
+        // `arrets` : les J'apprends arrêtés (0 à 9) ; `rate` : 1 si le
+        // dernier retour est raté ; `retours` : 1 si elle a réussi un retour
+        // (retourReussi) ; `grille` : son état dans la grille (etatGrille) ;
+        // `echeances` : le jour où elle revient (null : pas dans les boîtes,
+        // ou pas d'attente).
+        tentes: ligne.r.slice(),
+        tenteLe: ligne.r.map((r, index) => (r && !ligne.b[index] ? ligne.q[index] : null)),
+        arrets: ligne.ar.map((_, index) => arretsDe(ligne, index)),
+        rate: ligne.x.map(x => (x & X_RATE ? 1 : 0)),
+        retours: ligne.b.map((_, index) => (retourReussi(ligne, index) ? 1 : 0)),
+        grille: ligne.b.map((_, index) => etatGrille(ligne, index)),
+        echeances: ligne.e.slice()
       });
       etats.forEach((etat, index) => {
         if (etat !== "revoir" && etat !== "classe") return;
@@ -3729,6 +3785,11 @@
     const joursSemaine = [...new Set(seances.filter(jour => jour >= lundi))];
     const dernier = seances.length ? seances[seances.length - 1] : null;
     const vus = Object.keys(parcours.modules).map(id => parcours.modules[id].vu).filter(Boolean).sort();
+    const finies = pairesDe(parcours).map(({jour, entree}) => {
+      const ligne = {jour};
+      JOURNAL.forEach((champ, index) => { if (champ !== "numero") ligne[champ] = entree[index] >= 0 ? entree[index] : null; });
+      return ligne;
+    });
     return {
       lisible,
       commence: Object.keys(parcours.modules).length > 0 || parcours.seances.length > 0,
@@ -3744,11 +3805,11 @@
       // Les 4 dernières semaines, et le journal, une séance finie par ligne,
       // de la plus ancienne à la plus récente — null : pas connu.
       semaines: seancesParSemaine(parcours, aujourdhui),
-      journal: pairesDe(parcours).map(({jour, entree}) => {
-        const ligne = {jour};
-        JOURNAL.forEach((champ, index) => { if (champ !== "numero") ligne[champ] = entree[index] >= 0 ? entree[index] : null; });
-        return ligne;
-      }),
+      journal: finies,
+      // Lot K2 « le professeur » : les 5 dernières séances finies (les mêmes
+      // lignes), pour « À aider » (rien gagné depuis 5 séances ; calculs du
+      // jour sur les 3 dernières).
+      recentes: finies.slice(-5),
       // La ceinture portée, les jours où chacune a été gagnée, le
       // remplissage de la suivante (tous les étages : la page du professeur
       // ne lit pas le réglage de l'élève ici).
@@ -3922,6 +3983,8 @@
     typeDe,
     // Lot K1 : la carte de l'élève et l'état de ses étoiles.
     carteEleve,
+    etatGrille,
+    retourReussi,
     etatEtoile,
     premierRetourSansLecon,
     aVoirEnClasse,

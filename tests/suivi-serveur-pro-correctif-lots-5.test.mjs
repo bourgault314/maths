@@ -489,7 +489,7 @@ test("et un pirate ? les mêmes appels au serveur qu'avant le correctif, rien n'
   // Lot 5b : « Régler … » passe par appelBorne (le même api(), borné dans le temps).
   const appels = [...new Set([...script.matchAll(/(?:api|appelBorne)\("([a-z_.]+)"/g)].map(m => m[1]))].sort();
   assert.deepEqual(appels, ["classes.creer", "classes.liste", "classes.modifier", "classes.supprimer", "classes.supprimer_echues",
-    "eleves.acces", "eleves.ajouter", "eleves.fiche", "eleves.nommer", "eleves.regenerer", "eleves.reglages", "eleves.restaurer", "eleves.supprimer",
+    "eleves.acces", "eleves.ajouter", "eleves.fiche", "eleves.nommer", "eleves.recommencer", "eleves.regenerer", "eleves.reglages", "eleves.restaurer", "eleves.supprimer",
     "evaluation.enregistrer_modele", "evaluation.etat", "evaluation.fermer", "evaluation.fichier", "evaluation.modeles", "evaluation.ouvrir",
     "evaluation.repasser", "evaluation.supprimer_modele", "evaluation.terminer", "moi", "partages.ajouter", "partages.liste",
     "partages.supprimer", "profs.ajouter", "profs.annuaire", "profs.desactiver", "profs.liste", "profs.motdepasse", "profs.reactiver",

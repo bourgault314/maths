@@ -119,6 +119,12 @@ export const RECETTES = [
   { fichier: "tests/defi-calcul-lot-6e-complete-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
   // Lot « les fractions de 6e » (28/11/2026) : les cinquièmes en dixièmes, « Fraction et quotient » le tout partagé, la place de la touche « , ».
   { fichier: "tests/defi-calcul-lot-fractions-6e-ecrans.cjs", appli: "defi-calcul", besoin: ["playwright"], garde: DEFI_CALCUL },
+  // Lot K2 de Défi calcul « le professeur » (28/11/2026) : l'onglet Défi calcul de « Ma classe » (À aider,
+  // À reprendre en classe, la grille, Qui s'entraîne, le tableau), la fiche et sa feuille, le réglage en
+  // ceintures, « Recommencer Défi calcul à zéro » défait par « Revenir à… » — sur le vrai serveur (PHP absent :
+  // rien n'est joué, la recette le dit).
+  { fichier: "tests/defi-calcul-lot-K2-ecrans.cjs", appli: "suivi", besoin: ["playwright"],
+    garde: [...DEFI_CALCUL, "_serveur/public/prof/", "_serveur/public/api/prof.php", "_serveur/public/lib/versions.php"] },
 
   // Évaluations nationales, lot EN-A1 : l'accueil de l'appli, l'écran du choix d'un test, le bandeau d'« Explorer les outils ».
   { fichier: "tests/evaluations-nationales-accueil-ecrans.cjs", appli: "evaluations", besoin: ["playwright"],

@@ -106,7 +106,8 @@ test("4 — au téléphone, sous le prénom : « table de 7 » (et les séances 
   assert.deepEqual(td.enfants.map(e => [e.className, e.textContent]), [["indice-tel", "table de 7"], ["indice-tel fort", "12 séances dessus"]], "un texte vide n'ajoute rien");
   assert.match(fonction("dessinerTableau"), /finirLigne\(ligne, eleve, cNom\);\s*\/\/[^\n]*\n\s*\/\/[^\n]*\n\s*indiceTelephone\(cNom, enCours\.type === "table" \? `table de \$\{enCours\.tables\[0\]\}` : enCours\.type === "rien" \? "" : enCours\.texte, ""\);\s*if \(eleve\.lu\.longue\) indiceTelephone\(cNom, `\$\{eleve\.lu\.longue\.seances\} séances dessus`, "fort"\);/,
     "APRÈS finirLigne (qui reprend le texte du prénom pour son bouton)");
-  assert.match(fonction("dessinerTableauCalcul"), /finirLigne\(ligne, eleve, cNom\);[\s\S]{0,400}if \(lu\.commence && lu\.aVoir\) indiceTelephone\(cNom, `\$\{lu\.aVoir\} à voir en classe`, "fort"\);/);
+  // (Lot K2 : « N à surveiller », la colonne du tableau, passe sous le prénom.)
+  assert.match(fonction("dessinerTableauCalcul"), /finirLigne\(ligne, eleve, cNom\);\s*if \(lu\.commence && surveiller\.length\) indiceTelephone\(cNom, `\$\{surveiller\.length\} à surveiller`, "fort"\);/);
   assert.doesNotMatch(fonction("dessinerTableauCalcul"), /indiceTelephone\(cNom, `\$\{lu\.rouges\}/, "les rouges, que l'appli redonne, restent dans la fiche");
   assert.match(style, /#tableau \.indice-tel \{ display: none; \}/, "à l'ordinateur, la colonne est là");
   assert.match(telephone, /#tableau \.indice-tel \{ display: block;/);

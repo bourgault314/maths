@@ -75,6 +75,10 @@ const DROIT_PAR_ACTION = [
     'eleves.nommer' => 'ecriture',
     'eleves.regenerer' => 'ecriture',
     'eleves.restaurer' => 'ecriture',
+    // Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à
+    // zéro », dans le même menu « ⋯ » que « Revenir à… », et défait par lui
+    // pendant sept jours : un dépannage, comme « Revenir à… » — écriture.
+    'eleves.recommencer' => 'ecriture',
     // Propriétaire : ce qui efface, et ce qui change la classe elle-même.
     'classes.modifier' => 'proprietaire',
     'classes.supprimer' => 'proprietaire',
@@ -355,6 +359,92 @@ function applis_avec_cle_reservee(mixed $applis): bool
 
 // Correctif B3 (relecture Codex, point 3) : le refus d'une page d'avant ce lot.
 const MESSAGE_PAGE_B2 = "Cette page date d'avant une mise à jour de Ma classe : recharge-la, puis refais ton choix.";
+
+// Lot K2 de Défi calcul (28/11/2026) : « Recommencer Défi calcul à zéro »
+// pour un élève, depuis le « ⋯ » de sa ligne. Les applis qui savent repartir
+// de zéro côté serveur : Défi calcul seulement (son moteur fusionne deux
+// copies en gardant EN BLOC celle dont l'époque est la plus haute).
+const APPLIS_RECOMMENCABLES = ['defi-calcul'];
+// La version du parcours neuf : celle que le catalogue exige des pages
+// d'aujourd'hui (lib/applis.php, « version_min » : 15 au lot K2), ou celle
+// en base si elle est plus haute (une page plus récente l'a écrite). Jamais
+// plus basse : une page à jour lirait une version plus ancienne, mais
+// api/parcours.php refuse de servir une version sous « version_min ».
+// Le parcours neuf, construit ICI : la page n'envoie aucune progression.
+// Le même que remettreAZero() du moteur (defi_calcul_mon_parcours.js) : tout
+// s'efface, l'époque monte d'un cran — à la fusion, l'époque la plus haute
+// gagne en bloc, l'ancien travail ne revient pas des appareils de l'élève.
+// Le moteur complète tout le reste (normaliserParcours) ; le filtre du
+// serveur (filtrer_progression) passe dessus comme sur toute écriture.
+function progression_neuve(string $appli, string $courantJson): string
+{
+    $courant = json_decode($courantJson, false);
+    $version = is_object($courant) ? ($courant->version ?? null) : null;
+    if (is_float($version) && floor($version) === $version) $version = (int)$version;
+    $minimum = (int)(CATALOGUE_APPLIS[$appli]['version_min'] ?? 1);
+    if (!is_int($version) || $version < $minimum || $version > PROGRESSION_ENTIER_MAX) $version = $minimum;
+    $neuf = (object)[
+        'version' => $version,
+        'epoque' => min(epoque_de($courantJson) + 1, PROGRESSION_ENTIER_MAX),
+    ];
+    $encode = json_encode(filtrer_progression($appli, $neuf), JSON_UNESCAPED_UNICODE);
+    if (!is_string($encode)) throw new RuntimeException('progression neuve illisible');
+    return $encode;
+}
+
+// La remise à zéro, sous le même verrou que « Revenir à… » et que les
+// écritures de l'appli (restaurer_progression, api/parcours.php) : la ligne
+// est verrouillée, l'UPDATE ne passe que si la révision lue est encore celle
+// en base. Ce qui est gardé pour faire marche arrière :
+//  - donnees_avant = l'état d'avant (« avant le dernier enregistrement »),
+//    comme pour un enregistrement ;
+//  - la ligne du jour (table versions) reçoit l'état neuf, comme pour un
+//    enregistrement : c'est la fin de la journée telle qu'elle est ;
+//  - et si l'élève n'a rien enregistré AUJOURD'HUI, l'état d'avant est
+//    exactement celui de la fin d'HIER : il est rangé comme la ligne d'hier
+//    s'il n'y en a pas déjà une. Sans cela, un élève qui n'avait plus écrit
+//    depuis plus de sept jours n'aurait plus rien dans l'historique, et sa
+//    prochaine synchronisation remplacerait donnees_avant : la remise à zéro
+//    serait devenue définitive, contre la promesse de la confirmation.
+// Renvoie ['rien' => true] sans progression, ['conflit' => true] si la ligne
+// a bougé sous le verrou, sinon ['donnees' => …, 'revision' => …].
+function recommencer_progression(PDO $pdo, int $eleveId, string $appli): array
+{
+    return avec_reprise($pdo, function () use ($pdo, $eleveId, $appli): array {
+        transaction_ouvrir($pdo);
+        $requete = $pdo->prepare('SELECT id, donnees, revision FROM progressions WHERE eleve_id = ? AND appli = ?' . pour_mise_a_jour($pdo));
+        $requete->execute([$eleveId, $appli]);
+        $ligne = $requete->fetch();
+        $requete->closeCursor();
+        if ($ligne === false) {
+            transaction_annuler($pdo);
+            return ['rien' => true];
+        }
+        $avant = (string)$ligne['donnees'];
+        $revision = (int)$ligne['revision'];
+        $neuf = progression_neuve($appli, $avant);
+        $requete = $pdo->prepare('UPDATE progressions SET donnees = ?, donnees_avant = ?, revision = ?, maj_le = ? WHERE id = ? AND revision = ?');
+        $requete->execute([$neuf, $avant, $revision + 1, aujourdhui(), (int)$ligne['id'], $revision]);
+        if ($requete->rowCount() !== 1) {
+            transaction_annuler($pdo);
+            return ['conflit' => true];
+        }
+        $jour = jour_local();
+        $requete = $pdo->prepare('SELECT COUNT(*) FROM versions WHERE eleve_id = ? AND appli = ? AND jour = ?');
+        $requete->execute([$eleveId, $appli, $jour]);
+        $ecritAujourdhui = (int)$requete->fetchColumn() > 0;
+        $requete->closeCursor();
+        if (!$ecritAujourdhui) {
+            $hier = gmdate('Y-m-d', strtotime($jour . ' 12:00:00 UTC') - 86400);
+            $ignorer = pilote($pdo) === 'mysql' ? 'INSERT IGNORE INTO' : 'INSERT OR IGNORE INTO';
+            $pdo->prepare("$ignorer versions (eleve_id, appli, jour, revision, calculs, donnees, maj_le) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                ->execute([$eleveId, $appli, $hier, $revision, compter_elements_declares($appli, $avant), $avant, maintenant()]);
+        }
+        enregistrer_version($pdo, $eleveId, $appli, $neuf, $revision + 1);
+        transaction_valider($pdo);
+        return ['donnees' => $neuf, 'revision' => $revision + 1];
+    });
+}
 
 // La restauration écrit dans la même ligne que l'appli de l'élève, avec le
 // même verrou qu'elle (lib/bd.php, lot 6) : la ligne est verrouillée le temps
@@ -1158,6 +1248,25 @@ try {
             if (isset($resultat['conflit'])) erreur("La progression a changé pendant la restauration : regarde le tableau, puis réessaie.", 409);
             journaliser($pdo, $profId, 'eleves.restaurer', 'eleve', (int)$eleve['id']);
             repondre(['ok' => true, 'parcours' => json_decode($resultat['donnees'], false), 'revision' => $resultat['revision']]);
+
+        case 'eleves.recommencer':
+            // Lot K2 de Défi calcul : « Recommencer Défi calcul à zéro ».
+            // Le droit est celui de la classe DE L'ÉLÈVE (eleve_pour_action :
+            // un élève d'une autre classe répond 404, un collègue en lecture
+            // seule 403) ; aucune progression n'est reçue du navigateur — le
+            // neuf est construit ici (progression_neuve).
+            $eleve = eleve_pour_action($pdo, $profId, $corps['eleve_id'] ?? 0, $action);
+            limiter('recommencer:' . $profId, 60, 600);
+            $appli = appli_recue($corps['appli'] ?? null);
+            if (!in_array($appli, APPLIS_RECOMMENCABLES, true)) erreur("Cette activité ne se recommence pas d'ici.", 400);
+            $resultat = recommencer_progression($pdo, (int)$eleve['id'], $appli);
+            if (isset($resultat['rien'])) erreur("Rien à recommencer : cet élève n'a encore rien envoyé.", 409);
+            if (isset($resultat['conflit'])) {
+                journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id'], 'erreur');
+                erreur("La progression a changé pendant la remise à zéro : regarde le tableau, puis réessaie.", 409);
+            }
+            journaliser($pdo, $profId, 'eleves.recommencer', 'eleve', (int)$eleve['id']);
+            repondre(['ok' => true, 'revision' => $resultat['revision']]);
 
         case 'eleves.supprimer':
             // Supprimer un élève efface sa progression pour de bon : depuis le

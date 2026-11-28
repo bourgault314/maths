@@ -50,6 +50,8 @@ test("lot 6-0 : une ceinture gagnée cette semaine est dans « À féliciter » 
   assert.match(prof, /const NOMS_CEINTURES = \["ceinture blanche-jaune", "ceinture jaune", "ceinture jaune-orange", "ceinture orange", "ceinture verte", "ceinture bleue"\];/);
   // (Lot K1b, choix de Gwenaël le 26/11 : la classe entre parenthèses, « ceinture blanche-jaune (CP) gagnée ».)
   assert.match(prof, /\$\{NOMS_CEINTURES\[x\.ceinture - 1\]\} \(\$\{CLASSES_CEINTURES\[x\.ceinture - 1\]\}\) gagnée/);
-  // La page prof dit « J'apprends arrêté 3 fois » d'un niveau jamais appris.
-  assert.match(prof, /c\.etat === "classe" && c\.pasApprise/);
+  // La page prof dit « J'apprends arrêté 3 fois » d'un niveau jamais appris
+  // (lot K2 : l'étoile « à voir en classe » lue par etoileDe, suiteCalcul).
+  assert.match(prof, /if \(e\.etat === "classe"\) \{\s*if \(e\.arrets >= 3\) \{/);
+  assert.match(prof, /`J’apprends arrêté 3 fois : à voir en classe · /);
 });

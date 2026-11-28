@@ -78,7 +78,7 @@ function constante(nom, source = script) {
 // ------------------------------------------------------------ la page, rejouée
 
 const SOURCES = ["jourPlus", "lundiDuJour", "joursEntre", "pluriel", "moteurSuivi", "suiviApp", "eleveDe", "elevesDeLaVue",
-  "bilanEleve", "coupureDe", "jourCourtChiffres", "aiderDe", "feliciterDe", "texteLigne", "joursDeLaFiche", "seancesDeLAppli", "etatModulePalier",
+  "bilanEleve", "coupureDe", "jourCourtChiffres", "aiderDe", "feliciterDe", "texteLigne", "joursDeLaFiche", "seancesDeLAppli",
   "nomDeLAppli", "nomCompetenceCalcul", "nomModuleCalcul"].map(n => fonction(n)).join("\n");
 const CONSTANTES = ["APPLIS", "RANGS_AIDER", "JOURS_ABSENT", "memoSuivi"].map(n => constante(n)).join("\n");
 
@@ -86,7 +86,7 @@ const CONSTANTES = ["APPLIS", "RANGS_AIDER", "JOURS_ABSENT", "memoSuivi"].map(n 
 function pageRejouee(listes, aujourdhui) {
   return new Function("PARCOURS", "CALCUL", "CALCUL_CORE", "SPLAT", "COFFRES", "ANZAN", "tableaux", "AUJ",
     `let eleves = [];\n${CONSTANTES}\n${SOURCES}\nfunction applisDeLaVue() { return APPLIS.map(a => a.cle).filter(cle => tableaux[cle]); }\nfunction applisDuBilan() { return APPLIS.map(a => a.cle); }\nfunction aujourdhuiSuivi() { return AUJ; }\n`
-    + "return {bilanEleve, texteLigne, joursDeLaFiche, seancesDeLAppli, etatModulePalier, suiviApp};")(
+    + "return {bilanEleve, texteLigne, joursDeLaFiche, seancesDeLAppli, suiviApp};")(
     T, D, DCORE, S, C, A, listes, aujourdhui);
 }
 
@@ -201,7 +201,8 @@ test("à aider : bloqué (Défi tables, 8 séances ou plus ; Défi calcul, mise 
   assert.match(cartes, /const raisons = b\.aider\.filter\(raison => raison\.genre !== "revoir"\);/);
   assert.doesNotMatch(fonction("contenuEnsemble"), /genre !== "revoir"/, "la fiche montre tout");
   assert.match(fonction("aiderDe"), /ajouter\("revoir", cle,/);
-  assert.match(fonction("aiderDe"), /ajouter\("bloque", cle, `\$\{nom\}\$\{plus\} mise/, "une mise de côté : bloqué");
+  // (Lot K2 : les mots des étoiles.)
+  assert.match(fonction("aiderDe"), /ajouter\("bloque", cle, `\$\{nom\}\$\{plus\} à voir en classe`/, "à voir en classe : bloqué");
   // 6 lignes au plus, les absents d'abord.
   assert.match(constante("LIGNES_CARTE"), /= 6;/);
   assert.match(constante("RANGS_AIDER"), /\{absent: 0, bloque: 1, revoir: 2, aide: 3\}/);
@@ -239,7 +240,7 @@ test("« Ce qu'il a fait » : une phrase par appli, des nombres seulement (null 
   assert.deepEqual(p.texteLigne("defi-tables", {table: 4, etapes: 4, calculs: 10, justes: 9, test: 1}), ["table de 4 · 4\u00a0étapes · test réussi ✓", "calculs du jour 9/10", false]); // « 4 étapes » : lot « le jour vert »
   assert.deepEqual(p.texteLigne("defi-tables", {table: 0, etapes: 1, calculs: 3, justes: 1, test: 0}), ["révisions · 1\u00a0étape", "calculs du jour 1/3", true]);
   assert.deepEqual(p.texteLigne("defi-tables", {table: null, etapes: null, calculs: null, justes: null, test: null}), ["une séance", "", false], "une séance d'avant le lot S1");
-  assert.deepEqual(p.texteLigne("defi-calcul", {calculs: 6, justes: 5, nouveautes: 1, prouvees: 0, rouges: 1}), ["1 nouveauté réussie", "calculs du jour 5/6", false]);
+  assert.deepEqual(p.texteLigne("defi-calcul", {calculs: 6, justes: 5, nouveautes: 1, prouvees: 0, rouges: 1}), ["1 étoile gagnée par J’apprends", "calculs du jour 5/6", false]);
   assert.deepEqual(p.texteLigne("defi-calcul", {calculs: 3, justes: 2, nouveautes: 0, prouvees: 0, rouges: 0}), ["révisions seulement", "calculs du jour 2/3", false]);
   assert.deepEqual(p.texteLigne("flash-anzan", {mode: "flash", calculs: 10, justes: 8, prevus: 10, grade: 0}), ["Flash", "8/10 justes", false]);
   assert.deepEqual(p.texteLigne("flash-anzan", {mode: "colonne", calculs: 2, justes: 1, prevus: 10, grade: 0}), ["Colonne", "1/2 juste", false]);
@@ -259,15 +260,11 @@ test("« Voir les jours précédents » : 4 semaines par 4 semaines, du plus ré
   assert.equal(p.joursDeLaFiche(1, JEUDI, tout.jours.length).encore, false, "juste assez : pas de bouton");
 });
 
-test("Où en est la classe : l'état d'un module pour un palier — à revoir, su, en route, pas commencé", () => {
-  const p = pageRejouee({}, JEUDI);
-  const lu2 = etats => ({commence: true, modules: [{id: "M", paliers: [1, 1, 2], etats}]});
-  assert.equal(p.etatModulePalier(lu2(["su", "su", "gris"]), "M", 1), "su");
-  assert.equal(p.etatModulePalier(lu2(["su", "route", "gris"]), "M", 1), "route");
-  assert.equal(p.etatModulePalier(lu2(["su", "classe", "gris"]), "M", 1), "revoir");
-  assert.equal(p.etatModulePalier(lu2(["su", "su", "gris"]), "M", 2), "gris", "le palier 2 n'est pas commencé");
-  assert.equal(p.etatModulePalier({commence: false}, "M", 1), "gris");
-  assert.equal(p.etatModulePalier(lu2(["su", "su", "su"]), "AUTRE", 1), "gris");
+test("Où en est chacun (lot K2) : la grille remplace les barres par module — plus d'état de module par palier", () => {
+  // (Lot K2 « le professeur », 28/11/2026 : une case par étoile, l'état
+  // rendu par le moteur ; suivi-prof-defi-calcul.test.mjs les éprouve.)
+  assert.ok(!script.includes("function etatModulePalier("));
+  assert.match(fonction("dessinerOuEnEst"), /const etat = etoileDe\(eleve\.lu, x\.cle\)\.etat;/);
 });
 
 // ------------------------------------------------------------ la page : ce qui se voit
@@ -299,13 +296,17 @@ test("Défi calcul : le bouton « mode professeur », en haut de son onglet, à 
   assert.ok(qui.includes('id="dc-mode-prof"'), "sur la ligne « qui voit », avant « Régler »");
   assert.match(fonction("poserQuiVoit"), /\$\("dc-mode-prof"\)\.hidden = cle !== "defi-calcul";/);
   assert.match(style, /\.qui-voit a\.bouton \.mot \{ display: none; \}/, "au téléphone, le dessin seul, comme « Régler »");
-  assert.match(page, /<details class="carte dc-ouest" id="dc-ouest" hidden>\s*<summary class="dc-tete">/, "repliable : repliée au téléphone au départ");
-  assert.match(fonction("dessinerOuEnEst"), /bloc\.open = !\(window\.matchMedia && window\.matchMedia\("\(max-width: 700px\)"\)\.matches\);/);
+  // (Lot K2 : la grille est la vue principale — ouverte au départ, au
+  // téléphone aussi, planche K2-4 ; elle reste repliable.)
+  assert.match(page, /<details class="carte dc-ouest" id="dc-ouest" hidden>\s*<summary class="dc-tete">/, "repliable");
+  assert.match(fonction("dessinerOuEnEst"), /if \(!bloc\.dataset\.pose\) \{ bloc\.open = true; bloc\.dataset\.pose = "1"; \}/);
   assert.match(page, /<div class="carte dc-qui" id="dc-qui" hidden>/);
   assert.match(fonction("dessinerTableauCalcul"), /dessinerOuEnEst\(\);\s*dessinerQuiSentraine\(\);/);
   assert.match(fonction("dessinerQuiSentraine"), /if \(aujourdhui !== lundi\) \{/, "le lundi, pas de « pas venus cette semaine »");
-  assert.match(fonction("dessinerTableauCalcul"), /else if \(seances\.quatreSemaines && aujourdhuiSuivi\(\) !== lundiDuJour\(aujourdhuiSuivi\(\)\)\) \{/, "le lundi, pas de « rien cette semaine » en rouge");
-  assert.match(style, /\.dc-ouest-pop \{ position: absolute;/, "la liste d'une barre s'ouvre PAR-DESSUS : rien ne descend");
+  assert.match(fonction("dessinerTableauCalcul"), /else if \(seances\.quatreSemaines && aujourdhuiSuivi\(\) !== lundiDuJour\(aujourdhuiSuivi\(\)\)\)/, "le lundi, pas de « rien cette semaine » en rouge");
+  // (Lot K2 : le détail d'une case s'ouvre PAR-DESSUS, comme « 5 élèves » : rien ne descend.)
+  assert.match(style, /\.pop-eleves \{ position: absolute;/);
+  assert.match(fonction("dessinerOuEnEst"), /ouvrirPopEleves\(c, detailCase\(eleve, x\)\)/);
   assert.doesNotMatch(fonction("contenuCalcul"), /Sa semaine|dc-comp \$\{etat\}/, "plus de 95 étiquettes ni de « Sa semaine » (la Vue d'ensemble l'a)");
 });
 
@@ -330,10 +331,11 @@ test("rien d'un élève ne devient du HTML : textContent partout ; le seul inner
   assert.doesNotMatch(blocS2, /\.code\b|celluleCode/);
   // Les prénoms partent avec la classe et à la déconnexion.
   const zones = constante("ZONES_TEXTE");
-  for (const id of ["lc-aider-liste", "lc-aider-plus", "lc-feliciter-liste", "lc-feliciter-plus", "lc-corps", "fe-onglets", "dc-ouest-pop", "dc-qui-texte"]) {
+  for (const id of ["lc-aider-liste", "lc-aider-plus", "lc-feliciter-liste", "lc-feliciter-plus", "lc-corps", "fe-onglets", "dc-grille", "dc-qui-texte", "dc-aider-liste", "dc-reprendre-corps"]) {
     assert.ok(zones.includes(`"${id}"`), id);
   }
-  assert.match(constante("BLOCS_A_CACHER"), /"vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop"/);
+  // (Lot K2 : « À aider » porte des prénoms ; plus de liste de barre.)
+  assert.match(constante("BLOCS_A_CACHER"), /"vue-classe", "dc-ouest", "dc-qui", "dc-aider"/);
   // Rien de nouveau demandé au serveur : seulement « tableau ».
   assert.deepEqual([...new Set([...blocS2.matchAll(/api\("([\w.]+)"/g)].map(m => m[1]))], ["tableau"]);
 });

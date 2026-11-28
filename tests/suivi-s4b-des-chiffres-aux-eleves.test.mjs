@@ -182,17 +182,17 @@ test("1 — Défi tables, « Les calculs qui coincent » : « 5 élèves » donn
   assert.deepEqual(ouvertures, [["Zoé", undefined]]);
 });
 
-test("1 — Défi calcul : « 2 élèves » de « À reprendre en classe » donne les prénoms par état ; les barres de « Où en est la classe » ont des prénoms qui ouvrent la fiche", () => {
-  const reprendre = fonction("reprendreEnClasse");
-  assert.match(reprendre, /entree\.qui\.push\(\{eleve, c\}\);/);
+test("1 — Défi calcul (lot K2) : « 18 élèves sur 24 » de « À reprendre en classe » donne les prénoms (par état pour une étoile qui résiste), avec « Copier la liste » ; une case de la grille donne son détail ; les prénoms ouvrent la fiche", () => {
   const dessin = fonction("dessinerReprendre");
-  assert.match(dessin, /nombre\.append\(boutonNombre\(`\$\{c\.eleves\} élève\$\{c\.eleves > 1 \? "s" : ""\}`, pop => \{/);
-  assert.match(dessin, /\[\["À voir en classe", q => q\.c\.etat === "classe"\], \["Mise de côté", q => q\.c\.etat !== "classe" && q\.c\.deCote\],\s*\["À revoir", q => q\.c\.etat !== "classe" && !q\.c\.deCote\]\]/,
-    "chaque élève dans un seul groupe");
-  assert.match(dessin, /const qui = ordreDeLaFeuille\(c\.qui\.filter\(garde\)\.map\(q => q\.eleve\)\);\s*if \(!qui\.length\) return;/);
-  assert.match(fonction("ouvrirPopOuEnEst"), /groupes\[etat\]\.forEach\(\(e, i\) => \{ if \(i\) p\.append\(document\.createTextNode\(", "\)\); p\.append\(lienFiche\(e\)\); \}\);/);
-  assert.match(fonction("ouvrirPopOuEnEst"), /fermerPopEleves\(\);/, "une seule liste à la fois");
-  assert.match(fonction("ouvrirPopEleves"), /fermerPopOuEnEst\(\);/);
+  assert.match(dessin, /boutonNombre\(`\$\{o\.eleves\.length\} élèves sur \$\{sur\}`, popPrenoms\(/);
+  assert.match(dessin, /boutonNombre\(`\$\{r\.qui\.length\} élèves sur \$\{sur\}`, popPrenoms\(nom, groupes\)\)/);
+  assert.match(dessin, /const liste = r\.qui\.filter\(eleve => etoileDe\(eleve\.lu, r\.etoile\.cle\)\.etat === etat\);/, "chaque élève dans un seul groupe : son état");
+  const pop = fonction("popPrenoms");
+  assert.match(pop, /const qui = ordreDeLaFeuille\(liste\);\s*if \(!qui\.length\) return;\s*const p = prenomsEnLiens\(qui\);/);
+  assert.match(pop, /pied\.append\(boutonCopier\(\(\) => tous\.map\(eleve => nomAffiche\(eleve\) \|\| "sans prénom"\)\.join\("\\n"\)\)\);/);
+  assert.match(fonction("dessinerOuEnEst"), /c\.addEventListener\("click", evenement => \{ evenement\.stopPropagation\(\); ouvrirPopEleves\(c, detailCase\(eleve, x\)\); \}\);/);
+  assert.match(fonction("detailCase"), /p\.append\(lienFiche\(eleve\), /);
+  assert.doesNotMatch(fonction("ouvrirPopEleves"), /fermerPopOuEnEst/, "une seule liste : celle des prénoms");
 });
 
 test("1 — fermer la fiche revient au même endroit : un clic DANS la fiche ne ferme pas la liste (le chemin du clic, même redessiné) ; Échap ferme d'abord la fiche", () => {
@@ -200,11 +200,10 @@ test("1 — fermer la fiche revient au même endroit : un clic DANS la fiche ne 
   assert.ok(debut > 0);
   const ecoute = script.slice(debut, script.indexOf("$(\"onglet-reglages\").addEventListener", debut));
   assert.match(ecoute, /const chemin = typeof evenement\.composedPath === "function" \? evenement\.composedPath\(\) : \[evenement\.target\];/);
-  assert.match(ecoute, /if \(!dans\("#dc-ouest-pop, \.dc-ouest-barre, dialog"\)\) fermerPopOuEnEst\(\);/);
   assert.match(ecoute, /if \(!dans\("#pop-eleves, dialog"\)\) fermerPopEleves\(\);/);
   // Lot S4c : les étapes de SPLAT! ont la même bulle.
   assert.match(ecoute, /if \(!dans\("\.dc-case, \.detail-monde \.et"\)\) cacherBulleCase\(\);/);
-  assert.match(ecoute, /cacherBulleCase\(\);\s*if \(document\.querySelector\("dialog\[open\]"\)\) return;\s*fermerPopOuEnEst\(\);\s*fermerPopEleves\(\);/);
+  assert.match(ecoute, /cacherBulleCase\(\);\s*if \(document\.querySelector\("dialog\[open\]"\)\) return;\s*fermerPopEleves\(\);/);
   assert.doesNotMatch(fonction("surFermetureFenetre"), /scroll|redessin|fermerPop/, "fermer la fiche ne touche ni à la page ni à la liste");
   // Une autre largeur (le téléphone tourné) ferme la liste ; la barre d'adresse qui se cache, non.
   assert.match(script, /if \(window\.innerWidth === largeurPop\) return;\s*largeurPop = window\.innerWidth;\s*fermerPopEleves\(\);/);
@@ -212,8 +211,8 @@ test("1 — fermer la fiche revient au même endroit : un clic DANS la fiche ne 
 });
 
 test("1 et 3 — la liste des prénoms est vidée et cachée à la déconnexion ; tout passe par textContent", () => {
-  assert.match(script, /"dc-qui-texte",\s*\/\/[^\n]*\n\s*"splat-mondes-liste", "splat-mondes-vues",\s*\/\/[^\n]*\n\s*"pop-eleves"\];/);
-  assert.match(script, /"vue-classe", "dc-ouest", "dc-qui", "dc-ouest-pop", "pop-eleves",/);
+  assert.match(script, /"dc-qui-texte", "dc-qui-peu",\s*\/\/[^\n]*\n\s*"splat-mondes-liste", "splat-mondes-vues",\s*\/\/[^\n]*\n\s*"pop-eleves"\];/);
+  assert.match(script, /"vue-classe", "dc-ouest", "dc-qui", "dc-aider", "pop-eleves",/);
   assert.match(page, /<div class="pop-eleves" id="pop-eleves" hidden><\/div>\s*<dialog id="fenetre-eleve"/);
   for (const nom of ["ouvrirPopEleves", "fermerPopEleves", "boutonNombre", "lienFiche", "prenomsEnLiens", "dessinerFragiles", "dessinerReprendre", "dessinerCartesClasse", "montrerBulleCase", "choisirJourFiche"]) {
     assert.doesNotMatch(fonction(nom), /innerHTML|insertAdjacentHTML/, `${nom} : textContent seulement`);
@@ -255,13 +254,14 @@ test("3 — « Et 12 autres » : un nombre à toucher ; la liste complète des a
 // ------------------------------------------------------------ 2. la case d'une compétence
 
 test("2 — Défi calcul, la fiche : chaque case est un bouton ; la toucher (ou la survoler) montre le nom de la compétence dans une bulle au-dessus de la ligne", () => {
-  const cases = fonction("competencesEnCases");
-  assert.match(cases, /const c = el\("button", `dc-case \$\{etat\}`\);\s*c\.type = "button";/);
-  assert.match(cases, /c\.setAttribute\("aria-label", nom\);/);
-  assert.doesNotMatch(cases, /c\.title = nom|"role", "img"/, "plus de bulle du navigateur en double");
-  assert.match(cases, /c\.addEventListener\("click", evenement => \{ evenement\.stopPropagation\(\); montrerBulleCase\(c, nom, true\); \}\);/);
-  assert.match(cases, /c\.addEventListener\("mouseenter", \(\) => montrerBulleCase\(c, nom, false\)\);/);
-  assert.match(cases, /legende\.append\(el\("span", "", "· toucher une case : le nom de la compétence"\)\);/);
+  // (Lot K2 : « Ses étoiles », etoilesEnCases, aux états et aux mots de la grille.)
+  const cases = fonction("etoilesEnCases");
+  assert.match(cases, /const c2 = el\("button", `dc-case dc-g-case \$\{etat\}`, etat === "classe" \? "\?" : ""\);\s*c2\.type = "button";/);
+  assert.match(cases, /c2\.setAttribute\("aria-label", nom\);/);
+  assert.doesNotMatch(cases, /c2\.title = nom|"role", "img"/, "plus de bulle du navigateur en double");
+  assert.match(cases, /c2\.addEventListener\("click", evenement => \{ evenement\.stopPropagation\(\); montrerBulleCase\(c2, nom, true\); \}\);/);
+  assert.match(cases, /c2\.addEventListener\("mouseenter", \(\) => montrerBulleCase\(c2, nom, false\)\);/);
+  assert.match(cases, /legende\.append\(el\("span", "", "· toucher une case : le nom de l’étoile"\)\);/);
   assert.doesNotMatch(cases, /Survoler une case/);
   // La bulle elle-même.
   const r = documentFactice([]);
@@ -317,6 +317,6 @@ test("5 — Défi tables : « Séances · 4 semaines » et « … séances » (L
 });
 
 test("rien de genré dans les nouveaux textes", () => {
-  const nouveaux = ["dessinerFragiles", "dessinerReprendre", "dessinerCartesClasse", "competencesEnCases", "choisirJourFiche"].map(fonction).join("\n").replace(/^\s*\/\/.*$/gm, "");
+  const nouveaux = ["dessinerFragiles", "dessinerReprendre", "dessinerCartesClasse", "etoilesEnCases", "dessinerAider", "dessinerOuEnEst", "detailCase", "suiteCalcul", "choisirJourFiche"].map(fonction).join("\n").replace(/^\s*\/\/.*$/gm, "");
   assert.doesNotMatch(nouveaux, /\bil a\b|\bavec lui\b|\bvenus?\b|\bqu’il\b|\bqu'il\b/);
 });

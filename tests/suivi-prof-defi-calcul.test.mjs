@@ -18,6 +18,13 @@ import {createRequire} from "node:module";
 // sa semaine ; deux feuilles en noir et blanc ; la tuile de Mon espace : une
 // jauge et « N compétences sues sur 129 », rien tant qu'aucune n'est sue.
 //
+// Lot K2 « le professeur » (28/11/2026, planches K2-3, K2-4, K2-6) : l'onglet
+// est refait sur les étoiles — « À aider » (avec les prénoms : chaque élève
+// une fois, pour sa raison la plus forte), « À reprendre en classe » (les
+// erreurs les plus fréquentes, ce que l'appli dit à l'élève ; les étoiles qui
+// résistent), « Où en est chacun » (la grille), le tableau (« Étoiles », « À
+// surveiller »), la fiche et ses feuilles dans les mots de la grille.
+//
 // Ces tests EXÉCUTENT les fonctions pures de la page avec les VRAIS moteurs
 // servis par le serveur (prof/defi_calcul_core.js, prof/defi_calcul_mon_parcours.js).
 
@@ -89,25 +96,47 @@ function noeud(tag) {
 }
 const document = {createElement: noeud, createTextNode: t => ({tag: "#texte", _texte: String(t), enfants: [], get textContent() { return this._texte; }})};
 const fabrique = new Function("CALCUL_CORE", "CALCUL", "document", "eleves", `
-  ${constante("ETATS_CALCUL", sectionCalcul)}
-  ${constante("SYMBOLES_CALCUL", sectionCalcul)}
   ${constante("APPLI_CALCUL", sectionCalcul)}
+  ${constante("ETATS_GRILLE", sectionCalcul)}
+  ${constante("MOTS_GRILLE", sectionCalcul)}
+  ${constante("SIGNES_GRILLE", sectionCalcul)}
+  ${constante("gagneeGrille", sectionCalcul)}
+  ${constante("CLASSES_ETAGES", sectionCalcul)}
+  ${constante("AIDER", sectionCalcul)}
+  ${constante("RESISTE", sectionCalcul)}
+  ${constante("ETOILE_VIDE", sectionCalcul)}
+  ${constante("majuscule", sectionCalcul)}
+  ${constante("etoilesDuPlan", sectionCalcul)}
+  ${constante("etoileDe", sectionCalcul)}
   const exemplesCalcul = new Map();
+  const grillesLues = new WeakMap();
+  let planGrilleCalcul = null;
+  const ordreDeLaFeuille = liste => liste;
+  const elevesDeLOnglet = () => eleves;
   ${fonction("nomCompetenceCalcul", sectionCalcul)}
   ${fonction("nomModuleCalcul", sectionCalcul)}
   ${fonction("nomPalierCalcul", sectionCalcul)}
   ${fonction("nomCauseCalcul", sectionCalcul)}
   ${fonction("exempleErreur", sectionCalcul)}
+  ${fonction("retourDeLErreur", sectionCalcul)}
   ${fonction("candidatsErreur", sectionCalcul)}
   ${fonction("lienOuvrirEnClasse", sectionCalcul)}
-  ${fonction("causePrincipale", sectionCalcul)}
-  ${fonction("ligneCause", sectionCalcul)}
-  ${fonction("reprendreEnClasse", sectionCalcul)}
+  ${fonction("planCalcul", sectionCalcul)}
+  ${fonction("grilleDe", sectionCalcul)}
+  ${fonction("compteEtoiles", sectionCalcul)}
+  ${fonction("raisonsAider", sectionCalcul)}
+  ${fonction("texteRaison", sectionCalcul)}
+  ${fonction("aiderCalcul", sectionCalcul)}
+  ${fonction("erreursFrequentesCalcul", sectionCalcul)}
+  ${fonction("niveauAReprendre", sectionCalcul)}
+  ${fonction("etoilesQuiResistent", sectionCalcul)}
+  ${fonction("detailResiste", sectionCalcul)}
   ${fonction("suiteCalcul", sectionCalcul)}
   ${fonction("nomCourtPalier", sectionCalcul)}
   ${fonction("jourCourtCalcul", sectionCalcul)}
   return {nomCompetenceCalcul, nomModuleCalcul, nomPalierCalcul, nomCauseCalcul, exempleErreur, candidatsErreur, lienOuvrirEnClasse,
-    causePrincipale, ligneCause, reprendreEnClasse, suiteCalcul, nomCourtPalier, jourCourtCalcul, ETATS_CALCUL, SYMBOLES_CALCUL};
+    planCalcul, etoilesDuPlan, etoileDe, compteEtoiles, raisonsAider, texteRaison, aiderCalcul, erreursFrequentesCalcul, niveauAReprendre,
+    etoilesQuiResistent, detailResiste, suiteCalcul, nomCourtPalier, jourCourtCalcul, ETATS_GRILLE, MOTS_GRILLE, SIGNES_GRILLE};
 `);
 const outils = eleves => fabrique(CALCUL_CORE, CALCUL, document, eleves);
 const CARTE = CALCUL_CORE.carte();
@@ -120,10 +149,11 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   const entete = page.slice(page.indexOf('<tr id="entete-defi-calcul" hidden>'), page.indexOf("</tr>", page.indexOf('<tr id="entete-defi-calcul" hidden>')));
   assert.deepEqual([...entete.matchAll(/<th(?: class="([\w-]+)")?>(?:<button type="button" data-tri="(\w+)">)?([^<]*)/g)].map(m => `${m[3]}${m[2] ? `:${m[2]}` : ""}${m[1] ? ` (${m[1]})` : ""}`),
     // Lot 4 « les ceintures » : la colonne « Ceinture », cachée au téléphone.
-    ["Élève:prenom", "Ceinture:ceinture (large)", "Compétences sues:sues", "À revoir:revoir (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", "", " (fin)"],
-    "au téléphone : l'élève, les compétences sues, le dernier jour");
+    // Lot K2 : « Étoiles » et « À surveiller ».
+    ["Élève:prenom", "Ceinture:ceinture (large)", "Étoiles:etoiles", "À surveiller:surveiller (large)", "Séances · 4 semaines:seances (large)", "Dernière activité:date", "", " (fin)"],
+    "au téléphone : l'élève, les étoiles, le dernier jour");
   const TRIS = new Function(`${constante("TRIS")}\nreturn TRIS;`)();
-  assert.deepEqual(TRIS["defi-calcul"], ["prenom", "ceinture", "sues", "revoir", "seances", "date"]);
+  assert.deepEqual(TRIS["defi-calcul"], ["prenom", "ceinture", "etoiles", "surveiller", "seances", "date"]);
   assert.match(fonction("elevesLus"), /cle === "defi-calcul" \? lireCalcul/);
   assert.match(fonction("dessinerTableau"), /if \(appliAffichee === "defi-calcul"\) \{ dessinerTableauCalcul\(corps, ecriture, lignes\); fin\(\); return; \}/);
   assert.match(fonction("chargerMoteurDe"), /if \(cle === "defi-calcul"\) return chargerMoteurCalcul\(\);/);
@@ -151,7 +181,7 @@ test("APPLIS, l'onglet, l'en-tête, les tris, le lecteur, le chargement des deux
   assert.match(page, /\.grille-defi-calcul th\.fd-mod \{ white-space: normal; font-weight: 700; \}/);
   assert.match(page, /\.fiche-defi-calcul td\.fd-etats span \{ display: block; \}/);
   assert.doesNotMatch(page, /\.fiche-defi-calcul td\.fd-etats \{ white-space: nowrap; \}/);
-  assert.match(fonction("remplirFicheCalcul"), /const ligneEtat = document\.createElement\("span"\);/);
+  assert.match(fonction("remplirFicheCalcul"), /td\.append\(el\("span", "", `\$\{SIGNES_GRILLE\[etoileDe\(lu, x\.cle\)\.etat\]\} /, "une étoile par ligne, avec son signe");
   // Relecture Codex : une liste lue sans son moteur est relue quand le moteur arrive.
   assert.match(fonction("afficherAppli"), /if \(tableaux\[cle\] && tableaux\[cle\]\.some\(eleve => eleve\.parcours && eleve\.lu && eleve\.lu\.lisible === false\)\) \{\s*tableaux\[cle\] = elevesLus\(cle, tableaux\[cle\]\);/);
   // Les deux feuilles portent le logo et la signature, une fois chacune.
@@ -260,62 +290,253 @@ test("exempleErreur : un calcul regénéré pour chacune des 199 causes des 53 m
   assert.equal(o.exempleErreur("ZZ9", 1), null);
 });
 
-test("causePrincipale et ligneCause : la cause la plus fréquente du module, sommée sur les élèves, avec son exemple", () => {
+// ------------------------------------------------------------ lot K2 « le professeur »
+//
+// Les étoiles telles que la page les lit (le moteur, resumeProf : grille,
+// tentes, arrets…), « À aider » règle par règle, « À reprendre en classe »,
+// ce que l'appli va faire d'une étoile, les mots et les signes de la grille.
+// Ces tests ont été sabotés un par un (chaque règle d'« À aider » cassée à
+// son tour dans la page : un test tombe à chaque fois).
+
+const J = "2026-06-01";
+const plus = n => CALCUL.ajouterJours(J, n);
+const de = cle => { const [module, niveau] = cle.split("-"); return {module, niveau: Number(niveau)}; };
+const o6 = jour => ({aujourdhui: jour, carte: CARTE, seance: false, source: 7});
+const justes = () => Array.from({length: 6}, () => ({juste: true, ms: 1500}));
+const rates = () => [{juste: false, ms: 1500}, {juste: false, ms: 1500}];
+const arretee = () => Array.from({length: 25}, (_, i) => ({juste: i % 3 !== 0, outil: "aucun"}));
+const exigerK2 = (r, quoi) => { assert.equal(r.refuse, undefined, `${quoi} : ${r.refuse}`); return r.parcours; };
+const tenter = (p, cle, jour) => exigerK2(CALCUL.appliquerTentative(p, Object.assign(de(cle), {reponses: justes()}), o6(jour)), `Je tente ${cle}`);
+const rater = (p, cle, jour) => exigerK2(CALCUL.appliquerTentative(p, Object.assign(de(cle), {reponses: rates()}), o6(jour)), `Je tente raté ${cle}`);
+const arreter = (p, cle, jour) => exigerK2(CALCUL.appliquerSerie(p, Object.assign(de(cle), {genre: "apprends", reponses: arretee()}), o6(jour)), `J'apprends arrêté ${cle}`);
+const retour = (p, cle, jour, juste) => exigerK2(CALCUL.appliquerRetour(p, Object.assign(de(cle), {juste, ms: 1500, type: "P"}), {aujourdhui: jour, carte: CARTE}), `retour ${cle}`);
+const rateRetour = (p, cle, jour) => retour(retour(p, cle, jour, false), cle, jour, false);
+const luDe = (p, jour = plus(10)) => CALCUL.resumeProf(p, CARTE, jour);
+// Un élève « fabriqué » (la forme que rend resumeProf) : `etoiles`, une table
+// « A2-1 » → {etat, tentes, arrets, perdues} ; `recentes`, ses dernières
+// séances ; `causes`.
+function faux({etoiles = {}, recentes = [], causes = []} = {}) {
+  const modules = new Map();
+  Object.entries(etoiles).forEach(([cle, e]) => {
+    const {module, niveau} = de(cle);
+    const m = modules.get(module) || {id: module, grille: [], tentes: [], arrets: [], perdues: [], tenteLe: [], echeances: [], entrees: []};
+    for (let i = m.grille.length; i < niveau; i += 1) { m.grille[i] = "vide"; m.tentes[i] = 0; m.arrets[i] = 0; m.perdues[i] = 0; m.tenteLe[i] = null; m.echeances[i] = null; m.entrees[i] = null; }
+    Object.assign(m, {});
+    m.grille[niveau - 1] = e.etat;
+    m.tentes[niveau - 1] = e.tentes || 0;
+    m.arrets[niveau - 1] = e.arrets || 0;
+    m.perdues[niveau - 1] = e.perdues || 0;
+    m.echeances[niveau - 1] = e.echeance || null;
+    modules.set(module, m);
+  });
+  return {lisible: true, commence: true, modules: [...modules.values()], recentes, causes, seances: {semaine: 1, quatreSemaines: 1}};
+}
+const seance = (calculs, justesN, nouveautes = 0, prouvees = 0) => ({jour: J, calculs, justes: justesN, nouveautes, prouvees, rouges: 0});
+
+test("lot K2 — le plan de la carte : six étages, 151 étoiles, chacune avec son étage et sa ligne", () => {
   const o = outils([]);
-  const lea = CALCUL.resumeProf({version: CALCUL.VERSION, modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"1": 4, "3": 1}}}}, CARTE, JOUR);
-  const tom = CALCUL.resumeProf({version: CALCUL.VERSION, modules: {A5: {b: [1, 0, 0, 0], e: [JOUR, null, null, null], c: {"3": 5}}}}, CARTE, JOUR);
-  assert.deepEqual(o.causePrincipale([lea], "A5"), {cause: 1, n: 4});
-  assert.deepEqual(o.causePrincipale([lea, tom], "A5"), {cause: 3, n: 6}, "la somme sur les deux");
-  assert.equal(o.causePrincipale([lea], "M2"), null);
-  const ligne = o.ligneCause([lea], "A5", 1);
-  assert.match(ligne.textContent, /^ex\. .+ → .+ · retour oublié$/);
-  assert.doesNotMatch(ligne.textContent, /□/, "la case s'écrit « ? »");
-  assert.equal(o.ligneCause([lea], "M2", 1), null, "sans cause connue : rien");
+  const plan = o.planCalcul();
+  assert.deepEqual(plan.map(e => e.etage), [1, 2, 3, 4, 5, 6]);
+  const etoiles = o.etoilesDuPlan();
+  assert.equal(etoiles.length, plan.reduce((s, e) => s + e.total, 0));
+  assert.equal(etoiles.length, CALCUL.carteEleve(CALCUL.creerParcours(), CARTE, {aujourdhui: JOUR}).total);
+  assert.deepEqual(etoiles[0], {cle: "A1-1", module: "A1", niveau: 1, etage: 1, ligne: "Jusqu’à 20"});
+  assert.equal(new Set(etoiles.map(x => x.cle)).size, etoiles.length, "chaque étoile une fois");
 });
 
-test("reprendreEnClasse : au moins 2 élèves, ou 1 mis de côté ; les plus partagées d'abord ; 6 au plus", () => {
-  // (Lot K1 « la carte chez l'élève » : « à revoir », c'est une étoile perdue
-  // — gagnée un jour, sortie des boîtes ; « à voir en classe », perdue 3 fois.)
-  const parcours = (b, pe = [0, 0, 0, 0]) => ({version: CALCUL.VERSION, modules: {A2: {b, e: [JOUR, JOUR, JOUR, JOUR], pe,
-    d: ["2026-10-01", "2026-10-01", "2026-10-01", null], c: {"2": 1}}}});
-  const eleve = (id, p) => ({id, lu: CALCUL.resumeProf(p, CARTE, JOUR)});
-  // A2-3 perdue chez 3 élèves, A2-1 perdue chez 1, A2-2 à voir en classe chez 1.
+test("lot K2 — etoileDe et compteEtoiles : l'état de la grille rendu par le moteur ; « gagnées » = a réussi un retour, gagnée, ratée au dernier retour", () => {
+  const o = outils([]);
+  let p = tenter(CALCUL.creerParcours(), "A1-1", J);
+  p = retour(p, "A1-1", plus(7), true);
+  p = tenter(p, "A1-2", plus(7));
+  p = tenter(p, "A1-3", plus(7));
+  p = rateRetour(p, "A1-3", plus(14));
+  p = rater(p, "A10-1", plus(14));
+  const lu = luDe(p, plus(14));
+  assert.deepEqual(["A1-1", "A1-2", "A1-3", "A10-1", "A10-2"].map(cle => o.etoileDe(lu, cle).etat), ["tenu", "gagnee", "rate", "essai", "vide"]);
+  const c = o.compteEtoiles(lu);
+  assert.deepEqual([c.gagnees, c.tenues, c.total], [3, 1, o.etoilesDuPlan().length]);
+  assert.deepEqual(c.etages[0], {etage: 1, total: 14, gagnees: 3, touchees: 4});
+  assert.equal(o.etoileDe({lisible: false, commence: true, modules: []}, "A1-1").etat, "vide", "illisible : tout est vide");
+});
+
+test("lot K2 — « À aider », règle 1 : à voir en classe (J'apprends arrêté 3 fois, ou perdue 3 fois)", () => {
+  const o = outils([]);
+  let p = CALCUL.creerParcours();
+  p = arreter(p, "A1-1", J); p = arreter(p, "A1-1", plus(1)); p = arreter(p, "A1-1", plus(2));
+  const r = o.raisonsAider(luDe(p, plus(2)));
+  assert.deepEqual([r[0].rang, r[0].texte, r[0].etoile.cle], [1, "J’apprends arrêté 3 fois", "A1-1"]);
+  assert.equal(o.texteRaison(r[0]), `J’apprends arrêté 3 fois : ${o.nomCompetenceCalcul("A1", 1).replace(/^./, c => c.toUpperCase())}`);
+  const perdue = o.raisonsAider(faux({etoiles: {"A2-1": {etat: "classe", perdues: 3}}}));
+  assert.deepEqual([perdue[0].rang, perdue[0].texte], [1, "perdue 3 fois"]);
+});
+
+test("lot K2 — « À aider », règle 2 : « Je tente » raté 2 fois sur une étoile pas gagnée (une fois ne suffit pas)", () => {
+  const o = outils([]);
+  let p = rater(CALCUL.creerParcours(), "A1-1", J);
+  assert.deepEqual(o.raisonsAider(luDe(p, J)), [], "un seul raté : rien");
+  p = rater(p, "A1-1", plus(1));
+  const r = o.raisonsAider(luDe(p, plus(1)));
+  assert.deepEqual([r.length, r[0].rang, r[0].texte], [1, 2, "« Je tente » raté 2 fois"]);
+});
+
+test("lot K2 — « À aider », règle 3 : perdue au retour (deux retours ratés de suite) ; un seul retour raté n'y est pas", () => {
+  const o = outils([]);
+  let p = tenter(CALCUL.creerParcours(), "A1-1", J);
+  p = rateRetour(p, "A1-1", plus(7));
+  assert.deepEqual(o.raisonsAider(luDe(p, plus(7))), [], "ratée une fois : elle reste, rien à signaler");
+  p = rateRetour(p, "A1-1", plus(8));
+  const r = o.raisonsAider(luDe(p, plus(8)));
+  assert.deepEqual([r.length, r[0].rang, r[0].texte], [1, 3, "perdue au retour"]);
+});
+
+test("lot K2 — « À aider », règle 4 : J'apprends arrêté 2 fois (une fois ne suffit pas)", () => {
+  const o = outils([]);
+  let p = arreter(CALCUL.creerParcours(), "A1-1", J);
+  assert.deepEqual(o.raisonsAider(luDe(p, J)), []);
+  p = arreter(p, "A1-1", plus(1));
+  const r = o.raisonsAider(luDe(p, plus(1)));
+  assert.deepEqual([r.length, r[0].rang, r[0].texte], [1, 4, "J’apprends arrêté 2 fois"]);
+});
+
+test("lot K2 — « À aider », règle 5 : rien gagné depuis 5 séances, s'il reste quelque chose à gagner", () => {
+  const o = outils([]);
+  const rien = Array.from({length: 5}, () => seance(10, 9));
+  assert.deepEqual(o.raisonsAider(faux({recentes: rien})).map(r => [r.rang, r.texte]), [[5, "rien gagné depuis 5 séances"]]);
+  assert.deepEqual(o.raisonsAider(faux({recentes: rien.slice(1)})), [], "4 séances : rien");
+  assert.deepEqual(o.raisonsAider(faux({recentes: [...rien.slice(1), seance(10, 9, 1, 0)]})), [], "une étoile gagnée par J'apprends : rien");
+  assert.deepEqual(o.raisonsAider(faux({recentes: [seance(10, 9, 0, 1), ...rien.slice(1)]})), [], "une étoile gagnée à « Je tente » dans les 5 : rien");
+  assert.deepEqual(o.raisonsAider(faux({recentes: [{...rien[0], nouveautes: null}, ...rien.slice(1)]})), [], "une séance pas connue : rien");
+  const tout = Object.fromEntries(o.etoilesDuPlan().map(x => [x.cle, {etat: "tenu"}]));
+  assert.deepEqual(o.raisonsAider(faux({etoiles: tout, recentes: rien})), [], "tout gagné : plus rien à gagner, rien à dire");
+});
+
+test("lot K2 — « À aider », règle 6 : calculs du jour, moins de 60 % de justes sur les 3 dernières séances, 8 calculs au moins", () => {
+  const o = outils([]);
+  const r = o.raisonsAider(faux({recentes: [seance(20, 20, 1), seance(10, 5, 1), seance(10, 6, 1), seance(10, 6, 1)]}));
+  assert.deepEqual(r.map(x => [x.rang, x.texte]), [[6, "calculs du jour : 17 justes sur 30 (3 dernières séances)"]]);
+  assert.deepEqual(o.raisonsAider(faux({recentes: [seance(3, 1, 1), seance(4, 1, 1)]})), [], "7 calculs : trop peu pour dire");
+  assert.deepEqual(o.raisonsAider(faux({recentes: [seance(10, 6, 1)]})), [], "60 % pile : rien");
+  assert.equal(o.raisonsAider(faux({recentes: [seance(8, 4, 1)]}))[0].rang, 6, "8 calculs, 50 % : oui");
+});
+
+test("lot K2 — « À aider » : la raison la plus forte d'abord, puis l'ordre de la carte ; une ligne par élève ; « et N autres choses »", () => {
+  const o = outils([]);
+  const lu = faux({etoiles: {"A1-1": {etat: "essai", arrets: 2}, "A1-2": {etat: "essai", tentes: 2}, "A1-3": {etat: "perdue"}, "A2-1": {etat: "essai", tentes: 2}},
+    recentes: [seance(10, 2, 1)]});
+  const r = o.raisonsAider(lu);
+  assert.deepEqual(r.map(x => [x.rang, x.etoile && x.etoile.cle]), [[2, "A1-2"], [2, "A2-1"], [3, "A1-3"], [4, "A1-1"], [6, null]]);
+  const eleves = [{id: 1, prenom: "Léa", lu}, {id: 2, prenom: "Tom", lu: faux()}, {id: 3, prenom: "Zoé", lu: {lisible: true, commence: false}}];
+  const aider = outils(eleves).aiderCalcul();
+  assert.deepEqual(aider.map(a => [a.eleve.prenom, a.raisons.length]), [["Léa", 5]], "Tom n'a rien, Zoé n'a pas commencé");
+});
+
+test("lot K2 — « À reprendre » : les erreurs les plus fréquentes chez 2 élèves ou plus, 3 au plus, un exemple et ce que l'appli dit", () => {
+  const causes = c => faux({causes: c});
   const eleves = [
-    eleve(1, parcours([0, 2, 0, 0], [1, 0, 1, 0])), eleve(2, parcours([2, 2, 0, 0], [0, 0, 1, 0])), eleve(3, parcours([2, 2, 0, 0], [0, 0, 2, 0])),
-    eleve(4, parcours([2, 0, 2, 0], [0, 3, 0, 0])), eleve(5, {}), {id: 6, lu: CALCUL.resumeProf(null, CARTE, JOUR)}
+    {id: 1, lu: causes([{module: "A5", cause: 1, n: 4}, {module: "A5", cause: 3, n: 9}, {module: "A2", cause: 2, n: 1}, {module: "M1", cause: 1, n: 1}])},
+    {id: 2, lu: causes([{module: "A5", cause: 1, n: 1}, {module: "A2", cause: 2, n: 2}, {module: "M1", cause: 1, n: 1}])},
+    {id: 3, lu: causes([{module: "A5", cause: 1, n: 1}, {module: "A2", cause: 2, n: 1}, {module: "M1", cause: 1, n: 5}, {module: "ZZ9", cause: 1, n: 7}])},
+    {id: 4, lu: causes([{module: "M1", cause: 1, n: 1}])}
   ];
-  const lignes = outils(eleves).reprendreEnClasse();
-  assert.deepEqual(lignes.map(c => [`${c.module}-${c.niveau}`, c.eleves, c.classe]), [["A2-2", 1, 1], ["A2-3", 3, 0]],
-    "la mise de côté d'abord, puis la plus partagée ; A2-1 (un seul élève, pas mis de côté) n'y entre pas");
-  assert.equal(outils([]).reprendreEnClasse().length, 0);
-  // Au-delà de six compétences partagées : six lignes.
-  const perdu = {b: [0, 0, 0, 0], e: [null, null, null, null], pe: [1, 1, 1, 1], d: ["2026-10-01", "2026-10-01", "2026-10-01", "2026-10-01"], c: {}};
-  const beaucoup = [1, 2].map(id => eleve(id, {version: CALCUL.VERSION, modules: {A2: perdu, A5: perdu}}));
-  assert.equal(outils(beaucoup).reprendreEnClasse().length, 6);
+  const o = outils(eleves);
+  const e = o.erreursFrequentesCalcul();
+  assert.deepEqual(e.map(x => [`${x.module}:${x.cause}`, x.eleves.length, x.n]), [["M1:1", 4, 8], ["A5:1", 3, 6], ["A2:2", 3, 4]],
+    "les plus partagées d'abord ; A5:3 (un seul élève) et une cause inconnue n'y sont pas ; 3 au plus");
+  const ex = o.exempleErreur("A5", 1);
+  assert.equal(typeof ex.dit, "string");
+  assert.ok(ex.dit.length > 5, `ce que l'appli dit : « ${ex.dit} »`);
+  assert.doesNotMatch(ex.dit, /\s{2}|\n/, "sur une ligne");
+  assert.equal(outils([]).erreursFrequentesCalcul().length, 0);
+  assert.deepEqual(outils(eleves.slice(0, 2)).erreursFrequentesCalcul().map(x => `${x.module}:${x.cause}`), ["A5:1", "A2:2", "M1:1"]);
+  assert.deepEqual(outils([eleves[0], {id: 9, lu: causes([{module: "A5", cause: 1, n: 1}])}]).erreursFrequentesCalcul().map(x => `${x.module}:${x.cause}`), ["A5:1"],
+    "une erreur d'un seul élève n'y est pas");
+  // « ouvrir en classe » : la première étoile du module qu'un de ces élèves n'a pas tenue.
+  const a = {id: 1, lu: faux({etoiles: {"A1-1": {etat: "tenu"}, "A1-2": {etat: "gagnee"}}})};
+  const b = {id: 2, lu: faux({etoiles: {"A1-1": {etat: "tenu"}, "A1-2": {etat: "tenu"}}})};
+  assert.equal(o.niveauAReprendre("A1", [a, b]), 2);
+  assert.equal(o.niveauAReprendre("A1", [b, {id: 3, lu: faux({etoiles: {"A1-1": {etat: "tenu"}, "A1-2": {etat: "tenu"}, "A1-3": {etat: "tenu"}}})}]), 3);
 });
 
-test("suiteCalcul : ce que l'appli va faire d'une compétence à revoir, dans les mots du professeur", () => {
+test("lot K2 — « À reprendre » : les étoiles qui résistent chez 2 élèves ou plus ; « à voir en classe » d'abord, 3 au plus ; le détail en mots", () => {
+  const eleves = [
+    {id: 1, lu: faux({etoiles: {"A1-2": {etat: "essai", tentes: 1}, "A2-1": {etat: "classe", arrets: 3}, "A1-3": {etat: "perdue"}, "M1-1": {etat: "rate"}, "A10-1": {etat: "essai", arrets: 1}}})},
+    {id: 2, lu: faux({etoiles: {"A1-2": {etat: "essai", tentes: 2}, "A2-1": {etat: "essai", tentes: 1}, "A1-3": {etat: "rate"}, "M1-1": {etat: "gagnee"}, "A10-1": {etat: "essai", arrets: 2}}})},
+    {id: 3, lu: faux({etoiles: {"A1-2": {etat: "rate"}, "A1-3": {etat: "tenu"}, "A10-1": {etat: "essai", tentes: 1}}})}
+  ];
+  const r = outils(eleves).etoilesQuiResistent();
+  assert.deepEqual(r.map(x => [x.etoile.cle, x.qui.length]), [["A2-1", 2], ["A1-2", 3], ["A10-1", 3]],
+    "à voir en classe d'abord, puis les plus partagées, puis l'ordre de la carte ; M1-1 (une seule) n'y est pas ; 3 au plus (A1-3 attend)");
+  assert.deepEqual(outils(eleves.slice(0, 1)).etoilesQuiResistent(), [], "un seul élève : rien ne résiste « chez plusieurs »");
   const o = outils([]);
-  assert.equal(o.suiteCalcul({etat: "classe", deCote: true, echeance: "2026-11-30", apprends: true}), "mise de côté jusqu’à lun. 30/11, puis J’apprends et un entraînement");
-  assert.equal(o.suiteCalcul({etat: "classe", deCote: false, echeance: JOUR, apprends: true}), "revenue après sa mise de côté : J’apprends, puis un entraînement à sa prochaine séance");
-  // Relecture Codex : ratée aujourd'hui, la séance du jour la réentraîne (le
-  // rouge d'abord) — « revient demain » seul cachait ce rattrapage.
+  assert.equal(o.detailResiste(r[1].par), "2 « Je tente » ratés · 1 ratée au retour");
+  assert.equal(o.detailResiste(r[0].par), "1 « Je tente » raté · 1 à voir en classe");
+  assert.equal(o.detailResiste(r[2].par), "1 « Je tente » raté · 2 J’apprends arrêtés");
+});
+
+test("lot K2 — suiteCalcul : ce que l'appli va faire d'une étoile, avec les règles d'aujourd'hui (P1, § 10)", () => {
+  const o = outils([]);
   const demain = CALCUL.ajouterJours(CALCUL.jourLocal(), 1);
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: false, entrainee: false}),
-    "ratée aujourd’hui · un entraînement avec l’aide dans sa séance du jour · revient demain");
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: false, entrainee: true}),
-    "ratée aujourd’hui · réentraînée avec l’aide aujourd’hui · revient demain");
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: demain, apprends: true, entrainee: true}),
-    "ratée aujourd’hui · réentraînée avec l’aide aujourd’hui · revient demain, J’apprends à refaire");
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: "2026-01-01", apprends: false}), "un entraînement avec l’aide à sa prochaine séance");
-  assert.equal(o.suiteCalcul({etat: "revoir", deCote: false, echeance: "2026-01-01", apprends: true}), "J’apprends à refaire, puis un entraînement avec l’aide à sa prochaine séance");
+  const plusTard = CALCUL.ajouterJours(CALCUL.jourLocal(), 6);
+  assert.equal(o.suiteCalcul({etat: "rate", echeance: demain}), "ratée à son dernier retour · elle reste et revient demain ; ratée encore, elle part");
+  assert.equal(o.suiteCalcul({etat: "perdue", perdues: 1}), "perdue au retour (deux retours ratés de suite) · à regagner par « Je tente » ou J’apprends");
+  assert.equal(o.suiteCalcul({etat: "perdue", perdues: 2}), "perdue au retour (deux retours ratés de suite) · à regagner par « Je tente » ou J’apprends · perdue 2 fois");
+  assert.equal(o.suiteCalcul({etat: "essai", tentes: 2}), "« Je tente » raté 2 fois · seulement J’apprends, jusqu’à ce qu’elle soit gagnée");
+  assert.equal(o.suiteCalcul({etat: "essai", tentes: 1, tenteLe: "2026-11-27"}), "« Je tente » raté le ven. 27/11");
+  assert.equal(o.suiteCalcul({etat: "essai", arrets: 2}), "J’apprends arrêté 2 fois · au 3e arrêt, elle sera à voir en classe");
+  assert.equal(o.suiteCalcul({etat: "classe", arrets: 3, echeance: plusTard}), `J’apprends arrêté 3 fois : à voir en classe · elle revient dans ses étoiles le ${o.jourCourtCalcul(plusTard)}`);
+  assert.equal(o.suiteCalcul({etat: "classe", arrets: 3, echeance: null}), "J’apprends arrêté 3 fois : à voir en classe · elle se rejoue déjà");
+  assert.equal(o.suiteCalcul({etat: "classe", arrets: 0, perdues: 3}), "perdue 3 fois : à voir en classe");
+  // Aucun des textes d'avant la carte.
+  const tout = fonction("suiteCalcul", sectionCalcul) + fonction("contenuCalcul", sectionCalcul) + fonction("remplirFicheCalcul", sectionCalcul) + fonction("seancesCalcul");
+  for (const mot of ["un entraînement avec l’aide à sa prochaine séance", "prouvée", "nouveauté", "compétences sues", "Compétences sues", "mise de côté", "J’apprends et un entraînement"]) {
+    assert.ok(!tout.includes(mot), `plus de « ${mot} »`);
+  }
 });
 
-test("les symboles de la feuille et les mots de la légende", () => {
+test("lot K2 — les sept états : leurs mots (la légende), leurs signes en noir et blanc, tous différents", () => {
   const o = outils([]);
-  assert.deepEqual(o.SYMBOLES_CALCUL, {gris: "·", route: "○", su: "✓", revoir: "↻", classe: "✖"});
-  assert.deepEqual(o.ETATS_CALCUL, {gris: "à apprendre", route: "en route", su: "sue", revoir: "à revoir", classe: "à voir en classe"});
+  assert.deepEqual(o.ETATS_GRILLE, ["tenu", "gagnee", "rate", "perdue", "essai", "classe", "vide"]);
+  assert.deepEqual(o.MOTS_GRILLE, {tenu: "a réussi un retour", gagnee: "gagnée", rate: "ratée au dernier retour", perdue: "perdue, à regagner",
+    essai: "essayée, pas encore gagnée", classe: "à voir en classe", vide: "pas encore"});
+  assert.equal(new Set(Object.values(o.SIGNES_GRILLE)).size, 7, "un signe par état");
   // La note d'impression nomme les deux boutons de Défi calcul.
   assert.match(page, /Onglet Anzan ou Défi calcul : touche la ligne d’un élève, puis/);
   assert.match(page, /Défi calcul a aussi <strong>« Imprimer la grille »<\/strong>/);
+});
+
+test("lot K2 — la page : l'ordre des cartes, sans prénom à l'écran dans « À reprendre », aucun temps, rien par innerHTML", () => {
+  // L'ordre du HTML : À aider, Notre classe, …, À reprendre ; puis la grille, Qui s'entraîne, le tableau.
+  const ordre = ["id=\"dc-aider\"", "id=\"objectif\"", "id=\"dc-reprendre\"", "id=\"dc-ouest\"", "id=\"dc-qui\"", "id=\"tableau\""].map(m => page.indexOf(m));
+  assert.ok(ordre.every((x, i) => x > 0 && (i === 0 || x > ordre[i - 1])), "l'ordre de la planche K2-3");
+  assert.match(page, /<strong>À aider<\/strong>\s*<p class="sous">Les élèves qui butent en ce moment · avec les prénoms : à ne pas projeter<\/p>/);
+  assert.match(page, /<p class="sous">Ce qui coince chez plusieurs élèves · aucun prénom à l’écran : on peut projeter<\/p>/);
+  assert.match(page, /<summary class="dc-tete"><strong>Où en est chacun<\/strong>/);
+  // Les cartes du haut : À aider à gauche, Notre classe dessous, À reprendre à droite (CSS).
+  assert.match(page, /grid-template-areas: "aider reprendre" "objectif reprendre";/);
+  // « À reprendre » n'écrit aucun prénom : seulement des nombres qui se touchent.
+  const reprendre = fonction("dessinerReprendre", sectionCalcul);
+  assert.doesNotMatch(reprendre.replace(/popPrenoms\([^)]*\)/g, ""), /nomAffiche|prenom/);
+  // Aucun temps montré (choix du 07/11, redit le 28/11).
+  assert.doesNotMatch(sectionCalcul.replace(/\/\/.*$/gm, ""), /minutes\b|secondes|\.ms\b/);
+  assert.doesNotMatch(fonction("dessinerOuEnEst") + fonction("dessinerQuiSentraine") + fonction("etoilesEnCases"), /innerHTML/);
+  // La grille : les prénoms collés à gauche, la ligne « Gagnée par ».
+  assert.match(page, /\.dc-g-nom \{ position: sticky; left: 0;/);
+  assert.match(fonction("dessinerOuEnEst"), /el\("td", "dc-g-nom dc-g-total", "Gagnée par"\)/);
+  // Plus de barres par module (lot S2) : ni leur code, ni leur fenêtre.
+  for (const mort of ["ouvrirPopOuEnEst", "fermerPopOuEnEst", "etatModulePalier", "dc-ouest-barre", "dc-ouest-pop", "dc-ouest-liste", "palierOuEnEst"]) {
+    assert.ok(!page.includes(mort), `plus de ${mort}`);
+  }
+  // Qui s'entraîne : moins de 3 séances cette semaine, pas le lundi.
+  assert.match(fonction("dessinerQuiSentraine"), /if \(aujourdhui !== lundi\) \{[\s\S]*Moins de 3 séances cette semaine : /);
+});
+
+test("lot K2 — « Recommencer Défi calcul à zéro » : la confirmation de la planche K2-6, rien d'autre que l'élève et l'appli envoyé", () => {
+  const f = fonction("recommencerCalcul");
+  assert.match(f, /`Recommencer Défi calcul à zéro pour \$\{nom \|\| "l’élève"\} \?`/);
+  assert.match(f, /detail: "Ses étoiles, sa ceinture et ses séances repartent de zéro, sur tous ses appareils\. Pendant 7\\u00a0jours, «\\u00a0Revenir à…\\u00a0» \(dans le même menu «\\u00a0⋯\\u00a0»\) permet de faire marche arrière\."/);
+  assert.match(f, /oui: `Recommencer à zéro pour \$\{nom \|\| "l’élève"\}`, danger: true/);
+  assert.ok(f.indexOf("await demander(") < f.indexOf('api("eleves.recommencer"'), "on confirme AVANT d'appeler le serveur");
+  assert.match(f, /api\("eleves\.recommencer", \{eleve_id: eleve\.id, appli: "defi-calcul"\}\)/);
+  assert.match(fonction("demander"), /if \(options && options\.detail\) \$\("boite-texte"\)\.append\(el\("span", "boite-detail", options\.detail\)\);/);
 });

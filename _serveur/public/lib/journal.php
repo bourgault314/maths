@@ -37,7 +37,7 @@ const ACTIONS_JOURNAL = [
     'connexion', 'deconnexion', 'motdepasse',
     'classes.creer', 'classes.modifier', 'classes.supprimer', 'classes.supprimer_echues',
     'classes.menage',
-    'eleves.ajouter', 'eleves.nommer', 'eleves.regenerer', 'eleves.restaurer', 'eleves.supprimer',
+    'eleves.ajouter', 'eleves.nommer', 'eleves.regenerer', 'eleves.restaurer', 'eleves.recommencer', 'eleves.supprimer',
     // Lot « Qui voit quoi » (22/10/2026) : qui a ouvert quoi en plus à quel
     // élève — la cible est l'élève, par son identifiant ; ce qui a été ouvert
     // est dans sa ligne (eleves.ajouts), pas dans le journal.
