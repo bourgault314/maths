@@ -68,7 +68,7 @@ test("le cadre : centré et à la hauteur de l'écran sur l'ordinateur ; caché 
   assert.ok(!/sur-parcours/.test(CSS), "plus aucune règle de Mon parcours");
   assert.match(CSS, /body\.accueil-en-attente \.shell \{ visibility: hidden; \}/);
   assert.match(corps(PAGE, "renderAccueil"), /document\.body\.classList\.toggle\("accueil-en-attente", suiviAttendu && !\$\("intro"\)\.hidden\);/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
 });
 
 test("la question « Effacer » s'ouvre dans la même case que « La carte » et les liens", () => {

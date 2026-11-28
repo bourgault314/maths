@@ -32,7 +32,10 @@
     Object.freeze({n: 3, nom: "Le CE2", classes: "CE2"}),
     Object.freeze({n: 4, nom: "Le CM1", classes: "CM1"}),
     Object.freeze({n: 5, nom: "Le CM2", classes: "CM2"}),
-    Object.freeze({n: 6, nom: "Vers la 6e", classes: "6e et choix pédagogiques"})
+    // Lot « la 6e complète » (27/11/2026, choix de Gwenaël du 26/11) : « La
+    // 6e », comme « Le CM1 », « Le CM2 » — l'étage a tout le programme de
+    // 6e ; les choix pédagogiques d'avant y restent, dans leur ligne.
+    Object.freeze({n: 6, nom: "La 6e", classes: "6e"})
   ]);
 
   // Les ceintures (lot 4, 14/11/2026, choix de Gwenaël) : une par palier
@@ -287,6 +290,9 @@
   // nombre lu (lireReponse) ; `ecrit` : ce que l'élève a tapé.
   function estJuste(attendu, valeur, ecrit = "") {
     if (!attendu || !memeNombre(valeur, attendu.reponse)) return false;
+    // Lot « la 6e complète » : une réponse à choisir (`choix`) n'est juste
+    // que si elle est l'une des trois valeurs proposées — la bonne.
+    if (Array.isArray(attendu.choix) && !attendu.choix.some(v => memeNombre(v, valeur))) return false;
     if (!attendu.irreductible || !String(ecrit).includes("/")) return true;
     const [num, den] = morceauxFraction(ecrit).map(Number);
     return pgcdEntiers(num, den) === 1;
@@ -1936,9 +1942,13 @@
     // depuis le lot C2 — 1,47 × 5 = 14,7 ÷ 2.)
     "F6-4", "D8-4", "D8-5", "D9-1", "C3-3", "M12-2", "D9-2", "M13-3", "A9-1", "C1-3", "F11-1", "C4-1",
     "F9-3", "C4-2", "F4-2",
-    // palier 6, vers la 6e : 12 compétences (lot 7c : F4-2 passe au CM2)
-    "D2-4", "D5-2", "M9-1", "F1-3", "D6-3", "M10-3", "A9-2", "D7-2", "M12-3",
-    "M9-2", "D7-3", "F11-2"
+    // palier 6, la 6e : 22 compétences (lot 7c : F4-2 passe au CM2 ; lot
+    // « la 6e complète », 27/11/2026 : dix étoiles neuves, rangées dans leur
+    // ligne ; les opérations alternent toujours, et « Décimal × décimal »
+    // vient après « 0,1 et 1/10 : les produits à connaître », son « d'abord »)
+    "D2-4", "D5-2", "M9-1", "F1-3", "D10-1", "D6-3", "M10-3", "D11-1", "A9-2", "D10-2",
+    "D7-2", "M12-3", "D14-1", "F11-2", "P1-1", "M9-2", "D7-3", "D12-1", "F11-3", "D16-1",
+    "P2-1", "F10-1"
   ]);
 
   // ------------------------------------------------------------ la carte et les étoiles
@@ -1998,10 +2008,16 @@
       Object.freeze(["Fraction d’une quantité", Object.freeze(["F3-3", "F4-1", "F11-1", "F4-2"])]),
       Object.freeze(["Parenthèses et trous", Object.freeze(["C1-2", "C3-3", "C1-3", "C4-1", "C4-2"])])
     ]),
+    // Lot « la 6e complète » (27/11/2026, planche 1 validée par Gwenaël le
+    // 26/11) : six lignes, 22 étoiles ; les 12 d'avant gardent leur nom et
+    // leur ordre dans leur ligne.
     6: Object.freeze([
       Object.freeze(["Décimaux\u00a0: + et −", Object.freeze(["D5-2", "D6-3", "A9-2", "D7-2", "D7-3"])]),
+      Object.freeze(["Décimaux\u00a0: × 10 et × 0,1", Object.freeze(["D2-4", "D10-1", "D10-2"])]),
+      Object.freeze(["Décimaux\u00a0: × et ÷", Object.freeze(["D11-1", "D14-1", "D12-1", "D16-1"])]),
       Object.freeze(["Je multiplie, je divise", Object.freeze(["M9-1", "M10-3", "M12-3", "M9-2"])]),
-      Object.freeze(["Décimaux et fractions", Object.freeze(["D2-4", "F1-3", "F11-2"])])
+      Object.freeze(["Fractions", Object.freeze(["F1-3", "F11-2", "F11-3", "F10-1"])]),
+      Object.freeze(["Pourcentages", Object.freeze(["P1-1", "P2-1"])])
     ])
   });
   // Les liens « d'abord » entre deux lignes d'un même étage : l'étoile →
@@ -2021,7 +2037,10 @@
     "A10-2": "A2-1", "A5-1": "A3-1",
     "A10-5": "A2-6", "A11-4": "A2-6", "A5-5": "A3-5",
     "M12-1": "M3-2", "F8-3": "F5-1", "F9-2": "F6-2",
-    "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3"
+    "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3",
+    // Lot « la 6e complète » : les produits à connaître avant le produit de
+    // deux décimaux.
+    "D12-1": "D10-2"
   });
   // La ligne de chaque étoile : {etage, ligne (son rang dans l'étage, de 0),
   // nom}.
@@ -10209,7 +10228,7 @@
   // Lot C4d (choix de Gwenaël du 25/11 au CM1, étendu au CM2 et à la 6e) :
   // « Dénominateurs multiples : au-delà de 20 », « Entier × fraction »,
   // « Fraction et quotient ».
-  const NIVEAUX_BLOCS = Object.freeze(new Set(["F5-1", "F5-2", "F8-3", "F9-2", "F9-3", "F11-1", "F11-2"]));
+  const NIVEAUX_BLOCS = Object.freeze(new Set(["F5-1", "F5-2", "F8-3", "F9-2", "F9-3", "F11-1", "F11-2", "F10-1"]));
   // Les unités pleines possibles au début d'une barre : jusqu'à la première
   // limite (parts prises, enlevées, crochets, accolade) qui tombe au milieu
   // d'une unité ; la dernière unité garde toujours ses parts.
@@ -12098,8 +12117,8 @@
   // (Lot C4c : au CM1, une unité n'est jamais coupée en plus de 12 parts —
   // au-delà, les flèches « × 2 en haut et en bas », comme les fractions
   // égales.)
-  const f9Grand = calcul => calcul.module === "F9" && (!tientSurLaBarre(f9Valeur(calcul), Math.max(...densDe(calcul.lu)))
-    || (NIVEAUX_BLOCS.has(`F9-${calcul.deNiveau || calcul.niveau}`) && Math.max(...densDe(calcul.lu)) > BLOCS_PARTS));
+  const f9Grand = calcul => (calcul.module === "F9" || calcul.module === "F10") && (!tientSurLaBarre(f9Valeur(calcul), Math.max(...densDe(calcul.lu)))
+    || (NIVEAUX_BLOCS.has(`${calcul.module}-${calcul.deNiveau || calcul.niveau}`) && Math.max(...densDe(calcul.lu)) > BLOCS_PARTS));
   // La fraction à réécrire (celle aux grandes parts) : a/d → A/D.
   function f9Conversion(calcul) {
     const termes = calcul.lu.cotes[0].filter(t => t.d > 1);
@@ -12186,7 +12205,8 @@
   // calcul en parts de même taille. Le dessin : le crochet réécrit en vert,
   // puis l'accolade ; au-delà de 30 parts, les deux flèches.
   function f9Ecris(calcul) {
-    if (!calcul || calcul.module !== "F9") return null;
+    // (Lot « la 6e complète » : et F10, deux fractions réécrites.)
+    if (!calcul || (calcul.module !== "F9" && calcul.module !== "F10")) return null;
     const termes = calcul.lu.cotes[0];
     const D = Math.max(...densDe(calcul.lu));
     const conv = f9Conversion(calcul);
@@ -12592,6 +12612,1314 @@
     ]
   };
 
+
+  // ======================================== lot « la 6e complète » (27/11/2026)
+  //
+  // Dix étoiles neuves pour l'étage de 6e (choix de Gwenaël du 26/11,
+  // conception `defi-calcul-lot-6e-complete-CONCEPTION.md`, § 3 ; programme
+  // du cycle 3 de 2025, p. 13 à 16 ; « Exemples de réussite, 6e », p. 3 à 9).
+  // Les identifiants réservés depuis la carte v2 servent quand ils existent
+  // (D10-1, D10-2, D11-1, D14-1, D12-1, F10-1, P1-1, P2-1) ; F11-3 est au bout
+  // de F11 ; « Où va la virgule ? » est un module neuf, D16, à la fin de
+  // MODULES (aucun rang ne bouge dans les tableaux enregistrés). Les niveaux
+  // pas encore construits de ces modules restent réservés (palier 0).
+  // Les aides reprennent un dessin déjà validé dans l'appli : le tableau à
+  // flèches (× 0,1, c'est ÷ 10), le compte en dixièmes des doubles de
+  // décimaux (une colonne large), le carré de 100, les deux barres de
+  // « Fraction d'une quantité », les bandes et les flèches des fractions ;
+  // deux dessins neufs : le carré du produit (0,4 × 0,3) et les arrondis
+  // (« Où va la virgule ? »).
+  // Les niveaux pas encore construits d'un module construit : `enReserve`,
+  // leur nombre, au bout du module — la carte les compte (palier 0, jamais
+  // affichés, comme `reserveSansPalier`), la fiche ne les a pas dans
+  // `niveaux` (seuls les niveaux construits y sont).
+  const insecable = texte => String(texte).replace(/ /g, " ");
+  // Un nombre suivi de « % », soudés (« 35 % » ne se coupe jamais).
+  const pourcent = a => `${f(a)} %`;
+
+  // ------------------------------------------- D10-1 : × 0,1 ; × 0,01 ; × 0,001
+  //
+  // « 47 × 0,1 = □ » : multiplier par 0,1, c'est diviser par 10 (exemples
+  // de réussite de 6e, p. 3-4 : « multiplier par 0,1 c'est diviser par
+  // 10 ») ; le tableau à flèches de « ÷ 10 » (CM1, CM2), l'étiquette dit
+  // « × 0,1 ». Trois sortes : × 0,1 ; × 0,01 et × 0,001 ; l'égalité à trou
+  // (□ × 0,1 = 4,5). Données : n (le nombre), q (10, 100, 1 000 : ÷ q),
+  // fac (0,1, 0,01, 0,001), m (le résultat, n ÷ q).
+  const D10_FACTEURS = Object.freeze({10: 0.1, 100: 0.01, 1000: 0.001});
+  function d10Calcul(niveau, forme, n, q) {
+    const fac = D10_FACTEURS[q];
+    const m = exact(n / q);
+    const gauche = forme === "produit-gauche";
+    const morceaux = forme === "trou" ? [TROU, "×", fac, "=", m] : gauche ? [fac, "×", n, "=", TROU] : [n, "×", fac, "=", TROU];
+    const reponse = forme === "trou" ? n : m;
+    // Les réponses fausses connues : multiplié par q (47 × 0,1 → 470), un
+    // rang de trop ou de moins ; sur le trou, divisé au lieu de multiplier.
+    const donnees = {n, q, fac, m, fois: exact(n * q), deTrop: exact(m / 10), deMoins: exact(m * 10), trouDivise: forme === "trou" ? exact(m / q) : -1};
+    return fabriquer("D10", niveau, forme, morceaux, reponse, donnees);
+  }
+  // Un nombre à écrire : un entier (pas multiple de 10 pour × 0,1 ; 360 ×
+  // 0,01 en a un), ou un décimal à une décimale ; le résultat a au plus
+  // trois chiffres après la virgule.
+  function d10Vivier() {
+    const produits = [];
+    const autres = [];
+    const trous = [];
+    const sans69 = (...xs) => xs.every(x => !f(x).includes("69"));
+    // × 0,1 : des entiers de 2 ou 3 chiffres, des décimaux (4,5 × 0,1).
+    [...entre(11, 99).filter(n => n % 10), ...entre(101, 999, 7).filter(n => n % 10), ...entre(11, 99).filter(n => n % 10).map(n => exact(n / 10))].forEach(n => {
+      if (sans69(n, n / 10)) produits.push(d10Calcul(1, "produit", n, 10));
+    });
+    // × 0,01, × 0,001 : des entiers (360 × 0,01 ; 8 × 0,001 ; 45 × 0,001).
+    [...entre(2, 9), ...entre(12, 98, 3), ...entre(120, 960, 40)].forEach(n => {
+      if (sans69(n, n / 100)) autres.push(d10Calcul(1, "produit", n, 100));
+      if (n < 100 && sans69(n, n / 1000)) autres.push(d10Calcul(1, "produit", n, 1000));
+    });
+    // Le trou (□ × 0,1 = 4,5) : le nombre cherché est entier.
+    [...entre(12, 98).filter(n => n % 10)].forEach(n => { if (sans69(n, n / 10)) trous.push(d10Calcul(1, "trou", n, 10)); });
+    entre(13, 97, 6).filter(n => n % 10).forEach(n => { if (sans69(n, n / 100)) trous.push(d10Calcul(1, "trou", n, 100)); });
+    return Object.freeze({produit: Object.freeze(produits), "produit-cent": Object.freeze(autres), trou: Object.freeze(trous)});
+  }
+  const D10_VIVIER = d10Vivier();
+  // (Les trois paquets : × 0,1 ; × 0,01 et × 0,001 ; le trou.)
+  function d10Composer(parts) {
+    const paquets = [D10_VIVIER.produit, D10_VIVIER["produit-cent"], D10_VIVIER.trou];
+    return function composer(rng, total, imposes) {
+      const nombres = repartir(total, parts);
+      const pris = new Set(imposes.map(c => c.cle));
+      return [...paquets.flatMap((paquet, i) => {
+        const deja = imposes.filter(c => paquet.some(x => x.cle === c.cle)).length;
+        return melanger(rng, paquet).filter(c => !pris.has(c.cle)).slice(0, Math.max(0, nombres[i] - deja));
+      }), ...imposes];
+    };
+  }
+  const d10 = (texte) => {
+    const trouve = Object.values(D10_VIVIER).flat().find(c => c.texte === texte);
+    if (!trouve) throw new Error(`D10-1 : ${texte}`);
+    return trouve;
+  };
+  // Le tableau à flèches de ÷ q, l'étiquette « × 0,1 » ; le trou : on part
+  // de l'arrivée et on revient (× 10).
+  function d10Tableau(calcul) {
+    const {n, q, fac, m} = calcul.donnees;
+    if (calcul.forme === "trou") return {outil: "tableau-fleches", depart: m, arrivee: n, p: q, operation: "×", virgule: true, etiquette: `÷ ${f(fac)}`};
+    return {outil: "tableau-fleches", depart: n, arrivee: m, p: q, operation: "÷", virgule: true, etiquette: `× ${f(fac)}`};
+  }
+  const d10Image = calcul => Object.freeze(d10Tableau(calcul));
+  const d10Aide = calcul => Object.freeze(Object.assign(d10Tableau(calcul), {inconnue: true}));
+  function d10Phrase(calcul) {
+    const {n, q, fac, m} = calcul.donnees;
+    if (calcul.forme === "trou") return fr(`Regarde : ${f(m)} × ${f(q)} = ${f(n)}, donc ${f(n)} × ${f(fac)} = ${f(m)}.`);
+    return fr(`Regarde : × ${f(fac)}, c’est ÷ ${f(q)}. ${f(n)} ÷ ${f(q)} = ${f(m)}.`);
+  }
+  // Le glisse-nombres : le nombre glisse de 1, 2 ou 3 colonnes vers la
+  // droite (le trou : de l'arrivée vers le nombre cherché).
+  function d10Manipulation(calcul) {
+    const {n, q, fac, m} = calcul.donnees;
+    const k = colonnesDe(q);
+    const trou = calcul.forme === "trou";
+    return Object.freeze({
+      outil: "glisse", depart: trou ? m : n, colonnes: COLONNES_D2, decalage: trou ? k : -k,
+      texte: calcul.texte.replace(CASE, "?"),
+      consigne: trou ? fr(`On revient : × ${f(q)}. Chaque chiffre vaut ${f(q)} fois plus.`) : fr(`× ${f(fac)}, c’est ÷ ${f(q)} : chaque chiffre vaut ${f(q)} fois moins.`),
+      refus: fr(`Chaque chiffre doit valoir ${f(q)} fois ${trou ? "plus" : "moins"} : ${pluriel(k, "colonne")}.`),
+      traces: Object.freeze([Object.freeze({apres: 1, attente: trou ? `${f(m)} × ${f(q)} = …` : `${f(n)} × ${f(fac)} = …`,
+        texte: trou ? `${f(m)} × ${f(q)} = ${f(n)}` : `${f(n)} × ${f(fac)} = ${f(m)}`})])
+    });
+  }
+  const D10_FORMES = Object.freeze({produit: 0, "produit-gauche": 0, trou: 2});
+  const d10Difficulte = calcul => (D10_FORMES[calcul.forme] + (calcul.donnees.q > 10 ? 1 : 0)) * 1000 + colonnesDe(calcul.donnees.q) * 100
+    + (calcul.donnees.m < 1 ? 60 : 0) + decimalesDe(calcul.donnees.n) * 20 + String(Math.trunc(calcul.donnees.n)).length * 10;
+  const D10_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "multiplié par 10 au lieu de diviser",
+      test: sauf((calcul, reponse) => calcul.forme !== "trou" && memeNombre(reponse, calcul.donnees.fois)),
+      retour: (calcul, reponse) => {
+        const {n, q, fac} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est ${f(n)} × ${f(q)}. × ${f(fac)}, c’est prendre ${q === 10 ? "le dixième" : q === 100 ? "le centième" : "le millième"} : ÷ ${f(q)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "une colonne de trop ou de moins",
+      test: sauf((calcul, reponse) => calcul.forme !== "trou" && (memeNombre(reponse, calcul.donnees.deTrop) || memeNombre(reponse, calcul.donnees.deMoins))),
+      retour: (calcul, reponse) => {
+        const {q, fac} = calcul.donnees;
+        return fr(`${f(reponse)} : compte les colonnes. × ${f(fac)}, c’est ÷ ${f(q)} : ${pluriel(colonnesDe(q), "colonne")} vers la droite.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le trou : divisé au lieu de multiplier",
+      test: sauf((calcul, reponse) => calcul.donnees.trouDivise >= 0 && memeNombre(reponse, calcul.donnees.trouDivise)),
+      retour: (calcul, reponse) => {
+        const {q, fac, m} = calcul.donnees;
+        return fr(`${f(reponse)} × ${f(fac)} = ${f(exact(reponse / q))}, pas ${f(m)}. Le nombre cherché est ${f(q)} fois plus grand que ${f(m)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // J'écris : « 47 × 0,1 = 47 ÷ 10 = □ » ; le trou : « 4,5 × 10 = □ ».
+  function d10Ecris(calcul) {
+    if (!calcul || calcul.module !== "D10" || calcul.niveau === 2 || calcul.deNiveau === 2) return null;
+    const {n, q, fac, m} = calcul.donnees;
+    const etapes = calcul.forme === "trou"
+      ? [{texte: `${f(m)} × ${f(q)} = ${CASE}`, reponse: n}, {texte: calcul.texte, reponse: n}]
+      : [{texte: `${f(n)} × ${f(fac)} = ${f(n)} ÷ ${f(q)} = ${CASE}`, reponse: m}];
+    return ecrisAvecDessins({
+      etapes: Object.freeze(etapes.map(e => Object.freeze(e))), reponse: calcul.reponse,
+      solution: Object.freeze({image: d10Image(calcul), phrase: d10Phrase(calcul)})
+    }, tableauDessins(d10Aide(calcul), d10Image(calcul), etapes));
+  }
+  // J'écris de D10-2, l'écriture en fraction « 1/10 = 10 × 1/□ » : le membre
+  // de gauche à virgule, partagé (« 0,1 ÷ 10 = □ »), en fraction
+  // (« 0,01 = 1/□ »), puis le calcul. Les autres sortes, par cœur : pas de
+  // J'écris tiré.
+  function d10FaitEcris(calcul) {
+    if (!calcul || calcul.module !== "D10" || calcul.forme !== "fraction") return null;
+    const {a, l, r} = calcul.donnees;
+    const p = exact(1 / r);
+    const etapes = [{texte: `${f(l)} ÷ ${f(a)} = ${CASE}`, reponse: p}, {texte: `${f(p)} = 1/${CASE}`, reponse: r}, {texte: calcul.texte, reponse: r}];
+    return ecrisAvecDessins({
+      consigne: fr(calcul.texte.replace(CASE, "?")),
+      etapes: Object.freeze(etapes.map(e => Object.freeze(e))), reponse: r,
+      solution: Object.freeze({image: d10FaitImage(calcul), phrase: d10FaitPhrase(calcul)})
+    }, tableauDessins(d10FaitAide(calcul), d10FaitImage(calcul), etapes));
+  }
+  function d10Apprends({manipule, represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(manipule),
+      manipule: d10Manipulation(manipule),
+      represente: Object.freeze({
+        outil: "tableau-fleches", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: d10Aide(represente),
+        solution: Object.freeze({image: d10Image(represente), phrase: d10Phrase(represente)})
+      }),
+      ecris: d10Ecris(ecris),
+      bilan: frBilan(bilan),
+      image: d10Image(manipule),
+      calculs: Object.freeze({montre: manipule, ecris}),
+      textes: Object.freeze([manipule.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // ------------------------------------- D10-2 : 0,1 et 1/10, les produits à connaître
+  //
+  // Par cœur (exemples de réussite de 6e, p. 4 ; programme, p. 13 : « 1 =
+  // 10 × 1/10 = 100 × 1/100 ; 1/10 = 10 × 1/100 »). Quatre sortes : ce qui
+  // fait 1 (10 × 0,1) ; ce qui fait 0,1 ou 0,01 (10 × 0,01) ; 0,1 × 0,1 ;
+  // l'écriture en fraction (1 = 10 × 1/□). Le dessin : le tableau à flèches
+  // (× 10, ou × 0,1 : ÷ 10).
+  function d10FaitCalcul(niveau, sorte, a, b, reponse, texte = null) {
+    const morceaux = texte || [a, "×", b, "=", TROU];
+    const c = fabriquer("D10", niveau, sorte, morceaux, reponse, {a, b, r: reponse});
+    return c;
+  }
+  function d10Faits() {
+    const un = [];
+    const dixieme = [];
+    const deux = [];
+    const fractions = [];
+    [[10, 0.1], [100, 0.01], [1000, 0.001]].forEach(([g, p]) => { un.push(d10FaitCalcul(2, "fait-un", g, p, 1)); un.push(d10FaitCalcul(2, "fait-un", p, g, 1)); });
+    // (Et le nombre cherché : « 10 × □ = 1 », « 0,1 × □ = 1 ».)
+    [[10, 0.1], [100, 0.01], [0.1, 10], [0.01, 100]].forEach(([g, r]) => un.push(d10FaitCalcul(2, "fait-un", g, 0, r, [g, "×", TROU, "=", 1])));
+    [[10, 0.01], [100, 0.001], [10, 0.001]].forEach(([g, p]) => { const r = exact(g * p); dixieme.push(d10FaitCalcul(2, "fait-dixieme", g, p, r)); dixieme.push(d10FaitCalcul(2, "fait-dixieme", p, g, r)); });
+    [[0.1, 0.1], [0.1, 0.01], [0.01, 0.1]].forEach(([p, s]) => deux.push(d10FaitCalcul(2, "dixieme-dixieme", p, s, exact(p * s))));
+    // « 1 = 10 × 1/□ », « 1/10 = 10 × 1/□ » : la case est un dénominateur.
+    [[1, 10, 10], [1, 100, 100], [1, 1000, 1000], ["1/10", 10, 100], ["1/100", 10, 1000], ["1/10", 100, 1000]].forEach(([gauche, g, r]) => {
+      // (l : la valeur du membre de gauche, 1, 0,1 ou 0,01.)
+      const l = gauche === 1 ? 1 : exact(1 / Number(String(gauche).split("/")[1]));
+      fractions.push(Object.freeze(Object.assign({}, fabriquer("D10", 2, "fraction", [gauche, "=", g, "×", `1/${CASE}`], r, {a: g, b: 0, r, l}),
+        {cle: `D10-2-${gauche === 1 ? 1 : Number(String(gauche).split("/")[1])}-${g}-x`})));
+    });
+    return Object.freeze({"fait-un": Object.freeze(un), "fait-dixieme": Object.freeze(dixieme), "dixieme-dixieme": Object.freeze(deux), fraction: Object.freeze(fractions)});
+  }
+  const D10_FAITS = d10Faits();
+  const d10Fait = texte => {
+    const trouve = Object.values(D10_FAITS).flat().find(c => c.texte === texte);
+    if (!trouve) throw new Error(`D10-2 : ${texte}`);
+    return trouve;
+  };
+  // Le tableau du fait : g × p (le plus grand fait glisser vers la gauche,
+  // × 10) ; 0,1 × 0,1 : 0,1 ÷ 10 ; la fraction « 1/10 = 10 × 1/□ » : le
+  // membre de gauche à virgule, partagé par 10 (0,1 ÷ 10 = 0,01, c'est
+  // 1/100) — le tableau n'écrit jamais le dénominateur cherché.
+  function d10FaitTableau(calcul) {
+    const {a, b} = calcul.donnees;
+    if (calcul.forme === "fraction") {
+      const {l} = calcul.donnees;
+      return {outil: "tableau-fleches", depart: l, arrivee: exact(l / a), p: a, operation: "÷", virgule: true};
+    }
+    if (calcul.forme === "dixieme-dixieme") return {outil: "tableau-fleches", depart: a, arrivee: calcul.reponse, p: exact(1 / b), operation: "÷", virgule: true, etiquette: `× ${f(b)}`};
+    const [g, p] = a >= 1 ? [a, b] : [b, a];
+    return {outil: "tableau-fleches", depart: p, arrivee: calcul.reponse, p: g, operation: "×", virgule: true};
+  }
+  const d10FaitImage = calcul => Object.freeze(d10FaitTableau(calcul));
+  const d10FaitAide = calcul => Object.freeze(Object.assign(d10FaitTableau(calcul), {inconnue: true}));
+  function d10FaitPhrase(calcul) {
+    const {a, b} = calcul.donnees;
+    if (calcul.forme === "fraction") return fr(`Regarde : ${f(calcul.donnees.l)} ÷ ${f(a)} = ${f(exact(1 / calcul.reponse))}, c’est 1/${f(calcul.reponse)}. ${f(a)} × 1/${f(calcul.reponse)} = ${f(calcul.donnees.l)}.`);
+    if (calcul.forme === "dixieme-dixieme") return fr(`Regarde : × ${f(b)}, c’est ÷ ${f(exact(1 / b))}. ${f(a)} ÷ ${f(exact(1 / b))} = ${f(calcul.reponse)}.`);
+    return fr(`Regarde : ${calcul.texte.replace(CASE, f(calcul.reponse))}.`);
+  }
+  const D10_FAIT_RANGS = Object.freeze({"fait-un": 0, "fait-dixieme": 1, "dixieme-dixieme": 2, fraction: 3});
+  const d10FaitDifficulte = calcul => D10_FAIT_RANGS[calcul.forme] * 1000 + Math.round(Math.log10(Math.max(calcul.donnees.a, calcul.donnees.b || 1) + 1) * 10);
+
+  // ------------------------------------- D11-1, D14-1 : un décimal et un chiffre, en dixièmes
+  //
+  // « 0,4 × 3 = □ » : 0,4, c'est 4 dixièmes ; 4 dixièmes × 3 = 12 dixièmes
+  // = 1,2 (exemples de réussite de 6e, p. 4 : 0,4 × 3 = 0,1 × 12 = 1,2).
+  // « 1,2 ÷ 3 = □ » : 1,2, c'est 12 dixièmes ; 12 dixièmes ÷ 3 = 4
+  // dixièmes = 0,4. Le dessin : le compte dans le rang des doubles de
+  // décimaux (CM2, choix de Gwenaël du 21/11) — le tableau des rangs, une
+  // seule colonne large, « dixièmes » ou « centièmes ».
+  // Données : a (le décimal), k (le chiffre), N (a compté dans son rang),
+  // R (le résultat compté dans le rang), rang (1 dixièmes, 2 centièmes),
+  // r (le résultat), et les réponses fausses connues.
+  const NOMS_DEC = Object.freeze({1: "dixièmes", 2: "centièmes", 3: "millièmes"});
+  function rangCalcul(module, niveau, forme, a, k, {gauche = false, rang: rangVoulu = 0} = {}) {
+    // (« 2 ÷ 4 » se compte aussi en dixièmes : 20 dixièmes ÷ 4.)
+    const rang = Math.max(rangVoulu, decimalesDe(a));
+    const p = 10 ** rang;
+    const N = Math.round(a * p);
+    const division = forme === "division" || forme === "trou";
+    const R = division ? N / k : N * k;
+    const r = exact(R / p);
+    let morceaux;
+    if (forme === "trou") morceaux = [TROU, "×", k, "=", a];
+    else if (division) morceaux = [a, "÷", k, "=", TROU];
+    else morceaux = gauche ? [k, "×", a, "=", TROU] : [a, "×", k, "=", TROU];
+    // Le chiffre de chaque rang multiplié ou partagé sans échange
+    // (2,3 × 4 → 8,12 ; jamais quand rien ne s'échange).
+    const e = Math.trunc(a);
+    const reste = N - e * p;
+    const sansEchange = !division && e > 0 && reste * k >= p ? Number(`${e * k}.${String(reste * k)}`) : -1;
+    const donnees = {a, k, N, R, rang, p, r, deTrop: exact(r * 10), deMoins: exact(r / 10), plus: division ? -1 : exact(a + k),
+      fois: division ? exact(a * k) : -1, sansEchange};
+    const reponse = forme === "trou" ? r : r;
+    return fabriquer(module, niveau, gauche ? `${forme}-gauche` : forme, morceaux, reponse, donnees);
+  }
+  // Le tableau : « 0,4 » → 4 (dixièmes) ; « × 3 » ; le résultat, compté.
+  function rangTableau(calcul) {
+    const {N, R, k, rang, a} = calcul.donnees;
+    const division = calcul.module === "D14";
+    const nom = NOMS_DEC[rang];
+    return {cols: [{nom, large: true}], lignes: [{label: f(a), cells: [celT(f(N))]}, {label: `${division ? "÷" : "×"} ${k}`, cells: []}],
+      res: {cells: [CIBLE_T]}, valeur: R, etape: {texte: `${f(N)} ${division ? "÷" : "×"} ${k} = ${CASE}`, reponse: R}};
+  }
+  const rangImage = calcul => tableauEtat(rangTableau(calcul), "trouve");
+  const rangAide = calcul => tableauEtat(rangTableau(calcul), "aide");
+  function rangPhrase(calcul) {
+    const {N, R, k, rang, a, r} = calcul.donnees;
+    const nom = NOMS_DEC[rang];
+    const op = calcul.module === "D14" ? "÷" : "×";
+    return fr(`Regarde : ${f(a)}, c’est ${f(N)} ${nom}. ${f(N)} ${nom} ${op} ${k} = ${f(R)} ${nom}, c’est ${f(r)}.`);
+  }
+  // Le retour d'une erreur, compté dans le rang, sans la réponse.
+  const rangCompter = (calcul, reponse) => fr(`${f(reponse)} : compte en ${NOMS_DEC[calcul.donnees.rang]}. ${f(calcul.donnees.a)}, c’est ${f(calcul.donnees.N)} ${NOMS_DEC[calcul.donnees.rang]}.`);
+  // (Chaque module a ses causes, numérotées à partir de 1 : un × n'a pas de
+  // « partagé », un ÷ n'a ni échange ni « ajouté » — la page du professeur
+  // regénère un exemple pour chacune.)
+  const RANG_CAUSES = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "la virgule au mauvais rang",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.deTrop) || memeNombre(reponse, calcul.donnees.deMoins)),
+      retour: (calcul, reponse) => rangCompter(calcul, reponse),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "chaque rang sans échange",
+      test: sauf((calcul, reponse) => calcul.donnees.sansEchange >= 0 && memeNombre(reponse, calcul.donnees.sansEchange)),
+      retour: (calcul, reponse) => {
+        const {N, R, rang, k} = calcul.donnees;
+        return fr(`${f(reponse)} : ${f(N - Math.trunc(calcul.donnees.a) * calcul.donnees.p)} ${NOMS_DEC[rang]} × ${k}, ça fait plus de 10. Compte tout en ${NOMS_DEC[rang]} : ${f(N)} × ${k} = ${f(R)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "ajouté au lieu de multiplier",
+      test: sauf((calcul, reponse) => calcul.donnees.plus >= 0 && memeNombre(reponse, calcul.donnees.plus)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.a)} + ${calcul.donnees.k}. Ici, on multiplie : ${calcul.donnees.k} fois ${f(calcul.donnees.a)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "multiplié au lieu de partager",
+      test: sauf((calcul, reponse) => calcul.donnees.fois >= 0 && memeNombre(reponse, calcul.donnees.fois)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.a)} × ${calcul.donnees.k}. Ici, on partage en ${calcul.donnees.k} parts égales.`),
+      gras: 0
+    })
+  ]);
+  const D11_ERREURS = Object.freeze(RANG_CAUSES.slice(0, 3));
+  const D14_ERREURS = Object.freeze([RANG_CAUSES[0], Object.freeze(Object.assign({}, RANG_CAUSES[3], {c: 2}))]);
+  const rangDifficulte = calcul => {
+    const rangs = {"produit": 0, "produit-gauche": 0, division: 0, trou: 2};
+    const {a, rang, N, k} = calcul.donnees;
+    return (rangs[calcul.forme] || 0) * 10000 + (a >= 1 ? 4000 : 0) + rang * 2000 + Math.min(999, N * k);
+  };
+  // J'écris, sur le modèle du compte dans le rang des doubles de décimaux
+  // (D8, choix de Gwenaël du 21/11) : la consigne dit le rang (« 0,7 × 4 :
+  // je compte en dixièmes. »), le tableau écrit 0,7 = 7 dixièmes ; « 7 × 4
+  // = □ » remplit sa case, puis le calcul. Le trou « □ × 3 = 1,2 » :
+  // « 12 ÷ 3 = □ », « 1,2 ÷ 3 = □ », puis le trou.
+  function rangEcris(calcul) {
+    if (!calcul || !calcul.donnees || calcul.donnees.N === undefined) return null;
+    const t = rangTableau(calcul);
+    const aide = tableauEtat(t, "aide");
+    const {dessins, revele} = rangDessins(aide);
+    const nom = NOMS_DEC[calcul.donnees.rang];
+    const etapes = [Object.freeze(Object.assign({}, t.etape))];
+    if (calcul.forme === "trou") etapes.push(Object.freeze({texte: `${f(calcul.donnees.a)} ÷ ${calcul.donnees.k} = ${CASE}`, reponse: calcul.reponse}));
+    etapes.push(Object.freeze({texte: calcul.texte, reponse: calcul.reponse}));
+    const vus = [dessins[0], ...etapes.map(() => dessins[1])];
+    return ecrisAvecDessins({
+      consigne: fr(`${calcul.texte.replace(` = ${CASE}`, "").replace(CASE, "?")} : je compte en ${nom}.`),
+      etapes: Object.freeze(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: rangImage(calcul), phrase: rangPhrase(calcul)})
+    }, {dessins: Object.freeze(vus), revele});
+  }
+  function rangApprends({represente, ecris, consigne, bilan}) {
+    const aide = rangAide(represente);
+    const aEtapes = dessinAEtapes(aide, represente.texte, represente.reponse);
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "tableau-rang", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: Object.freeze(aide),
+        etapes: aEtapes.etapes, dessins: aEtapes.dessins,
+        solution: Object.freeze({image: rangImage(represente), phrase: rangPhrase(represente)})
+      }),
+      ecris: rangEcris(ecris),
+      bilan: frBilan(bilan),
+      image: Object.freeze(rangImage(represente)),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+  // Les viviers. D11-1 : des dixièmes (0,4 × 3), des centièmes (0,06 × 7),
+  // avec des unités (2,3 × 4). D14-1 : chaque rang se partage (8,4 ÷ 4), on
+  // compte en dixièmes (1,2 ÷ 3), le nombre cherché (□ × 3 = 1,2).
+  const sans69 = (...xs) => xs.every(x => !f(x).includes("69"));
+  function d11Vivier() {
+    const dixiemes = [];
+    const centiemes = [];
+    const unites = [];
+    entre(1, 9).forEach(d => entre(2, 9).forEach(k => {
+      const a = d / 10;
+      if (d * k > 9 && sans69(a * k)) dixiemes.push(rangCalcul("D11", 1, "produit", a, k, {gauche: (d + k) % 4 === 0}));
+    }));
+    [...entre(2, 9), 12, 15, 25].forEach(c => entre(2, 9).forEach(k => {
+      const a = c / 100;
+      if (c * k > 9 && c * k < 200 && sans69(exact(a * k))) centiemes.push(rangCalcul("D11", 1, "produit", a, k));
+    }));
+    entre(11, 59).filter(N => N % 10).forEach(N => entre(2, 9).forEach(k => {
+      if (N * k > 400 || !sans69(N / 10, N * k / 10)) return;
+      unites.push(rangCalcul("D11", 1, "produit", N / 10, k, {gauche: (N + k) % 5 === 0}));
+    }));
+    return Object.freeze({dixiemes: Object.freeze(dixiemes), centiemes: Object.freeze(centiemes), unites: Object.freeze(unites)});
+  }
+  const D11_VIVIER = d11Vivier();
+  const d11Famille = c => (c.donnees.rang === 2 ? "centiemes" : c.donnees.a >= 1 ? "unites" : "dixiemes");
+  function d14Vivier() {
+    const rangs = [];
+    const dixiemes = [];
+    const trous = [];
+    entre(2, 9).forEach(k => entre(1, 99).forEach(Q => {
+      const N = Q * k;
+      if (N > 99 || N < 10 || !sans69(N / 10, Q / 10) || Q % 10 === 0 && N % 10 === 0) return;
+      const chiffres = [Math.floor(N / 10), N % 10];
+      const parRang = chiffres.every(x => x % k === 0) && N % 10 !== 0;
+      const a = N / 10;
+      (parRang ? rangs : dixiemes).push(rangCalcul("D14", 1, "division", a, k, {rang: 1}));
+      if (!parRang && Q < 10) trous.push(rangCalcul("D14", 1, "trou", a, k, {rang: 1}));
+    }));
+    return Object.freeze({rangs: Object.freeze(rangs), dixiemes: Object.freeze(dixiemes), trou: Object.freeze(trous)});
+  }
+  const D14_VIVIER = d14Vivier();
+  const d14Famille = c => (c.forme === "trou" ? "trou" : D14_VIVIER.rangs.some(x => x.cle === c.cle) ? "rangs" : "dixiemes");
+  const dansVivier = (vivier, nom) => texte => {
+    const trouve = Object.values(vivier).flat().find(c => c.texte === texte);
+    if (!trouve) throw new Error(`${nom} : ${texte}`);
+    return trouve;
+  };
+  const d11 = dansVivier(D11_VIVIER, "D11-1");
+  const d14 = dansVivier(D14_VIVIER, "D14-1");
+
+  // ------------------------------------------------- D12-1 : décimal × décimal
+  //
+  // « 0,4 × 0,3 = □ » (exemples de réussite de 6e, p. 4 : 0,4 × 0,3 = 0,01 ×
+  // 12 = 0,12 ; programme, p. 13 : l'aire d'un rectangle). Trois sortes :
+  // dixièmes × dixièmes, avec des unités (1,2 × 0,3), dixièmes × centièmes
+  // (0,3 × 0,02). Le dessin (choix de Gwenaël du 27/11 : la meilleure aide)
+  // : le carré de 100, 4 bandes et 3 rangées ; le produit, ce sont les 12
+  // petits carrés où elles se croisent, un petit carré vaut 0,01. Au-delà
+  // d'une unité ou en millièmes, le carré ne se dessine plus : le compte
+  // dans le rang (12 × 3 = 36 centièmes).
+  function d12Calcul(niveau, a, b) {
+    const da = decimalesDe(a);
+    const db = decimalesDe(b);
+    const A = Math.round(a * 10 ** da);
+    const B = Math.round(b * 10 ** db);
+    const rang = da + db;
+    const P = A * B;
+    const r = exact(P / 10 ** rang);
+    const forme = a >= 1 ? "unites" : db === 2 ? "centiemes" : "dixiemes";
+    return fabriquer("D12", niveau, forme, [a, "×", b, "=", TROU], r,
+      {a, b, A, B, P, rang, carre: a < 1 && da === 1 && db === 1, deTrop: exact(r * 10), deMoins: exact(r / 10), plus: exact(a + b)});
+  }
+  function d12Vivier() {
+    const dixiemes = [];
+    const unites = [];
+    const centiemes = [];
+    entre(2, 9).forEach(A => entre(2, 9).forEach(B => { if (A !== B || A < 6) dixiemes.push(d12Calcul(1, A / 10, B / 10)); }));
+    entre(11, 29).filter(A => A % 10).forEach(A => entre(2, 6).forEach(B => { if (A * B < 100 && sans69(A * B / 100)) unites.push(d12Calcul(1, A / 10, B / 10)); }));
+    entre(2, 9).forEach(A => entre(2, 9).forEach(B => { if (sans69(A * B / 1000)) centiemes.push(d12Calcul(1, A / 10, B / 100)); }));
+    return Object.freeze({dixiemes: Object.freeze(dixiemes), unites: Object.freeze(unites), centiemes: Object.freeze(centiemes)});
+  }
+  const D12_VIVIER = d12Vivier();
+  const d12 = dansVivier(D12_VIVIER, "D12-1");
+  // Le carré du produit : `a` bandes coloriées (les dixièmes du premier
+  // nombre), `b` rangées (ceux du second) ; le produit, les petits carrés
+  // des deux. `trouve` : le nombre de petits carrés écrit.
+  function d12Dessin(calcul, revele) {
+    const {A, B, P, rang} = calcul.donnees;
+    if (calcul.donnees.carre) {
+      return Object.freeze({outil: "carre-produit", a: A, b: B, produit: P, texte: revele ? f(calcul.reponse) : "?", trouve: Boolean(revele)});
+    }
+    const nom = NOMS_DEC[rang];
+    return tableauEtat({cols: [{nom, large: true}], lignes: [{label: `${f(calcul.donnees.a)} × ${f(calcul.donnees.b)}`, cells: [celT(`${A} × ${B}`)]}],
+      res: {cells: [CIBLE_T]}, valeur: P, etape: {texte: `${A} × ${B} = ${CASE}`, reponse: P}}, revele ? "trouve" : "aide");
+  }
+  const d12Image = calcul => d12Dessin(calcul, true);
+  const d12Aide = calcul => d12Dessin(calcul, false);
+  function d12Phrase(calcul) {
+    const {A, B, P, rang, a, b} = calcul.donnees;
+    const noms = {1: "dixième", 2: "centième"};
+    const da = decimalesDe(a);
+    const db = decimalesDe(b);
+    return fr(`Regarde : ${A} × ${B} = ${P}. Un ${noms[da]} d’un ${noms[db]}, c’est un ${NOMS_DEC[rang].slice(0, -1)} : ${f(a)} × ${f(b)} = ${f(calcul.reponse)}.`);
+  }
+  const D12_RANGS = Object.freeze({dixiemes: 0, unites: 1, centiemes: 2});
+  const d12Difficulte = calcul => D12_RANGS[calcul.forme] * 1000 + Math.min(999, calcul.donnees.P);
+  const D12_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "la virgule au mauvais rang",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.deTrop) || memeNombre(reponse, calcul.donnees.deMoins)),
+      retour: (calcul, reponse) => {
+        const {A, B, P, rang} = calcul.donnees;
+        return fr(`${f(reponse)} : ${A} × ${B} = ${P}, mais ce sont des ${NOMS_DEC[rang]}. Un dixième d’un dixième, c’est un centième.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "ajouté au lieu de multiplier",
+      test: sauf((calcul, reponse) => memeNombre(reponse, calcul.donnees.plus)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ${f(calcul.donnees.a)} + ${f(calcul.donnees.b)}. Ici, on multiplie.`),
+      gras: 0
+    })
+  ]);
+  // J'écris : « 4 × 3 = □ », puis le calcul (le carré se remplit).
+  function d12Ecris(calcul) {
+    if (!calcul || calcul.module !== "D12") return null;
+    const {A, B, P} = calcul.donnees;
+    const etapes = [Object.freeze({texte: `${A} × ${B} = ${CASE}`, reponse: P}), Object.freeze({texte: calcul.texte, reponse: calcul.reponse})];
+    const aide = d12Aide(calcul);
+    const trouve = calcul.donnees.carre ? Object.freeze(Object.assign({}, aide, {compte: true})) : tableauRempli(aide, "trouve");
+    return ecrisAvecDessins({
+      consigne: fr(`${calcul.texte.replace(` = ${CASE}`, "")} : ${A} × ${B}, en ${NOMS_DEC[calcul.donnees.rang]}.`),
+      etapes: Object.freeze(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: d12Image(calcul), phrase: d12Phrase(calcul)})
+    }, {dessins: Object.freeze([aide, trouve, trouve]), revele: d12Image(calcul)});
+  }
+
+  // ------------------------------------------------- D16-1 : où va la virgule ?
+  //
+  // Une forme de réponse neuve (choix de Gwenaël du 26/11, planche 2) : la
+  // réponse à CHOISIR parmi trois (`choix`, trois nombres rangés du plus
+  // petit au plus grand, un seul juste : `reponse`). Deux sortes (programme
+  // de 6e, p. 13-14 : « contrôler les résultats à l'aide d'ordres de
+  // grandeur » ; exemples de réussite de 6e, p. 4 : « 3,7 × 2,9 est proche
+  // de 4 × 3 = 12 ») : « 3,8 × 2,9 est proche de… » (1, 10 ou 100 ; 0,1, 1
+  // ou 10), et « 37 × 29 = 1 073, donc 3,7 × 2,9 = … » (1,073 ; 10,73 ;
+  // 107,3 : les mêmes chiffres, la virgule ailleurs — jamais deux valeurs
+  // qui diffèrent d'un seul chiffre). La bonne n'est pas toujours au
+  // milieu. Au hasard, 5 justes sur 6 : moins de 2 chances sur 100.
+  // Données : a, b, ra, rb (les arrondis), e (leur produit), choix.
+  const arrondiUnite = x => (x >= 1 ? Math.round(x) : exact(Math.round(x * 10) / 10));
+  function d16Calcul(niveau, forme, a, b, decalage) {
+    const ra = arrondiUnite(a);
+    const rb = arrondiUnite(b);
+    const e = exact(ra * rb);
+    const produit = exact(a * b);
+    let choix;
+    let reponse;
+    let morceaux;
+    if (forme === "proche") {
+      // La puissance de 10 la plus proche du produit : le plus petit écart
+      // en rapport (12 est à 1,2 fois 10, à 8,3 fois 100).
+      const p = 10 ** Math.round(Math.log10(produit));
+      reponse = exact(p);
+      choix = [p / 10, p, p * 10].map(exact);
+      // (La bonne : à gauche, au milieu ou à droite, selon les nombres.)
+      if (decalage === 0) choix = [p, p * 10, p * 100].map(exact);
+      if (decalage === 2) choix = [p / 100, p / 10, p].map(exact);
+      morceaux = [a, "×", b, "est proche de", TROU];
+    } else {
+      const da = decimalesDe(a);
+      const db = decimalesDe(b);
+      const A = Math.round(a * 10 ** da);
+      const B = Math.round(b * 10 ** db);
+      reponse = produit;
+      const base = [exact(produit / 10), produit, exact(produit * 10)];
+      choix = decalage === 0 ? [produit, exact(produit * 10), exact(produit * 100)] : decalage === 2 ? [exact(produit / 100), exact(produit / 10), produit] : base;
+      morceaux = [A, "×", B, "=", A * B, ", donc", a, "×", b, "=", TROU];
+    }
+    const c = fabriquer("D16", niveau, forme, morceaux, reponse, {a, b, ra, rb, e, choix: Object.freeze(choix.slice())});
+    // (« 37 × 29 = 1 073, donc » : la virgule colle au nombre.)
+    const texte = c.texte.replace(" , donc", ", donc");
+    return Object.freeze(Object.assign({}, c, {texte, choix: Object.freeze(choix.slice()), cle: `${c.cle}-${decalage}`}));
+  }
+  // Un produit est « proche » d'une puissance de 10 quand il en est à moins
+  // de 2,2 fois : 12 est proche de 10, 31 n'est proche ni de 10 ni de 100.
+  // Correctif (relecture de Codex du 28/11) : proche AUSSI par l'écart.
+  // Sous une puissance de 10, l'écart à la puissance d'en dessous est le
+  // plus petit dès 0,55 fois : 46,53 est à 2,15 fois de 100, mais plus près
+  // de 10 (36,5 contre 53,5). En dessous, il faut donc au moins 0,6 fois la
+  // puissance (60 est proche de 100) ; au-dessus, moins de 2,2 fois (22 est
+  // proche de 10). Les deux lectures disent alors la même puissance, pour le
+  // produit comme pour l'estimation (voir d16Vivier).
+  const procheNet = x => { const p = 10 ** Math.round(Math.log10(x)); return x >= p ? x / p < 2.2 : x / p >= 0.6; };
+  function d16Vivier() {
+    const proches = [];
+    const virgules = [];
+    // (Les exemples de la leçon et de « Je tente » : la bonne au milieu,
+    // comme sur la planche 2.)
+    const exemples = new Set(["3.8|2.9", "3.7|2.9", "0.48|21"]);
+    const decalageDe = (a, b, n) => (exemples.has(`${a}|${b}`) ? 1 : n % 3);
+    const dixiemes = entre(11, 99).filter(n => n % 10).map(n => n / 10);
+    dixiemes.forEach(a => dixiemes.forEach(b => {
+      if (a === b || !procheNet(a * b)) return;
+      const ra = arrondiUnite(a);
+      const rb = arrondiUnite(b);
+      // (L'arrondi tombe sur le bon ordre de grandeur : 4 × 3 = 12 dit 10.)
+      if (!procheNet(ra * rb) || Math.round(Math.log10(ra * rb)) !== Math.round(Math.log10(a * b)) || Math.abs(a - ra) < 0.15 && Math.abs(b - rb) < 0.15) return;
+      const A = Math.round(a * 10);
+      const B = Math.round(b * 10);
+      if (((7 * A + 3 * B) % 6 === 0 || exemples.has(`${a}|${b}`)) && sans69(a * b)) proches.push(d16Calcul(1, "proche", a, b, decalageDe(a, b, A + B)));
+    }));
+    // Des centièmes et des entiers (0,48 × 21 : proche de 10).
+    [0.48, 0.52, 0.39, 0.21, 0.19, 0.31].forEach((a, i) => [19, 21, 29, 31, 48, 52, 98, 102, 9.8, 4.9].forEach((b, j) => {
+      if (!procheNet(a * b) || !procheNet(arrondiUnite(a) * arrondiUnite(b)) || Math.round(Math.log10(arrondiUnite(a) * arrondiUnite(b))) !== Math.round(Math.log10(a * b))) return;
+      if (sans69(a * b)) proches.push(d16Calcul(1, "proche", a, b, decalageDe(a, b, i + j)));
+    }));
+    // Le produit des entiers donné : deux nombres à une décimale (3,7 × 2,9),
+    // ou un à deux décimales (0,37 × 29 = 10,73).
+    entre(12, 49).filter(n => n % 10 && n % 11).forEach(A => entre(12, 49).filter(n => n % 10 && n % 11).forEach(B => {
+      if (A === B || !sans69(A * B)) return;
+      if ((A + B) % 7 === 0 || exemples.has(`${A / 10}|${B / 10}`)) virgules.push(d16Calcul(1, "virgule", A / 10, B / 10, decalageDe(A / 10, B / 10, A + B)));
+      if ((A * B) % 13 === 0) virgules.push(d16Calcul(1, "virgule", A / 100, B, decalageDe(A / 100, B, A + 2 * B)));
+    }));
+    return Object.freeze({proche: Object.freeze(proches.filter(c => c.choix.every(v => v >= 0.01))), virgule: Object.freeze(virgules)});
+  }
+  const D16_VIVIER = d16Vivier();
+  const d16 = dansVivier(D16_VIVIER, "D16-1");
+  // Le dessin : chaque nombre et son arrondi à l'unité (une flèche), leur
+  // produit. Les trois cases ne sont PAS dans le dessin : elles sont à la
+  // place du pavé, où l'élève choisit (décision de la passe 2 : sur la
+  // planche 3, l'esquisse les dessinait à côté du produit — à l'écran, elles
+  // auraient été deux fois). `revele` : le même dessin (rien n'y est caché).
+  const d16Dessin = calcul => Object.freeze({outil: "arrondis", a: calcul.donnees.a, b: calcul.donnees.b, ra: calcul.donnees.ra, rb: calcul.donnees.rb,
+    e: calcul.donnees.e, sansChoix: true});
+  const d16Image = calcul => d16Dessin(calcul);
+  const d16Aide = calcul => d16Dessin(calcul);
+  function d16Phrase(calcul) {
+    const {a, b, ra, rb, e} = calcul.donnees;
+    const proche = `${f(a)} est proche de ${f(ra)} et ${f(b)} de ${f(rb)} : ${f(ra)} × ${f(rb)} = ${f(e)}.`;
+    if (calcul.forme === "proche") return fr(`${proche} ${f(a)} × ${f(b)} est proche de ${f(calcul.reponse)}.`);
+    return fr(`${proche} Le résultat est proche de ${f(e)} : c’est ${f(calcul.reponse)}.`);
+  }
+  const d16Difficulte = calcul => (calcul.forme === "virgule" ? 1000 : 0) + (calcul.donnees.a < 1 ? 300 : 0) + Math.round(Math.abs(Math.log10(calcul.reponse)) * 50);
+  const D16_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "trop petit",
+      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && calcul.donnees.choix.some(v => memeNombre(v, reponse)) && reponse < calcul.reponse),
+      retour: (calcul, reponse) => {
+        const {a, b, ra, rb, e} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est trop petit. ${f(a)} est proche de ${f(ra)} et ${f(b)} de ${f(rb)} : ${f(ra)} × ${f(rb)} = ${f(e)}.`);
+      },
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "trop grand",
+      test: sauf((calcul, reponse) => Array.isArray(calcul.donnees.choix) && calcul.donnees.choix.some(v => memeNombre(v, reponse)) && reponse > calcul.reponse),
+      retour: (calcul, reponse) => {
+        const {a, b, ra, rb, e} = calcul.donnees;
+        return fr(`${f(reponse)}, c’est trop grand. ${f(a)} est proche de ${f(ra)} et ${f(b)} de ${f(rb)} : ${f(ra)} × ${f(rb)} = ${f(e)}.`);
+      },
+      gras: 0
+    })
+  ]);
+  // J'écris : chaque arrondi, leur produit, puis le choix (une étape à
+  // choisir : `choix`).
+  function d16Ecris(calcul) {
+    if (!calcul || calcul.module !== "D16") return null;
+    const {a, b, ra, rb, e} = calcul.donnees;
+    // (La dernière ligne, « où va la virgule » : le produit des entiers est
+    // dans la consigne, la ligne reste courte — « 3,7 × 2,9 = □ », à choisir.)
+    const virgule = calcul.forme === "virgule";
+    const etapes = [
+      Object.freeze({texte: `${f(a)} est proche de ${CASE}`, reponse: ra}),
+      Object.freeze({texte: `${f(b)} est proche de ${CASE}`, reponse: rb}),
+      Object.freeze({texte: `${f(ra)} × ${f(rb)} = ${CASE}`, reponse: e}),
+      Object.freeze({texte: virgule ? `${f(a)} × ${f(b)} = ${CASE}` : calcul.texte, reponse: calcul.reponse, choix: calcul.choix})
+    ];
+    // (Les dessins : les arrondis s'écrivent un à un, en vert.)
+    const vu = montre => Object.freeze(Object.assign({}, d16Aide(calcul), {montre}));
+    const arrondir = calcul.donnees.a < 1 ? "J’arrondis chaque nombre : à l’unité, ou au dixième sous 1." : "J’arrondis chaque nombre à l’unité.";
+    return ecrisAvecDessins({
+      consigne: fr(virgule ? `${calcul.texte.split(", donc")[0]}. ${arrondir}` : arrondir),
+      etapes: Object.freeze(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: d16Image(calcul), phrase: d16Phrase(calcul)})
+    }, {dessins: Object.freeze([vu(0), vu(1), vu(2), vu(3), vu(3)]), revele: d16Image(calcul)});
+  }
+  function d16Apprends({represente, ecris, consigne, bilan, autre = null}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "arrondis", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse, choix: represente.choix,
+        image: d16Aide(represente),
+        solution: Object.freeze({image: d16Image(represente), phrase: d16Phrase(represente)})
+      }),
+      ecris: d16Ecris(ecris),
+      bilan: frBilan(bilan),
+      ...autreDe(autre),
+      image: d16Image(represente),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // ------------------------------------------------- F11-3 : une fraction d'un nombre
+  //
+  // « 2/5 × 60 = □ » (exemples de réussite de 6e, p. 7 : « 2/5 de 60, c'est
+  // 2 fois un cinquième de 60 … 2/5 × 60 = 2 × 60/5 = 24 » ; programme,
+  // p. 15). Trois sortes : fraction × nombre, nombre × fraction (20 × 3/4),
+  // un résultat plus grand que le nombre (5/4 × 8). Le dessin : les deux
+  // barres de « Fraction d'une quantité » (le tout en haut, les parts
+  // collées dessous, les parts prises entourées, l'accolade).
+  function f11qCalcul(niveau, forme, a, d, N) {
+    const p = N / d;
+    const r = a * p;
+    const texte = forme === "nombre-fraction" ? `${f(N)} × ${a}/${d} = ${CASE}` : `${a}/${d} × ${f(N)} = ${CASE}`;
+    const codes = {"fraction-nombre": 6, "nombre-fraction": 7, "plus-grand": 8};
+    const c = {texte, reponse: r, forme, module: "F11", niveau, cle: `F11-${niveau}-${codes[forme]}-${a}-${d}-${N}`,
+      f11: Object.freeze({k: 1, a, d, N, p, q: true})};
+    const pas = valeur => (valeur > 0 && Number.isInteger(valeur) && valeur !== r ? valeur : -1);
+    return finirCalcul(c, {plus: -1, recopie: -1, parts: -1, quotient: -1, une: pas(p), fois: pas(a * N), parA: Number.isInteger(N / a) ? pas(N / a) : -1});
+  }
+  function f11qVivier() {
+    const fn = [];
+    const nf = [];
+    const grands = [];
+    [2, 3, 4, 5, 6, 8, 10].forEach(d => entre(1, d - 1).filter(a => pgcd(a, d) === 1 && a > 1 || d === 2 && a === 1).forEach(a => entre(2, 12).forEach(p => {
+      const N = d * p;
+      // (Un résultat sous 100 : la case garde la largeur de deux chiffres.)
+      if (N > 120 || a * p >= 100 || !sans69(N, a * p)) return;
+      fn.push(f11qCalcul(3, "fraction-nombre", a, d, N));
+      nf.push(f11qCalcul(3, "nombre-fraction", a, d, N));
+    })));
+    [2, 3, 4, 5].forEach(d => entre(d + 1, 2 * d - 1).filter(a => pgcd(a, d) === 1).forEach(a => entre(2, 10).forEach(p => {
+      const N = d * p;
+      if (N <= 50 && sans69(N, a * p)) grands.push(f11qCalcul(3, "plus-grand", a, d, N));
+    })));
+    return Object.freeze({"fraction-nombre": Object.freeze(fn), "nombre-fraction": Object.freeze(nf), "plus-grand": Object.freeze(grands)});
+  }
+  const F11Q_VIVIER = f11qVivier();
+  const f11q = dansVivier(F11Q_VIVIER, "F11-3");
+  const f11qDessin = (calcul, {part = null, trouve = null} = {}) => Object.freeze({
+    outil: "tout-parts", tout: f(calcul.f11.N), d: calcul.f11.d, pris: calcul.f11.a,
+    part: part ? Object.freeze(part) : null, trouve: trouve ? Object.freeze(trouve) : null
+  });
+  const f11qAide = calcul => f11qDessin(calcul);
+  const f11qImage = calcul => f11qDessin(calcul, {part: {texte: f(calcul.f11.p), vert: false}, trouve: {texte: f(calcul.reponse), vert: false}});
+  function f11qPhrase(calcul) {
+    const {a, d, N, p} = calcul.f11;
+    return fr(`Regarde : ${f(N)} ÷ ${d} = ${f(p)}, puis ${a} × ${f(p)} = ${f(calcul.reponse)}.`);
+  }
+  // J'écris : « une part : 60 ÷ 5 = □ », puis « 2 × 12 = □ », puis le calcul.
+  function f11qEcris(calcul) {
+    if (!calcul || !calcul.f11 || !calcul.f11.q) return null;
+    const {a, d, N, p} = calcul.f11;
+    const vert = (texte, revele) => ({texte, vert: !revele});
+    const dessin = (k, revele) => f11qDessin(calcul, {
+      part: revele || k >= 1 ? vert(f(p), revele) : null,
+      trouve: revele || k >= 2 ? vert(f(calcul.reponse), revele) : null
+    });
+    return ecrisAvecDessins({
+      consigne: fr(`${a}/${d} de ${f(N)} : je partage en ${d} parts égales, j’en prends ${a}.`),
+      etapes: etapesEcris([[`${f(N)} ÷ ${d} = ?`, p], [`${a} × ${f(p)} = ?`, calcul.reponse]]), reponse: calcul.reponse,
+      solution: Object.freeze({image: f11qImage(calcul), phrase: f11qPhrase(calcul)})
+    }, {dessins: Object.freeze([0, 1, 2].map(k => dessin(k, false))), revele: dessin(2, true)});
+  }
+  function f11qApprends({represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "tout-parts", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: f11qAide(represente),
+        solution: Object.freeze({image: f11qImage(represente), phrase: f11qPhrase(represente)})
+      }),
+      ecris: f11qEcris(ecris),
+      bilan: frBilan(bilan),
+      image: f11qImage(represente),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+  const F11Q_RANGS = Object.freeze({"fraction-nombre": 0, "nombre-fraction": 1, "plus-grand": 2});
+  const f11qDifficulte = calcul => F11Q_RANGS[calcul.forme] * 1000 + calcul.f11.d * 40 + Math.min(39, calcul.f11.p * 3);
+  // Les erreurs de F11-3 (celles de « Fraction d'une quantité »).
+  const F11Q_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 7, nom: "une seule part",
+      test: sauf((calcul, reponse) => Boolean(calcul.f11 && calcul.f11.q) && calcul.donnees.une > 0 && memeNombre(reponse, calcul.donnees.une)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est une seule part. ${calcul.f11.a}/${calcul.f11.d}, c’est ${calcul.f11.a} parts.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 8, nom: "multiplié sans partager",
+      test: sauf((calcul, reponse) => Boolean(calcul.f11 && calcul.f11.q) && calcul.donnees.fois > 0 && memeNombre(reponse, calcul.donnees.fois)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as multiplié ${f(calcul.f11.N)} par ${calcul.f11.a}. D’abord, je partage ${f(calcul.f11.N)} en ${calcul.f11.d} parts égales.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 9, nom: "partagé par le numérateur",
+      test: sauf((calcul, reponse) => Boolean(calcul.f11 && calcul.f11.q) && calcul.donnees.parA > 0 && memeNombre(reponse, calcul.donnees.parA)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : tu as partagé en ${calcul.f11.a} parts. On partage en ${calcul.f11.d} parts égales, et on en prend ${calcul.f11.a}.`),
+      gras: 0
+    })
+  ]);
+
+  // ------------------------------------- F10-1 : additionner, soustraire, dénominateurs différents
+  //
+  // « 1/3 + 1/4 = □/12 » (exemples de réussite de 6e, p. 8 : « 5/4 + 2/3 ;
+  // 7/2 − 3/5 » ; le gâteau, 1/4 + 1/6). Le dénominateur commun est écrit
+  // (décision du 04/11 pour toutes les fractions : la consigne dit en
+  // quelles parts écrire ; décision de Claude au code, 27/11, réversible :
+  // la troisième sorte aussi, « 1/4 + 1/6 = □/12 », plutôt qu'une fraction à
+  // deux cases qui accepterait 10/24 sans rien montrer du plus petit
+  // dénominateur). Trois sortes : deux fractions unitaires ; le produit des
+  // dénominateurs (5/4 + 2/3 = □/12) ; un dénominateur commun plus petit que
+  // leur produit (1/4 + 1/6 = □/12). La méthode de « Dénominateurs
+  // multiples », les deux fractions réécrites : les bandes jusqu'à 12 parts
+  // par unité, les flèches au-delà (règle de Gwenaël du 25/11).
+  const F10_CODES = Object.freeze({unitaires: 1, produit: 2, commun: 3});
+  // Les écritures sont celles de « Dénominateurs multiples » (« somme »,
+  // « difference ») : sa barre, ses bandes, son J'écris et ses erreurs
+  // servent tels quels ; la famille (`f10`) fait les sortes.
+  function f10Calcul(famille, texte) {
+    const difference = texte.includes(" − ");
+    const forme = difference ? "difference" : "somme";
+    const c = fracCalcul("F10", 1, forme, texte, F10_CODES[famille] * 2 + (difference ? 1 : 0));
+    const termes = c.lu.cotes[0];
+    const D = c.lu.cotes[1][c.lu.cotes[1].length - 1].d;
+    const converti = t => t.n * D / t.d;
+    const [x, y] = termes;
+    // Les numérateurs pris tels quels (1/3 + 1/4 → 2/12 ; les dénominateurs
+    // ajoutés aussi, 2/7, ne peuvent pas s'écrire en douzièmes) ; le
+    // mauvais sens.
+    const bruts = termes.reduce((s, t) => s + t.s * t.n, 0);
+    return Object.freeze(Object.assign({}, finirCalcul(c, {bruts: sansPareil(c, bruts),
+      sens: sansPareil(c, difference ? converti(x) + converti(y) : Math.abs(converti(x) - converti(y))), oubli: -1, tout: -1}), {f10: famille}));
+  }
+  function f10Vivier() {
+    const familles = {unitaires: [], produit: [], commun: []};
+    const ajouter = (famille, a, d1, b, d2, D) => {
+      const A = a * D / d1;
+      const B = b * D / d2;
+      if (A + B <= 2 * D && tientSurLaBarre((A + B) / D, D)) familles[famille].push(f10Calcul(famille, `${a}/${d1} + ${b}/${d2} = ${CASE}/${D}`));
+      if (A > B && tientSurLaBarre(A / D, D)) familles[famille].push(f10Calcul(famille, `${a}/${d1} − ${b}/${d2} = ${CASE}/${D}`));
+    };
+    // Deux fractions unitaires : 1/3 + 1/4 ; 1/2 − 1/5.
+    entre(2, 6).forEach(d1 => entre(d1 + 1, 7).forEach(d2 => {
+      if (pgcd(d1, d2) === 1 && d1 * d2 <= 30) ajouter("unitaires", 1, d1, 1, d2, d1 * d2);
+    }));
+    // Le produit des dénominateurs : 5/4 + 2/3 ; 7/2 − 3/5.
+    entre(2, 5).forEach(d1 => entre(2, 7).forEach(d2 => {
+      if (d1 === d2 || pgcd(d1, d2) !== 1 || d1 * d2 > 15) return;
+      entre(1, 2 * d1 - 1).filter(a => pgcd(a, d1) === 1).forEach(a => entre(1, 2 * d2 - 1).filter(b => pgcd(b, d2) === 1).forEach(b => {
+        if (a > 1 || b > 1) ajouter("produit", a, d1, b, d2, d1 * d2);
+      }));
+    }));
+    // Un dénominateur commun plus petit que leur produit : 1/4 + 1/6 = □/12.
+    [[4, 6], [6, 4], [6, 8], [8, 6], [4, 10], [10, 4], [6, 9], [9, 6]].forEach(([d1, d2]) => {
+      const D = ppcm(d1, d2);
+      entre(1, d1 - 1).filter(a => pgcd(a, d1) === 1).forEach(a => entre(1, d2 - 1).filter(b => pgcd(b, d2) === 1).forEach(b => ajouter("commun", a, d1, b, d2, D)));
+    });
+    const propre = liste => Object.freeze(liste.filter((c, i) => liste.findIndex(x => x.cle === c.cle) === i && !c.texte.includes("69")));
+    return Object.freeze({unitaires: propre(familles.unitaires), produit: propre(familles.produit), commun: propre(familles.commun)});
+  }
+  const F10_VIVIER = f10Vivier();
+  const f10 = dansVivier(F10_VIVIER, "F10-1");
+
+  // ------------------------------------------------- P1-1 : pourcentage, fraction, décimal
+  //
+  // « 35 % = □ » (exemples de réussite de 6e, p. 3 : « a % est égal à
+  // a/100 » ; 25 % = 25/100 = 0,25 = 1/4 ; 35 % = 0,35 = 7/20 ; p. 8 : une
+  // proportion en pourcentage). Trois sortes : a % en centièmes et en
+  // décimal ; les pourcentages usuels en fraction (25 %, 50 %, 75 %, 10 %,
+  // 20 %) ; une proportion en pourcentage (3 sur 10, c'est □ %). Le dessin
+  // : le carré de 100, a cases coloriées.
+  function p1Calcul(niveau, forme, a, {d = 0, n = 0} = {}) {
+    let texte;
+    let reponse;
+    if (forme === "centiemes") { texte = `${pourcent(a)} = ${CASE}/100`; reponse = a; }
+    else if (forme === "decimal") { texte = `${pourcent(a)} = ${CASE}`; reponse = exact(a / 100); }
+    else if (forme === "pourcent") { texte = `${f(exact(a / 100))} = ${CASE} %`; reponse = a; }
+    else if (forme === "usuel") { texte = `${pourcent(a)} = ${n}/${CASE}`; reponse = d; }
+    else { texte = `${n} sur ${d}, c’est ${CASE} %.`; reponse = a; }
+    const codes = {centiemes: 1, decimal: 2, pourcent: 3, usuel: 4, proportion: 5};
+    const c = {texte, reponse, forme, module: "P1", niveau, cle: `P1-${niveau}-${codes[forme]}-${a}-${n}-${d}`, p1: Object.freeze({a, n, d})};
+    // Les réponses fausses connues : le pourcentage recopié (35 % = 35),
+    // le décimal au mauvais rang (3,5 ; 0,035), le numérateur recopié (3
+    // sur 10 → 3), le pourcentage pris pour un dénominateur (25 % = 1/25).
+    return finirCalcul(c, {recopie: forme === "decimal" ? a : forme === "usuel" ? a : -1, rang: forme === "decimal" ? exact(a / 10) : -1, mille: forme === "decimal" ? exact(a / 1000) : -1,
+      numerateur: forme === "proportion" ? n : -1});
+  }
+  function p1Vivier() {
+    const centiemes = [];
+    const usuels = [];
+    const proportions = [];
+    entre(11, 99).filter(a => a % 10 && a !== 69).forEach(a => {
+      centiemes.push(p1Calcul(1, a % 3 === 0 ? "centiemes" : "decimal", a));
+      if (a % 4 === 1) centiemes.push(p1Calcul(1, "pourcent", a));
+    });
+    [[50, 1, 2], [25, 1, 4], [75, 3, 4], [10, 1, 10], [20, 1, 5], [40, 2, 5], [30, 3, 10], [70, 7, 10], [60, 3, 5], [80, 4, 5], [90, 9, 10]].forEach(([a, n, d]) => usuels.push(p1Calcul(1, "usuel", a, {n, d})));
+    [[2, 4, 5], [5, 10, 20], [4, 5, 25], [2, 5, 50]].forEach(ds => ds.forEach(d => entre(1, d - 1).forEach(n => {
+      const a = n * 100 / d;
+      if (Number.isInteger(a) && pgcd(n, d) === 1 && a !== 69 && proportions.length < 60) proportions.push(p1Calcul(1, "proportion", a, {n, d}));
+    })));
+    return Object.freeze({centiemes: Object.freeze(centiemes), usuel: Object.freeze(usuels), proportion: Object.freeze(proportions.filter((c, i, l) => l.findIndex(x => x.cle === c.cle) === i))});
+  }
+  const P1_VIVIER = p1Vivier();
+  const p1De = dansVivier(P1_VIVIER, "P1-1");
+  const p1Famille = c => (c.forme === "usuel" ? "usuel" : c.forme === "proportion" ? "proportion" : "centiemes");
+  // Le carré de 100 : a cases coloriées (a %, c'est a centièmes).
+  const p1Image = calcul => Object.freeze(d1Carre(calcul.p1.a / 100));
+  const p1Aide = calcul => Object.freeze(calcul.forme === "proportion" ? d1Carre(0) : d1Carre(calcul.p1.a / 100));
+  function p1Phrase(calcul) {
+    const {a, n, d} = calcul.p1;
+    if (calcul.forme === "proportion") return fr(`Regarde : ${n} sur ${d}, c’est ${a} sur 100 : ${a} %.`);
+    if (calcul.forme === "usuel") return fr(`Regarde : ${pourcent(a)} = ${a}/100 = ${n}/${d}.`);
+    return fr(`Regarde : ${pourcent(a)}, c’est ${a} centièmes : ${pourcent(a)} = ${a}/100 = ${f(exact(a / 100))}.`);
+  }
+  const P1_RANGS = Object.freeze({centiemes: 0, decimal: 0, pourcent: 1, usuel: 2, proportion: 3});
+  const p1Difficulte = calcul => P1_RANGS[calcul.forme] * 1000 + (calcul.p1.d || 0) * 10 + calcul.p1.a / 10;
+  const P1_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "le pourcentage recopié",
+      test: sauf((calcul, reponse) => calcul.donnees.recopie > 0 && memeNombre(reponse, calcul.donnees.recopie)),
+      retour: (calcul, reponse) => (calcul.forme === "usuel"
+        ? fr(`${f(reponse)} : ${pourcent(calcul.p1.a)}, ce n’est pas 1 sur ${f(reponse)}. C’est ${calcul.p1.a} sur 100 : ${calcul.p1.a}/100.`)
+        : fr(`${f(reponse)} : ${pourcent(calcul.p1.a)}, c’est ${calcul.p1.a} centièmes, ${calcul.p1.a}/100.`)),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "le décimal au mauvais rang",
+      test: sauf((calcul, reponse) => calcul.donnees.rang > 0 && (memeNombre(reponse, calcul.donnees.rang) || memeNombre(reponse, calcul.donnees.mille))),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : ${pourcent(calcul.p1.a)}, ce sont des centièmes. ${calcul.p1.a} centièmes = ${f(exact(calcul.p1.a / 100))}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "le nombre de parts recopié",
+      test: sauf((calcul, reponse) => calcul.donnees.numerateur > 0 && memeNombre(reponse, calcul.donnees.numerateur)),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : un pourcentage, c’est sur 100. ${calcul.p1.n} sur ${calcul.p1.d}, c’est combien sur 100 ?`),
+      gras: 0
+    })
+  ]);
+  // J'écris : « 35 % = □/100 », puis le calcul ; une proportion : « 3 sur
+  // 10 = □ sur 100 », puis le pourcentage.
+  function p1Ecris(calcul) {
+    if (!calcul || !calcul.p1) return null;
+    const {a, n, d} = calcul.p1;
+    let etapes;
+    if (calcul.forme === "proportion") etapes = [[`${n} sur ${d} = ? sur 100`, a], [calcul.texte.replace(CASE, "?"), a]];
+    else if (calcul.forme === "usuel") etapes = [[`${pourcent(a)} = ?/100`, a], [calcul.texte.replace(CASE, "?"), d]];
+    else if (calcul.forme === "centiemes") return null;
+    else etapes = [[`${pourcent(a)} = ?/100`, a], [calcul.texte.replace(CASE, "?"), calcul.reponse]];
+    const vide = Object.freeze(d1Carre(0));
+    return ecrisAvecDessins({
+      // (Le but : le calcul cherché, « 25 % = 1/? ».)
+      consigne: fr(calcul.texte.replace(CASE, "?")),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: p1Image(calcul), phrase: p1Phrase(calcul)})
+    // (Comme les cinquièmes en centièmes, F1 : le carré se colorie quand
+    // l'élève a écrit les centièmes — vide avant.)
+    }, {dessins: Object.freeze([vide, p1Image(calcul), p1Image(calcul)]), revele: p1Image(calcul)});
+  }
+  function p1Apprends({represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "carre", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: p1Aide(represente),
+        solution: Object.freeze({image: p1Image(represente), phrase: p1Phrase(represente)})
+      }),
+      ecris: p1Ecris(ecris),
+      bilan: frBilan(bilan),
+      image: p1Image(represente),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // ------------------------------------------------- P2-1 : un pourcentage d'un nombre
+  //
+  // « 25 % de 48 = □ » (exemples de réussite de 6e, p. 9 : 20 % de 60 €,
+  // l'échelle de pourcentage ; programme, p. 14 et 16). Trois sortes : 50 %
+  // et 25 % ; 10 % et 20 % ; 75 %. Le dessin (retouche de Gwenaël du 27/11)
+  // : les deux barres de « Fraction d'une quantité » — 48 en haut ; dessous,
+  // 12, 12, 12, 12 ; la part prise en bleu clair, entourée ; l'accolade,
+  // « 25 % de 48 = 12 » (jamais « 100 % = 48 »).
+  const P2_PARTS = Object.freeze({50: [1, 2], 25: [1, 4], 75: [3, 4], 10: [1, 10], 20: [1, 5]});
+  function p2Calcul(niveau, a, N) {
+    const [n, d] = P2_PARTS[a];
+    const p = N / d;
+    const r = n * p;
+    const forme = a === 75 ? "trois-quarts" : a === 10 || a === 20 ? "dixiemes" : "moitie-quart";
+    const c = {texte: `${pourcent(a)} de ${f(N)} = ${CASE}`, reponse: r, forme, module: "P2", niveau, cle: `P2-${niveau}-${a}-${N}`, p2: Object.freeze({a, N, n, d, p})};
+    const pas = valeur => (valeur > 0 && !memeNombre(valeur, r) ? exact(valeur) : -1);
+    return finirCalcul(c, {une: n > 1 ? pas(p) : -1, recopie: pas(a), rang: pas(r / 10), dix: pas(r * 10), reste: pas(N - r)});
+  }
+  function p2Vivier() {
+    const mq = [];
+    const dx = [];
+    const tq = [];
+    entre(2, 25).forEach(p => {
+      if (2 * p <= 100 && sans69(2 * p, p)) mq.push(p2Calcul(1, 50, 2 * p));
+      if (4 * p <= 100 && p % 5 && sans69(4 * p, p)) mq.push(p2Calcul(1, 25, 4 * p));
+      if (4 * p <= 100 && sans69(4 * p, 3 * p)) tq.push(p2Calcul(1, 75, 4 * p));
+    });
+    [...entre(2, 30), 40, 45, 50].forEach(p => {
+      if (10 * p <= 500 && sans69(10 * p, p)) dx.push(p2Calcul(1, 10, 10 * p));
+      if (5 * p <= 200 && sans69(5 * p, p)) dx.push(p2Calcul(1, 20, 5 * p));
+    });
+    // (Le résultat n'est jamais le nombre de parts, ni celui des parts
+    // prises : « 50 % de 4 » ferait dire la réponse au dessin, « 2 parts ».)
+    const lisible = c => c.reponse !== c.p2.d && c.reponse !== c.p2.n;
+    return Object.freeze({"moitie-quart": Object.freeze(mq.filter(lisible)), dixiemes: Object.freeze(dx.filter(lisible)), "trois-quarts": Object.freeze(tq.filter(lisible))});
+  }
+  const P2_VIVIER = p2Vivier();
+  const p2De = dansVivier(P2_VIVIER, "P2-1");
+  const p2Dessin = (calcul, {part = null, trouve = null} = {}) => Object.freeze({
+    outil: "tout-parts", tout: f(calcul.p2.N), d: calcul.p2.d, pris: calcul.p2.n,
+    part: part ? Object.freeze(part) : null, trouve: trouve ? Object.freeze(trouve) : null, accolade: `${pourcent(calcul.p2.a)} de ${f(calcul.p2.N)}`
+  });
+  const p2Aide = calcul => p2Dessin(calcul);
+  const p2Image = calcul => p2Dessin(calcul, {part: {texte: f(calcul.p2.p), vert: false}, trouve: {texte: f(calcul.reponse), vert: false}});
+  function p2Phrase(calcul) {
+    const {a, N, n, d, p} = calcul.p2;
+    const fraction = n === 1 ? `1/${d}` : `${n}/${d}`;
+    return fr(`Regarde : ${pourcent(a)}, c’est ${fraction}. ${f(N)} ÷ ${d} = ${f(p)}${n > 1 ? `, et ${n} × ${f(p)} = ${f(calcul.reponse)}` : ""}.`);
+  }
+  const P2_RANGS = Object.freeze({"moitie-quart": 0, dixiemes: 1, "trois-quarts": 2});
+  const p2Difficulte = calcul => P2_RANGS[calcul.forme] * 1000 + calcul.p2.d * 30 + Math.min(29, calcul.p2.p);
+  const P2_ERREURS = Object.freeze([
+    Object.freeze({
+      c: 1, nom: "une seule part",
+      test: sauf((calcul, reponse) => calcul.donnees.une > 0 && memeNombre(reponse, calcul.donnees.une)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est une seule part, ${pourcent(100 / calcul.p2.d)}. ${pourcent(calcul.p2.a)}, c’est ${calcul.p2.n} parts.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 2, nom: "le pourcentage recopié",
+      test: sauf((calcul, reponse) => calcul.donnees.recopie > 0 && memeNombre(reponse, calcul.donnees.recopie)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est le pourcentage. ${pourcent(calcul.p2.a)} de ${f(calcul.p2.N)}, c’est ${calcul.p2.n}/${calcul.p2.d} de ${f(calcul.p2.N)}.`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 3, nom: "un rang de trop ou de moins",
+      test: sauf((calcul, reponse) => (calcul.donnees.rang > 0 && memeNombre(reponse, calcul.donnees.rang)) || (calcul.donnees.dix > 0 && memeNombre(reponse, calcul.donnees.dix))),
+      retour: (calcul, reponse) => fr(`${f(reponse)} : ${pourcent(calcul.p2.a)}, c’est ${calcul.p2.n}/${calcul.p2.d}. ${f(calcul.p2.N)} ÷ ${calcul.p2.d} = ?`),
+      gras: 0
+    }),
+    Object.freeze({
+      c: 4, nom: "ce qui reste, pas ce qu’on prend",
+      test: sauf((calcul, reponse) => calcul.donnees.reste > 0 && memeNombre(reponse, calcul.donnees.reste)),
+      retour: (calcul, reponse) => fr(`${f(reponse)}, c’est ce qui reste. On cherche ${pourcent(calcul.p2.a)} de ${f(calcul.p2.N)}.`),
+      gras: 0
+    })
+  ]);
+  function p2Ecris(calcul) {
+    if (!calcul || !calcul.p2) return null;
+    const {a, N, n, d, p} = calcul.p2;
+    const vert = (texte, revele) => ({texte, vert: !revele});
+    const dessin = (k, revele) => p2Dessin(calcul, {
+      part: revele || k >= 1 ? vert(f(p), revele) : null,
+      trouve: revele || k >= 2 ? vert(f(calcul.reponse), revele) : null
+    });
+    const etapes = [[`${f(N)} ÷ ${d} = ?`, p], n > 1 ? [`${n} × ${f(p)} = ?`, calcul.reponse] : [calcul.texte.replace(CASE, "?"), calcul.reponse]];
+    return ecrisAvecDessins({
+      consigne: fr(`${pourcent(a)}, c’est ${n}/${d} : je partage ${f(N)} en ${d} parts égales${n > 1 ? `, j’en prends ${n}` : ""}.`),
+      etapes: etapesEcris(etapes), reponse: calcul.reponse,
+      solution: Object.freeze({image: p2Image(calcul), phrase: p2Phrase(calcul)})
+    }, {dessins: Object.freeze([0, 1, 2].map(k => dessin(k, false))), revele: dessin(2, true)});
+  }
+  function p2Apprends({represente, ecris, consigne, bilan}) {
+    return Object.freeze({
+      exemple: exempleDe(represente),
+      manipule: null,
+      represente: Object.freeze({
+        outil: "tout-parts", consigne: fr(consigne),
+        texte: represente.texte, reponse: represente.reponse,
+        image: p2Aide(represente),
+        solution: Object.freeze({image: p2Image(represente), phrase: p2Phrase(represente)})
+      }),
+      ecris: p2Ecris(ecris),
+      bilan: frBilan(bilan),
+      image: p2Image(represente),
+      calculs: Object.freeze({montre: represente, ecris}),
+      textes: Object.freeze([represente.texte, represente.texte, ecris.texte])
+    });
+  }
+
+  // ------------------------------------------------- les fiches des modules
+  const D10 = {
+    id: "D10", nom: "× 0,1 ; × 0,01 ; × 0,001", exemple: "47 × 0,1",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "tableau-fleches",
+    erreurs: D10_ERREURS,
+    image: c => (c.niveau === 2 || c.deNiveau === 2 ? d10FaitImage(c) : d10Image(c)),
+    aide: c => (c.niveau === 2 || c.deNiveau === 2 ? d10FaitAide(c) : d10Aide(c)),
+    phrase: c => (c.niveau === 2 || c.deNiveau === 2 ? d10FaitPhrase(c) : d10Phrase(c)),
+    manipulation: c => (c.niveau === 2 || c.deNiveau === 2 ? null : d10Manipulation(c)),
+    difficulte: c => (c.niveau === 2 || c.deNiveau === 2 ? d10FaitDifficulte(c) : d10Difficulte(c)),
+    niveaux: [
+      {
+        n: 1, titre: "multiplier par 0,1 ; 0,01 ; 0,001", nom: "× 0,1 ; × 0,01 ; × 0,001", palier: 6, type: "P",
+        composer: d10Composer([4, 3, 3]),
+        imposes: [d10("47 × 0,1 = □"), d10("360 × 0,01 = □"), d10("□ × 0,1 = 4,5")],
+        apprends: d10Apprends({
+          manipule: pourApprendre(d10("47 × 0,1 = □")),
+          represente: pourApprendre(d10("360 × 0,01 = □")),
+          ecris: pourApprendre(d10("8 × 0,001 = □")),
+          consigne: "× 0,01, c’est ÷ 100 : chaque chiffre vaut 100 fois moins.",
+          bilan: "Multiplier par 0,1, c’est diviser par 10 : chaque chiffre recule d’un rang. 47 × 0,1 = 4,7."
+        })
+      },
+      {
+        n: 2, titre: "0,1 et 1/10 : les produits à connaître", nom: "0,1 et 1/10 : les produits à connaître", palier: 6, type: "F",
+        composer: vivierNiveau(D10_FAITS, [4, 3, 2, 3]),
+        imposes: [d10Fait("10 × 0,1 = □"), d10Fait("0,1 × 0,1 = □"), d10Fait("1 = 100 × 1/□")],
+        apprends: Object.freeze({
+          exemple: exempleDe(d10Fait("0,1 × 0,1 = □")),
+          manipule: null,
+          represente: Object.freeze({
+            outil: "tableau-fleches", consigne: fr("× 0,1, c’est ÷ 10 : chaque chiffre vaut 10 fois moins."),
+            texte: d10Fait("0,1 × 0,1 = □").texte, reponse: 0.01,
+            image: d10FaitAide(d10Fait("0,1 × 0,1 = □")),
+            solution: Object.freeze({image: d10FaitImage(d10Fait("0,1 × 0,1 = □")), phrase: d10FaitPhrase(d10Fait("0,1 × 0,1 = □"))})
+          }),
+          ecris: d10FaitEcris(d10Fait("1/10 = 10 × 1/□")),
+          bilan: frBilan("10 × 0,1 = 1 et 10 × 1/10 = 1. 0,1 × 0,1 = 0,01."),
+          image: d10FaitImage(d10Fait("0,1 × 0,1 = □")),
+          calculs: Object.freeze({montre: d10Fait("0,1 × 0,1 = □"), ecris: d10Fait("1/10 = 10 × 1/□")}),
+          textes: Object.freeze([d10Fait("0,1 × 0,1 = □").texte, d10Fait("0,1 × 0,1 = □").texte, d10Fait("1/10 = 10 × 1/□").texte])
+        })
+      }
+    ],
+    enReserve: 1
+  };
+  // (D10 : les deux niveaux ont leurs erreurs ; celles de D10-1 ne parlent
+  // jamais d'un fait de D10-2 — leurs données n'y sont pas.)
+  const D11 = {
+    id: "D11", nom: "Décimal × un chiffre", exemple: "0,4 × 3",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "tableau-rang",
+    erreurs: D11_ERREURS, image: rangImage, aide: rangAide, phrase: rangPhrase, manipulation: () => null, difficulte: rangDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "dixièmes, centièmes × un chiffre", nom: "Décimal × un chiffre", palier: 6, type: "P",
+        composer: vivierFamilles(D11_VIVIER, [4, 3, 3], d11Famille),
+        imposes: [d11("0,4 × 3 = □"), d11("0,06 × 7 = □"), d11("2,3 × 4 = □")],
+        apprends: rangApprends({
+          represente: pourApprendre(d11("0,4 × 3 = □")),
+          ecris: pourApprendre(d11("0,7 × 4 = □")),
+          consigne: "0,4, c’est 4 dixièmes : je compte en dixièmes.",
+          bilan: "Je compte en dixièmes. 0,4, c’est 4 dixièmes ; 4 dixièmes × 3 = 12 dixièmes = 1,2."
+        })
+      }
+    ],
+    enReserve: 2
+  };
+  const D12 = {
+    id: "D12", nom: "Décimal × décimal", exemple: "0,4 × 0,3",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "carre-produit",
+    erreurs: D12_ERREURS, image: d12Image, aide: d12Aide, phrase: d12Phrase, manipulation: () => null, difficulte: d12Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "dixièmes × dixièmes, centièmes", nom: "Décimal × décimal", palier: 6, type: "P",
+        composer: vivierNiveau(D12_VIVIER, [5, 3, 2]),
+        imposes: [d12("0,4 × 0,3 = □"), d12("1,2 × 0,3 = □")],
+        apprends: Object.freeze({
+          exemple: exempleDe(d12("0,4 × 0,3 = □")),
+          manipule: null,
+          represente: Object.freeze({
+            outil: "carre-produit", consigne: fr("4 bandes et 3 rangées : les petits carrés des deux."),
+            texte: d12("0,4 × 0,3 = □").texte, reponse: 0.12,
+            image: d12Aide(pourApprendre(d12("0,4 × 0,3 = □"))),
+            solution: Object.freeze({image: d12Image(pourApprendre(d12("0,4 × 0,3 = □"))), phrase: d12Phrase(d12("0,4 × 0,3 = □"))})
+          }),
+          ecris: d12Ecris(pourApprendre(d12("0,5 × 0,6 = □"))),
+          bilan: frBilan("4 × 3 = 12 ; un dixième d’un dixième, c’est un centième : 0,4 × 0,3 = 0,12."),
+          image: d12Image(pourApprendre(d12("0,4 × 0,3 = □"))),
+          calculs: Object.freeze({montre: pourApprendre(d12("0,4 × 0,3 = □")), ecris: pourApprendre(d12("0,5 × 0,6 = □"))}),
+          textes: Object.freeze([d12("0,4 × 0,3 = □").texte, d12("0,4 × 0,3 = □").texte, d12("0,5 × 0,6 = □").texte])
+        })
+      }
+    ],
+    enReserve: 1
+  };
+  const D14 = {
+    id: "D14", nom: "Décimal ÷ un chiffre", exemple: "1,2 ÷ 3",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "tableau-rang",
+    erreurs: D14_ERREURS, image: rangImage, aide: rangAide, phrase: rangPhrase, manipulation: () => null, difficulte: rangDifficulte,
+    niveaux: [
+      {
+        n: 1, titre: "dixièmes ÷ un chiffre", nom: "Décimal ÷ un chiffre", palier: 6, type: "P",
+        composer: vivierFamilles(D14_VIVIER, [3, 4, 3], d14Famille),
+        imposes: [d14("8,4 ÷ 4 = □"), d14("1,2 ÷ 3 = □"), d14("□ × 3 = 1,2")],
+        apprends: rangApprends({
+          represente: pourApprendre(d14("1,2 ÷ 3 = □")),
+          ecris: pourApprendre(d14("4,5 ÷ 5 = □")),
+          consigne: "1,2, c’est 12 dixièmes : je partage 12 dixièmes en 3.",
+          bilan: "Je compte en dixièmes. 1,2, c’est 12 dixièmes ; 12 dixièmes ÷ 3 = 4 dixièmes = 0,4."
+        })
+      }
+    ],
+    enReserve: 2
+  };
+  const D16 = {
+    id: "D16", nom: "Où va la virgule ?", exemple: "3,8 × 2,9",
+    famille: "D", construit: true, virgule: true,
+    aide_entraine: "arrondis",
+    erreurs: D16_ERREURS, image: d16Image, aide: d16Aide, phrase: d16Phrase, manipulation: () => null, difficulte: d16Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "ordre de grandeur d’un produit", nom: "Où va la virgule ?", palier: 6, type: "P",
+        composer: vivierNiveau(D16_VIVIER, [1, 1]),
+        imposes: [d16("3,8 × 2,9 est proche de □"), d16(`37 × 29 = ${f(1073)}, donc 3,7 × 2,9 = ${CASE}`)],
+        apprends: d16Apprends({
+          represente: pourApprendre(d16("3,8 × 2,9 est proche de □")),
+          ecris: pourApprendre(d16(`37 × 29 = ${f(1073)}, donc 3,7 × 2,9 = ${CASE}`)),
+          consigne: "J’arrondis chaque nombre à l’unité.",
+          bilan: "J’arrondis chaque nombre à l’unité : 3,8 × 2,9 est proche de 4 × 3 = 12. Le résultat est proche de 10."
+        })
+      }
+    ]
+  };
+  // (F10 : les deux causes de F9 qui parlent de dénominateurs différents —
+  // « une fraction oubliée » et « les unités comptées deux fois » ne s'y
+  // présentent pas.)
+  const F10_ERREURS = Object.freeze(F9_ERREURS.slice(0, 2));
+  const F10 = {
+    id: "F10", nom: "Dénominateurs différents", exemple: "1/3 + 1/4",
+    famille: "F", construit: true,
+    aide_entraine: "barre-droite",
+    erreurs: F10_ERREURS, image: f9Image, aide: f9Aide, phrase: f9Phrase, manipulation: f9Manipulation, difficulte: f9Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "deux fractions, dénominateurs différents", nom: "Additionner, soustraire : dénominateurs différents", palier: 6, type: "P",
+        composer: vivierFamilles(F10_VIVIER, [3, 4, 3], c => c.f10),
+        imposes: [f10(`1/3 + 1/4 = ${CASE}/12`), f10(`5/4 + 2/3 = ${CASE}/12`), f10(`1/4 + 1/6 = ${CASE}/12`)],
+        apprends: blocsLecon(f9Apprends({
+          represente: pourApprendre(f10(`1/3 + 1/4 = ${CASE}/12`)),
+          ecris: pourApprendre(f10(`1/4 + 1/6 = ${CASE}/12`)),
+          consigne: "Chaque tiers, c’est 4 douzièmes ; chaque quart, 3 douzièmes.",
+          bilan: "1/3 = 4/12 et 1/4 = 3/12, puis 4/12 + 3/12 = 7/12."
+        }))
+      }
+    ],
+    enReserve: 2
+  };
+  const P1 = {
+    id: "P1", nom: "Pourcentage, fraction, décimal", exemple: "25 % = 1/?",
+    famille: "P", construit: true, virgule: true,
+    aide_entraine: "carre",
+    erreurs: P1_ERREURS, image: p1Image, aide: p1Aide, phrase: p1Phrase, manipulation: () => null, difficulte: p1Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "a %, c’est a centièmes", nom: "Pourcentage, fraction, décimal", palier: 6, type: "P",
+        composer: vivierFamilles(P1_VIVIER, [4, 3, 3], p1Famille),
+        imposes: [p1De(`${pourcent(35)} = ${CASE}`), p1De(`${pourcent(25)} = 1/${CASE}`), p1De(`3 sur 10, c’est ${CASE} %.`)],
+        apprends: p1Apprends({
+          represente: pourApprendre(p1De(`${pourcent(35)} = ${CASE}`)),
+          ecris: pourApprendre(p1De(`${pourcent(25)} = 1/${CASE}`)),
+          consigne: "35 cases sur 100.",
+          bilan: "a %, c’est a centièmes : 35 % = 35/100 = 0,35. 25 % = 25/100 = 1/4."
+        })
+      }
+    ],
+    enReserve: 2
+  };
+  const P2 = {
+    id: "P2", nom: "Un pourcentage d’un nombre", exemple: "25 % de 48",
+    famille: "P", construit: true,
+    aide_entraine: "tout-parts",
+    erreurs: P2_ERREURS, image: p2Image, aide: p2Aide, phrase: p2Phrase, manipulation: () => null, difficulte: p2Difficulte,
+    niveaux: [
+      {
+        n: 1, titre: "les pourcentages usuels d’un nombre", nom: "Un pourcentage d’un nombre", palier: 6, type: "P",
+        composer: vivierNiveau(P2_VIVIER, [4, 4, 2]),
+        imposes: [p2De(`${pourcent(25)} de 48 = ${CASE}`), p2De(`${pourcent(10)} de 250 = ${CASE}`), p2De(`${pourcent(20)} de 60 = ${CASE}`)],
+        apprends: p2Apprends({
+          represente: pourApprendre(p2De(`${pourcent(25)} de 48 = ${CASE}`)),
+          ecris: pourApprendre(p2De(`${pourcent(75)} de 40 = ${CASE}`)),
+          consigne: "25 %, c’est un quart : 48 en 4 parts égales.",
+          bilan: "25 %, c’est 1/4 : 48 en 4 parts égales, 48 ÷ 4 = 12. 25 % de 48 = 12."
+        })
+      }
+    ],
+    enReserve: 2
+  };
+
+  // F11-3 « Une fraction d'un nombre », au bout de F11 : ses calculs portent
+  // `f11.q` ; les fonctions de la fiche choisissent leur dessin par lui.
+  F11.niveaux.push({
+    n: 3, titre: "fraction × nombre", nom: "Une fraction d’un nombre", palier: 6, type: "P",
+    composer: vivierNiveau(F11Q_VIVIER, [4, 3, 3]),
+    imposes: [f11q(`2/5 × 60 = ${CASE}`), f11q(`20 × 3/4 = ${CASE}`), f11q(`5/4 × 8 = ${CASE}`)],
+    apprends: f11qApprends({
+      represente: pourApprendre(f11q(`2/5 × 60 = ${CASE}`)),
+      ecris: pourApprendre(f11q(`3/4 × 20 = ${CASE}`)),
+      consigne: "60 partagé en 5 parts égales : on en prend 2.",
+      bilan: "2/5 × 60, c’est 2 fois un cinquième de 60 : 60 ÷ 5 = 12, puis 2 × 12 = 24."
+    })
+  });
+  {
+    const deF11 = {image: F11.image, aide: F11.aide, phrase: F11.phrase, manipulation: F11.manipulation, difficulte: F11.difficulte};
+    const estQ = c => Boolean(c && c.f11 && c.f11.q);
+    Object.assign(F11, {
+      // (Les causes de F11-1 et F11-2 ne parlent jamais d'un calcul de F11-3,
+      // et inversement : chacune regarde son niveau.)
+      erreurs: Object.freeze([...F11_ERREURS.map(e => Object.freeze(Object.assign({}, e, {test: (calcul, ...reste) => !estQ(calcul) && e.test(calcul, ...reste)}))), ...F11Q_ERREURS]),
+      image: c => (estQ(c) ? f11qImage(c) : deF11.image(c)),
+      aide: c => (estQ(c) ? f11qAide(c) : deF11.aide(c)),
+      phrase: c => (estQ(c) ? f11qPhrase(c) : deF11.phrase(c)),
+      manipulation: c => (estQ(c) ? null : deF11.manipulation(c)),
+      difficulte: c => (estQ(c) ? f11qDifficulte(c) : deF11.difficulte(c))
+    });
+  }
+
   // Un module pas encore construit (« bientôt ») : son nom, son exemple,
   // ses niveaux avec leur palier et leur type.
   const reserve = (id, nom, exemple, niveaux) =>
@@ -12649,18 +13977,18 @@
     F9,
     F11,
 
-    reserveSansPalier("D10", "× 0,1\u00a0; × 0,01\u00a0; × 0,001", "780 × 0,1", 3),
-    reserveSansPalier("D11", "Produits liés aux tables", "0,6 × 7", 3),
-    reserveSansPalier("D12", "Décimal × décimal", "0,4 × 0,3", 2),
+    D10,
+    D11,
+    D12,
     reserveSansPalier("D13", "× 0,5\u00a0; × 0,25\u00a0; × 1,5", "48 × 0,5", 3),
-    reserveSansPalier("D14", "Diviser un décimal par un entier", "4,8 ÷ 4", 3),
+    D14,
     reserveSansPalier("D15", "Diviser par un décimal", "1,5 ÷ 0,3", 3),
     reserveSansPalier("F7", "Simplifier", "15/35", 3),
-    reserveSansPalier("F10", "Dénominateurs quelconques", "2/5 + 1/4", 3),
+    F10,
     reserveSansPalier("F12", "Multiplier deux fractions", "2/3 × 5/7", 2),
     reserveSansPalier("F13", "Inverse et division", "5 ÷ 1/2", 3),
-    reserveSansPalier("P1", "Pourcentage, fraction, décimal", "25 % = 1/?", 3),
-    reserveSansPalier("P2", "50 %, 10 %, 1 %, 25 % d’un nombre", "10 % de 250", 3),
+    P1,
+    P2,
     reserveSansPalier("P3", "Pourcentages composés", "20 % de 120", 4),
     reserveSansPalier("P4", "× 1,1\u00a0; × 0,9\u00a0; × 1,2\u00a0; × 0,8", "800 × 1,1", 3),
     reserveSansPalier("R1", "Traverser zéro", "5 − 7", 2),
@@ -12677,7 +14005,10 @@
     reserveSansPalier("X6", "Notation scientifique", "4,58 × 10^?", 3),
     reserveSansPalier("X7", "Produits et quotients de puissances", "2³ × 2⁴", 3),
     reserveSansPalier("C2", "Priorités", "6 + 4 × 2", 4),
-    reserveSansPalier("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 3)
+    reserveSansPalier("C5", "Factoriser pour calculer", "12 × 7 + 12 × 3", 3),
+    // Lot « la 6e complète » (27/11/2026) : un module neuf, à la fin — aucun
+    // rang ne bouge dans les tableaux enregistrés.
+    D16
   ].map(fiche => Object.freeze(Object.assign({}, fiche, {
     // Lot K1 : chaque niveau porte sa ligne sur la carte (son nom d'élève),
     // lue dans la table `LIGNES` ; "" pour un niveau qui n'est pas dans la
@@ -12904,7 +14235,19 @@
     "C4-1": parFormes(["× puis −", "fois-moins"], ["× puis +", "plus-fois"], ["+ puis ×", "fois-par"], ["÷ puis +", "plus-div"]),
     "C4-2": parFormes(["× puis +", "plus-fois"], ["× puis −", "fois-moins"], ["+ puis ×", "fois-par"]),
     "M9-1": [["× 9", (c, d) => d.m === 9], ["× 19", toutes]],
-    "M9-2": [["× 99", (c, d) => d.m === 99], ["× 98", toutes]]
+    "M9-2": [["× 99", (c, d) => d.m === 99], ["× 98", toutes]],
+    // Lot « la 6e complète » (27/11/2026) : les sortes du tableau du § 3 de
+    // la conception.
+    "D10-1": [["× 0,1", (c, d) => c.forme !== "trou" && d.q === 10], ["× 0,01 et × 0,001", c => c.forme !== "trou"], ["l’égalité à trou", toutes]],
+    "D10-2": parFormes(["ce qui fait 1", "fait-un"], ["ce qui fait 0,1 ou 0,01", "fait-dixieme"], ["0,1 × 0,1", "dixieme-dixieme"], ["en fraction", "fraction"]),
+    "D11-1": [["dixièmes × un chiffre", (c, d) => d.rang === 1 && d.a < 1], ["centièmes × un chiffre", (c, d) => d.rang === 2], ["avec des unités", toutes]],
+    "D14-1": [["chaque rang se partage", c => c.forme === "division" && d14Famille(c) === "rangs"], ["on compte en dixièmes", formeEst("division")], ["le nombre cherché", toutes]],
+    "D12-1": parFormes(["dixièmes × dixièmes", "dixiemes"], ["avec des unités", "unites"], ["dixièmes × centièmes", "centiemes"]),
+    "D16-1": parFormes(["proche de 1, 10 ou 100\u00a0?", "proche"], ["où va la virgule\u00a0?", "virgule"]),
+    "F11-3": parFormes(["fraction × nombre", "fraction-nombre"], ["nombre × fraction", "nombre-fraction"], ["plus grand que le nombre", "plus-grand"]),
+    "F10-1": [["deux fractions unitaires", c => c.f10 === "unitaires"], ["le produit des dénominateurs", c => c.f10 === "produit"], ["un dénominateur commun plus petit", toutes]],
+    "P1-1": [["en centièmes, en décimal", c => c.forme !== "usuel" && c.forme !== "proportion"], ["en fraction", formeEst("usuel")], ["une proportion", toutes]],
+    "P2-1": parFormes(["50 % et 25 %", "moitie-quart"], ["10 % et 20 %", "dixiemes"], ["75 %", "trois-quarts"])
   });
 
   // Les cartes « par cœur » (lot 2 « J'apprends en une étape », 12/11/2026,
@@ -13003,6 +14346,14 @@
     // (`moitie` : sous chaque nombre, sa moitié — pour les tests.)
     "D8-1": {titre: "Sous chaque nombre, sa moitié", blocs: coeurDe([{table: [[1, 3, 5, 7], [0.5, 1.5, 2.5, 3.5]], ligneTete: true, moitie: true},
       {table: [[9, 11, 13, 15], [4.5, 5.5, 6.5, 7.5]], ligneTete: true, moitie: true}])},
+    // Lot « la 6e complète » (planche 3, n° 2) : l'écriture à virgule et la
+    // fraction côte à côte (exemples de réussite de 6e, p. 4 ; programme,
+    // p. 13).
+    // (Planche 1 : l'écriture à virgule et la fraction côte à côte, ligne à
+    // ligne — 10 × 0,1 = 1 en face de 10 × 1/10 = 1.)
+    "D10-2": {titre: "0,1 et 1/10", blocs: coeurDe([
+      {liste: [`10 × 0,1 = 1`, `10 × 1/10 = 1`, `100 × 0,01 = 1`, `100 × 1/100 = 1`, `${nb(1000)} × 0,001 = 1`, `${nb(1000)} × 1/${nb(1000)} = 1`,
+        `10 × 0,01 = 0,1`, `1/10 = 10 × 1/100`, `100 × 0,001 = 0,1`, `1/100 = 10 × 1/${nb(1000)}`, `0,1 × 0,1 = 0,01`], colonnes: 2}])},
     "F1-3": {titre: "Cinquièmes", blocs: [
       ...coeurDe([{liste: ["1/5 = 2/10 = 20/100 = 0,2"], colonnes: 1}]),
       ...retrouveDe([{chemin: "6/5 = 6 × 1/5 = 12/10 = 1,2", liste: [2, 3, 4, 6, 7, 8, 9].map(n => `${n}/5 = ${2 * n}/10 = ${nb(n / 5)}`), colonnes: 2}])]}
@@ -13184,9 +14535,11 @@
   function carte() {
     return {
       modules: MODULES.map(fiche => ({
-        id: fiche.id, niveaux: fiche.niveaux.length,
-        paliers: fiche.niveaux.map(niveau => niveau.palier || 0),
-        types: fiche.niveaux.map(niveau => niveau.type || "P"),
+        // (Lot « la 6e complète » : les niveaux réservés au bout d'un module
+        // construit comptent, palier 0.)
+        id: fiche.id, niveaux: fiche.niveaux.length + (fiche.enReserve || 0),
+        paliers: [...fiche.niveaux.map(niveau => niveau.palier || 0), ...Array.from({length: fiche.enReserve || 0}, () => 0)],
+        types: [...fiche.niveaux.map(niveau => niveau.type || "P"), ...Array.from({length: fiche.enReserve || 0}, () => "P")],
         construit: Boolean(fiche.construit)
       })),
       ordre: ORDRE.slice(),
@@ -13803,6 +15156,9 @@
   // « 56 + ? = 100 ») : la famille d'écriture d'un calcul, et ce qu'on
   // annonce quand elle arrive.
   const ANNONCES = Object.freeze({
+    // (Lot « la 6e complète », « Où va la virgule ? » : la réponse à choisir.)
+    proche: "je choisis la bonne réponse",
+    virgule: "le produit des entiers est donné, je choisis où va la virgule",
     "complement-gauche": "la case est devant",
     difference: "c’est une soustraction",
     somme: "c’est une addition",
@@ -14489,6 +15845,48 @@
     "F11-2|quotient": calcul => {
       const [a, b] = nombresC3(calcul.texte);
       return `La fraction, c’est une division : ${exC3(a)}/${exC3(b)} = ${exC3(a)} ÷ ${exC3(b)} = ${exC3(calcul.reponse)}.`;
+    },
+    // --- Lot « la 6e complète » : les écritures que la leçon ne montre pas.
+    "D10-1|trou": calcul => {
+      const {q, fac, m} = calcul.donnees;
+      return `Je reviens au nombre de départ : × ${exC3(fac)}, c’est ÷ ${exC3(q)}, donc je fais × ${exC3(q)}. ${exC3(m)} × ${exC3(q)} = ${exC3(calcul.reponse)}, donc ${resoluC3(calcul)}.`;
+    },
+    "D10-2|fait-un": calcul => `Par cœur : 10 × 0,1 = 1 ; 100 × 0,01 = 1 ; ${f(1000)} × 0,001 = 1. Donc ${resoluC3(calcul)}.`,
+    "D10-2|fait-dixieme": calcul => {
+      const {a, b} = calcul.donnees;
+      const [g, p] = a >= 1 ? [a, b] : [b, a];
+      return `× ${exC3(p)}, c’est ÷ ${exC3(exact(1 / p))} : ${exC3(g)} ÷ ${exC3(exact(1 / p))} = ${exC3(calcul.reponse)}.`;
+    },
+    "D12-1|unites": calcul => {
+      const {A, B, P} = calcul.donnees;
+      return `${exC3(A)} × ${exC3(B)} = ${exC3(P)} ; des dixièmes × des dixièmes, ce sont des centièmes : ${exC3(P)} centièmes. ${resoluC3(calcul)}.`;
+    },
+    "D12-1|centiemes": calcul => {
+      const {A, B, P} = calcul.donnees;
+      return `${exC3(A)} × ${exC3(B)} = ${exC3(P)} ; des dixièmes × des centièmes, ce sont des millièmes : ${exC3(P)} millièmes. ${resoluC3(calcul)}.`;
+    },
+    "D14-1|trou": calcul => {
+      const {a, k, N, R} = calcul.donnees;
+      return `Je cherche le nombre qui, × ${k}, donne ${exC3(a)} : ${exC3(a)} ÷ ${k}. ${exC3(N)} dixièmes ÷ ${k} = ${exC3(R)} dixièmes, c’est ${exC3(calcul.reponse)}.`;
+    },
+    "F10|difference": phraseMemeDenominateur,
+    "F11-3|nombre-fraction": calcul => {
+      const {a, d, N, p} = calcul.f11;
+      return `${exC3(N)} × ${a}/${d}, c’est ${a}/${d} de ${exC3(N)} : ${exC3(N)} ÷ ${d} = ${exC3(p)}, puis ${a} × ${exC3(p)} = ${exC3(calcul.reponse)}.`;
+    },
+    "F11-3|plus-grand": calcul => {
+      const {a, d, N, p} = calcul.f11;
+      return `${a}/${d}, c’est plus que 1 : ${a} parts de ${exC3(p)}. ${exC3(N)} ÷ ${d} = ${exC3(p)}, puis ${a} × ${exC3(p)} = ${exC3(calcul.reponse)}.`;
+    },
+    "P1-1|centiemes": calcul => `${pourcent(calcul.p1.a)}, c’est ${exC3(calcul.p1.a)} centièmes : ${resoluC3(calcul)}.`,
+    "P1-1|pourcent": calcul => `${exC3(exact(calcul.reponse / 100))}, c’est ${exC3(calcul.reponse)} centièmes, ${exC3(calcul.reponse)} sur 100 : ${resoluC3(calcul)}.`,
+    "P1-1|proportion": calcul => {
+      const {n, d} = calcul.p1;
+      return `Sur 100 : ${n} sur ${d}, c’est ${n} × ${100 / d} = ${exC3(calcul.reponse)} sur 100, ${pourcent(calcul.reponse)}.`;
+    },
+    "P2-1|dixiemes": calcul => {
+      const {a, N, n, d, p} = calcul.p2;
+      return n === 1 ? `${pourcent(a)}, c’est 1/${d} : ${exC3(N)} ÷ ${d} = ${exC3(calcul.reponse)}.` : `${pourcent(a)}, c’est ${n}/${d} : ${exC3(N)} ÷ ${d} = ${exC3(p)}, puis ${n} × ${exC3(p)} = ${exC3(calcul.reponse)}.`;
     }
   });
   // La phrase d'une écriture, cherchée du plus précis (« M1-1|trou-double »)
@@ -15272,7 +16670,10 @@
     "F4-1": f4Ecris, "F4-2": f4Ecris, "F9-1": f9Ecris, "F9-2": c => avecBlocs(f9Ecris(c)), "F9-3": c => avecBlocs(f9Ecris(c)), "F11-1": c => avecBlocs(f11Ecris(c)), "F11-2": c => avecBlocs(f11Ecris(c)),
     // Lot 7d.
     "M11-1": recetteQuotientReste, "M11-2": recetteQuotientReste, "A9-1": recetteRegrouperTermes, "A9-2": recetteRegrouperTermes,
-    "C4-1": recetteRemonter, "C4-2": recetteRemonter, "M9-1": recetteRetrancher, "M9-2": recetteRetrancher
+    "C4-1": recetteRemonter, "C4-2": recetteRemonter, "M9-1": recetteRetrancher, "M9-2": recetteRetrancher,
+    // Lot « la 6e complète ».
+    "D10-1": d10Ecris, "D10-2": d10FaitEcris, "D11-1": rangEcris, "D14-1": rangEcris, "D12-1": d12Ecris, "D16-1": d16Ecris,
+    "F11-3": f11qEcris, "F10-1": c => avecBlocs(f9Ecris(c)), "P1-1": p1Ecris, "P2-1": p2Ecris
   });
 
   // Le J'écris d'un calcul dans un niveau (« A10-2 »), ou null quand la
@@ -15410,6 +16811,9 @@
     virguleDuTexte,
     diagnostiquer,
     imageDe,
+    // Lot « la 6e complète » : la phrase de méthode d'un calcul (la correction
+    // d'une réponse à choisir).
+    phraseDe: calcul => { const fiche = calcul && moduleDe(calcul.module); return fiche && typeof fiche.phrase === "function" ? fiche.phrase(calcul) : ""; },
     tableARevoir,
     a2Sauts,
     // Lot 3c : J'écris sur un calcul tiré.

@@ -91,7 +91,8 @@ test("Codex 14 — l'étoile partie garde ses deux boutons quand le paquet finit
 test("Codex 7 — sur la carte, « Continuer » ne promet que ce que le moteur propose", () => {
   const carte = corps("renderCarte");
   assert.match(carte, /const fin = suite\.type === "rien" && !\(s\.ouverte && suite\.tempsFini\);/);
-  assert.match(carte, /else if \(suite\.type === "etoile"\) petit\.textContent/);
+  // (Lot « la 6e complète » : le nom s'écrit avec ses fractions — ecrireAvecFractions.)
+  assert.match(carte, /else if \(suite\.type === "etoile"\) ecrireAvecFractions\(petit, /);
 });
 
 test("Codex 8 — le paquet envoyé ne porte plus la clé « prenom »", () => {
@@ -156,13 +157,13 @@ test("Codex 15 — Mon espace, joué : la lecture de Défi calcul annonce la ver
   };
   const lireParcours = new Function("window", "fetch", `${jaugesEspace()}\n${fonctionEspace("lireParcours")}\nreturn lireParcours;`)({MATHSGO_DEFI_CALCUL_CORE: CORE}, fetchFaux);
   // (Lot K1b : le moteur est en version 13 — la page annonce toujours celle de SON moteur.
-  // Lot P1 : en version 14.)
-  assert.equal(P.VERSION, 14);
-  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 14});
+  // Lot P1 : en version 14 ; lot « la 6e complète » : 15.)
+  assert.equal(P.VERSION, 15);
+  assert.deepEqual(await lireParcours("7K3M9P", "defi-calcul"), {version: 15});
   await lireParcours("7K3M9P", "defi-tables");
   await lireParcours("7K3M9P", "splat");
   assert.deepEqual(envois, [
-    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 14}],
+    ["api/parcours.php", {code: "7K3M9P", appli: "defi-calcul", lire: true, version: 15}],
     ["api/parcours.php", {code: "7K3M9P", appli: "defi-tables", lire: true}],
     ["api/parcours.php", {code: "7K3M9P", appli: "splat", lire: true}]
   ]);

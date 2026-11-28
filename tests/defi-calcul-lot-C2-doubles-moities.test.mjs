@@ -33,8 +33,8 @@ const DOUBLES = ["double", "double-fois", "trou-double"];
 
 test("la carte : 141 compétences en six étages (lot K1b ; 132 avant) ; M1 en neuf niveaux (six au lot C2), D8 en cinq, le double puis la moitié", () => {
   const construits = P.parcoursConstruit(CARTE);
-  assert.equal(construits.length, 141);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(CARTE, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]);
+  assert.equal(construits.length, 151);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(CARTE, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 22]);
   // Lot K1b : trois niveaux de M1 coupés en deux, la moitié du haut à la fin du module —
   // M1-7 (les doubles de 11 à 20, CE2), M1-8 (les moitiés de 22 à 40, CE2), M1-9 (les
   // moitiés en découpant avec une dizaine impaire, CE1).

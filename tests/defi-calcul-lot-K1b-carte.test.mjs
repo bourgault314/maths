@@ -46,7 +46,7 @@ const textes = cle => new Set(vivier(cle).map(c => espaces(c.texte)));
 
 test("six étages, un par classe, et sept ceintures : la blanche-jaune pour le CP, la jaune-orange pour le CE2", () => {
   assert.deepEqual(CORE.PALIERS.map(p => [p.n, p.nom, p.classes]), [[1, "Le CP", "CP"], [2, "Le CE1", "CE1"], [3, "Le CE2", "CE2"], [4, "Le CM1", "CM1"], [5, "Le CM2", "CM2"],
-    [6, "Vers la 6e", "6e et choix pédagogiques"]]);
+    [6, "La 6e", "6e"]]);
   assert.deepEqual(CORE.CEINTURES.map(c => [c.n, c.nom, c.court, [...c.couleurs]]), [
     [0, "Ceinture blanche", "blanche", ["#ffffff"]],
     [1, "Ceinture blanche-jaune", "blanche-jaune", ["#ffffff", "#f9bf3b"]],
@@ -61,13 +61,15 @@ test("six étages, un par classe, et sept ceintures : la blanche-jaune pour le C
   // Une ceinture par étage, dans l'ordre : la ceinture n se gagne à l'étage n.
   assert.equal(CORE.CEINTURES.length, CORE.PALIERS.length + 1);
   assert.deepEqual([P.SEUILS.ceintures.nombre, P.SEUILS.seance.paliers], [6, 6]);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => duEtage(n).length), [14, 20, 19, 33, 43, 12]);
-  assert.equal(CORE.ORDRE.length, 141);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => duEtage(n).length), [14, 20, 19, 33, 43, 22]);
+  assert.equal(CORE.ORDRE.length, 151);
   assert.deepEqual(CARTE.modules.flatMap(m => m.paliers).filter(Boolean).sort(), CORE.ORDRE.map(etageDe).sort(), "la carte donnée au moteur porte les mêmes étages");
   // Les trois étages du haut n'ont pas changé de contenu : seuls leurs numéros (2, 3, 4 → 4, 5, 6).
   const AVANT = require("./defi-calcul-lot-K1b-version-12.json").carte.etages;
   const tri = liste => [...liste].sort();
-  assert.deepEqual([duEtage(4), duEtage(5), duEtage(6)].map(tri), [AVANT[1], AVANT[2], AVANT[3]].map(tri), "le CM1, le CM2, vers la 6e : les mêmes étoiles");
+  // (Lot « la 6e complète » : la 6e a les mêmes étoiles, et dix de plus.)
+  const NEUVES_6E = ["D10-1", "D10-2", "D11-1", "D14-1", "D12-1", "D16-1", "F11-3", "F10-1", "P1-1", "P2-1"];
+  assert.deepEqual([duEtage(4), duEtage(5), duEtage(6).filter(k => !NEUVES_6E.includes(k))].map(tri), [AVANT[1], AVANT[2], AVANT[3]].map(tri), "le CM1, le CM2, la 6e : les mêmes étoiles");
   // Et le premier étage d'avant, ses 44 étoiles : dans les trois premiers d'aujourd'hui, avec les neuf étoiles neuves.
   const neuves = ["A10-4", "A10-5", "A11-4", "A2-6", "A3-5", "A5-5", "M1-7", "M1-8", "M1-9"];
   assert.deepEqual(tri([...duEtage(1), ...duEtage(2), ...duEtage(3)]), tri([...AVANT[0], ...neuves]));
@@ -114,8 +116,8 @@ test("les lignes : 37, quatre au CP, sept au CE1, six au CE2 ; leurs noms d'él�
     ["Les tables", "M2-1 M3-1 M5-1"],
     ["Je multiplie", "M6-1 M6-2 M8-2"],
     ["Fractions", "F6-1 F9-1"]]);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => CARTE.lignes.filter(l => l.etage === n).length), [4, 7, 6, 8, 9, 3]);
-  assert.equal(CARTE.lignes.length, 37);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => CARTE.lignes.filter(l => l.etage === n).length), [4, 7, 6, 8, 9, 6]); // (lot « la 6e complète » : six lignes en 6e)
+  assert.equal(CARTE.lignes.length, 40);
   // Un nom de ligne ne sert qu'une fois par étage ; chaque étoile a une ligne et une seule.
   [1, 2, 3, 4, 5, 6].forEach(n => { const noms = CARTE.lignes.filter(l => l.etage === n).map(l => l.nom); assert.equal(new Set(noms).size, noms.length, `étage ${n}`); });
   assert.deepEqual(CARTE.lignes.flatMap(l => l.cles).sort(), [...CORE.ORDRE].sort());
@@ -126,11 +128,13 @@ test("les liens « d'abord » : onze, cinq dans les bases ; un élève neuf a qu
   assert.deepEqual(Object.assign({}, CARTE.dabord), {
     "A10-2": "A2-1", "A5-1": "A3-1",
     "A10-5": "A2-6", "A11-4": "A2-6", "A5-5": "A3-5",
-    "M12-1": "M3-2", "F8-3": "F5-1", "F9-2": "F6-2", "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3"});
+    "M12-1": "M3-2", "F8-3": "F5-1", "F9-2": "F6-2", "F3-3": "D8-1", "M13-3": "D8-3", "D9-1": "D8-3",
+    // (Lot « la 6e complète » : « Décimal × décimal » demande « 0,1 et 1/10 ».)
+    "D12-1": "D10-2"});
   // Passer la dizaine demande le complément à la dizaine de la même taille ; ajouter 9, d'ajouter des dizaines.
   const carte = P.carteEleve(P.creerParcours(), CARTE, {aujourdhui: J});
   // (Lot P1 : tout est ouvert dès le premier jour.)
-  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total]), [[1, true, 14], [2, true, 20], [3, true, 19], [4, true, 33], [5, true, 43], [6, true, 12]]);
+  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total]), [[1, true, 14], [2, true, 20], [3, true, 19], [4, true, 33], [5, true, 43], [6, true, 22]]);
   const aGagner = carte.etages[0].lignes.flatMap(l => l.etoiles).filter(e => e.etat === "aGagner").map(e => e.cle);
   assert.deepEqual(aGagner, ["A1-1", "A10-1", "A2-1", "M1-1"], "la première étoile de chaque ligne");
   // Le réglage du professeur : la carte s'arrête à son étage.
@@ -356,7 +360,7 @@ test("une ceinture fermée : blanche dedans, un pointillé de 2 dans la couleur 
 test("le professeur et Mon espace : six étages dans les comptes, la ceinture portée de 0 à 6", () => {
   const p0 = P.creerParcours();
   const compte = P.compter(p0, CARTE);
-  assert.deepEqual(compte.paliers.map(x => [x.palier, x.total]), [[1, 14], [2, 20], [3, 19], [4, 33], [5, 43], [6, 12]]);
+  assert.deepEqual(compte.paliers.map(x => [x.palier, x.total]), [[1, 14], [2, 20], [3, 19], [4, 33], [5, 43], [6, 22]]);
   // Les ceintures gagnées une à une : la portée monte de 0 à 6, la prochaine suit, « fini » à la sixième.
   for (let gagnees = 0; gagnees <= 6; gagnees += 1) {
     const p = P.creerParcours();

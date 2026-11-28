@@ -1853,3 +1853,37 @@ svg .dc-montre { stroke: #f58220; animation: dc-montre-svg 1.1s ease-in-out infi
    le centrage suffisent : moins d'un pixel d'écart avec les polices des
    appareils, au téléphone comme à l'ordinateur. */
 .ck-points i { display: inline-flex; align-items: center; justify-content: center; line-height: 1; padding: 0; font-variant-numeric: tabular-nums; }
+
+/* Lot « la 6e complète » (27/11/2026, planche 2) : une réponse À CHOISIR parmi
+   trois (« Où va la virgule ? »). Les trois cases se posent en bas de la place
+   du pavé, qui la garde, invisible : rien ne bouge d'un calcul à l'autre. La
+   case touchée : un trait bleu épais (une ombre intérieure — le texte ne
+   bouge pas) ; la bonne : verte, avec ✓ ; la fausse choisie : en tirets
+   rouges, avec ✗. Lisible imprimé en noir et blanc (le trait épais, les
+   tirets, les signes). */
+.keypad { position: relative; }
+.keypad.est-choix { background: transparent; }
+.keypad.est-choix > button { visibility: hidden; }
+.question.a-choix #touches { visibility: hidden; }
+.dc-choix { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding: 10px; border-radius: 18px; background: #e3ecf2; visibility: visible; }
+.dc-choix[hidden] { display: none; }
+.keypad .dc-choix-case { position: relative; min-width: 0; min-height: calc(var(--touche-h) + 14px); padding: 0 4px; border: 2px solid #9fb0bf; border-radius: 14px; background: #fff; color: #143451; font: inherit; font-size: calc(var(--touche-police) * 1.05); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer; touch-action: manipulation; }
+.keypad .dc-choix-case.est-choisie { border-color: var(--blue); box-shadow: inset 0 0 0 2px var(--blue); background: #eaf2fb; }
+.keypad .dc-choix-case.est-juste { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: var(--green-soft); color: var(--green); }
+.keypad .dc-choix-case.est-faux { border: 2px dashed var(--red); background: var(--red-soft); color: #7a1f1f; }
+.keypad .dc-choix-case.est-juste::after, .keypad .dc-choix-case.est-faux::after { position: absolute; top: -11px; right: -9px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fff; font-size: 14px; font-weight: 900; line-height: 1; }
+.keypad .dc-choix-case.est-juste::after { content: "✓"; border: 2px solid var(--green); color: var(--green); }
+.keypad .dc-choix-case.est-faux::after { content: "✗"; border: 2px solid var(--red); color: var(--red); }
+/* (Les cases sont dans le pavé : ni le fond ni l'effacement de ses touches.) */
+.keypad .dc-choix-case { height: auto; line-height: 1; isolation: auto; }
+.keypad .dc-choix-case::before { content: none; }
+.challenge-playing .question > .keypad .dc-choix-case { height: auto; }
+.keypad .dc-choix-case:disabled { cursor: default; opacity: 1; }
+.keypad .dc-choix-case:focus-visible { outline: 3px solid #0f6cf9; outline-offset: 2px; }
+/* Le calcul à choisir, sur deux lignes : le calcul en grand, l'autre ligne
+   plus petite (« est proche de… », « 37 × 29 = 1 073, donc »). */
+/* (Les deux lignes tiennent dans la hauteur d'un calcul d'une ligne : le pavé
+   garde sa taille d'un calcul à l'autre, à l'ordinateur aussi.) */
+.expression.dc-choix-expression { flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 0; line-height: 1; }
+.dc-choix-calcul { display: block; white-space: nowrap; font-size: .8em; }
+.dc-choix-ligne { display: block; margin-top: .14em; white-space: nowrap; font-size: .46em; font-weight: 700; }

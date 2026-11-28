@@ -389,7 +389,7 @@ test("GÊNANT — une progression LUE en version 12 est récrite une fois en ver
     // Un appareil neuf (rien dans l'appareil).
     const neuf = P.recevoir(P.creerParcours(), ligne12, options);
     assert.deepEqual([neuf.lectureSeule, neuf.apporte], [false, true], `ligne ${n} : appareil neuf — la reprise part au serveur`);
-    assert.equal(neuf.parcours.version, 14); // (lot P1 : relue en version 14)
+    assert.equal(neuf.parcours.version, 15); // (lot P1 : relue en version 14 ; lot « la 6e complète » : 15)
     // Un appareil qui a déjà la même progression (reprise).
     const meme = P.recevoir(P.normaliserParcours(ligne12, {aujourdhui: J24}), ligne12, options);
     assert.deepEqual([meme.lectureSeule, meme.apporte], [false, true], `ligne ${n} : la même progression dans l'appareil`);
@@ -401,8 +401,8 @@ test("GÊNANT — une progression LUE en version 12 est récrite une fois en ver
   });
   // Rien d'autre ne change : une version plus récente reste en lecture seule ; une version d'avant la 12
   // (elle repart de zéro, personne n'y avait joué) ne déclenche pas d'envoi à elle seule.
-  // (Lot P1 : le moteur est en version 14 — la plus récente est la 15.)
-  assert.deepEqual([P.recevoir(P.creerParcours(), {version: 15, modules: {}}, options).lectureSeule, P.recevoir(P.creerParcours(), {version: 15, modules: {}}, options).apporte], [true, false]);
+  // (Lot P1 : le moteur est en version 14 ; lot « la 6e complète » : 15 — la plus récente est la 16.)
+  assert.deepEqual([P.recevoir(P.creerParcours(), {version: 16, modules: {}}, options).lectureSeule, P.recevoir(P.creerParcours(), {version: 16, modules: {}}, options).apporte], [true, false]);
   assert.equal(P.recevoir(P.creerParcours(), {version: 11, epoque: 0, modules: {}}, options).apporte, false);
   assert.equal(P.recevoir(P.creerParcours(), {version: "12", modules: {}}, options).apporte, false, "une version en texte n'est pas une version 12");
 });
@@ -432,19 +432,21 @@ test("DÉTAIL — l'ancien `palier` écrit `2.0` dans le texte JSON vaut 2 pour 
 
 test("DÉTAIL — les tailles, mesurées : la référence versionnée (1 657 clés, 30 818 octets sans le prénom) ; toutes les étoiles tenues et 12 causes (1 954, 33 733) ; le pire cas (1 954, 35 972) — sous les bornes du serveur", async () => {
   // (Lot P1 : la sorte d'un calcul raté rangée dans `x` — aucune clé de plus, quelques octets.)
+  // (Lot « la 6e complète » : D16, un module de plus, et dix étoiles — 1 680 clés et 31 139 octets
+  // dans la référence ; toutes tenues 1 980 et 34 064 ; le pire cas 1 980 et 36 323.)
   const reference = JSON.parse(await readFile(new URL("../_serveur/tests/parcours-reference-defi-calcul.json", import.meta.url), "utf8"));
   // Avec la clé `prenom` (vide), comme le moteur la garde : une clé et 12 octets de plus.
-  assert.deepEqual(P.mesurer(reference), {cles: 1658, octets: 30830});
+  assert.deepEqual(P.mesurer(reference), {cles: 1680, octets: 31139});
   // Ce que le serveur garde (il ne connaît pas `prenom`) — les chiffres de la relecture de Codex.
   const {prenom, ...envoyee} = reference;
   assert.equal(prenom, "");
-  assert.deepEqual(P.mesurer(envoyee), {cles: 1657, octets: 30818});
+  assert.deepEqual(P.mesurer(envoyee), {cles: 1679, octets: 31127});
   const {parcoursComplet} = await import("../scripts/generer-parcours-reference-defi-calcul.mjs");
-  assert.deepEqual(P.mesurer(parcoursComplet()), {cles: 1658, octets: 30830}, "le fichier versionné est ce que rend le générateur");
+  assert.deepEqual(P.mesurer(parcoursComplet()), {cles: 1680, octets: 31139}, "le fichier versionné est ce que rend le générateur");
   // Les chiffres de la notice du lot : toutes les étoiles tenues, 12 causes par module…
-  assert.deepEqual(P.mesurer(parcoursComplet({entier: true, causes: P.SEUILS.causes})), {cles: 1954, octets: 33733});
+  assert.deepEqual(P.mesurer(parcoursComplet({entier: true, causes: P.SEUILS.causes})), {cles: 1980, octets: 34064});
   // … et le pire cas pour la taille (aucune tenue, quatre dates par étoile, 12 causes).
   const pire = P.mesurer(parcoursComplet({pire: true, causes: P.SEUILS.causes}));
-  assert.deepEqual(pire, {cles: 1954, octets: 35972});
+  assert.deepEqual(pire, {cles: 1980, octets: 36323});
   assert.ok(pire.cles < 2000 && pire.octets < 40000, "sous les bornes du serveur (2 000 clés, 40 000 octets)");
 });

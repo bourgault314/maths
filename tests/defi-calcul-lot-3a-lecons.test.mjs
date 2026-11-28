@@ -32,7 +32,7 @@ const tirages = (cle, n = 40) => {
 };
 
 test("les leçons (141 depuis le lot K1b) : À retenir reprend le calcul de « On te montre », et sa réponse", () => {
-  assert.equal(NIVEAUX.length, 141, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
+  assert.equal(NIVEAUX.length, 151, "lot « la 6e complète » : dix de plus (141 avant) ; lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
   NIVEAUX.forEach(({cle, trouve}) => {
     const a = trouve.niveau.apprends;
     const montre = a.calculs.montre;
@@ -65,6 +65,14 @@ const AUTRE_SORTE = Object.freeze({
   // montre 7 × 3/7 = 3 (la définition), J'écris sur la fraction cherchée,
   // 3 × □ = 2.
   "F11-2": "décidé : J'écris sur la fraction cherchée (lot 6)",
+  // Lot « la 6e complète » (27/11/2026) : J'écris prend une autre sorte du
+  // niveau que « On te montre », pour que l'élève en rencontre deux.
+  "D10-1": "décidé : On te montre × 0,1, J'écris × 0,001",
+  "D10-2": "décidé : On te montre 0,1 × 0,1, J'écris l'écriture en fraction",
+  "D16-1": "décidé : On te montre « proche de », J'écris « où va la virgule », l'arrondi en étapes",
+  "F10-1": "décidé : On te montre le produit des dénominateurs, J'écris un dénominateur commun plus petit",
+  "P1-1": "décidé : On te montre le décimal, J'écris la fraction",
+  "P2-1": "décidé : On te montre 25 %, J'écris 75 %",
   // Lot 3b : J'écris des demis et quarts, × 100, ÷ 10, millièmes, fractions
   // égales 2 et 3 sont de la sorte de la leçon. (Lot 7e : F6-1 aussi, depuis
   // qu'il s'arrête à 12 parts.)

@@ -273,11 +273,24 @@
   // refuse l'écriture d'une page de version 13 (« version_min » 14) : elle
   // couperait `x` à 3 (elle effacerait la sorte, et un 4 deviendrait 3 : un
   // retour raté et un 2e calcul qui n'existent pas).
-  const VERSION = 14;
+  // Version 15 (lot « la 6e complète », 27/11/2026, choix de Gwenaël du
+  // 26/11) : l'étage de 6e a 22 étoiles. Deux lignes s'allongent ou
+  // arrivent, aucune clé neuve : « Entier × fraction » (F11) gagne un niveau
+  // au bout (F11-3, « Une fraction d'un nombre ») et « Où va la virgule ? »
+  // est un module neuf (D16, un niveau) ; les modules réservés D10, D11,
+  // D12, D14, F10, P1 et P2 étaient déjà dans le format (leurs lignes ne
+  // changent pas de taille). Une progression de version 14 se relit SANS
+  // RIEN PERDRE : la ligne de F11 reçoit une case vide au bout, D16 n'y est
+  // pas (vide). Le serveur refuse l'écriture d'une page de version 14
+  // (« version_min » 15) : elle couperait la ligne de F11 à deux cases et
+  // jetterait D16 (une étoile gagnée sur un autre appareil partirait).
+  const VERSION = 15;
   // Les versions d'avant qui se relisent (les autres repartent de zéro) : la
-  // 12 est reprise (reprendreVersion12), la 13 se relit telle quelle.
+  // 12 est reprise (reprendreVersion12), la 13 et la 14 se relisent telles
+  // quelles.
   const VERSION_REPRISE = 12;
   const VERSION_13 = 13;
+  const VERSION_14 = 14;
   const CLE_STOCKAGE = "mathsgo-defi-calcul-parcours";
   const PRENOM_MAX = 20;
   // Le code de suivi et l'identité vivent dans l'ONGLET, sous les mêmes clés
@@ -297,10 +310,12 @@
     M4: 2, M1: 9, M2: 2, M3: 3, M5: 1, M6: 2, M13: 3, M7: 3, M8: 3, M9: 2, M10: 3, M11: 2, M12: 3,
     C1: 3, C3: 3, C4: 2,
     D1: 3, D2: 4, D3: 3, D4: 3, D5: 2, D6: 3, D7: 3, D8: 5, D9: 2,
-    F2: 2, F1: 3, F3: 3, F4: 2, F5: 2, F6: 4, F8: 3, F9: 3, F11: 2,
+    F2: 2, F1: 3, F3: 3, F4: 2, F5: 2, F6: 4, F8: 3, F9: 3, F11: 3,
     D10: 3, D11: 3, D12: 2, D13: 3, D14: 3, D15: 3, F7: 3, F10: 3, F12: 2, F13: 3,
     P1: 3, P2: 3, P3: 4, P4: 3, R1: 2, R2: 3, R3: 3, R4: 3, R5: 4, R6: 2,
-    X1: 3, X2: 3, X3: 2, X4: 3, X5: 4, X6: 3, X7: 3, C2: 4, C5: 3
+    X1: 3, X2: 3, X3: 2, X4: 3, X5: 4, X6: 3, X7: 3, C2: 4, C5: 3,
+    // Lot « la 6e complète » (version 15) : un module neuf, à la fin.
+    D16: 1
   });
   const CODES = Object.freeze(Object.keys(NIVEAUX));
 
@@ -1235,6 +1250,27 @@
   //    zéro, gagne toujours en bloc ; le prénom (un visiteur sans code) aussi ;
   //  - plus récente : rendue vide, elle aussi — l'appelant (charger,
   //    recevoir, sauver) ne l'utilise pas et passe en lecture seule.
+  // Correctif du lot « la 6e complète » (relecture de Codex du 28/11) : les
+  // étoiles qu'une page de version 14 (ou plus ancienne) ne pouvait PAS
+  // jouer — les dix étoiles neuves de La 6e. Une copie ancienne qui porte
+  // quelque chose à ces places (une copie abîmée ou trafiquée : aucun geste
+  // n'a pu l'écrire) ne donne pas d'étoile : ces places repartent vides.
+  //  - `modules` : les modules qui n'avaient aucun niveau jouable avant (leur
+  //    ligne entière repart vide, niveaux réservés compris) ;
+  //  - F11 : sa troisième case seulement, et les causes de « Une fraction
+  //    d'un nombre » (7, 8, 9), qu'aucune page ancienne ne pouvait compter.
+  const NEUVES_15 = Object.freeze({modules: Object.freeze(["D10", "D11", "D12", "D14", "F10", "P1", "P2", "D16"]), F11: 2, causesF11: Object.freeze(["7", "8", "9"])});
+  // (Une progression ne porte que les modules touchés : un module absent est
+  // vide.)
+  function viderNeuves15(parcours) {
+    NEUVES_15.modules.forEach(id => { delete parcours.modules[id]; });
+    const ligne = parcours.modules.F11;
+    if (!ligne) return;
+    const vide = moduleVide("F11");
+    Object.keys(vide).forEach(champ => { if (Array.isArray(vide[champ])) ligne[champ][NEUVES_15.F11] = vide[champ][NEUVES_15.F11]; });
+    NEUVES_15.causesF11.forEach(cause => { delete ligne.c[cause]; });
+  }
+
   function normaliserParcours(brut, {aujourdhui = jourLocal()} = {}) {
     const parcours = creerParcours();
     if (!brut || typeof brut !== "object" || Array.isArray(brut)) return parcours;
@@ -1247,15 +1283,17 @@
     if (!versionDe(brut)) return parcours;
     parcours.epoque = entier(brut.epoque, 0, 1000000);
     const jour = dateOuNull(aujourdhui) || jourLocal();
-    const xMax = versionDe(brut) === VERSION ? X_MAX : X_RATE + X_SECOND;
+    const xMax = versionDe(brut) === VERSION || versionDe(brut) === VERSION_14 ? X_MAX : X_RATE + X_SECOND;
+    const ancienne = versionDe(brut) !== VERSION;
     if (versionDe(brut) === VERSION_REPRISE) brut = reprendreVersion12(brut, jour);
-    else if (versionDe(brut) !== VERSION && versionDe(brut) !== VERSION_13) return parcours;
+    else if (versionDe(brut) !== VERSION && versionDe(brut) !== VERSION_14 && versionDe(brut) !== VERSION_13) return parcours;
     if (brut.modules && typeof brut.modules === "object" && !Array.isArray(brut.modules)) {
       CODES.forEach(id => {
         if (!Object.prototype.hasOwnProperty.call(brut.modules, id)) return;
         parcours.modules[id] = normaliserModule(id, brut.modules[id], jour, NIVEAUX[id], xMax);
       });
     }
+    if (ancienne) viderNeuves15(parcours);
     const seance = brut.seance && typeof brut.seance === "object" && !Array.isArray(brut.seance) ? brut.seance : {};
     parcours.seance = {
       jour: dateOuNull(seance.jour),
@@ -3598,7 +3636,7 @@
     const distant = normaliserParcours(recu, {aujourdhui});
     const fusion = fusionner(ici, distant, {aujourdhui, carte, palier});
     const sansPrenom = p => JSON.stringify(Object.assign({}, p, {prenom: ""}));
-    return {parcours: fusion, lectureSeule: false, apporte: versionDe(recu) === VERSION_REPRISE || versionDe(recu) === VERSION_13 || sansPrenom(fusion) !== sansPrenom(distant)};
+    return {parcours: fusion, lectureSeule: false, apporte: versionDe(recu) === VERSION_REPRISE || versionDe(recu) === VERSION_13 || versionDe(recu) === VERSION_14 || sansPrenom(fusion) !== sansPrenom(distant)};
   }
 
   // ---------------------------------------------- ce que lit le professeur
@@ -3847,6 +3885,7 @@
     VERSION,
     VERSION_REPRISE,
     VERSION_13,
+    VERSION_14,
     COUPE_K1B,
     // Correctif K1b : les deux étages du compteur d'une moitié du haut.
     COMPTEURS_K1B: Object.freeze({heriteMax: COMPTEUR_HERITE_MAX, joue: COMPTEUR_JOUE}),

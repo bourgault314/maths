@@ -41,6 +41,10 @@ function evaluer(expression) {
   let t = blanc(expression)
     .replace(/double de/g, "2 ×").replace(/moitié de/g, "0,5 ×")
     .replace(/(\d+(?:,\d+)?) dizaines/g, "($1 × 10)")
+    // (Lot « la 6e complète » : « 12 dixièmes », « 42 centièmes », « 35 % »,
+    // « 25 % de 48 ».)
+    .replace(/(\d+(?: \d{3})*) dixièmes/g, "($1 ÷ 10)").replace(/(\d+(?: \d{3})*) centièmes/g, "($1 ÷ 100)")
+    .replace(/(\d+(?:,\d+)?) % de/g, "($1 ÷ 100) ×").replace(/(\d+(?:,\d+)?) %/g, "($1 ÷ 100)")
     .replace(/(\d+)\/(\d+(?: \d{3})*) de/g, "($1 / $2) ×")
     .replace(/ (g|kg|L|m|cm|€|billes|élèves)\b/g, "").replace(/ €/g, "");
   if (/[a-zA-Zéèàù?]/.test(t)) return null;
@@ -92,6 +96,17 @@ function phraseVraie(texte, calcul) {
   if ((m = /^(\d+)\/(\d+) de ([\d ,]+) (\S+), c’est ([\d ,]+) \4\.$/.exec(t))) return proches(nb(m[5]), nb(m[3]) * Number(m[1]) / Number(m[2]));
   if ((m = /^1\/(\d+) de ([\d ,]+) (\S+), c’est ([\d ,]+) \3\.$/.exec(t))) return proches(nb(m[4]), nb(m[2]) / Number(m[1]));
   if ((m = /^La moitié de ([\d ,]+) (\S+), c’est ([\d ,]+) \2\.$/.exec(t))) return proches(nb(m[3]), nb(m[1]) / 2);
+  // (Lot « la 6e complète », « Où va la virgule ? » : « 3,7 est proche de
+  // 4 » — l'arrondi à l'unité, au dixième sous 1 ; « 3,8 × 2,9 est proche de
+  // 10 » — la puissance de 10 la plus proche ; « 37 × 29 = 1 073, donc 3,7 ×
+  // 2,9 = 10,73 » — deux égalités vraies.)
+  if ((m = /^(.+) est proche de ([\d ,]+)$/.exec(t))) {
+    const v = evaluer(m[1]);
+    if (v === null) return null;
+    if (/^[\d ,]+$/.test(m[1])) return proches(nb(m[2]), v >= 1 ? Math.round(v) : Math.round(v * 10) / 10);
+    return proches(nb(m[2]), 10 ** Math.round(Math.log10(v)));
+  }
+  if ((m = /^(.+), donc (.+)$/.exec(t))) return egaliteVraie(m[1]) === true && egaliteVraie(m[2]) === true;
   return null;
 }
 const avecReponse = (texte, reponse, ecrite = null) => (blanc(texte).includes("□/□") && ecrite
@@ -215,7 +230,7 @@ function verifierEcris(cle, tire, lecon) {
 }
 
 test("lot 3c : chaque recette redonne le J'écris de la leçon, sur son calcul", () => {
-  assert.equal(NIVEAUX.length, 141, "lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
+  assert.equal(NIVEAUX.length, 151, "lot « la 6e complète » : dix de plus (141 avant) ; lot 6 « programmes 2 » : F9-1 et F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9 ; lot K1b : neuf de plus (132 avant)");
   const memes = x => blanc(JSON.stringify(x));
   NIVEAUX.forEach(cle => {
     const lecon = CORE.niveauDe(cle).niveau.apprends;
@@ -270,7 +285,8 @@ test("lot 3c : la même graine rend le même calcul ; une autre en rend souvent 
     // montre » ; dans « Fractions égales : multiplier », l'exemple 3/4 = □/12
     // est le plus dur de son écriture — un seul calcul reste, jusqu'au lot C3
     // qui prend un exemple moyen.)
-    assert.ok(autres.size >= (["F2-1", "F2-2", "F1-2", "F6-1"].includes(cle) ? 1 : 2), `${cle} : ${autres.size} calcul(s) en 40 tirages`);
+    // (Lot « la 6e complète » : D10-2, par cœur, n'a que trois écritures en fraction.)
+    assert.ok(autres.size >= (["F2-1", "F2-2", "F1-2", "F6-1", "D10-2"].includes(cle) ? 1 : 2), `${cle} : ${autres.size} calcul(s) en 40 tirages`);
   });
 });
 

@@ -40,7 +40,7 @@ const NIVEAUX = CORE.MODULES.filter(fiche => fiche.construit).flatMap(fiche => f
 const serie = (cle, graines = 30) => Array.from({length: graines}, (_, g) => CORE.genererSerie(cle, {graine: g + 1})).flat();
 
 test("la case : les formes des réponses du niveau, toutes, et pas la réponse cherchée (remarque 56)", () => {
-  assert.equal(NIVEAUX.length, 141, "lot K1b : neuf de plus (132 avant) ; lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
+  assert.equal(NIVEAUX.length, 151, "lot « la 6e complète » : dix de plus ; lot K1b : neuf de plus (132 avant) ; lot 6 « programmes 2 » : F9-1, F6-2 ; lot 7a : D5, D6, D7 en plus ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9");
   NIVEAUX.forEach(cle => {
     const formes = CORE.modelesReponse(cle);
     assert.ok(formes.length >= 1, cle);
@@ -61,7 +61,8 @@ test("la case : les formes des réponses du niveau, toutes, et pas la réponse c
   assert.match(PAGE, /function fixerLargeurCases\(\) \{/);
   assert.match(PAGE, /largeur = Math\.max\(largeur, laCase\.getBoundingClientRect\(\)\.width \/ zoom\);/);
   assert.match(PAGE, /laCase\.style\.minWidth = `\$\{\(\(largeur \+ 1\) \/ taille\)\.toFixed\(3\)\}em`;/);
-  assert.match(PAGE, /function renderInlineAnswer\(status = ""\) \{\n\s+const slot = \$\("inline-answer"\);\n\s+fixerLargeurCases\(\);/);
+  // (Lot « la 6e complète » : les trois cases d'une réponse à choisir se posent d'abord.)
+  assert.match(PAGE, /function renderInlineAnswer\(status = ""\) \{\n\s+const slot = \$\("inline-answer"\);\n\s+majChoix\(status\);\n\s+fixerLargeurCases\(\);/);
   assert.match(CSS, /\.inline-answer \{\n\s+font-variant-numeric: tabular-nums;/, "des chiffres de même largeur");
   // Le calcul se remesure une fois l'écran posé (sinon il rapetissait à la première touche).
   assert.match(PAGE, /serie\.virgule = virgule;\n(\s+\/\/.*\n)+\s+ajusterCalcul\(\);/);
@@ -224,14 +225,14 @@ test("les mots : titres sans « retenue » (53), M8-2 sans « Je coupe » (68), 
 test("les copies pour la page prof, les adresses de cache", async () => {
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_core.js"), SOURCES.core);
   assert.equal(await lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"), await lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"));
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
   // Lot 2 « J'apprends en une étape » : le moteur change (20261113-1) ;
   // lot 3a « Une leçon, une méthode » (20261113-3), lot 3b « Chaque sorte
   // annoncée » : le cœur, les aides, la feuille (20261113-4) ; lot 3c
   // « J'écris sur des calculs qui changent » : le cœur, les aides (20261113-5).
-  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-1/);
-  assert.match(PAGE, /defi_calcul_core\.js\?v=20261127-1/);
-  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261125-2/);
+  assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul_aides\.js\?v=20261127-2/);
 });
 
 test("les tables : 8 × 7, c'est « 8 fois 7 » — on compte de 7 en 7 jusqu'à 8 × 7, comme Défi tables (demande du 12/11)", () => {

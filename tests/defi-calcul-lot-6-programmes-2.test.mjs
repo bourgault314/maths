@@ -27,8 +27,8 @@ const fractions = texte => [...espaces(texte).matchAll(/(\d+)\/(\d+)/g)].map(m =
 test("la carte : 141 compétences en six étages depuis le lot K1b (14, 20, 19, 33, 43, 12 ; 132 en quatre avant) ; F9 et F6 ont un niveau de plus, posé à sa place", () => {
   const carte = CORE.carte();
   const construits = P.parcoursConstruit(carte);
-  assert.equal(construits.length, 141);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 12]);
+  assert.equal(construits.length, 151);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(p => construits.filter(c => P.palierDe(carte, c.module, c.niveau) === p).length), [14, 20, 19, 33, 43, 22]);
   // (Lot K1b : les étages ont changé de numéro — 3 le CE2, 4 le CM1, 5 le CM2.)
   assert.deepEqual(CORE.moduleDe("F9").niveaux.map(n => [n.palier, espaces(n.nom)]), [[3, "Dénominateurs multiples : dans l’unité"], [4, "Dénominateurs multiples : jusqu’à 20"], [5, "Dénominateurs multiples : au-delà de 20"]]);
   assert.deepEqual(CORE.moduleDe("F6").niveaux.map(n => [n.palier, espaces(n.nom)]), [[3, "Fractions égales : multiplier"], [4, "Fractions égales : jusqu’à 20"], [5, "Fractions égales : diviser"], [5, "Fractions égales : le dénominateur"]]);
@@ -232,8 +232,8 @@ test("les cinq exemples guidés, sous « À retenir » ; le niveau « ajouter 9 
 
 test("la page : adresses de cache, copies du moteur pour la page prof", () => {
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
-  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
   assert.ok(lire("../_serveur/public/prof/defi_calcul_mon_parcours.js") === lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), "la copie du moteur, octet pour octet");
 });

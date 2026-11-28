@@ -1298,10 +1298,13 @@
     // flèches ne vont pas (à droite pour ×, à gauche pour ÷) : elle ne
     // cache jamais une flèche.
     // « × ? » tant que l'élève ne l'a pas écrit (`etiquetteTrouvee`).
-    const etiquette = `${o.operation} ${o.masque && !o.etiquetteTrouvee ? "?" : nombre(o.p)}`;
+    // Lot « la 6e complète » : `o.etiquette` dit l'opération autrement —
+    // « × 0,1 » sur le tableau de ÷ 10 (multiplier par 0,1, c'est diviser
+    // par 10).
+    const etiquette = o.etiquette && !(o.masque && !o.etiquetteTrouvee) ? o.etiquette : `${o.operation} ${o.masque && !o.etiquetteTrouvee ? "?" : nombre(o.p)}`;
     // Dans J'écris, la pilule a déjà la largeur de « × 100 » : rien ne bouge
     // quand l'élève l'écrit.
-    const lw = ("etiquetteTrouvee" in o ? `${o.operation} ${nombre(o.p)}` : etiquette).length * 10 + 18;
+    const lw = ("etiquetteTrouvee" in o ? o.etiquette || `${o.operation} ${nombre(o.p)}` : etiquette).length * 10 + 18;
     const marge = lw + 10;
     const gaucheEtiquette = plan.k < 0;
     const W = B * 2 + n * C + (n - 1) * E + marge;
@@ -4046,14 +4049,24 @@
   // écrite dans les parts prises (en vert à l'étape qui la trouve) ;
   // l'accolade sous les parts prises, c'est la réponse (`trouve`, ou « ? »).
   function toutParts(o) {
-    const {gauche: G, longueur: L, encre, cherche} = FRACTIONS;
+    const {gauche: G, encre, cherche} = FRACTIONS;
+    // Lot « la 6e complète » : plus de parts prises que de parts dans le
+    // tout (5/4 × 8) — le tout garde sa barre, les parts de plus la
+    // prolongent dessous, en tirets ; une accolade nommée (`accolade`,
+    // « 25 % de 48 ») se pose même sous une seule part.
+    const parts = Math.max(o.d, o.pris || 0);
+    const L = FRACTIONS.longueur * o.d / parts;
     const R = PARTS.barre;
     const w = L / o.d;
     const y1 = 4;
     const y2 = y1 + R;
-    const pris = o.pris >= 2 ? o.pris : 0;
+    const pris = o.pris >= 2 || o.accolade ? o.pris : 0;
     let s = `<rect x="${G}" y="${y1}" width="${L}" height="${R}" fill="#fff"/>`
       + `<text x="${G + L / 2}" y="${y1 + R / 2 + 7}" text-anchor="middle" font-size="20" font-weight="800" fill="${encre}">${o.tout}</text>`;
+    for (let k = o.d; k < parts; k += 1) {
+      s += caseCherchee(G + k * w, y2, w, R, o.part ? o.part.texte : "", o.part && o.part.vert ? FRACTIONS.trouve : encre);
+      s += `<rect x="${(G + k * w).toFixed(2)}" y="${y2}" width="${w.toFixed(2)}" height="${R}" fill="none" stroke="${encre}" stroke-width="2.6" stroke-dasharray="6 4"/>`;
+    }
     for (let k = 0; k < o.d; k += 1) {
       if (pris && k < pris) s += caseCherchee(G + k * w, y2, w, R, o.part ? o.part.texte : "", o.part && o.part.vert ? FRACTIONS.trouve : encre);
       else if (!pris && k === 0) s += caseCherchee(G, y2, w, R, o.trouve ? o.trouve.texte : "?", o.trouve ? (o.trouve.vert ? FRACTIONS.trouve : encre) : cherche);
@@ -4065,13 +4078,14 @@
     s += `<rect x="${G + 1.6}" y="${y2 + 1.6}" width="${(w * (pris || 1) - 3.2).toFixed(2)}" height="${R - 3.2}" fill="none" stroke="${vert ? FRACTIONS.trouve : cherche}" stroke-width="3.5"/>`;
     let bas = y2 + R + 4;
     if (pris) {
-      s += accolade(G + 2, G + pris * w - 2, y2 + R + 4, o.trouve ? o.trouve.texte : "?", !o.trouve, Boolean(o.trouve && o.trouve.vert));
+      const valeur = o.trouve ? o.trouve.texte : "?";
+      s += accolade(G + 2, G + pris * w - 2, y2 + R + 4, o.accolade ? `${o.accolade} = ${valeur}` : valeur, !o.trouve, Boolean(o.trouve && o.trouve.vert));
       bas = y2 + R + 4 + 54;
     }
     return `<svg class="dc-fractions dc-tout-parts" viewBox="0 0 ${FRACTIONS.largeur} ${bas}" role="img" aria-label="${decrireToutParts(o)}">${s}</svg>`;
   }
   function decrireToutParts(o) {
-    if (o.pris >= 2) {
+    if (o.pris >= 2 || o.accolade) {
       const part = o.part ? ` Une part : ${o.part.texte}.` : "";
       return `Schéma en barres. En haut, le tout : ${o.tout}. En dessous, ${o.d} parts égales ; les ${o.pris} premières sont prises.${part} Ensemble : ${o.trouve ? o.trouve.texte : "?"}.`;
     }
@@ -4673,8 +4687,88 @@
     return `Rectangle de ${nombre(o.a)} sur ${nombre(o.rond)} : ${nombre(o.a)} × ${nombre(o.rond)} = ${etape >= 1 ? nombre(o.a * o.rond) : "un nombre à trouver"}. On retire une bande de ${nombre(o.a)} sur ${o.enleve} : ${o.enleve === 1 || etape >= 2 ? nombre(o.a * o.enleve) : "un nombre à trouver"}. Il reste ${nombre(o.a)} × ${nombre(o.b)} : ${etape >= etapes ? nombre(o.a * o.b) : "un nombre à trouver"}.`;
   }
 
+  // Lot « la 6e complète » (27/11/2026) : le carré du produit (« Décimal ×
+  // décimal », choix de Gwenaël du 27/11 : la meilleure aide) — le carré de
+  // 100 ; `a` bandes (les dixièmes du premier nombre) en bleu clair, `b`
+  // rangées (ceux du second) en hachures ; là où elles se croisent, les
+  // a × b petits carrés en bleu foncé : le produit, en centièmes. Lisible en
+  // noir et blanc (le clair, les hachures, le foncé). `texte` : le produit
+  // écrit sous le carré (« ? » dans l'aide).
+  function carreProduit(o) {
+    const cote = 150;
+    const c = cote / 10;
+    const M = 6;
+    const x0 = M;
+    const y0 = M;
+    const texteX = x0 + cote + 18;
+    let s = `<rect x="${x0}" y="${y0}" width="${cote}" height="${cote}" fill="#fff"/>`;
+    s += `<rect x="${x0}" y="${y0}" width="${o.a * c}" height="${cote}" fill="${FRACTIONS.clair}"/>`;
+    s += hachuresSvg(x0, y0 + cote - o.b * c, cote, o.b * c, FRACTIONS.bleu);
+    s += `<rect x="${x0}" y="${y0 + cote - o.b * c}" width="${o.a * c}" height="${o.b * c}" fill="${CARRE.plein}"/>`;
+    for (let k = 1; k < 10; k += 1) {
+      s += `<line x1="${x0 + k * c}" y1="${y0}" x2="${x0 + k * c}" y2="${y0 + cote}" stroke="${CARRE.trait}" stroke-width="1" opacity=".55"/>`;
+      s += `<line x1="${x0}" y1="${y0 + k * c}" x2="${x0 + cote}" y2="${y0 + k * c}" stroke="${CARRE.trait}" stroke-width="1" opacity=".55"/>`;
+    }
+    s += `<rect x="${x0}" y="${y0}" width="${cote}" height="${cote}" fill="none" stroke="${CARRE.trait}" stroke-width="2.4"/>`;
+    const ligne = (y, texte, poids = 700) => `<text x="${texteX}" y="${y}" font-size="16" font-weight="${poids}" fill="${FRACTIONS.encre}">${texte}</text>`;
+    s += ligne(y0 + 22, `${o.a} bandes\u00a0: 0,${o.a}`);
+    s += ligne(y0 + 48, `${o.b} rangées\u00a0: 0,${o.b}`);
+    s += ligne(y0 + 74, "un petit carré\u00a0= 0,01");
+    s += ligne(y0 + 112, `${o.a} × ${o.b} = ${o.compte || o.trouve ? o.produit : "?"} petits carrés`, 800);
+    const valeur = o.texte || "?";
+    const couleur = o.trouve ? FRACTIONS.trouve : o.texte === "?" ? FRACTIONS.cherche : FRACTIONS.encre;
+    s += `<text x="${texteX}" y="${y0 + 142}" font-size="18" font-weight="800" fill="${couleur}">0,${o.a} × 0,${o.b} = ${valeur}</text>`;
+    const W = texteX + 230;
+    const H = cote + 2 * M;
+    return `<svg class="dc-carre-produit" viewBox="0 0 ${W} ${H}" role="img" aria-label="${decrireCarreProduit(o)}">${s}</svg>`;
+  }
+  function decrireCarreProduit(o) {
+    return `Carré de 100 : ${o.a} bandes coloriées, ${o.b} rangées hachurées ; là où elles se croisent, ${o.a} × ${o.b} petits carrés. Un petit carré vaut 0,01. 0,${o.a} × 0,${o.b} = ${o.texte || "?"}.`;
+  }
+  // Lot « la 6e complète » : les arrondis (« Où va la virgule ? », planche
+  // 3, n° 6) — chaque nombre et, dessous, son arrondi (une flèche) ; leur
+  // produit ; les trois cases, la bonne en vert quand `bonne` est donnée.
+  function arrondis(o) {
+    const ecrit = x => nombre(x);
+    const encre = FRACTIONS.encre;
+    const xa = 50;
+    const xb = 150;
+    const id = `dc-ar-${(compteurTableaux += 1)}`;
+    let s = `<defs><marker id="${id}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto"><path d="M0 0L10 5L0 10z" fill="${encre}"/></marker></defs>`;
+    const texte = (x, y, t, taille = 22, poids = 800, couleur = encre) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="${taille}" font-weight="${poids}" fill="${couleur}">${t}</text>`;
+    s += texte(xa, 26, ecrit(o.a)) + texte(100, 26, "×") + texte(xb, 26, ecrit(o.b));
+    s += `<line x1="${xa}" y1="34" x2="${xa}" y2="56" stroke="${encre}" stroke-width="2.4" marker-end="url(#${id})"/>`;
+    s += `<line x1="${xb}" y1="34" x2="${xb}" y2="56" stroke="${encre}" stroke-width="2.4" marker-end="url(#${id})"/>`;
+    // J'écris (`montre`, 0 à 3) : les arrondis s'écrivent un à un, en vert,
+    // à mesure que l'élève les trouve ; « ? » en bleu avant.
+    const jecris = Number.isInteger(o.montre);
+    const morceau = (x, y, valeur, rang, avant = "") => (!jecris ? texte(x, y, `${avant}${ecrit(valeur)}`)
+      : o.montre >= rang ? texte(x, y, `${avant}${ecrit(valeur)}`, 22, 800, FRACTIONS.trouve)
+        : texte(x, y, `${avant}?`, 22, 800, "#0755b8"));
+    s += morceau(xa, 84, o.ra, 1) + texte(100, 84, "×") + morceau(xb, 84, o.rb, 2) + morceau(212, 84, o.e, 3, "= ");
+    const choix = Array.isArray(o.choix) && !o.sansChoix ? o.choix : [];
+    choix.forEach((v, i) => {
+      const x = 268 + i * 74;
+      const bonne = o.bonne !== null && o.bonne !== undefined && Math.abs(v - o.bonne) < 1e-9;
+      s += `<rect x="${x}" y="58" width="66" height="38" rx="9" fill="${bonne ? "#e6f3ec" : "#fff"}" stroke="${bonne ? FRACTIONS.trouve : "#9fb0bf"}" stroke-width="${bonne ? 3 : 1.6}"/>`;
+      s += texte(x + 33, 84, ecrit(v), 18, 800, bonne ? FRACTIONS.trouve : encre);
+    });
+    // (Sans les trois cases — J'écris, où l'élève choisit sous le dessin —,
+    // le dessin s'arrête après le produit.)
+    const W = o.sansChoix ? 256 : 268 + 3 * 74;
+    return `<svg class="dc-arrondis" viewBox="0 0 ${W} 104" role="img" aria-label="${decrireArrondis(o)}">${s}</svg>`;
+  }
+  function decrireArrondis(o) {
+    const vu = rang => !Number.isInteger(o.montre) || o.montre >= rang;
+    const lu = (valeur, rang) => (vu(rang) ? nombre(valeur) : "à trouver");
+    const choix = (o.sansChoix ? [] : o.choix || []).map(nombre).join(", ");
+    return `${nombre(o.a)} est proche de ${lu(o.ra, 1)}, ${nombre(o.b)} est proche de ${lu(o.rb, 2)} : produit des arrondis, ${lu(o.e, 3)}.${choix ? ` Les trois réponses : ${choix}.` : ""}${o.bonne !== null && o.bonne !== undefined && !o.sansChoix ? ` La bonne : ${nombre(o.bonne)}.` : ""}`;
+  }
+
   function dessinerImage(image) {
     if (!image) return "";
+    if (image.outil === "carre-produit") return carreProduit(image);
+    if (image.outil === "arrondis") return arrondis(image);
     if (image.outil === "tableau-fleches") return tableauFleches(image);
     if (image.outil === "barres") return barres(image);
     if (image.outil === "barres-fois") return barresFois(image);

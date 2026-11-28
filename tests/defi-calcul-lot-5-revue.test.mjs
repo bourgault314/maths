@@ -56,5 +56,5 @@ test("le bilan de Mes calculs du jour au téléphone : parti au lot K1 (« Séan
 });
 
 test("la feuille a changé : son adresse aussi (cache)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-1/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
 });

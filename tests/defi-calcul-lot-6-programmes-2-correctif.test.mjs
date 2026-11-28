@@ -135,8 +135,8 @@ test("ordinateur : « Avec le dessin » prend sa place dans la ligne, après « 
   assert.match(css, /#play \.status \.seance-fil \{ position: static; min-height: 0; margin: 0; \}/);
   assert.doesNotMatch(css, /#play \.status \.seance-fil \{ position: absolute; top: 0; left: 150px;/);
   const page = lire("../outils/calcul_mental/defi_calcul_modules.html");
-  assert.match(page, /defi_calcul\.css\?v=20261127-1/);
-  assert.match(page, /defi_calcul_aides\.js\?v=20261125-2/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
+  assert.match(page, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(page, /defi_calcul_aides\.js\?v=20261127-2/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie du noyau, octet pour octet");
 });

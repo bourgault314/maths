@@ -187,14 +187,14 @@ test("la page : la réserve suit la série, un cran plus facile après une erreu
   assert.match(amener, /serie\.questions\.splice\(suivant, 0, choisi\.question\)/);
   const allonger = page.slice(page.indexOf("function allongerSerie("), page.indexOf("function placerUnCranPlusFacile("));
   assert.match(allonger, /encore\.slice\(encore\.fenetre \|\| 0\)/);
-  assert.match(page, /defi_calcul_core\.js\?v=20261127-1/);
+  assert.match(page, /defi_calcul_core\.js\?v=20261127-2/);
   assert.ok(lire("../_serveur/public/prof/defi_calcul_core.js") === lire("../outils/calcul_mental/defi_calcul_core.js"), "la copie pour la page prof, octet pour octet");
-  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
+  assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-(?:C1-ordre|C2-doubles-moities|C3-exemples|C4a|C4b|C4c|C4d|K1-la-carte|K1b|P1|6e-complete)$|^lot arriver-E$|^lot m-corrige$|^lot aujourdhui-B3$|^lot anzan-bareme-lot-1$/m); // (lots E « Arriver » et M corrigé : le manifeste change de nom ; lot C2 : le cœur)
 });
 
 test("les données ne changent pas : progression en version 10 (11 au lot C2, 12 au lot K1, 13 au lot K1b, 14 au lot P1), mêmes compétences, mêmes sortes (en nombre)", () => {
   const P = require("../outils/calcul_mental/defi_calcul_mon_parcours.js");
-  assert.equal(P.VERSION, 14);
-  assert.equal(CORE.ORDRE.length, 141); // (lot K1b : neuf étoiles de plus, 132 avant)
+  assert.equal(P.VERSION, 15); // (lot « la 6e complète » : 15)
+  assert.equal(CORE.ORDRE.length, 151); // (lot K1b : neuf étoiles de plus, 132 avant)
   assert.ok(CORE.ORDRE.every(cle => CORE.sortesDe(cle).length >= 2 && CORE.sortesDe(cle).length <= 4));
 });

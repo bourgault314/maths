@@ -64,19 +64,21 @@ function poser(p, k, {b = 2, e = J, d = plus(-10), a = 1, g = 1, plusChamps = {}
 // étage, 4 → 6 étages, 29 → 37 lignes) et les numéros de version suivent.
 // Ce que le lot K1b ajoute a ses fichiers : defi-calcul-lot-K1b-donnees
 // (la reprise d'une version 12) et defi-calcul-lot-K1b-carte.
+// Lot « la 6e complète » (27/11/2026) : l'étage de 6e a 22 étoiles en six
+// lignes (151 étoiles, 40 lignes, 12 liens « d'abord ») ; version 15.
 const tenir = (cles, options) => P.normaliserParcours(cles.reduce((p, k) => poser(p, k, options), P.creerParcours()), {aujourdhui: J});
 
 // ------------------------------------------------------------ la table
 
-test("la table : les 141 étoiles ont une ligne, l'étage est le palier, chaque ligne suit l'ordre de la carte", () => {
-  assert.equal(CARTE.ordre.length, 141);
+test("la table : les 151 étoiles ont une ligne, l'étage est le palier, chaque ligne suit l'ordre de la carte", () => {
+  assert.equal(CARTE.ordre.length, 151);
   const rang = new Map(CARTE.ordre.map((k, i) => [k, i]));
   const dans = CARTE.lignes.flatMap(l => l.cles);
-  assert.equal(dans.length, 141);
-  assert.equal(new Set(dans).size, 141, "aucune étoile dans deux lignes");
+  assert.equal(dans.length, 151);
+  assert.equal(new Set(dans).size, 151, "aucune étoile dans deux lignes");
   assert.deepEqual(CARTE.ordre.filter(k => !dans.includes(k)), [], "aucune étoile sans ligne");
-  assert.equal(CARTE.lignes.length, 37);
-  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => CARTE.lignes.filter(l => l.etage === n).length), [4, 7, 6, 8, 9, 3]);
+  assert.equal(CARTE.lignes.length, 40);
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(n => CARTE.lignes.filter(l => l.etage === n).length), [4, 7, 6, 8, 9, 6]);
   CARTE.lignes.forEach(l => {
     assert.ok(l.nom.length > 3, "une ligne a un nom d'élève");
     assert.ok(l.cles.length >= 2 && l.cles.length <= 6, `${l.nom} : 2 à 6 étoiles`);
@@ -90,7 +92,7 @@ test("la table : les 141 étoiles ont une ligne, l'étage est le palier, chaque 
 
 test("la table : aucun lien « d'abord » ne remonte l'ordre de la carte ni ne sort de l'étage", () => {
   const rang = new Map(CARTE.ordre.map((k, i) => [k, i]));
-  assert.equal(Object.keys(CARTE.dabord).length, 11);
+  assert.equal(Object.keys(CARTE.dabord).length, 12); // (lot « la 6e complète » : « Décimal × décimal » → « 0,1 et 1/10 »)
   Object.entries(CARTE.dabord).forEach(([k, avant]) => {
     assert.ok(rang.has(k) && rang.has(avant), `${k} → ${avant} : deux étoiles de la carte`);
     assert.equal(ETAGE[k], ETAGE[avant], `${k} → ${avant} : même étage`);
@@ -124,7 +126,7 @@ test("« Je tente » : 6 calculs, au moins un de chaque sorte, du plus simple au
 
 test("un élève neuf : la première étoile de chaque ligne est à gagner (sauf lien « d'abord »), les autres fermées — à tous les étages (lot P1 : tout est ouvert)", () => {
   const carte = P.carteEleve(P.creerParcours(), CARTE, {aujourdhui: J});
-  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total, e.etoiles, e.quarts]), [[1, true, 14, 0, 0], [2, true, 20, 0, 0], [3, true, 19, 0, 0], [4, true, 33, 0, 0], [5, true, 43, 0, 0], [6, true, 12, 0, 0]]);
+  assert.deepEqual(carte.etages.map(e => [e.etage, e.ouvert, e.total, e.etoiles, e.quarts]), [[1, true, 14, 0, 0], [2, true, 20, 0, 0], [3, true, 19, 0, 0], [4, true, 33, 0, 0], [5, true, 43, 0, 0], [6, true, 22, 0, 0]]);
   assert.ok(carte.etages.every(e => e.test === undefined), "plus de « Tente toute la ceinture »");
   assert.equal(carte.courant, 1);
   carte.etages.forEach(etage => etage.lignes.forEach(l => l.etoiles.forEach((e, i) => {
@@ -142,8 +144,9 @@ test("une étoile fermée ne se joue pas : ni « Je tente », ni J'apprends — 
   const avant = JSON.stringify(p);
   // (Lot P1 : tout est ouvert — une étoile fermée l'est par celle d'avant dans sa ligne, ou par un
   // lien « d'abord » : A10-5 et A5-5 (lien) au CE1, A2-5 au CM1, F1-3 vers la 6e. A2-4 et D2-4, les
-  // premières de leur ligne, sont maintenant à gagner.)
-  for (const k of ["A1-2", "A10-2", "A10-5", "A5-5", "A2-5", "F1-3"]) {
+  // premières de leur ligne, sont maintenant à gagner. Lot « la 6e complète » : F1-3 ouvre la
+  // ligne « Fractions » ; en 6e, D10-1 est fermée par D2-4, D12-1 par son lien vers D10-2.)
+  for (const k of ["A1-2", "A10-2", "A10-5", "A5-5", "A2-5", "D10-1", "D12-1"]) {
     const t = tenter(p, k, justes(), J, true);
     assert.deepEqual([t.refuse, t.reussi, JSON.stringify(t.parcours)], ["fermee", false, avant], `« Je tente » ${k}`);
     const a = apprendre(p, k, lecon(), J, true);
@@ -797,14 +800,14 @@ function fauxStockage(initial = {}) {
 }
 
 test("B1 — une progression d'une version plus récente n'est jamais lue, fusionnée ni recouverte : deux versions dans le même stockage", () => {
-  // (Lot P1 : le moteur est en version 14 ; la page plus récente, en 15.)
-  assert.equal(P.VERSION, 14);
+  // (Lot P1 : le moteur est en version 14 ; lot « la 6e complète » : 15 — la page plus récente, en 16.)
+  assert.equal(P.VERSION, 15);
   const stockage = fauxStockage();
   const mien = tenter(P.creerParcours(), "A1-1").parcours;
   assert.equal(P.sauver(stockage, mien, ""), true);
   // Une page plus récente (version 14 depuis le lot K1b, un format que ce moteur ne connaît
   // pas) écrit dans la même case : des listes plus longues, un champ neuf.
-  const futur = {version: 15, epoque: 0, prenom: "", modules: {A1: {vu: J, b: [5, 4, 3, 2], e: [J, J, J, J], zz: [1, 1, 1, 1]}}, neuf: {x: 1}};
+  const futur = {version: 16, epoque: 0, prenom: "", modules: {A1: {vu: J, b: [5, 4, 3, 2], e: [J, J, J, J], zz: [1, 1, 1, 1]}}, neuf: {x: 1}};
   const cle13 = P.cleStockage("", stockage);
   stockage.setItem(cle13, JSON.stringify(futur));
   const ecrituresAvant = stockage.ecritures();
@@ -848,7 +851,7 @@ test("les progressions d'avant la version 12 repartent de zéro (aucun élève n
 
 test("G5 — une version illisible n'est jamais prise pour une version ancienne ; des valeurs abîmées ne décalent rien et ne lèvent aucune exception", () => {
   const propre = tenir(["M1-1", "M1-2", "M1-3"], {b: 3, e: J});
-  for (const version of [10.5, 12.5, 13.5, 14.5, "12", "13", "14", true, null, undefined, [12], [13], [14], {}, -1, 0, NaN]) {
+  for (const version of [10.5, 12.5, 13.5, 14.5, 15.5, "12", "13", "14", "15", true, null, undefined, [12], [13], [14], [15], {}, -1, 0, NaN]) {
     const lu = P.normaliserParcours(Object.assign({}, JSON.parse(JSON.stringify(propre)), {version}), {aujourdhui: J});
     assert.deepEqual(lu.modules, {}, `version ${JSON.stringify(version)} : illisible, rien n'est repris`);
     assert.equal(P.versionDe({version}), 0);
@@ -856,6 +859,7 @@ test("G5 — une version illisible n'est jamais prise pour une version ancienne 
   assert.equal(P.versionDe({version: 12}), 12);
   assert.equal(P.versionDe({version: 13}), 13);
   assert.equal(P.versionDe({version: 14}), 14);
+  assert.equal(P.versionDe({version: 15}), 15);
   // Un booléen, un texte, une liste d'un nombre, un objet piégé : la valeur neutre, à SA place.
   const piege = {toString: 1, valueOf: 1};
   const abime = JSON.parse(JSON.stringify(propre));
@@ -922,7 +926,7 @@ test("le professeur et Mon espace lisent la même forme qu'avant (leur nouvel af
   p = P.normaliserParcours(p, {aujourdhui: J});
   for (let n = 0; n < 3; n += 1) p = apprendre(p, "A2-1", arretee(), plus(n - 3)).parcours;
   const r = P.resumeProf(p, CARTE, J);
-  assert.deepEqual([r.lisible, r.commence, r.entrees, r.sues, r.total], [true, true, 3, 1, 141]);
+  assert.deepEqual([r.lisible, r.commence, r.entrees, r.sues, r.total], [true, true, 3, 1, 151]);
   const a1 = r.modules.find(m => m.id === "A1");
   assert.deepEqual([a1.etats, a1.boites, a1.su, a1.perdues], [["route", "su", "revoir"], [3, 5, 0], false, [0, 0, 1]]);
   assert.deepEqual(r.modules.find(m => m.id === "A2").etats[0], "classe");

@@ -41,8 +41,13 @@ const espaces = texte => String(texte).replace(/[  ]/g, " ");
 const GARDEES = new Set(["A3-1", "A3-5", "A3-2", "A3-3", "A3-4", "A2-1", "A2-6", "A2-2", "M12-1", "M4-1", "M4-2", "D1-1", "D1-2", "D1-3", "C1-1", "C1-2", "C1-3", "F3-1", "F3-2", "F3-3", "F4-1", "F4-2",
   // (Lot C4d : je compte dans le rang, comme C4a — « 5,73 + 0,6 : 7 dixièmes
   // + 6 dixièmes », « moitié de 15,8 = 158 dixièmes ÷ 2 ».)
-  "D4-3", "D8-2", "D8-3", "D8-4", "D8-5"]);
-const SANS_LIGNE = new Set(["M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3"]);
+  "D4-3", "D8-2", "D8-3", "D8-4", "D8-5",
+  // (Lot « la 6e complète » : je compte en dixièmes, en centièmes ; j'arrondis ;
+  // je partage et j'en prends — la phrase de la méthode, comme D8 et F4.)
+  "D11-1", "D14-1", "D12-1", "D16-1", "F11-3", "P2-1"]);
+const SANS_LIGNE = new Set(["M2-1", "M2-2", "D2-1", "D2-2", "D2-3", "D2-4", "D3-1", "D3-2", "D3-3",
+  // (Lot « la 6e complète » : × 0,1, une seule étape, comme D2 et D3.)
+  "D10-1"]);
 
 // Un petit calcul exact : « 1 002 − 2 − 5 », « 6 × 10 + 6 × 4 », « 3/4 − 1/2 »,
 // « moitié de 28 », « 1/2 de 6 L » (l'unité s'en va), « 58 × 10 ÷ 2 ».
@@ -92,7 +97,7 @@ function cherche(apprends) {
 }
 
 test("J'écris annonce le but : une ligne pour chaque niveau construit, en égalité, sans mot", () => {
-  assert.equal(NIVEAUX.length, 141, "141 niveaux construits (lot K1b : neuf de plus ; 132 avant — lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
+  assert.equal(NIVEAUX.length, 151, "151 niveaux construits (lot « la 6e complète » : dix de plus ; lot K1b : neuf de plus ; 132 avant — lot 6 « programmes 2 » : F9-1, F6-2 ; lot « couverture » : A2-5 en plus, A8-3 et F5-3 réunis ; lot 7a : D5, D6, D7 ; lot 7b : D8, D9, M13 ; lot 7c : F4, F9, F11 ; lot 7d : M11, A9, C4, M9)");
   NIVEAUX.forEach(({niveau, cle}) => {
     const apprends = niveau.apprends;
     const consigne = apprends.ecris.consigne ? espaces(apprends.ecris.consigne) : "";
