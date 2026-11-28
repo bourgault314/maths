@@ -122,7 +122,7 @@ test("5. J'écris de « Où va la virgule ? » : les arrondis s'écrivent un à 
 });
 
 test("6. les adresses de cache neuves (moteur, progression, aides, feuille)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261128-1/);
   assert.match(PAGE, /defi_calcul_core\.js\?v=20261128-1/);
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
   assert.match(PAGE, /defi_calcul_aides\.js\?v=20261128-1/);

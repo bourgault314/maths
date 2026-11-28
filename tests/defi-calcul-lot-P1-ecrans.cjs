@@ -229,13 +229,15 @@ async function cas(n, f) {
     await cas(`${f} : l'accueil — « Aujourd'hui : la ligne … », sans puis avec « Avant : … »`, async () => {
       let s = await ouvrir(nav, base, {largeur, hauteur});
       assert.equal(await texte(s.page, "#acc-but"), "Aujourd’hui : la ligne Jusqu’à 20");
-      assert.equal(await s.page.isVisible("#acc-but-avant"), false, "élève neuf : aucun calcul du jour, aucune ligne");
+      // (Lot « l'accueil, c'est la carte » : « Avant : … » est sous « Commencer ».)
+      assert.doesNotMatch(await texte(s.page, "#carte-continuer"), /Avant/, "élève neuf : aucun calcul du jour, aucune ligne");
       await tient(s.page, largeur, hauteur, "accueil neuf");
       await photo(s.page, `${f}-01-accueil-neuf`);
       assert.deepEqual(s.erreurs, []);
       await s.ctx.close();
       s = await ouvrir(nav, base, {largeur, hauteur, parcours: EN_COURS});
-      assert.equal(await texte(s.page, "#acc-but"), `Aujourd’hui : la ligne ${sEnCours.but.ligne} Avant : tes ${sEnCours.obligatoire} calculs du jour.`);
+      assert.equal(await texte(s.page, "#acc-but"), `Aujourd’hui : la ligne ${sEnCours.but.ligne}`);
+      assert.equal(await texte(s.page, "#carte-continuer small"), `Avant : tes ${sEnCours.obligatoire} calculs du jour.`);
       // « − » et « + » ne restent jamais seuls en début de ligne.
       const lignes = await s.page.evaluate(() => { const e = document.getElementById("acc-but-texte"); const r = document.createRange(); r.selectNodeContents(e); return [...r.getClientRects()].length; });
       assert.ok(lignes <= 2, `${lignes} lignes`);
@@ -247,7 +249,7 @@ async function cas(n, f) {
 
     await cas(`${f} : la carte — « gagnée » ou « 18/20 » sous chaque ceinture, pas de bandeau${ordi ? ", le même cadre sur les six onglets" : ""}`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: EN_COURS});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 400);
       const attendu = P.carteEleve(EN_COURS, CARTE, {aujourdhui: JOUR}).etages.map(e => (e.ceinture ? "gagnée" : `${e.etoiles}/${e.total}`));
       const mots = await s.page.evaluate(() => [...document.querySelectorAll("#carte-etages .ck-onglet span")].map(x => x.textContent));
@@ -272,7 +274,7 @@ async function cas(n, f) {
 
     await cas(`${f} : « Plus facile » dans le panneau, après un « Je tente » raté`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: PLUS_FACILE.parcours});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       await s.page.click(`#carte-etages .ck-onglet:nth-child(${PLUS_FACILE.etage})`);
       await pause(s.page, 300);
@@ -294,7 +296,7 @@ async function cas(n, f) {
 
     await cas(`${f} : « Je tente » réussi du premier coup — « dans une semaine »`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 1500);
       for (let i = 0; i < 6 && await enJeu(s.page); i += 1) await repondre(s.page, true);
       await pause(s.page, 800);
@@ -310,7 +312,7 @@ async function cas(n, f) {
 
     await cas(`${f} : « Je tente » raté — « Continuer », « J'apprends », « Ensuite : … », « Mes 2 erreurs »`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 1500);
       const faux = [];
       for (let i = 0; i < 6 && await enJeu(s.page); i += 1) faux.push(await repondre(s.page, false));
@@ -336,7 +338,7 @@ async function cas(n, f) {
       const c0 = P.continuer(DESCEND.parcours, CARTE, {aujourdhui: JOUR, sansPaquet: true});
       assert.equal(c0.raison, "plusFacile", "le moteur descend (leçon arrêtée deux fois)");
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: DESCEND.parcours});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       await s.page.click(`#carte-lignes [data-cle="A1-1"]`);
       await pause(s.page, 300);
@@ -358,7 +360,7 @@ async function cas(n, f) {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: PRESQUE});
       const dues = P.etatSeance(PRESQUE, CARTE, {aujourdhui: JOUR}).obligatoire;
       assert.ok(dues >= 2, `${dues} calculs du jour`);
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 2000);
       // Mes calculs du jour : le premier faux, puis son 2e calcul faux aussi
       // (la règle B : elle revient demain), le reste juste.
@@ -409,7 +411,7 @@ async function cas(n, f) {
 
     await cas(`${f} : la dernière ceinture du réglage — « Tu as fini … »`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, parcours: PRESQUE_FINI, reglages: {"defi-calcul": {etage: 1}}});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       const c = P.continuer(PRESQUE_FINI, CARTE, {aujourdhui: JOUR, palier: 1, sansPaquet: true});
       await s.page.click(`#carte-lignes [data-cle="${c.module}-${c.niveau}"]`);

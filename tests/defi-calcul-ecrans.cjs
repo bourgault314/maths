@@ -532,7 +532,7 @@ async function premierJour(navigateur, base, taille) {
   const ecran = (nom, options) => controler(session, taille, `jour1-${nom}`, options);
   await ecran("accueil");
   assert.match(await texte(page, "#acc-but-texte"), /Différences et trous jusqu’à 20/, "le but du jour");
-  await page.click("#acc-commencer");
+  await page.click("#carte-continuer");
   await page.waitForTimeout(600);
   assert.equal(await genre(page), "tente");
   // Deux faux : ✗ sans la bonne réponse, puis l'arrêt.

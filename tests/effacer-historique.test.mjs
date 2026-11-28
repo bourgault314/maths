@@ -63,9 +63,11 @@ test("Défi calcul : ni élève à code, ni élève qui arrive de son espace, ni
   // Lot « accueil » (07/11/2026) : une seule colonne ; « Comment ça marche ? »
   // et « Effacer mon historique » sur la même ligne, centrés ensemble ; la
   // question s'ouvre à la place de la porte et de la ligne.
-  // (Lot K1 : la ligne dit « 10 minutes · La carte · Comment ça marche ? »,
-  // puis « Effacer mon historique » pour le visiteur.)
-  assert.match(CALCUL, /<div id="acc-bas" class="acc-bas">\s*<span id="acc-minutes"[^>]*>10&nbsp;minutes<\/span>\s*<button id="acc-porte"[^>]*>La carte<\/button>\s*<button id="acc-notice-bouton"[^>]*>Comment ça marche&nbsp;\?<\/button>\s*<button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique<\/button>/);
+  // (Lot « l'accueil, c'est la carte », 28/11/2026 : la ligne, sous
+  // « Commencer », n'a plus que « Effacer mon historique » et « Mode
+  // professeur », pour le visiteur sans code seulement.)
+  assert.match(CALCUL, /<div id="acc-bas" class="acc-bas">\s*<button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique<\/button>\s*<a id="acc-prof" class="lien-prof" href="\?prof=1" hidden>Mode professeur<\/a>/);
+  assert.match(corps(CALCUL, "renderCarte"), /\$\("acc-pied"\)\.hidden = !peutEffacer\(\);/);
   assert.match(corps(CALCUL, "marquerEffacer"), /pied\.classList\.toggle\("est-ouverte", !\$\("acc-confirm"\)\.hidden\);/);
   assert.match(CALCUL_CSS, /\.acc-pied > \* \{ grid-area: 1 \/ 1; min-width: 0; \}/, "la question et le pied dans la même case");
   assert.match(CALCUL, /defi_calcul\.css\?v=202611(?:1[0-9]|2[0-9])-[0-9]+/, "la feuille modifiée change d'adresse (cache)");
@@ -288,9 +290,9 @@ test("Défi tables : le « ⋯ » et la question se posent par-dessus — rien n
 });
 
 test("Défi calcul (ordinateur) : les liens sur la même ligne, centrés ensemble sous « Commencer » ; la question prend leur place et n'agrandit pas le cadre", {skip: ignorer, timeout: PLAFOND}, async () => {
-  // (Lot K1 : la ligne est « 10 minutes · La carte · Comment ça marche ? »,
-  // et, pour le visiteur sans code, « Effacer mon historique » et « Mode
-  // professeur ».)
+  // (Lot « l'accueil, c'est la carte », 28/11/2026 : la carte est l'accueil ;
+  // sous « Commencer », pour le visiteur sans code seulement, « Effacer mon
+  // historique » et « Mode professeur ». L'élève à code n'a pas cette ligne.)
   await demarrerServeur();
   const nav = await navigateur.launch();
   try {
@@ -298,24 +300,25 @@ test("Défi calcul (ordinateur) : les liens sur la même ligne, centrés ensembl
       const {ctx, page, erreurs} = await ouvrir(nav, "calcul", {largeur: 1440, hauteur: 900, eleve});
       const mesurer = () => page.evaluate(() => {
         const r = s => { const e = document.querySelector(s); const b = e.getBoundingClientRect(); return {haut: b.top, bas: b.bottom, centre: (b.left + b.right) / 2, g: b.left, d: b.right}; };
-        return {notice: r("#acc-notice-bouton"), porte: r("#acc-porte"), effacer: document.getElementById("acc-effacer").hidden ? null : r("#acc-effacer"),
-          commencer: r("#acc-commencer"), ceinture: r("#acc-ceinture"), acc: r(".acc"), echelle: getComputedStyle(document.documentElement).getPropertyValue("--echelle")};
+        return {pied: document.getElementById("acc-pied").hidden, effacer: document.getElementById("acc-effacer").hidden ? null : r("#acc-effacer"),
+          prof: document.getElementById("acc-prof").hidden ? null : r("#acc-prof"), commencer: r("#carte-continuer"), onglets: r("#carte-etages"),
+          echelle: getComputedStyle(document.documentElement).getPropertyValue("--echelle")};
       });
       const m = await mesurer();
-      assert.ok(Math.abs(m.commencer.centre - m.acc.centre) < 2, "« Commencer » centré");
-      assert.ok(Math.abs(m.notice.haut - m.porte.haut) < 2, "« La carte » et « Comment ça marche ? » sur la même ligne");
-      const ligne = await page.evaluate(() => { const b = [...document.querySelectorAll("#acc-bas > *")].filter(e => !e.hidden).map(e => e.getBoundingClientRect()); return (Math.min(...b.map(r => r.left)) + Math.max(...b.map(r => r.right))) / 2; });
-      assert.ok(Math.abs(ligne - m.acc.centre) < 3, "les liens centrés ensemble");
       if (!eleve) {
-        assert.ok(m.effacer && Math.abs(m.notice.haut - m.effacer.haut) < 2, "visiteur : « Effacer » sur la même ligne");
+        assert.equal(m.pied, false, "visiteur : la ligne est là");
+        assert.ok(m.effacer && m.prof && Math.abs(m.effacer.haut - m.prof.haut) < 2, "visiteur : « Effacer » et « Mode professeur » sur la même ligne");
+        assert.ok(Math.abs((m.effacer.g + m.prof.d) / 2 - m.commencer.centre) < 3, "les liens centrés ensemble sous « Commencer »");
         await page.click("#acc-effacer");
         const q = await mesurer();
-        assert.equal(await page.isVisible("#acc-porte"), false, "la question prend la place de la ligne");
+        assert.equal(await page.isVisible("#acc-effacer"), false, "la question prend la place de la ligne");
+        assert.ok(await page.isVisible("#acc-confirm"));
         assert.equal(q.echelle, m.echelle, "le cadre ne change pas de taille");
-        assert.ok(Math.abs(q.ceinture.haut - m.ceinture.haut) < 1, "rien au-dessus ne bouge");
+        assert.ok(Math.abs(q.onglets.haut - m.onglets.haut) < 1 && Math.abs(q.commencer.haut - m.commencer.haut) < 1, "rien au-dessus ne bouge");
         await page.click("#acc-confirm-non");
-        assert.ok(await page.isVisible("#acc-porte"));
+        assert.ok(await page.isVisible("#acc-effacer"));
       } else {
+        assert.equal(m.pied, true, "élève à code : pas de ligne de liens");
         assert.equal(m.effacer, null, "élève à code : pas d'« Effacer »");
       }
       assert.deepEqual(erreurs, []);

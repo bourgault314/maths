@@ -80,7 +80,7 @@
       } catch (e) {}
     })(window);
   </script>
-  <link rel="stylesheet" href="./defi_calcul.css?v=20261127-2">
+  <link rel="stylesheet" href="./defi_calcul.css?v=20261128-1">
 <script src="/assets/js/compteur.js?v=compteur-20261121-1" defer></script>
 </head>
 <body>
@@ -127,75 +127,56 @@
            enregistré. La pilule est sur l'accueil et sur l'écran d'un module. -->
       <p id="prof-pilule" class="prof-pilule" hidden><b>Mode professeur</b><span class="pp-point" aria-hidden="true">·</span><span class="pp-texte">tous les menus, rien n’est enregistré</span><span class="pp-point" aria-hidden="true">·</span><button id="prof-quitter" type="button">Quitter</button></p>
       <p id="prof-refus" class="prof-pilule est-refus" hidden><b>Mode professeur</b><span>· déconnecte-toi d’abord</span></p>
-      <!-- Lot K1 « la carte chez l'élève » (planches K0-1 à K0-5a, K0-7,
-           K1-1 à K1-4, validées par Gwenaël) : l'accueil dit la ceinture qui
-           se remplit, le but du jour et « Commencer » ; « La carte » remplace
-           Mon parcours. Le professeur voit la même page, toutes les étoiles
-           ouvertes. Tout ce qui s'y lit est calculé par renderAccueil(). -->
-      <div id="intro" class="intro">
-        <div class="acc">
-          <section class="ck-accueil" aria-labelledby="acc-titre">
-            <h2 id="acc-titre" class="ck-cache" tabindex="-1">Ma ceinture</h2>
-            <div id="acc-ceinture" class="ck-grande-ceinture" aria-hidden="true"></div>
-            <p id="acc-compte" class="ck-compte"></p>
-            <div id="acc-but" class="ck-but" hidden><span class="ck-coche" aria-hidden="true"></span><span><span id="acc-but-texte"></span><small id="acc-but-avant" hidden></small></span></div>
-            <div id="acc-tout" class="ck-tout" hidden>
-              <p class="ck-tout-titre">Tout est gagné.</p>
-              <p id="acc-tout-quand"></p>
-              <div class="ck-deux"><button id="acc-encore" class="secondary" type="button">Je m’entraîne encore</button><button id="acc-tout-carte" class="secondary" type="button">La carte</button></div>
-              <p class="ck-petit">S’entraîner ne fait perdre aucune étoile.</p>
-            </div>
-            <button id="acc-commencer" class="primary ck-commencer" type="button">Commencer</button>
-          </section>
-          <!-- Le pied : « 10 minutes · La carte · Comment ça marche ? » (et
-               « Effacer mon historique », « Mode professeur » pour le
-               visiteur SANS code). La question « Effacer tout ton
-               historique ? » s'ouvre À LEUR PLACE, dans la même case. -->
-          <div id="acc-pied" class="acc-pied">
-            <div class="acc-pied-normal">
-              <div id="acc-bas" class="acc-bas">
-                <span id="acc-minutes" class="ck-minutes">10&nbsp;minutes</span>
-                <button id="acc-porte" type="button">La carte</button>
-                <button id="acc-notice-bouton" type="button">Comment ça marche&nbsp;?</button>
-                <button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique</button>
-                <!-- « Mode professeur » (07/11/2026) : pour le visiteur SANS
-                     code seulement. -->
-                <a id="acc-prof" class="lien-prof" href="?prof=1" hidden>Mode professeur</a>
-              </div>
-            </div>
-            <div id="acc-confirm" class="acc-confirm" role="group" aria-labelledby="acc-confirm-texte" hidden>
-              <p id="acc-confirm-texte">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
-              <div class="acc-confirm-boutons">
-                <button id="acc-confirm-oui" class="danger" type="button">Effacer</button>
-                <button id="acc-confirm-non" class="garder" type="button">Garder</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- La carte (lot K1) : les étages (une ceinture chacun), la ceinture
-           de l'étage et son compte, les lignes d'étoiles ; en bas, Mes
-           calculs du jour (« encore 14 ») et « Continuer ». Une étoile
-           touchée ouvre son panneau par-dessus. À l'ordinateur, tout tient
-           dans le cadre, de la même taille sur tous les onglets (lot P1) ;
-           au téléphone, la carte défile et « Continuer » reste en bas.
+           de l'étage et son compte, les lignes d'étoiles ; en bas, le but du
+           jour, Mes calculs du jour (« encore 14 ») et « Commencer ». Une
+           étoile touchée ouvre son panneau par-dessus. À l'ordinateur, tout
+           tient dans le cadre, de la même taille sur tous les onglets (lot
+           P1) ; au téléphone, la carte défile et le bas reste en bas.
            (Lot P1 : tout est ouvert, « Tente toute la ceinture » n'existe
-           plus.) -->
-      <div id="ecran-carte" class="ck-ecran" hidden>
-        <div class="settings-toolbar">
-          <button id="carte-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
-          <h1 id="carte-heading" class="settings-heading" tabindex="-1">La carte</h1>
-        </div>
+           plus.) Lot « l'accueil, c'est la carte » (28/11/2026, demande de
+           Gwenaël, planches et choix A aux quatre questions) : la carte EST
+           l'accueil — on y arrive, on y revient ; le petit menu de l'ancien
+           accueil est sous le bouton. -->
+      <div id="ecran-carte" class="ck-ecran">
+        <h2 id="carte-heading" class="ck-cache" tabindex="-1">La carte</h2>
         <div class="ck-haut">
           <div id="carte-etages" class="ck-etages" role="group" aria-label="Les ceintures"></div>
-          <div id="carte-porteur" class="ck-porteur"></div>
+          <!-- « Comment ça marche ? » : un petit rond « ? » au bout de la ligne
+               de la ceinture (28/11/2026, Gwenaël : « on va le lire une seule
+               fois », il n'occupe plus une ligne). renderCarte le remet à sa
+               place à chaque dessin. -->
+          <div id="carte-porteur" class="ck-porteur"><button id="acc-notice-bouton" class="ck-aide" type="button" aria-label="Comment ça marche ?" title="Comment ça marche ?">?</button></div>
         </div>
         <div id="carte-lignes" class="ck-lignes"></div>
         <div class="ck-bas">
+          <!-- Le but du jour (lot P1, planche P1-2 A), coché en fin de séance ;
+               lot K2 : « Ton professeur te demande » prendra cette place. -->
+          <p id="acc-but" class="ck-but-jour" hidden><span class="ck-coche" aria-hidden="true"></span><span id="acc-but-texte"></span></p>
           <button id="carte-jour" class="ck-jour" type="button" hidden><span>Mes calculs du jour</span><em id="carte-jour-encore"></em></button>
           <p id="carte-tout" class="ck-tout-ligne" hidden></p>
-          <button id="carte-continuer" class="primary ck-continuer" type="button">Continuer</button>
+          <button id="carte-continuer" class="primary ck-continuer" type="button">Commencer</button>
+        </div>
+        <!-- Le petit menu de l'ancien accueil, pour le visiteur SANS code
+             seulement (lot « l'accueil, c'est la carte ») : « Effacer mon
+             historique », « Mode professeur ». (« 10 minutes » est dans le
+             bouton, « Comment ça marche ? » est le « ? » de la ceinture.) La
+             question « Effacer tout ton historique ? » s'ouvre À LEUR PLACE,
+             dans la même case : rien ne bouge. -->
+        <div id="acc-pied" class="acc-pied ck-pied" hidden>
+          <div class="acc-pied-normal">
+            <div id="acc-bas" class="acc-bas">
+              <button id="acc-effacer" class="lien-effacer" type="button" hidden>Effacer mon historique</button>
+              <a id="acc-prof" class="lien-prof" href="?prof=1" hidden>Mode professeur</a>
+            </div>
+          </div>
+          <div id="acc-confirm" class="acc-confirm" role="group" aria-labelledby="acc-confirm-texte" hidden>
+            <p id="acc-confirm-texte">Effacer tout ton historique&nbsp;? Cette action ne peut pas être annulée.</p>
+            <div class="acc-confirm-boutons">
+              <button id="acc-confirm-oui" class="danger" type="button">Effacer</button>
+              <button id="acc-confirm-non" class="garder" type="button">Garder</button>
+            </div>
+          </div>
         </div>
         <div id="carte-voile" class="ck-voile" hidden></div>
         <div id="carte-panneau" class="ck-panneau" role="dialog" aria-modal="true" aria-labelledby="panneau-titre" hidden>
@@ -211,7 +192,7 @@
         <div id="fil-seance" class="seance-fil seance" hidden></div>
         <div class="status">
           <div class="status-left">
-            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter et revenir à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">Accueil</span></button>
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter et revenir à la carte"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="game-menu-label">La carte</span></button>
             <span id="question-count"></span>
           </div>
           <div id="seance-fil" class="seance-fil" hidden></div>
@@ -286,7 +267,7 @@
            seule fois. -->
       <div id="notice" class="notice-screen" hidden>
         <div class="settings-toolbar">
-          <button id="notice-back" class="settings-back" type="button" aria-label="Retour à l’accueil"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">Accueil</span></button>
+          <button id="notice-back" class="settings-back" type="button" aria-label="Retour à la carte"><span class="back-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="settings-back-label">La carte</span></button>
           <h1 id="notice-title" class="settings-heading" tabindex="-1">Comment ça marche&nbsp;?</h1>
         </div>
         <div class="notice">
@@ -322,6 +303,9 @@
       // de la progression lit sans connaître les textes.
       const CARTE = CORE.carte();
       const $ = id => document.getElementById(id);
+      // Lot « l'accueil, c'est la carte » (28/11/2026) : l'écran d'arrivée,
+      // celui où l'on revient, est la carte.
+      const ACCUEIL = "ecran-carte";
 
       // Deux stockages, deux durées de vie. Les parcours (une case par code,
       // plus la case « sans code ») restent sur l'appareil. L'identité — QUEL
@@ -606,8 +590,9 @@
       // (« ← Comment ça marche ? ») ou le fil de la séance (les étapes ①②③④
       // et le nom de l'activité), la barre se range JUSTE DESSOUS. Sans titre
       // (une activité hors séance, son bilan), elle reste en haut du cadre.
-      // Lot K1 : la carte aussi (« ← Accueil » · « La carte »).
-      const TETES_ECRAN = ["#fil-seance", "#result-fil", "#notice > .settings-toolbar", "#ecran-carte > .settings-toolbar"];
+      // (Lot « l'accueil, c'est la carte » : la carte n'a plus de titre à elle,
+      // elle a celui de l'accueil — la barre reste en haut du cadre.)
+      const TETES_ECRAN = ["#fil-seance", "#result-fil", "#notice > .settings-toolbar"];
       function teteEcran() {
         if (!document.body.classList.contains("ecran-interne")) return null;
         for (const selecteur of TETES_ECRAN) {
@@ -1526,8 +1511,7 @@
 
       // Le suivi redessine l'écran visible (jamais une activité en cours).
       function renderParcours() {
-        if (!$("intro").hidden) renderAccueil();
-        else if (!$("ecran-carte").hidden && $("carte-panneau").hidden) renderCarte();
+        if (!$("ecran-carte").hidden && $("carte-panneau").hidden) renderCarte();
         ajusterEchelle();
       }
 
@@ -1977,7 +1961,7 @@
       // jamais.
       // [retour-navigateur:debut]
       const MARQUE_HISTORIQUE = "defiCalculEcran";
-      let ecranCourant = "intro";
+      let ecranCourant = ACCUEIL;
       let retourHistoriqueAttendu = false;
 
       function surEntreeInterne() {
@@ -1987,7 +1971,7 @@
       function suivreHistorique(name) {
         ecranCourant = name;
         try {
-          if (name !== "intro") {
+          if (name !== ACCUEIL) {
             if (!surEntreeInterne()) window.history.pushState({[MARQUE_HISTORIQUE]: true}, "");
           } else if (surEntreeInterne()) {
             retourHistoriqueAttendu = true;
@@ -2000,10 +1984,10 @@
         if (retourHistoriqueAttendu) {
           retourHistoriqueAttendu = false;
           // L'élève a déjà rouvert un écran pendant que l'entrée se retirait.
-          if (ecranCourant !== "intro") suivreHistorique(ecranCourant);
+          if (ecranCourant !== ACCUEIL) suivreHistorique(ecranCourant);
           return;
         }
-        if (surEntreeInterne() || ecranCourant === "intro") return;
+        if (surEntreeInterne() || ecranCourant === ACCUEIL) return;
         // « C'est toujours toi ? » ouvert : on y reste, rien ne part.
         if (gardeVisible) { suivreHistorique(ecranCourant); return; }
         if (ecranCourant === "play" || ecranCourant === "result") quitterSerie();
@@ -2019,30 +2003,29 @@
       window.addEventListener("popstate", retourNavigateur);
       // [retour-navigateur:fin]
 
-      const ECRANS = Object.freeze(["intro", "ecran-carte", "play", "result", "notice"]);
-      const TITRES = Object.freeze({intro: "acc-titre", "ecran-carte": "carte-heading", notice: "notice-title"});
+      const ECRANS = Object.freeze(["ecran-carte", "play", "result", "notice"]);
+      const TITRES = Object.freeze({"ecran-carte": "carte-heading", notice: "notice-title"});
 
       // La pilule du mode professeur : sur l'accueil et sur l'écran d'un
       // module. Avec un code d'élève, la clé est ignorée et l'accueil le dit.
       function majPilule(name) {
-        $("prof-pilule").hidden = !(MODE_PROF && (name === "intro" || name === "ecran-carte"));
-        $("prof-refus").hidden = !(PROF_REFUSE && suiviActif() && name === "intro");
+        $("prof-pilule").hidden = !(MODE_PROF && name === ACCUEIL);
+        $("prof-refus").hidden = !(PROF_REFUSE && suiviActif() && name === ACCUEIL);
       }
 
       function show(name) {
         ECRANS.forEach(id => { $(id).hidden = id !== name; });
-        if (name === "intro") renderAccueil();
-        if (name !== "ecran-carte") fermerPanneau(false);
+        if (name !== ACCUEIL) fermerPanneau(false);
         document.body.classList.toggle("challenge-playing", name === "play");
         // Hors de l'accueil, le lien du site « ← Calcul mental » s'efface :
         // la seule flèche à l'écran est celle de l'appli.
-        document.body.classList.toggle("ecran-interne", name !== "intro");
-        if (name !== "intro") document.body.classList.remove("accueil-en-attente");
+        document.body.classList.toggle("ecran-interne", name !== ACCUEIL);
+        if (name !== ACCUEIL) document.body.classList.remove("accueil-en-attente");
         // La carte (lot K1) : sa classe sur le corps de la page.
-        document.body.classList.toggle("sur-carte", name === "ecran-carte");
+        document.body.classList.toggle("sur-carte", name === ACCUEIL);
         // (Lot P1 : la carte se dessine une fois sa page en place — elle
         // mesure la hauteur de ses étages, voir poserLignes.)
-        if (name === "ecran-carte") renderCarte();
+        if (name === ACCUEIL) renderCarte();
         // Lot 5 « revue » : « Comment ça marche ? » aussi prend la hauteur de
         // l'écran à l'ordinateur (avant : 650 px fixes, le cadre dépassait de
         // 3 px pour l'élève, de 63 px pour le visiteur, en 1366 × 657).
@@ -2108,10 +2091,12 @@
         });
       }
 
+      // Lot « l'accueil, c'est la carte » (28/11/2026, demande de Gwenaël) :
+      // revenir à l'accueil, c'est revenir à la carte, sur l'étage de
+      // « Continuer ».
       function versAccueil() {
-        arreterActivite();
         state.origine = "intro";
-        show("intro");
+        ouvrirCarte();
       }
 
       // ------------------------------------------------- l'accueil et la carte
@@ -2201,10 +2186,6 @@
 
       // ---- l'accueil
 
-      function etageCourant(carte = carteDuJour()) {
-        return carte.etages.find(e => e.etage === carte.courant) || carte.etages[0] || null;
-      }
-
       // Le but du jour : la LIGNE de l'étoile de « Continuer », sans le
       // paquet (lot P1, planche P1-2 A : « Aujourd'hui : la ligne Décimaux :
       // + et − »). Il est fixé au début de la séance, pour être coché à la
@@ -2227,34 +2208,6 @@
         sauverParcours();
       }
 
-      function renderAccueil() {
-        const acc = document.querySelector(".acc");
-        // Tant que le serveur n'a pas dit qui est l'élève, l'accueil attend.
-        acc.classList.toggle("en-attente", suiviAttendu);
-        document.body.classList.toggle("accueil-en-attente", suiviAttendu && !$("intro").hidden);
-        fermerSeanceFinie();
-        const carte = carteDuJour();
-        const etage = etageCourant(carte);
-        const s = etatDuJour();
-        $("acc-ceinture").replaceChildren(ceintureDeLEtage(etage, 150));
-        $("acc-compte").textContent = etage ? soude(`${nomCeinture(etage.etage)} · ${texteCompte(etage)}`) : "";
-        // Tout est gagné et rien n'est dû (planche K0-4) : la carte le dit
-        // sans punir ; on peut s'entraîner sur une étoile gagnée.
-        const toutGagne = s.continuer.type === "rien" && s.continuer.toutGagne && !s.paquet;
-        $("acc-but").hidden = toutGagne || !texteBut(s.but);
-        $("acc-but-texte").textContent = texteBut(s.but);
-        $("acc-but-avant").textContent = s.obligatoire ? texteAvant(s.obligatoire) : "";
-        $("acc-but-avant").hidden = !s.obligatoire;
-        $("acc-tout").hidden = !toutGagne;
-        if (toutGagne) $("acc-tout-quand").textContent = texteRetour(s.continuer.prochainRetour);
-        $("acc-commencer").hidden = toutGagne;
-        $("acc-commencer").textContent = s.ouverte ? "Continuer" : s.finies ? "Encore une séance" : "Commencer";
-        $("acc-minutes").textContent = soude(`${s.minutes} minutes`);
-        $("acc-effacer").hidden = !peutEffacer() || PARCOURS.estVide(parcours);
-        $("acc-prof").hidden = !peutEffacer();
-        if (!peutEffacer()) $("acc-confirm").hidden = true;
-        marquerEffacer();
-      }
       // « Tes étoiles reviennent dans 3 jours, pour voir si elles tiennent. »
       function texteRetour(jours) {
         if (jours === null || jours === undefined) return "";
@@ -2279,14 +2232,15 @@
         // (Correctif K1, relecture de Codex du 26/11 : la case est relue
         // AVANT d'effacer — un autre onglet, mis à jour, a pu y écrire une
         // progression que cette page ne sait pas lire ; elle n'y touche pas.)
-        if (verifierPageAncienne()) { renderAccueil(); renderRepere(); return; }
+        if (verifierPageAncienne()) { renderCarte(); renderRepere(); return; }
         arreterActivite();
         PARCOURS.effacer(storage(), "");
         parcours = caseSansCode();
         state.seance = null;
         $("acc-confirm").hidden = true;
-        renderAccueil();
-        $("acc-titre").focus?.({preventScroll: true});
+        renderCarte();
+        ajusterEchelle();
+        $("carte-heading").focus?.({preventScroll: true});
       }
 
       // ---- la carte
@@ -2299,9 +2253,18 @@
       }
 
       function renderCarte() {
+        // Tant que le serveur n'a pas dit qui est l'élève, la carte attend
+        // (ce qu'attendait l'accueil, avant ce lot).
+        const ecran = $("ecran-carte");
+        ecran.classList.toggle("en-attente", suiviAttendu);
+        document.body.classList.toggle("accueil-en-attente", suiviAttendu && !ecran.hidden);
+        fermerSeanceFinie();
         const carte = carteDuJour();
-        if (state.etage === null || !carte.etages.some(e => e.etage === state.etage)) state.etage = carte.courant || 1;
-        const etage = carte.etages.find(e => e.etage === state.etage) || carte.etages[0];
+        // L'étage de « Continuer », tant que l'élève n'a pas touché un onglet
+        // (lot « l'accueil, c'est la carte » : la carte se dessine aussi
+        // pendant l'attente du serveur — l'étage n'est pas retenu avant).
+        const choisi = state.etage !== null && carte.etages.some(e => e.etage === state.etage) ? state.etage : (carte.courant || 1);
+        const etage = carte.etages.find(e => e.etage === choisi) || carte.etages[0];
         const s = etatDuJour();
         const suite = s.continuer;
         const vise = suite.type === "etoile" ? cleDe(suite.module, suite.niveau) : "";
@@ -2334,7 +2297,8 @@
         const compte = document.createElement("span");
         compte.textContent = texteCompte(etage);
         texte.append(nom, compte);
-        porteur.replaceChildren(ceintureDeLEtage(etage, 76), texte);
+        porteur.classList.toggle("prof", MODE_PROF);
+        porteur.replaceChildren(ceintureDeLEtage(etage, 76), texte, $("acc-notice-bouton"));
         // Les lignes : une étoile par compétence, dans l'ordre de la carte.
         // Lot P1 (DECISIONS § 8) : hors téléphone, la place des lignes est
         // celle de l'étage le plus haut — le cadre a la même taille sur tous
@@ -2381,8 +2345,23 @@
         if (!fin) {
           if (suite.type === "paquet") petit.textContent = s.obligatoire ? texteAvant(s.obligatoire) : "Mes calculs du jour";
           else if (suite.type === "etoile") ecrireAvecFractions(petit, `${suite.raison === "aRegagner" ? "D’abord" : "Ensuite"} : ${nomCompetence(suite.module, suite.niveau)}`);
-          bouton.replaceChildren(document.createTextNode("Continuer"), ...(petit.textContent ? [petit] : []));
+          // (Lot « l'accueil, c'est la carte » : le mot de l'ancien accueil —
+          // « Commencer », « Continuer » dans une séance ouverte, « Encore une
+          // séance » après la fin.)
+          // (28/11, Gwenaël : la durée dans le bouton — « Commencer · 10 minutes ».)
+          const mot = s.ouverte ? "Continuer" : `${s.finies ? "Encore une séance" : "Commencer"} · ${s.minutes}\u00a0minutes`;
+          bouton.replaceChildren(document.createTextNode(mot), ...(petit.textContent ? [petit] : []));
         }
+        // Le but du jour, au-dessus (pas quand tout est gagné).
+        const toutGagne = fin && suite.toutGagne;
+        $("acc-but").hidden = toutGagne || !texteBut(s.but);
+        $("acc-but-texte").textContent = texteBut(s.but);
+        // Le petit menu de l'ancien accueil : le visiteur sans code seulement.
+        $("acc-pied").hidden = !peutEffacer();
+        $("acc-effacer").hidden = !peutEffacer() || PARCOURS.estVide(parcours) || !$("acc-confirm").hidden;
+        $("acc-prof").hidden = !peutEffacer();
+        if (!peutEffacer()) $("acc-confirm").hidden = true;
+        marquerEffacer();
       }
 
       // Lot P1 (DECISIONS § 8, rapport de Codex sur les écrans d'ordinateur :
@@ -2669,7 +2648,7 @@
         arreterActivite();
         state.seance = null;
         state.origine = "intro";
-        show("intro");
+        ouvrirCarte();
       }
 
       const DELAI_SUIVANT = 800;
@@ -3354,8 +3333,8 @@
       // Le bouton de retour d'une étape : « ← Accueil » (lot K1 : l'écran
       // « Mon module » n'existe plus).
       function majBoutonRetour() {
-        $("game-menu").querySelector(".game-menu-label").textContent = "Accueil";
-        $("game-menu").setAttribute("aria-label", "Arrêter et revenir à l’accueil");
+        $("game-menu").querySelector(".game-menu-label").textContent = "La carte";
+        $("game-menu").setAttribute("aria-label", "Arrêter et revenir à la carte");
       }
 
       // ------------------------------------------------- J'apprends, en une étape
@@ -3944,9 +3923,7 @@
         } else if (enSeance() && PARCOURS.seanceOuverte(parcours, jourCourant())) {
           $("result-suite").replaceChildren(boutonContinuer(), boutonsDeSuite(revoir), lienDiscret("Arrêter la séance", quitterSeance));
         } else {
-          $("result-suite").replaceChildren(
-            boutonsDeSuite(["La carte", "primary", () => ouvrirCarte()], revoir),
-            lienDiscret("Accueil", versAccueil));
+          $("result-suite").replaceChildren(boutonsDeSuite(["La carte", "primary", versAccueil], revoir));
         }
         $("corrections").replaceChildren();
         state.titreResultat = "retenir-phrase";
@@ -5226,7 +5203,7 @@
         const verdict = suivi.verdict || {reussi: false};
         if (verdict.reussi) poserVerdict({titre: "Entraînement réussi !", score: sur});
         else poserVerdict({classe: "is-neutre", icone: "", titre: serie.genre === "rattrape" ? "On le revoit demain" : "On continue demain", score: sur});
-        $("result-suite").replaceChildren(...renvoiTables(serie), ...basDeBilan(fin, ...(enSeance() && PARCOURS.seanceOuverte(parcours, jourCourant()) ? [] : [["La carte", "primary", () => ouvrirCarte()], ["Accueil", "secondary", versAccueil]])));
+        $("result-suite").replaceChildren(...renvoiTables(serie), ...basDeBilan(fin, ...(enSeance() && PARCOURS.seanceOuverte(parcours, jourCourant()) ? [] : [["La carte", "primary", versAccueil]])));
       }
 
       // Après un J'apprends arrêté : ce que l'élève retrouvera demain.
@@ -5411,18 +5388,6 @@
       // ------------------------------------------------- les gestes
 
       // Lot K1 : l'accueil et la carte.
-      $("acc-commencer").addEventListener("click", lancerSeance);
-      $("acc-porte").addEventListener("click", () => ouvrirCarte());
-      $("acc-tout-carte").addEventListener("click", () => ouvrirCarte());
-      // « Je m'entraîne encore » quand tout est gagné : la dernière étoile
-      // gagnée de l'étage en cours (s'entraîner ne fait perdre aucune étoile).
-      $("acc-encore").addEventListener("click", () => {
-        const etage = etageCourant();
-        const gagnees = etage ? etage.lignes.flatMap(l => l.etoiles).filter(e => e.etat === "gagnee") : [];
-        const e = gagnees[gagnees.length - 1];
-        if (e) lancerDepuisCarte(() => lancerSerie(e.module, e.niveau, "rattrape", "seance"));
-      });
-      $("carte-back").addEventListener("click", versAccueil);
       $("carte-continuer").addEventListener("click", () => {
         if (PARCOURS.seanceOuverte(parcours, jourCourant())) { assurerSeance(); continuerSeance(); } else lancerSeance();
       });
@@ -5447,7 +5412,7 @@
       });
       $("acc-confirm-non").addEventListener("click", () => {
         $("acc-confirm").hidden = true;
-        renderAccueil();
+        renderCarte();
         $("acc-effacer").focus?.({preventScroll: true});
       });
       $("acc-confirm-oui").addEventListener("click", effacerHistorique);
@@ -5535,7 +5500,7 @@
         if (document.visibilityState === "hidden") fermerLaPage();
         // L'onglet resté ouvert depuis la veille : au retour, l'accueil se
         // redessine sur le jour d'aujourd'hui.
-        else if (document.visibilityState === "visible" && !$("intro").hidden) renderAccueil();
+        else if (document.visibilityState === "visible" && !$("ecran-carte").hidden && $("carte-panneau").hidden) renderCarte();
       });
       // Pour les contrôles au navigateur (?test) : le calcul à l'écran et la
       // progression, en lecture seule.
@@ -5821,8 +5786,9 @@
       }
       majLienRetour();
       renderRepere();
-      majPilule("intro");
-      renderAccueil();
+      majPilule(ACCUEIL);
+      document.body.classList.add("sur-carte");
+      renderCarte();
       ajusterEchelle();
       // L'adresse a été lue et nettoyée par le script du <head>. L'espace
       // élève construit « #b=<billet>&ouvrir=parcours » : le billet s'échange

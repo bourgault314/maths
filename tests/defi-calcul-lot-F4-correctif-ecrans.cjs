@@ -274,7 +274,7 @@ async function jouer(page, choisir, {uneMinute = false} = {}) {
       await photo(s.page, `${f}-page-ancienne`);
       assert.equal(await visible(s.page, "#suivi-repere"), true, "le message est à l'écran");
       assert.match(await texte(s.page, "#suivi-repere"), /Page ancienne : recharge la page\./);
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 2500);
       if (await appel(s.page, "calcul")) await repondre(s.page, true);
       assert.equal(await s.page.evaluate(() => localStorage.getItem("mathsgo-defi-calcul-parcours")), v11, "la copie version 11 est intacte");

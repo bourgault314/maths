@@ -232,7 +232,7 @@ test("la page : l'exemple résolu passe avant « À toi », ne compte pas, jamai
   // Les adresses de cache, les copies pour la page prof, le manifeste.
   assert.match(PAGE, /defi_calcul_core\.js\?v=20261128-1/);
   assert.match(PAGE, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261128-1/);
   assert.equal(lire("../outils/calcul_mental/defi_calcul_core.js"), lire("../_serveur/public/prof/defi_calcul_core.js"));
   assert.equal(lire("../outils/calcul_mental/defi_calcul_mon_parcours.js"), lire("../_serveur/public/prof/defi_calcul_mon_parcours.js"));
   assert.match(lire("../_serveur/public/VERSION"), /^lot defi-calcul-lot-C3-exemples$|^lot anzan-bareme-lot-1$|^lot defi-calcul-lot-C4a$|^lot defi-calcul-lot-C4b$|^lot defi-calcul-lot-C4c$|^lot defi-calcul-lot-C4d$|^lot defi-calcul-lot-K1-la-carte$|^lot defi-calcul-lot-K1b$|^lot defi-calcul-lot-P1$|^lot defi-calcul-lot-6e-complete$|^lot defi-calcul-lot-fractions-6e$|^lot defi-calcul-lot-K2-professeur$/m);

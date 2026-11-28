@@ -410,19 +410,21 @@ test("le titre de l'écran d'abord, la ligne dessous : Défi tables (Mon parcour
       await o.ctx.close();
       // Défi calcul : la carte, la séance, puis « Comment ça marche ? ».
       // (Lot K1 : « Commencer » lance la séance ; « La carte » remplace Mon parcours.)
+      // (Lot « l'accueil, c'est la carte » : la carte est l'accueil — la
+      // barre est en haut du cadre, comme sur l'accueil de Défi tables.)
       o = await ouvrir(nav, "Défi calcul", {largeur, hauteur, telephone});
-      await o.page.click("#acc-porte");
       await o.page.waitForTimeout(600);
-      await verifierSousTitre(o.page, `Défi calcul, La carte (${taille})`, "#ecran-carte > .settings-toolbar", "#carte-etages");
-      await o.page.click("#carte-back");
-      await o.page.waitForTimeout(400);
-      await o.page.click("#acc-commencer");
+      const carte = await o.page.evaluate(() => ({classe: document.body.classList.contains("ligne-sous-titre"),
+        premiere: document.querySelector(".shell > .panel > header.topbar") !== null, carte: !document.getElementById("ecran-carte").hidden}));
+      assert.deepEqual(carte, {classe: false, premiere: true, carte: true}, `Défi calcul, la carte à l'arrivée (${taille}) : la barre en haut du cadre`);
+      await o.page.click("#carte-continuer");
       await o.page.waitForTimeout(1200);
       await verifierSousTitre(o.page, `Défi calcul, Ma séance (${taille})`, "#fil-seance", "#play .status");
       await verifierFlecheEnHaut(o.page, `Défi calcul, Ma séance (${taille})`, "#fil-seance", telephone);
       await o.page.click("#game-menu");
       await o.page.waitForTimeout(500);
-      await o.page.locator("text=Comment ça marche").first().click();
+      // (Lot « l'accueil, c'est la carte » : « Comment ça marche ? » est le « ? » de la ceinture.)
+      await o.page.click("#acc-notice-bouton");
       await o.page.waitForTimeout(500);
       await verifierSousTitre(o.page, `Défi calcul, Comment ça marche ? (${taille})`, "#notice-title", "#notice > .notice");
       assert.deepEqual(o.erreurs, [], `Défi calcul (${taille}) : aucune erreur`);

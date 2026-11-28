@@ -25,14 +25,15 @@ const lire = chemin => readFileSync(new URL(chemin, import.meta.url), "utf8");
 const PAGE = lire("../outils/calcul_mental/defi_calcul_modules.html");
 const CSS = lire("../outils/calcul_mental/defi_calcul.css");
 
-test("la carte : la ligne de suivi se range sous « ← Accueil · La carte », comme sous « ← Comment ça marche ? »", () => {
+test("la ligne de suivi se range sous « ← Comment ça marche ? » ; la carte, devenue l'accueil, n'a plus de titre à elle", () => {
   const liste = PAGE.match(/const TETES_ECRAN = \[([^\]]*)\];/);
   assert.ok(liste, "TETES_ECRAN");
   assert.match(liste[1], /"#notice > \.settings-toolbar"/);
-  // (Lot K1 : la carte remplace Mon parcours.)
-  assert.match(liste[1], /"#ecran-carte > \.settings-toolbar"/);
-  // Le titre de la carte est bien dans une barre « settings-toolbar » enfant directe de l'écran.
-  assert.match(PAGE, /<div id="ecran-carte" class="ck-ecran" hidden>\s*<div class="settings-toolbar">/);
+  // (Lot K1 : la carte remplace Mon parcours. Lot « l'accueil, c'est la
+  // carte » : elle est l'écran d'arrivée — la barre reste en haut du cadre,
+  // comme sur l'ancien accueil.)
+  assert.doesNotMatch(liste[1], /ecran-carte/);
+  assert.match(PAGE, /<div id="ecran-carte" class="ck-ecran">\s*<h2 id="carte-heading" class="ck-cache" tabindex="-1">La carte<\/h2>/);
 });
 
 test("« Comment ça marche ? » : à l'ordinateur, le cadre prend la hauteur de l'écran (plus 650 px fixes)", () => {
@@ -56,5 +57,5 @@ test("le bilan de Mes calculs du jour au téléphone : parti au lot K1 (« Séan
 });
 
 test("la feuille a changé : son adresse aussi (cache)", () => {
-  assert.match(PAGE, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(PAGE, /defi_calcul\.css\?v=20261128-1/);
 });

@@ -94,10 +94,11 @@ test("3. l'accueil : « Aujourd'hui : la ligne … », les mots courts soudés ;
   assert.equal(soudeCourts("Décimaux : + et −"), "Décimaux : + et −");
   assert.equal(soudeCourts("Jusqu’à 20"), "Jusqu’à 20");
   assert.equal(soudeCourts("Doubles et moitiés"), "Doubles et moitiés");
-  // « Avant : … » : le vrai nombre, rien quand il n'y en a pas.
-  const accueil = corps("renderAccueil");
-  assert.ok(accueil.includes('$("acc-but-avant").textContent = s.obligatoire ? texteAvant(s.obligatoire) : "";'));
-  assert.ok(accueil.includes('$("acc-but-avant").hidden = !s.obligatoire;'));
+  // « Avant : … » : le vrai nombre, rien quand il n'y en a pas. (Lot « l'accueil,
+  // c'est la carte » : il est sous « Commencer » ; le but du jour au-dessus.)
+  const accueil = corps("renderCarte");
+  assert.ok(accueil.includes('petit.textContent = s.obligatoire ? texteAvant(s.obligatoire) : "Mes calculs du jour";'));
+  assert.ok(accueil.includes('$("acc-but-texte").textContent = texteBut(s.but);'));
   const avant = PAGE.match(/const texteAvant = n => (soude\([^\n]*\));/);
   assert.ok(avant);
   const texteAvant = new Function("n", "soude", `return ${avant[1]};`);
@@ -270,7 +271,7 @@ test("10. Mes calculs du jour : la sorte numérotée par le noyau et donnée au 
 });
 
 test("11. les adresses de cache neuves ; les copies du professeur, octet pour octet", () => {
-  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-2">/);
+  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261128-1">/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261128-1"><\/script>/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-2"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261126-2", "defi_calcul_mon_parcours.js?v=20261126-2", "defi_calcul.css?v=20261126-2"]) {

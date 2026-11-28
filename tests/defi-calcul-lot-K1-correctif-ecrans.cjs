@@ -226,7 +226,7 @@ async function cas(nom, f) {
         etat.revision = 5;
         return {statut: 409, donnees: {ok: false, conflit: true, parcours: etat.parcours, revision: 5}};
       }}});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     for (let i = 0; i < 30 && !premier; i += 1) await pause(s.page, 200);
     await pause(s.page, 1500);
     assert.ok(premier, "le premier calcul de Mes calculs du jour est à l'écran, et l'état de l'autre appareil est arrivé");
@@ -258,14 +258,14 @@ async function cas(nom, f) {
       // (Lot P1 : gagnée il y a 7 jours — du premier coup, elle revient dans une semaine.)
       const etat = {parcours: gagner(P.creerParcours(), CARTE.ordre.slice(essai, essai + 1), P.ajouterJours(JOUR, -7)), revision: 1};
       const s = await ouvrir(nav, base, {serveur: etat});
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 2600);
       const premier = await repondre(s.page, false);
       assert.ok(premier, "un premier calcul");
       await pause(s.page, 1500);
       // (Le faux serveur a reçu la progression : le 2e calcul attend.)
       const t = await ouvrir(nav, base, {serveur: {parcours: s.serveur.parcours, revision: s.serveur.revision}, contexte: s.ctx});
-      await t.page.click("#acc-commencer");
+      await t.page.click("#carte-continuer");
       await pause(t.page, 2600);
       const second = await T(t.page, "calcul");
       assert.ok(second, `${CARTE.ordre[essai]} : le 2e calcul est reposé`);
@@ -303,7 +303,7 @@ async function cas(nom, f) {
     assert.ok(caseDuCode, "la case du code est sur l'appareil");
     const ecritsAvant = s.serveur.ecrits.length;
     // Un geste qui range la progression et programme un envoi (700 ms plus tard) : ouvrir la séance.
-    await s.page.click("#acc-porte");
+    // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
     await pause(s.page, 300);
     await s.page.evaluate(() => document.querySelector("#carte-lignes .ck-case.aGagner").click());
     await pause(s.page, 200);
@@ -323,7 +323,7 @@ async function cas(nom, f) {
 
   await cas("12. Mes calculs du jour : le temps part AVEC chaque réponse, pas seulement au bilan", async () => {
     const s = await ouvrir(nav, base, {serveur: {parcours: lea(), revision: 1}});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await pause(s.page, 2600);
     assert.equal(await T(s.page, "genre"), "jour");
     // Vingt secondes de réflexion, puis une réponse juste.
@@ -375,7 +375,7 @@ async function cas(nom, f) {
         etat.revision = 9;
         return {statut: 409, donnees: {ok: false, conflit: true, parcours: corps.parcours, revision: 9}};
       }}});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await pause(s.page, 6000);
     assert.equal(conflits, 1, "le conflit a eu lieu");
     assert.equal(s.serveur.ecrits.length, 1, "un seul envoi : pas de renvoi après un conflit qui n'apporte rien");
@@ -394,7 +394,7 @@ async function cas(nom, f) {
     await cas(`14. ${f} : l'étoile partie dans un paquet qui finit la séance garde « Je tente » · « J'apprends » ; ils ouvrent une séance`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, serveur: {parcours: lea(), revision: 1}});
       // Le premier paquet (10 étoiles), une demi-minute par calcul.
-      await s.page.click("#acc-commencer");
+      await s.page.click("#carte-continuer");
       await pause(s.page, 2600);
       for (let i = 0; i < 12 && await enJeu(s.page) && await T(s.page, "genre") === "jour"; i += 1) await repondre(s.page, true, 30);
       await pause(s.page, 800);
@@ -413,7 +413,7 @@ async function cas(nom, f) {
       await pause(s.page, 2600);
       await s.page.click("#game-menu");
       await pause(s.page, 300);
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 500);
       assert.match(await texte(s.page, "#carte-jour"), /encore 7/);
       await s.page.click("#carte-jour");
@@ -455,7 +455,7 @@ async function cas(nom, f) {
 
   await cas("7. à 9 minutes, après un « Je tente » raté : « Continuer » propose une étoile qui tient encore, et la lance", async () => {
     const s = await ouvrir(nav, base, {serveur: {parcours: null, revision: 0}});
-    await s.page.click("#acc-commencer");
+    await s.page.click("#carte-continuer");
     await pause(s.page, 2600);
     assert.equal(await T(s.page, "genre"), "tente");
     const ratee = await T(s.page, "etape");

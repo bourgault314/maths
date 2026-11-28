@@ -160,9 +160,10 @@ async function cas(nom, f) {
     const f = `${largeur}x${hauteur}${plein ? "-plein" : ""}`;
     await cas(`${f} : la carte d'un élève neuf — six onglets sur une rangée, la ceinture du CP`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, plein});
-      assert.match(await texte(s.page, "#intro"), /Ceinture blanche-jaune · 0 étoile sur 14/);
+      // (Lot « l'accueil, c'est la carte » : la ceinture et son compte, dans la ligne de la ceinture.)
+      assert.match(await texte(s.page, "#carte-porteur"), /Ceinture blanche-jaune 0 étoile sur 14/);
       await photo(s.page, `${f}-accueil`);
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       const o = await onglets(s.page);
       assert.equal(o.length, 6, "six onglets");
@@ -198,13 +199,14 @@ async function cas(nom, f) {
         const jour = t.vu.jour || JOUR;
         const s = await ouvrir(nav, base, {largeur, hauteur, parcours: t.parcours, jour});
         const attendu = P.carteEleve(P.normaliserParcours(t.parcours, {aujourdhui: jour}), CARTE, {aujourdhui: jour});
-        await s.page.click("#acc-porte");
+        // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
         await pause(s.page, 300);
         const c = await T(s.page, "carte");
         assert.equal(c.courant, attendu.courant, "l'étage ouvert");
         assert.equal((await onglets(s.page)).length, 6);
         const porteur = await texte(s.page, "#carte-porteur");
-        assert.match(porteur, /^Ceinture [a-z-]+ \d+ étoiles? sur \d+$/);
+        // (Lot « l'accueil, c'est la carte » : le « ? » de « Comment ça marche ? » est au bout de la ligne.)
+        assert.match(porteur, /^Ceinture [a-z-]+ \d+ étoiles? sur \d+ \?$/);
         const n = attendu.etages.find(e => e.etage === attendu.courant);
         assert.ok(porteur.includes(`sur ${ETOILES[attendu.courant - 1]}`), `${porteur} : l'étage ${attendu.courant}`);
         assert.ok(n, "l'étage existe");
@@ -234,8 +236,8 @@ async function cas(nom, f) {
         }
       }
       const s = await ouvrir(nav, base, {largeur: 390, hauteur: 844, parcours: p, reglages: {"defi-calcul": {etage}}});
-      assert.match(await texte(s.page, "#intro"), /Tout est gagné/, "l'accueil le dit");
-      await s.page.click("#acc-porte");
+      assert.match(await texte(s.page, "#ecran-carte"), /Tout est gagné/, "la carte (l'accueil) le dit");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       const o = await onglets(s.page);
       // (Lot P1 : plus d'onglet « fermée » ; les étages au-delà du réglage ne sont pas montrés.)
@@ -256,7 +258,7 @@ async function cas(nom, f) {
   for (const [largeur, hauteur] of [[390, 844], [1366, 768]]) {
     await cas(`${largeur}x${hauteur} : le professeur — « Ceinture blanche-jaune · CP », tout ouvert, rien d'enregistré`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur, prof: true});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 300);
       assert.match(await texte(s.page, "#carte-porteur"), /^Ceinture blanche-jaune · CP/);
       assert.equal(await s.page.evaluate(() => document.querySelectorAll("#carte-lignes .ck-case.fermee").length), 0, "toutes les étoiles ouvertes");

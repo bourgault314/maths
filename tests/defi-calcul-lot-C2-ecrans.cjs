@@ -178,7 +178,7 @@ const PAR_COEUR = {"M1-1": /Sous chaque nombre, son double/, "M1-2": /Sous chaqu
     // moitiés » aux bases, la ceinture jaune à 44 étoiles.)
     await cas(`${f} : la carte d'un élève aux bases — la ligne « Doubles et moitiés », 44 étoiles`, async () => {
       const s = await ouvrir(nav, base, {largeur, hauteur});
-      await s.page.click("#acc-porte");
+      // (Lot « l'accueil, c'est la carte » : on arrive sur la carte.)
       await pause(s.page, 800);
       assert.match(await texte(s.page, "#carte-porteur"), /Ceinture jaune.*sur 44/);
       const lignes = await s.page.evaluate(() => [...document.querySelectorAll("#carte-lignes .ck-ligne h3")].map(h => h.firstChild.textContent.replace(/[\u00a0\u202f]/g, " ").trim()));

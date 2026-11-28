@@ -54,7 +54,8 @@ test("1. six onglets sur une rangée : six colonnes, les mots jamais coupés ; �
   assert.match(onglet, /padding: 5px 1px 3px;/);
   assert.match(onglet, /font-size: \.66rem;/);
   assert.match(onglet, /white-space: nowrap;/);
-  assert.match(regleMedia(CSS, "(min-width: 1024px)", ".ck-haut"), /grid-template-columns: 432px minmax\(0, 1fr\);/);
+  // (Lot « l'accueil, c'est la carte » : 390 px, le « ? » loge au bout de la ceinture.)
+  assert.match(regleMedia(CSS, "(min-width: 1024px)", ".ck-haut"), /grid-template-columns: 390px minmax\(0, 1fr\);/);
   assert.match(regleMedia(CSS, "(min-width: 1024px)", ".ck-onglet"), /font-size: \.74rem;/);
   assert.match(regleMedia(CSS, "(min-width: 1024px)", ".ck-etages"), /gap: 6px;/);
   // (320 px : « en cours » sortait de son onglet de 2 px.)
@@ -73,7 +74,7 @@ test("2. les textes du 26/11 : six ceintures dans « Comment ça marche ? » ; p
 });
 
 test("3. la page charge le noyau, le moteur et la feuille du lot (numéros de cache neufs)", () => {
-  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261127-2">/);
+  assert.match(PAGE, /<link rel="stylesheet" href="\.\/defi_calcul\.css\?v=20261128-1">/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_core\.js\?v=20261128-1"><\/script>/);
   assert.match(PAGE, /<script src="\.\/defi_calcul_mon_parcours\.js\?v=20261127-2"><\/script>/);
   for (const vieux of ["defi_calcul_core.js?v=20261125-7", "defi_calcul_mon_parcours.js?v=20261126-1", "defi_calcul.css?v=20261125-7"]) {

@@ -74,7 +74,8 @@ test("1. plus rien de l'ancien moteur ni des écrans partis (Mon module, Mon par
     "ouvrirParcours", "carteDeSeance", "renderSemaine", "feteBarrette", "barretteGagnee", "CARTE_CONSTRUITE", "Tu connais déjà ce module"]
     .forEach(mot => assert.ok(!PAGE.includes(mot), `« ${mot} » est parti`));
   assert.ok(!/show\("module"\)/.test(SCRIPT), "plus d'écran « Mon module »");
-  assert.match(SCRIPT, /const ECRANS = Object\.freeze\(\["intro", "ecran-carte", "play", "result", "notice"\]\);/);
+  // (Lot « l'accueil, c'est la carte » : plus d'écran d'accueil à part.)
+  assert.match(SCRIPT, /const ECRANS = Object\.freeze\(\["ecran-carte", "play", "result", "notice"\]\);/);
 });
 
 // ------------------------------------------------------------------ 2.
@@ -83,7 +84,7 @@ test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mo
   [
     // L'accueil, la carte (§ 12.3)
     // (Lot P1 : « Aujourd'hui : la ligne … » ; plus de « Tente toute la ceinture ».)
-    "Aujourd’hui : la ligne ", "Avant : tes ", " calculs du jour.", "Tout est gagné.", "S’entraîner ne fait perdre aucune étoile.",
+    "Aujourd’hui : la ligne ", "Avant : tes ", " calculs du jour.", "Tout est gagné.",
     "Continuer", "Ensuite : ", "D’abord : ",
     // Le panneau d'une étoile (planches K0-2, K1-2, K1-4)
     "6 calculs. 5 justes : l’étoile est à toi.", "On te montre, puis tu t’entraînes.", "Fermée.", " D’abord : ",
@@ -111,8 +112,8 @@ test("2. les textes validés (conception § 12.3, § 12.7, § 12.8), mot pour mo
     "Mes ceintures. Tout est ouvert. Une ceinture est à moi quand j’ai toutes ses étoiles. Six ceintures, de la blanche-jaune à la bleue, à gagner dans l’ordre que je veux."
   ].join(" "));
   // Un nombre et son unité ne se séparent jamais : les textes de la page passent par soude.
-  assert.match(SCRIPT, /\$\("acc-minutes"\)\.textContent = soude\(`\$\{s\.minutes\}\u00a0minutes`\);/);
-  assert.match(PAGE, /<span id="acc-minutes" class="ck-minutes">10&nbsp;minutes<\/span>/);
+  // (Lot « l'accueil, c'est la carte » : la durée est dans le bouton, « Commencer · 10 minutes ».)
+  assert.ok(SCRIPT.includes('const mot = s.ouverte ? "Continuer" : `${s.finies ? "Encore une séance" : "Commencer"} · ${s.minutes}\\u00a0minutes`;'));
   // « Séance terminée » sans la ligne des jours (25/11, 20 h 50) ; aucun mot genré.
   assert.ok(!/texteSoirs|cette semaine/.test(corps("renderFinDeSeance")), "pas de ligne des jours");
   const sansNotes = PAGE_PLATE.replace(/<!--[\s\S]*?-->/g, "").replace(/^\s*\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -132,7 +133,8 @@ test("3. le panneau d'une étoile se pose par-dessus la carte ; rien ne bouge de
   assert.match(SCRIPT, /key === "Escape"[\s\S]{0,120}fermerPanneau\(\)/);
   assert.ok(!/scrollTo/.test(corps("fermerPanneau")), "le fermer non plus");
   // Changer d'écran le referme.
-  assert.match(corps("show"), /if \(name !== "ecran-carte"\) fermerPanneau\(false\);/);
+  assert.match(corps("show"), /if \(name !== ACCUEIL\) fermerPanneau\(false\);/);
+  assert.match(SCRIPT, /const ACCUEIL = "ecran-carte";/);
 });
 
 // ------------------------------------------------------------------ 4.
@@ -156,8 +158,9 @@ test("4. le temps est versé avant chaque étape appliquée ; le professeur n'en
   // Une écriture refusée parce que le serveur garde plus récent : la ligne le dit, plus rien ne part.
   assert.match(corps("traiterReponseEnvoi"), /if \(reponse\.statut === 400 && donnees && donnees\.erreur === "Page ancienne : recharge la page\."\) \{\s*erreurDefinitive = true;\s*pageAncienne = true;\s*renderRepere\(\);\s*return;/);
   // Une séance ouverte sans rien à jouer se ferme à l'accueil (jamais en mode professeur, jamais en page ancienne).
-  // (Correctif K1 : la règle a son nom, fermerSeanceFinie, appelée par l'accueil.)
-  assert.match(corps("renderAccueil"), /fermerSeanceFinie\(\);/);
+  // (Correctif K1 : la règle a son nom, fermerSeanceFinie, appelée par l'accueil —
+  // la carte, depuis le lot « l'accueil, c'est la carte ».)
+  assert.match(corps("renderCarte"), /fermerSeanceFinie\(\);/);
   assert.match(corps("fermerSeanceFinie"), /if \(MODE_PROF \|\| suiviAttendu \|\| pageAncienne \|\| !etatDuJour\(\)\.aFermer\) return;/);
 });
 

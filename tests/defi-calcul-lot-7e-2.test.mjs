@@ -321,7 +321,7 @@ test("les adresses : le cœur, le moteur et la feuille changent d'adresse (cache
   const page = await lire("../outils/calcul_mental/defi_calcul_modules.html");
   assert.match(page, /defi_calcul_core\.js\?v=20261128-1/);
   assert.match(page, /defi_calcul_mon_parcours\.js\?v=20261127-2/);
-  assert.match(page, /defi_calcul\.css\?v=20261127-2/);
+  assert.match(page, /defi_calcul\.css\?v=20261128-1/);
   const version = await lire("../_serveur/public/VERSION");
   // (Lot 7b : le manifeste nomme le lot suivant.)
   // (lot « cours-pct-calculatrice », 15/11/2026) le manifeste change de nom à chaque lot du serveur : son nom exact est
